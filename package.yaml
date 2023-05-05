@@ -1,0 +1,88 @@
+name:                open-cascade
+version:             0.1.0.0
+github:              "githubuser/open-cascade"
+license:             BSD3
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2023 Author name here"
+
+extra-source-files:
+- README.md
+- CHANGELOG.md
+
+include-dirs:
+- cpp
+- /usr/include/opencascade
+
+cxx-options:
+- -std=c++17
+
+extra-libraries:
+- stdc++
+- TKGeomBase 
+- TKStd 
+- TKG3d 
+- TKG2d 
+- TKMath 
+- TKernel 
+- TKBRep 
+- TKGeomBase 
+- TKOffset 
+- TKFillet 
+- TKBO 
+- TKPrim 
+- TKTopAlgo 
+- TKSTL 
+- TKV3d 
+- TKMesh
+
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/open-cascade#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
+library:
+  source-dirs: src
+  c-sources:
+    - cpp/*.cpp
+
+executables:
+  open-cascade-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - open-cascade
+
+tests:
+  open-cascade-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - open-cascade
