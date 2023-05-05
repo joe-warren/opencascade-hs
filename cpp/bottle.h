@@ -3,9 +3,15 @@
 
 #ifdef __cplusplus
 extern "C" {
+#else
+typedef void TopoDS_Shape;
 #endif
 
-int saveBottle(double w, double t, double h, char* filename);
+TopoDS_Shape * MakeBottle (const double theWidth,
+                           const double theHeight,
+                           const double theThickness);
+
+int SaveShapeSTL(double res, TopoDS_Shape *shape, char* filename);
 
 #ifdef __cplusplus
 }

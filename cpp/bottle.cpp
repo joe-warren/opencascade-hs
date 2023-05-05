@@ -84,9 +84,9 @@
 
 #include "bottle.h"
 
-TopoDS_Shape MakeBottle (const Standard_Real theWidth,
-                         const Standard_Real theHeight,
-                         const Standard_Real theThickness)
+TopoDS_Shape * MakeBottle (const double theWidth,
+                         const double theHeight,
+                         const double theThickness)
 {
   // Profile : Define Support Points
   gp_Pnt aPnt1(-theWidth / 2., 0, 0);
@@ -218,56 +218,29 @@ TopoDS_Shape MakeBottle (const Standard_Real theWidth,
   TopoDS_Shape myThreading = aTool.Shape();
 
   // Building the Resulting Compound
-  TopoDS_Compound aRes;
+  auto aRes = new TopoDS_Compound();
   BRep_Builder aBuilder;
-  aBuilder.MakeCompound(aRes);
-  aBuilder.Add(aRes, myBody);
-  aBuilder.Add(aRes, myThreading);
+  aBuilder.MakeCompound(*aRes);
+  aBuilder.Add(*aRes, myBody);
+  aBuilder.Add(*aRes, myThreading);
 
   return aRes;
 }
 
-int saveBottle(double w, double t, double h, char* filename){
+int SaveShapeSTL(double resolution, TopoDS_Shape* shape, char* filename){
 
     //NCollection_Vector<Handle(AIS_InteractiveObject)> object;
-    auto bottle = MakeBottle(w, t, h);
-    BRepMesh_IncrementalMesh mesh(bottle, 0.01);
+    BRepMesh_IncrementalMesh mesh(*shape, 0.01);
     mesh.Perform();
-    //Handle(AIS_InteractiveObject) aShape = new AIS_Shape(bottle);
-    //object.Append(aShape);
-
-    //TopoDS_Compound aTopoCompound;
-    //BRep_Builder aBuilder;
-    //aBuilder.MakeCompound(aTopoCompound);
-    //aBuilder.Add(aTopoCompound, bottle);
-  
-    /*Standard_Boolean anIsShapeExist = Standard_False;
-    for(NCollection_Vector<Handle(AIS_InteractiveObject)>::Iterator anIter(object);
-        anIter.More(); anIter.Next())
+    StlAPI_Writer aStlWriter; 
+    if (aStlWriter.Write(*shape, filename))
     {
-      const Handle(AIS_InteractiveObject)& anObject = anIter.Value();
-      if (Handle(AIS_Shape) aShape = Handle(AIS_Shape)::DownCast(anObject))
-      {
-        anIsShapeExist = Standard_True;
-        aBuilder.Add(aTopoCompound, aShape->Shape());
-      }
+      std::cout << "A STL file was successfully written" << std::endl; 
     }
-    if (anIsShapeExist)
-    {*/
-      StlAPI_Writer aStlWriter;
-      if (aStlWriter.Write(bottle, filename))
-      {
-        std::cout << "A STL file was successfully written" << std::endl;
-      }
-      else
-      {
-	std::cout << "A STL file was not written" << std::endl;
-      }
-    /*}
     else
     {
-      std::cout << "Shapes do not exist" << std::endl;
-    } */
+      std::cout << "A STL file was not written" << std::endl;
+    }
     return 0;
 }
 
