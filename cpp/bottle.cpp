@@ -84,7 +84,6 @@
 
 #include "bottle.h"
 
-
 gp_Pnt * hs_new_GP_Pnt(double x, double y, double z) {
     return new gp_Pnt(x, y, z);
 }
