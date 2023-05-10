@@ -84,6 +84,268 @@
 
 #include "bottle.h"
 
+
+gp_Pnt * hs_new_GP_Pnt(double x, double y, double z) {
+    return new gp_Pnt(x, y, z);
+}
+
+
+gp_Pnt2d * hs_new_GP_Pnt2d(double x, double y) {
+    return new gp_Pnt2d(x, y);
+}
+
+
+gp_Dir2d * hs_new_GP_Dir2d(double x, double y) {
+    return new gp_Dir2d(x, y);
+}
+
+
+gp_Vec * hs_new_GP_Vec(double x, double y, double z) {
+    return new gp_Vec(x, y, z);
+}
+
+Handle(Geom_TrimmedCurve) * hs_GCMakeArcOfCircle(gp_Pnt * p1, gp_Pnt * mid, gp_Pnt * p2){
+    return new opencascade::handle<Geom_TrimmedCurve>(GC_MakeArcOfCircle(*p1, *mid, *p2));
+}
+
+Handle(Geom_TrimmedCurve) * hs_GC_MakeSegment(gp_Pnt * a, gp_Pnt * b){
+    return new opencascade::handle<Geom_TrimmedCurve>(GC_MakeSegment(*a, *b));
+}
+
+TopoDS_Edge * hs_BRepBuilderAPI_MakeEdgeTrimmedCurve(Handle(Geom_TrimmedCurve) * curve) {
+    return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(*curve));
+}
+
+TopoDS_Wire * hs_BRepBuilderAPI_MakeWire_2Edges(TopoDS_Edge * a, TopoDS_Edge * b){
+    return new TopoDS_Wire(BRepBuilderAPI_MakeWire(*a, *b));
+}
+
+TopoDS_Wire * hs_BRepBuilderAPI_MakeWire_3Edges(TopoDS_Edge * a, TopoDS_Edge * b, TopoDS_Edge * c){
+    return new TopoDS_Wire(BRepBuilderAPI_MakeWire(*a, *b, *c));
+}
+
+gp_Ax1 * hs_gp_Ax1_OX(){ 
+    return new gp_Ax1(gp::OX());
+}
+
+gp_Ax1 * hs_gp_Ax1_OY(){ 
+    return new gp_Ax1(gp::OY());
+}
+
+gp_Ax1 * hs_gp_Ax1_OZ(){ 
+    return new gp_Ax1(gp::OZ());
+}
+
+gp_Dir * hs_gp_Dir_DX(){ 
+    return new gp_Dir(gp::DX());
+}
+
+gp_Dir * hs_gp_Dir_DY(){ 
+    return new gp_Dir(gp::DY());
+}
+
+gp_Dir * hs_gp_Dir_DZ(){ 
+    return new gp_Dir(gp::DZ());
+}
+
+gp_Trsf * hs_new_Trsf(){
+    return new gp_Trsf();
+}
+
+void hs_Trsf_SetMirror(gp_Trsf * theTransform, gp_Ax1 *theAxis){
+  theTransform->SetMirror(*theAxis);
+}
+
+BRepBuilderAPI_MakeWire * hs_new_BRepBuilderAPI_MakeWire(){
+    return new BRepBuilderAPI_MakeWire();
+}
+
+void hs_BRepBuilderAPI_MakeWire_AddWire(BRepBuilderAPI_MakeWire * theBuilder, TopoDS_Wire * theWire){
+    theBuilder->Add(*theWire);
+}
+
+TopoDS_Wire * hs_BRepBuilderAPI_MakeWire_Wire(BRepBuilderAPI_MakeWire * theBuilder){
+    return new TopoDS_Wire(theBuilder->Wire());
+}
+
+
+TopoDS_Face * hs_BRepBuilderAPI_MakeFace_Wire(TopoDS_Wire * theWire){
+    return new TopoDS_Face(BRepBuilderAPI_MakeFace(*theWire));
+}
+
+
+TopoDS_Shape * hs_BRepPrimAPI_MakePrism(TopoDS_Face * theFace, gp_Vec * theVector){
+    return new TopoDS_Shape(BRepPrimAPI_MakePrism(*theFace, *theVector));
+}
+
+BRepFilletAPI_MakeFillet * hs_new_BRepFilletAPI_MakeFillet(TopoDS_Shape * theBody){
+    return new BRepFilletAPI_MakeFillet(*theBody);
+}
+
+void hs_BRepFilletAPI_MakeFillet_Add(BRepFilletAPI_MakeFillet * theFillet, double r, TopoDS_Edge * theEdge){
+    theFillet->Add(r, *theEdge);
+}
+
+TopoDS_Shape * hs_BRepFilletAPI_MakeFillet_Shape(BRepFilletAPI_MakeFillet * theFillet){
+    return new TopoDS_Shape(theFillet->Shape());
+}
+
+TopAbs_ShapeEnum * hs_new_TopAbs_EDGE(){
+    return new TopAbs_ShapeEnum(TopAbs_EDGE);
+}
+
+TopAbs_ShapeEnum * hs_new_TopAbs_FACE(){
+    return new TopAbs_ShapeEnum(TopAbs_FACE);
+}
+
+TopExp_Explorer * hs_new_TopExp_Explorer(TopoDS_Shape * theShape, TopAbs_ShapeEnum * toFind){
+    return new TopExp_Explorer(*theShape, *toFind);
+}
+
+bool hs_TopExp_Explorer_More(TopExp_Explorer * theExplorer){
+    return theExplorer->More();
+}
+
+TopoDS_Shape * hs_TopExp_Explorer_Current(TopExp_Explorer * theExplorer){
+    return new TopoDS_Shape(theExplorer->Current());
+}
+
+void hs_TopExp_Explorer_Next(TopExp_Explorer * theExplorer){
+    theExplorer->Next();
+}
+
+Handle(Geom_Surface) * hs_BRep_Tool_Surface(TopoDS_Face * aFace){
+    return new opencascade::handle<Geom_Surface>(BRep_Tool::Surface(*aFace));
+}
+
+bool hs_Geom_Surface_isPlane(Handle(Geom_Surface) * aSurface){
+    return ((*aSurface)->DynamicType() == STANDARD_TYPE(Geom_Plane));
+}
+
+gp_Pnt * hs_Geom_Plane_Location(Handle(Geom_Plane) * aPlane){
+      return new gp_Pnt((*aPlane)->Location());
+}
+
+double hs_gp_Pnt_X(gp_Pnt * pnt){
+    return pnt->X();
+}
+
+double hs_gp_Pnt_Y(gp_Pnt * pnt){
+    return pnt->Y();
+}
+
+double hs_gp_Pnt_Z(gp_Pnt * pnt){
+    return pnt->Z();
+}
+
+gp_Ax2 * hs_new_gp_Ax2(gp_Pnt * pnt, gp_Dir * dir){
+    return new gp_Ax2(*pnt, *dir);
+}
+
+
+gp_Ax2d * hs_new_gp_Ax2d(gp_Pnt2d * pnt, gp_Dir2d * dir){
+    return new gp_Ax2d(*pnt, *dir);
+}
+
+BRepPrimAPI_MakeCylinder * hs_new_BRepPrimAPI_MakeCylinder(gp_Ax2 * ax2, double radius, double height){
+    return new BRepPrimAPI_MakeCylinder(*ax2, radius, height);
+}
+
+TopoDS_Shape * hs_BRepPrimAPI_MakeCylinder_Shape(BRepPrimAPI_MakeCylinder * theBuilder){
+    return new TopoDS_Shape(theBuilder->Shape());
+}
+
+TopoDS_Shape * hs_BRepAlgoAPI_Fuse(TopoDS_Shape *a, TopoDS_Shape *b){
+        return new TopoDS_Shape(BRepAlgoAPI_Fuse(*a, *b));
+}
+
+TopTools_ListOfShape * hs_new_TopTools_ListOfShape(){
+    return new TopTools_ListOfShape();
+}
+
+void hs_TopTools_ListOfShape_Append(TopTools_ListOfShape * theList, TopoDS_Shape* theShape){
+    theList->Append(*theShape);
+}
+
+BRepOffsetAPI_MakeThickSolid * hs_new_BRepOffsetAPI_MakeThickSolid(){
+    return new BRepOffsetAPI_MakeThickSolid();
+}
+
+void hs_BRepOffsetAPI_MakeThickSolid_MakeThickSolidByJoin(
+            BRepOffsetAPI_MakeThickSolid *theMaker,
+            TopoDS_Shape* theShape,
+            TopTools_ListOfShape * closingFaces,
+            double thickness,
+            double tolerance){
+    theMaker->MakeThickSolidByJoin(*theShape, *closingFaces, thickness, tolerance);
+}
+
+TopoDS_Shape * hs_BRepOffsetAPI_MakeThickSolid_Shape(BRepOffsetAPI_MakeThickSolid * theMaker){
+    return new TopoDS_Shape(theMaker->Shape());
+}
+
+Handle(Geom_CylindricalSurface) * hs_new_GeomCylindricalSurface(gp_Ax2 * ax2, double r){
+    return new opencascade::handle<Geom_CylindricalSurface>(new Geom_CylindricalSurface(*ax2, r));
+}
+
+Geom2d_Ellipse * hs_new_Geom2d_Ellipse(gp_Ax2d *ax2, double rMajor, double rMinor){
+    return new Geom2d_Ellipse(*ax2, rMajor, rMinor);
+}
+
+Handle(Geom2d_TrimmedCurve) * hs_new_Geom2d_Trimmed_Curve_fromEllipse(Geom2d_Ellipse * theEllipse, double r1, double r2){
+    return new opencascade::handle<Geom2d_TrimmedCurve>(new Geom2d_TrimmedCurve(theEllipse, r1, r2));
+}
+
+gp_Pnt2d * hs_Geom2d_Ellipse_Value(Geom2d_Ellipse * theEllipse, double theta){
+    return new gp_Pnt2d(theEllipse->Value(theta));
+}
+
+Handle(Geom2d_TrimmedCurve) * hs_GCE2d_MakeSegment(gp_Pnt2d * pnt1, gp_Pnt2d * pnt2){
+    return new opencascade::handle<Geom2d_TrimmedCurve>(GCE2d_MakeSegment(*pnt1, *pnt2));
+}
+
+TopoDS_Edge * hs_BRepBuilderAPI_MakeEdge_fromArcAndCylinder(Handle(Geom2d_TrimmedCurve) * theArc, Handle(Geom_CylindricalSurface) * theSurface){
+    return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(*theArc, *theSurface));
+}
+
+void hs_BRepLib_BuildCurves3d(TopoDS_Wire * wire){ 
+    BRepLib::BuildCurves3d(*wire);
+}
+
+BRepOffsetAPI_ThruSections * hs_new_BRepOffsetAPI_ThruSections(bool isSolid){
+  return new BRepOffsetAPI_ThruSections(isSolid);
+}
+
+void hs_BRepOffsetAPI_ThruSections_AddWire(BRepOffsetAPI_ThruSections * thruSections, TopoDS_Wire * theWire){
+    thruSections->AddWire(*theWire);
+}
+
+void hs_BRepOffsetAPI_ThruSections_CheckCompatibility(BRepOffsetAPI_ThruSections * thruSections, bool check){
+    thruSections->CheckCompatibility(check);
+}
+
+TopoDS_Shape * hs_BRepOffsetAPI_ThruSections_Shape(BRepOffsetAPI_ThruSections * thruSections){
+    return new TopoDS_Shape(thruSections->Shape());
+}
+
+TopoDS_Compound * hs_new_TopoDS_Compound(){
+  return new TopoDS_Compound();
+}
+
+BRep_Builder * hs_new_BRepBuilder(){
+    return new BRep_Builder();
+}
+
+
+void hs_BRep_Builder_MakeCompound(BRep_Builder * theBuilder, TopoDS_Compound * theCompound){
+    theBuilder->MakeCompound(*theCompound);
+}
+
+void hs_BRep_Builder_Add(BRep_Builder * theBuilder, TopoDS_Compound * theCompound, TopoDS_Shape * theShape){
+    theBuilder->Add(*theCompound, *theShape);
+}
+
+
 TopoDS_Shape * MakeBottle (const double theWidth,
                          const double theHeight,
                          const double theThickness)
