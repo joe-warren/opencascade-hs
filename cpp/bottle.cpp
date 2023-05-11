@@ -155,6 +155,14 @@ void hs_Trsf_SetMirror(gp_Trsf * theTransform, gp_Ax1 *theAxis){
   theTransform->SetMirror(*theAxis);
 }
 
+BRepBuilderAPI_Transform * hs_new_BRepBuilderAPI_Transform(TopoDS_Wire * aWire, gp_Trsf *aTransform){
+    return new BRepBuilderAPI_Transform(*aWire, *aTransform);
+}
+
+TopoDS_Shape * hs_BRepBuilderAPI_Transform_Shape(BRepBuilderAPI_Transform * theTransform){
+    return new TopoDS_Shape(theTransform->Shape());
+}
+
 BRepBuilderAPI_MakeWire * hs_new_BRepBuilderAPI_MakeWire(){
     return new BRepBuilderAPI_MakeWire();
 }

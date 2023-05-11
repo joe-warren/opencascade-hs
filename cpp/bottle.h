@@ -19,6 +19,7 @@ typedef void gp_Dir2d;
 typedef void gp_Vec;
 typedef void gp_Trsf;
 typedef void BRep_Builder;
+typedef void BRepBuilderAPI_Transform;
 typedef void BRepBuilderAPI_MakeWire;
 typedef void BRepFilletAPI_MakeFillet;
 typedef void TopAbs_ShapeEnum;
@@ -65,6 +66,10 @@ gp_Dir * hs_gp_Dir_DZ();
 gp_Trsf * hs_new_Trsf();
 
 void hs_Trsf_SetMirror(gp_Trsf * theTransform, gp_Ax1 *theAxis);
+
+BRepBuilderAPI_Transform * hs_new_BRepBuilderAPI_Transform(TopoDS_Wire * aWire, gp_Trsf *aTransform);
+
+TopoDS_Shape * hs_BRepBuilderAPI_Transform_Shape(BRepBuilderAPI_Transform * theTransform);
 
 BRepBuilderAPI_MakeWire * hs_new_BRepBuilderAPI_MakeWire();
 
