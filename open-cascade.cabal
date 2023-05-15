@@ -26,6 +26,8 @@ source-repository head
 library
   exposed-modules:
       Lib
+      OpenCascade.GP.Ax1
+      OpenCascade.GP.Internal.Destructors
       OpenCascade.GP.Pnt
       OpenCascade.GP.Types
   other-modules:
@@ -41,6 +43,8 @@ library
       /usr/include/opencascade
   c-sources:
       cpp/bottle.cpp
+      cpp/hs_gp_Ax1.cpp
+      cpp/hs_gp_Dir.cpp
       cpp/hs_gp_Pnt.cpp
   extra-libraries:
       stdc++
