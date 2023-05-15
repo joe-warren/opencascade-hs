@@ -51,7 +51,7 @@ dependencies:
 - lens
 - text
 - linear
-
+- resourcet
 ghc-options:
 - -Wall
 - -Wcompat

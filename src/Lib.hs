@@ -9,7 +9,11 @@ import Control.Monad (forM_, filterM)
 import Data.Foldable (traverse_, maximumBy)
 import Data.Function (on)
 
+someFunc :: IO ()
+someFunc = print "hello world"
 
+
+{--
 data TopoDS_Shape
 data TopoDS_Edge
 data TopoDS_Wire
@@ -337,3 +341,5 @@ someFunc :: IO ()
 someFunc = do
     shape <- makeBottleHS 50 60 50
     withCString "haskell.stl" (saveShapeSTL 0.01 shape) >>= print
+
+--}
