@@ -103,67 +103,67 @@ angle = coerce rawAngle
 
 -- reverse/reversed
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_reverse" reverse :: Ptr Ax1 -> IO ()
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Reverse" reverse :: Ptr Ax1 -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_reversed" rawReversed :: Ptr Ax1 -> IO (Ptr Ax1)
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Reversed" rawReversed :: Ptr Ax1 -> IO (Ptr Ax1)
 
 reversed :: Ptr Ax1 -> Acquire (Ptr Ax1)
 reversed axis = mkAcquire (rawReversed axis) deleteAx1
 
 -- mirror/mirrored
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_mirror" mirror :: Ptr Ax1 -> Ptr Ax1 -> IO ()
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Mirror" mirror :: Ptr Ax1 -> Ptr Ax1 -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_mirrored" rawMirrored :: Ptr Ax1 -> Ptr Ax1 -> IO (Ptr Ax1)
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Mirrored" rawMirrored :: Ptr Ax1 -> Ptr Ax1 -> IO (Ptr Ax1)
 
 mirrored :: Ptr Ax1 -> Ptr Ax1 -> Acquire (Ptr Ax1)
 mirrored axis mirror = mkAcquire (rawMirrored axis mirror) deleteAx1
 
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_mirrorAboutPnt" mirrorAboutPnt :: Ptr Ax1 -> Ptr Pnt -> IO ()
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirrorAboutPnt" mirrorAboutPnt :: Ptr Ax1 -> Ptr Pnt -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_mirroredAboutPnt" rawMirroredAboutPnt :: Ptr Ax1 -> Ptr Pnt -> IO (Ptr Ax1)
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirroredAboutPnt" rawMirroredAboutPnt :: Ptr Ax1 -> Ptr Pnt -> IO (Ptr Ax1)
 
 mirroredAboutPnt :: Ptr Ax1 -> Ptr Pnt -> Acquire (Ptr Ax1)
 mirroredAboutPnt axis mirror = mkAcquire (rawMirroredAboutPnt axis mirror) deleteAx1
 
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_mirrorAboutAx2" mirrorAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> IO ()
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirrorAboutAx2" mirrorAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_mirroredAboutAx2" rawMirroredAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> IO (Ptr Ax1)
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirroredAboutAx2" rawMirroredAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> IO (Ptr Ax1)
 
 mirroredAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> Acquire (Ptr Ax1)
 mirroredAboutAx2 axis mirror = mkAcquire (rawMirroredAboutAx2 axis mirror) deleteAx1
 
 -- rotate/rotated 
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_rotate" rawRotate :: Ptr Ax1 -> Ptr Ax1 -> CDouble -> IO ()
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Rotate" rawRotate :: Ptr Ax1 -> Ptr Ax1 -> CDouble -> IO ()
 
 rotate :: Ptr Ax1 -> Ptr Ax1 -> Double -> IO ()
 rotate = coerce rawRotate
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_rotated" rawRotated :: Ptr Ax1 -> Ptr Ax1 -> CDouble -> IO (Ptr Ax1)
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Rotated" rawRotated :: Ptr Ax1 -> Ptr Ax1 -> CDouble -> IO (Ptr Ax1)
 
 rotated :: Ptr Ax1 -> Ptr Ax1 -> Double -> Acquire (Ptr Ax1)
 rotated axis axisOfRotation angle = mkAcquire (rawRotated axis axisOfRotation (CDouble angle)) deleteAx1
 
 -- scale/scaled 
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_scale" rawScale :: Ptr Ax1 -> Ptr Pnt -> CDouble -> IO ()
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Scale" rawScale :: Ptr Ax1 -> Ptr Pnt -> CDouble -> IO ()
 
 scale :: Ptr Ax1 -> Ptr Pnt -> Double -> IO ()
 scale = coerce rawScale
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_scaled" rawScaled :: Ptr Ax1 -> Ptr Pnt -> CDouble -> IO (Ptr Ax1)
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Scaled" rawScaled :: Ptr Ax1 -> Ptr Pnt -> CDouble -> IO (Ptr Ax1)
 
 scaled :: Ptr Ax1 -> Ptr Pnt -> Double -> Acquire (Ptr Ax1)
 scaled axis origin amount = mkAcquire (rawScaled axis origin (CDouble amount)) deleteAx1
 
 -- transform/transformed 
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_transform" transform :: Ptr Ax1 -> Ptr Trsf -> IO ()
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Transform" transform :: Ptr Ax1 -> Ptr Trsf -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_transformed" rawTransformed :: Ptr Ax1 -> Ptr Trsf -> IO (Ptr Ax1)
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Transformed" rawTransformed :: Ptr Ax1 -> Ptr Trsf -> IO (Ptr Ax1)
 
 transformed :: Ptr Ax1 -> Ptr Trsf -> Acquire (Ptr Ax1)
 transformed axis trsf = mkAcquire (rawTransformed axis trsf) deleteAx1
@@ -171,17 +171,17 @@ transformed axis trsf = mkAcquire (rawTransformed axis trsf) deleteAx1
 
 -- translate/translated
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_translate" translate :: Ptr Ax1 -> Ptr Vec -> IO ()
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Translate" translate :: Ptr Ax1 -> Ptr Vec -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_translated" rawTranslated :: Ptr Ax1 -> Ptr Vec -> IO (Ptr Ax1)
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Translated" rawTranslated :: Ptr Ax1 -> Ptr Vec -> IO (Ptr Ax1)
 
 translated :: Ptr Ax1 -> Ptr Vec -> Acquire (Ptr Ax1)
 translated axis vec = mkAcquire (rawTranslated axis vec) deleteAx1
 
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_translateRelative" translateRelative :: Ptr Ax1 -> Ptr Pnt -> Ptr Pnt -> IO ()
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_TranslateRelative" translateRelative :: Ptr Ax1 -> Ptr Pnt -> Ptr Pnt -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_translatedRelative" rawTranslatedRelative :: Ptr Ax1 -> Ptr Pnt -> Ptr Pnt -> IO (Ptr Ax1)
+foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_TranslatedRelative" rawTranslatedRelative :: Ptr Ax1 -> Ptr Pnt -> Ptr Pnt -> IO (Ptr Ax1)
 
 translatedRelative :: Ptr Ax1 -> Ptr Pnt -> Ptr Pnt -> Acquire (Ptr Ax1)
 translatedRelative axis from to = mkAcquire (rawTranslatedRelative axis from to) deleteAx1
