@@ -28,6 +28,7 @@ library
       Lib
       OpenCascade.GP.Ax1
       OpenCascade.GP.Ax2
+      OpenCascade.GP.Ax2d
       OpenCascade.GP.Internal.Destructors
       OpenCascade.GP.Pnt
       OpenCascade.GP.Types
@@ -38,6 +39,7 @@ library
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  cpp-options: -Werror-implicit-function-declaration
   cxx-options: -std=c++17
   include-dirs:
       cpp
@@ -46,8 +48,11 @@ library
       cpp/bottle.cpp
       cpp/hs_gp_Ax1.cpp
       cpp/hs_gp_Ax2.cpp
+      cpp/hs_gp_Ax2d.cpp
       cpp/hs_gp_Dir.cpp
+      cpp/hs_gp_Dir2d.cpp
       cpp/hs_gp_Pnt.cpp
+      cpp/hs_gp_Pnt2d.cpp
   extra-libraries:
       stdc++
       TKGeomBase
@@ -83,7 +88,6 @@ executable open-cascade-exe
   hs-source-dirs:
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
-  cxx-options: -std=c++17
   include-dirs:
       cpp
       /usr/include/opencascade
@@ -124,7 +128,6 @@ test-suite open-cascade-test
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
-  cxx-options: -std=c++17
   include-dirs:
       cpp
       /usr/include/opencascade

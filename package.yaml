@@ -14,9 +14,6 @@ include-dirs:
 - cpp
 - /usr/include/opencascade
 
-cxx-options:
-- -std=c++17
-
 extra-libraries:
 - stdc++
 - TKGeomBase 
@@ -67,7 +64,8 @@ library:
   source-dirs: src
   c-sources:
     - cpp/*.cpp
-
+  cxx-options: -std=c++17
+  cpp-options: -Werror-implicit-function-declaration
 executables:
   open-cascade-exe:
     main:                Main.hs
