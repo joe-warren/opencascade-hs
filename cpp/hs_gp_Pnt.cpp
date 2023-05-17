@@ -57,19 +57,19 @@ gp_Pnt * hs_gp_Pnt_Mirrored(gp_Pnt * thePnt, gp_Pnt * theAxis){
     return new gp_Pnt(thePnt->Mirrored(*theAxis));
 }
 
-void hs_gp_Pnt_Mirror1(gp_Pnt * thePnt, gp_Ax1 * theAxis){
+void hs_gp_Pnt_MirrorAboutAx1(gp_Pnt * thePnt, gp_Ax1 * theAxis){
     thePnt->Mirror(*theAxis);
 }
 
-gp_Pnt * hs_gp_Pnt_Mirrored1(gp_Pnt * thePnt, gp_Ax1 * theAxis){
+gp_Pnt * hs_gp_Pnt_MirroredAboutAx1(gp_Pnt * thePnt, gp_Ax1 * theAxis){
     return new gp_Pnt(thePnt->Mirrored(*theAxis));
 }
 
-void hs_gp_Pnt_Mirror2(gp_Pnt * thePnt, gp_Ax1 * theAxis){
+void hs_gp_Pnt_MirrorAboutAx2(gp_Pnt * thePnt, gp_Ax2 * theAxis){
     thePnt->Mirror(*theAxis);
 }
 
-gp_Pnt * hs_gp_Pnt_Mirrored2(gp_Pnt * thePnt, gp_Ax1 * theAxis){
+gp_Pnt * hs_gp_Pnt_MirroredAboutAx2(gp_Pnt * thePnt, gp_Ax2 * theAxis){
     return new gp_Pnt(thePnt->Mirrored(*theAxis));
 }
 

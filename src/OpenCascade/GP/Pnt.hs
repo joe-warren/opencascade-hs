@@ -14,10 +14,10 @@ module OpenCascade.GP.Pnt
 , isEqual
 , mirror
 , mirrored
-, mirror1
-, mirrored1
-, mirror2
-, mirrored2
+, mirrorAboutAx1
+, mirroredAboutAx1
+, mirrorAboutAx2
+, mirroredAboutAx2
 , rotate
 , rotated
 , scale
@@ -118,19 +118,19 @@ foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Mirrored" rawMirrored :: Ptr P
 mirrored :: Ptr Pnt -> Ptr Pnt -> Acquire (Ptr Pnt)
 mirrored point axis = mkAcquire (rawMirrored point axis) deletePnt
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Mirror1" mirror1 :: Ptr Pnt -> Ptr Ax1 -> IO ()
+foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_MirrorAboutAx1" mirrorAboutAx1 :: Ptr Pnt -> Ptr Ax1 -> IO ()
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Mirrored1" rawMirrored1 :: Ptr Pnt -> Ptr Ax1 -> IO (Ptr Pnt)
+foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_MirroredAboutAx1" rawMirroredAboutAx1 :: Ptr Pnt -> Ptr Ax1 -> IO (Ptr Pnt)
 
-mirrored1 :: Ptr Pnt -> Ptr Ax1 -> Acquire (Ptr Pnt)
-mirrored1 point axis = mkAcquire (rawMirrored1 point axis) deletePnt
+mirroredAboutAx1 :: Ptr Pnt -> Ptr Ax1 -> Acquire (Ptr Pnt)
+mirroredAboutAx1 point axis = mkAcquire (rawMirroredAboutAx1 point axis) deletePnt
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Mirror2" mirror2 :: Ptr Pnt -> Ptr Ax2 -> IO ()
+foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_MirrorAboutAx2" mirrorAboutAx2 :: Ptr Pnt -> Ptr Ax2 -> IO ()
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Mirrored2" rawMirrored2 :: Ptr Pnt -> Ptr Ax2 -> IO (Ptr Pnt)
+foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_MirroredAboutAx2" rawMirroredAboutAx2 :: Ptr Pnt -> Ptr Ax2 -> IO (Ptr Pnt)
 
-mirrored2 :: Ptr Pnt -> Ptr Ax2 -> Acquire (Ptr Pnt)
-mirrored2 point axis = mkAcquire (rawMirrored2 point axis) deletePnt
+mirroredAboutAx2 :: Ptr Pnt -> Ptr Ax2 -> Acquire (Ptr Pnt)
+mirroredAboutAx2 point axis = mkAcquire (rawMirroredAboutAx2 point axis) deletePnt
 
 -- rotate/rotated
 

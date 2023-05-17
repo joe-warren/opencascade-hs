@@ -35,13 +35,13 @@ void hs_gp_Pnt_Mirror(gp_Pnt * thePnt, gp_Pnt * theAxis);
 
 gp_Pnt * hs_gp_Pnt_Mirrored(gp_Pnt * thePnt, gp_Pnt * theAxis);
 
-void hs_gp_Pnt_Mirror1(gp_Pnt * thePnt, gp_Ax1 * theAxis);
+void hs_gp_Pnt_MirrorAboutAx1(gp_Pnt * thePnt, gp_Ax1 * theAxis);
 
-gp_Pnt * hs_gp_Pnt_Mirrored1(gp_Pnt * thePnt, gp_Ax1 * theAxis);
+gp_Pnt * hs_gp_Pnt_MirroredAboutAx1(gp_Pnt * thePnt, gp_Ax1 * theAxis);
 
-void hs_gp_Pnt_Mirror2(gp_Pnt * thePnt, gp_Ax1 * theAxis);
+void hs_gp_Pnt_MirrorAboutAx2(gp_Pnt * thePnt, gp_Ax2 * theAxis);
 
-gp_Pnt * hs_gp_Pnt_Mirrored2(gp_Pnt * thePnt, gp_Ax1 * theAxis);
+gp_Pnt * hs_gp_Pnt_MirroredAboutAx2(gp_Pnt * thePnt, gp_Ax2 * theAxis);
 
 void hs_gp_Pnt_Rotate(gp_Pnt * thePnt, gp_Ax1 * theAxis, double amount);
 
