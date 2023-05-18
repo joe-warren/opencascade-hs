@@ -30,6 +30,7 @@ library
       OpenCascade.GP.Ax2
       OpenCascade.GP.Ax2d
       OpenCascade.GP.Dir
+      OpenCascade.GP.Dir2d
       OpenCascade.GP.Internal.Destructors
       OpenCascade.GP.Pnt
       OpenCascade.GP.Pnt2d
