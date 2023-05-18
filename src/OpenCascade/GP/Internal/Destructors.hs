@@ -13,5 +13,6 @@ foreign import capi unsafe "hs_gp_Ax2.h hs_delete_gp_Ax2" deleteAx2d :: Ptr Ax2d
 foreign import capi unsafe "hs_gp_Dir.h hs_delete_gp_Dir" deleteDir :: Ptr Dir -> IO ()
 foreign import capi unsafe "hs_gp_Dir2d.h hs_delete_gp_Dir2d" deleteDir2d :: Ptr Dir2d -> IO ()
 foreign import capi unsafe "hs_gp_Vec.h hs_delete_gp_Vec" deleteVec :: Ptr Vec -> IO ()
+foreign import capi unsafe "hs_gp_Vec2d.h hs_delete_gp_Vec2d" deleteVec2d :: Ptr Vec2d -> IO ()
 
 
