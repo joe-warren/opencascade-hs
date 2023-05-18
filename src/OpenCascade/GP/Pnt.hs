@@ -134,11 +134,11 @@ mirroredAboutAx2 point axis = mkAcquire (rawMirroredAboutAx2 point axis) deleteP
 
 -- rotate/rotated
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Rotate" rotate :: Ptr Pnt -> Ptr Ax2 -> CDouble-> IO ()
+foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Rotate" rotate :: Ptr Pnt -> Ptr Ax1 -> CDouble-> IO ()
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Rotated" rawRotated :: Ptr Pnt -> Ptr Ax2 -> CDouble -> IO (Ptr Pnt)
+foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Rotated" rawRotated :: Ptr Pnt -> Ptr Ax1 -> CDouble -> IO (Ptr Pnt)
 
-rotated :: Ptr Pnt -> Ptr Ax2 -> Double -> Acquire (Ptr Pnt)
+rotated :: Ptr Pnt -> Ptr Ax1 -> Double -> Acquire (Ptr Pnt)
 rotated point axis amount = mkAcquire (rawRotated point axis (CDouble amount)) deletePnt
 
 -- scale/scaled
