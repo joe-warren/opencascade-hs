@@ -35,6 +35,7 @@ library
       OpenCascade.GP.Pnt
       OpenCascade.GP.Pnt2d
       OpenCascade.GP.Types
+      OpenCascade.GP.Vec
   other-modules:
       Paths_open_cascade
   autogen-modules:
@@ -56,6 +57,7 @@ library
       cpp/hs_gp_Dir2d.cpp
       cpp/hs_gp_Pnt.cpp
       cpp/hs_gp_Pnt2d.cpp
+      cpp/hs_gp_Vec.cpp
   extra-libraries:
       stdc++
       TKGeomBase
