@@ -35,6 +35,7 @@ library
       OpenCascade.GP.Pnt
       OpenCascade.GP.Pnt2d
       OpenCascade.GP.Trsf
+      OpenCascade.GP.Trsf2d
       OpenCascade.GP.Types
       OpenCascade.GP.Vec
       OpenCascade.GP.Vec2d
@@ -60,6 +61,7 @@ library
       cpp/hs_gp_Pnt.cpp
       cpp/hs_gp_Pnt2d.cpp
       cpp/hs_gp_Trsf.cpp
+      cpp/hs_gp_Trsf2d.cpp
       cpp/hs_gp_Vec.cpp
       cpp/hs_gp_Vec2d.cpp
   extra-libraries:
