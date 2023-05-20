@@ -8,6 +8,7 @@ typedef void TopoDS_Edge;
 typedef void TopoDS_Wire;
 typedef void TopoDS_Face;
 typedef void TopoDS_Compound;
+typedef void TopLoc_Location;
 typedef void gp_Pnt;
 typedef void gp_Ax1;
 typedef void gp_Ax2;

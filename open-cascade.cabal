@@ -40,6 +40,9 @@ library
       OpenCascade.GP.Types
       OpenCascade.GP.Vec
       OpenCascade.GP.Vec2d
+      OpenCascade.TopLoc.Internal.Destructors
+      OpenCascade.TopLoc.Location
+      OpenCascade.TopLoc.Types
   other-modules:
       Paths_open_cascade
   autogen-modules:
@@ -66,6 +69,8 @@ library
       cpp/hs_gp_Trsf2d.cpp
       cpp/hs_gp_Vec.cpp
       cpp/hs_gp_Vec2d.cpp
+      cpp/hs_TopLoc_Location.cpp
+      cpp/hs_TopoDS_Shape.cpp
   extra-libraries:
       stdc++
       TKGeomBase
