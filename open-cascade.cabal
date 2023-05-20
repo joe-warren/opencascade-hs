@@ -40,6 +40,7 @@ library
       OpenCascade.GP.Types
       OpenCascade.GP.Vec
       OpenCascade.GP.Vec2d
+      OpenCascade.TopLoc
       OpenCascade.TopLoc.Internal.Destructors
       OpenCascade.TopLoc.Location
       OpenCascade.TopLoc.Types
