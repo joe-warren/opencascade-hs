@@ -40,10 +40,17 @@ library
       OpenCascade.GP.Types
       OpenCascade.GP.Vec
       OpenCascade.GP.Vec2d
+      OpenCascade.Internal.Bool
+      OpenCascade.TopAbs
+      OpenCascade.TopAbs.Orientation
+      OpenCascade.TopAbs.ShapeEnum
       OpenCascade.TopLoc
       OpenCascade.TopLoc.Internal.Destructors
       OpenCascade.TopLoc.Location
       OpenCascade.TopLoc.Types
+      OpenCascade.TopoDS.Internal.Destructors
+      OpenCascade.TopoDS.Shape
+      OpenCascade.TopoDS.Types
   other-modules:
       Paths_open_cascade
   autogen-modules:
