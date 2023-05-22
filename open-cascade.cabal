@@ -26,6 +26,10 @@ source-repository head
 library
   exposed-modules:
       Lib
+      OpenCascade.GC.MakeArcOfCircle
+      OpenCascade.Geom
+      OpenCascade.Geom.Internal.Destructors
+      OpenCascade.Geom.Types
       OpenCascade.GP
       OpenCascade.GP.Ax1
       OpenCascade.GP.Ax2
@@ -40,6 +44,7 @@ library
       OpenCascade.GP.Types
       OpenCascade.GP.Vec
       OpenCascade.GP.Vec2d
+      OpenCascade.Handle
       OpenCascade.Internal.Bool
       OpenCascade.TopAbs
       OpenCascade.TopAbs.Orientation
@@ -74,6 +79,8 @@ library
       /usr/include/opencascade
   c-sources:
       cpp/bottle.cpp
+      cpp/hs_GC_MakeArcOfCircle.cpp
+      cpp/hs_Geom_TrimmedCurve.cpp
       cpp/hs_gp.cpp
       cpp/hs_gp_Ax1.cpp
       cpp/hs_gp_Ax2.cpp
