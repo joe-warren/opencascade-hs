@@ -4,10 +4,14 @@
 #ifndef __cplusplus
 
 typedef void TopoDS_Shape;
+typedef void TopoDS_Vertex;
 typedef void TopoDS_Edge;
-typedef void TopoDS_Wire;
 typedef void TopoDS_Face;
+typedef void TopoDS_Wire;
 typedef void TopoDS_Compound;
+typedef void TopoDS_CompSolid;
+typedef void TopoDS_Solid;
+typedef void TopoDS_Shell;
 typedef void TopLoc_Location;
 typedef int TopAbs_Orientation;
 typedef int TopAbs_ShapeEnum;

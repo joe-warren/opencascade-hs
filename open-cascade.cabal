@@ -48,9 +48,18 @@ library
       OpenCascade.TopLoc.Internal.Destructors
       OpenCascade.TopLoc.Location
       OpenCascade.TopLoc.Types
+      OpenCascade.TopoDS
+      OpenCascade.TopoDS.Compound
+      OpenCascade.TopoDS.CompSolid
+      OpenCascade.TopoDS.Edge
+      OpenCascade.TopoDS.Face
       OpenCascade.TopoDS.Internal.Destructors
       OpenCascade.TopoDS.Shape
+      OpenCascade.TopoDS.Shell
+      OpenCascade.TopoDS.Solid
       OpenCascade.TopoDS.Types
+      OpenCascade.TopoDS.Vertex
+      OpenCascade.TopoDS.Wire
   other-modules:
       Paths_open_cascade
   autogen-modules:
@@ -78,7 +87,15 @@ library
       cpp/hs_gp_Vec.cpp
       cpp/hs_gp_Vec2d.cpp
       cpp/hs_TopLoc_Location.cpp
+      cpp/hs_TopoDS_Compound.cpp
+      cpp/hs_TopoDS_CompSolid.cpp
+      cpp/hs_TopoDS_Edge.cpp
+      cpp/hs_TopoDS_Face.cpp
       cpp/hs_TopoDS_Shape.cpp
+      cpp/hs_TopoDS_Shell.cpp
+      cpp/hs_TopoDS_Solid.cpp
+      cpp/hs_TopoDS_Vertex.cpp
+      cpp/hs_TopoDS_Wire.cpp
   extra-libraries:
       stdc++
       TKGeomBase
