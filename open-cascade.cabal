@@ -47,6 +47,7 @@ library
       OpenCascade.GP.Vec
       OpenCascade.GP.Vec2d
       OpenCascade.Handle
+      OpenCascade.Inheritance
       OpenCascade.Internal.Bool
       OpenCascade.TopAbs
       OpenCascade.TopAbs.Orientation
