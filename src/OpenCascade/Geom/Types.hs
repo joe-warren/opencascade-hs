@@ -1,6 +1,8 @@
 {-# LANGUAGE EmptyDataDecls #-}
 module OpenCascade.Geom.Types
-( TrimmedCurve
+( Curve
+, TrimmedCurve
 ) where
 
+data Curve
 data TrimmedCurve
