@@ -29,6 +29,7 @@ typedef void gp_Trsf2d;
 typedef void BRep_Builder;
 typedef void BRepBuilderAPI_Transform;
 typedef void BRepBuilderAPI_MakeWire;
+typedef int BRepBuilderAPI_WireError;
 typedef void BRepFilletAPI_MakeFillet;
 typedef void TopExp_Explorer;
 typedef void BRepPrimAPI_MakeCylinder;

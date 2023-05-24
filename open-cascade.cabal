@@ -26,7 +26,12 @@ source-repository head
 library
   exposed-modules:
       Lib
+      OpenCascade.BRepBuilderAPI
+      OpenCascade.BRepBuilderAPI.Internal.Destructors
       OpenCascade.BRepBuilderAPI.MakeEdge
+      OpenCascade.BRepBuilderAPI.MakeWire
+      OpenCascade.BRepBuilderAPI.Types
+      OpenCascade.BRepBuilderAPI.WireError
       OpenCascade.GC.MakeArcOfCircle
       OpenCascade.GC.MakeSegment
       OpenCascade.Geom
@@ -68,6 +73,8 @@ library
       OpenCascade.TopoDS.Types
       OpenCascade.TopoDS.Vertex
       OpenCascade.TopoDS.Wire
+      OpenCascade.TopTools
+      OpenCascade.TopTools.Types
   other-modules:
       Paths_open_cascade
   autogen-modules:
@@ -83,6 +90,7 @@ library
   c-sources:
       cpp/bottle.cpp
       cpp/hs_BRepBuilderAPI_MakeEdge.cpp
+      cpp/hs_BRepBuilderAPI_MakeWire.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
       cpp/hs_Geom_TrimmedCurve.cpp
