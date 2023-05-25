@@ -30,6 +30,7 @@ library
       OpenCascade.BRepBuilderAPI.Internal.Destructors
       OpenCascade.BRepBuilderAPI.MakeEdge
       OpenCascade.BRepBuilderAPI.MakeWire
+      OpenCascade.BRepBuilderAPI.Transform
       OpenCascade.BRepBuilderAPI.Types
       OpenCascade.BRepBuilderAPI.WireError
       OpenCascade.GC.MakeArcOfCircle
@@ -91,6 +92,7 @@ library
       cpp/bottle.cpp
       cpp/hs_BRepBuilderAPI_MakeEdge.cpp
       cpp/hs_BRepBuilderAPI_MakeWire.cpp
+      cpp/hs_BRepBuilderAPI_Transform.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
       cpp/hs_Geom_TrimmedCurve.cpp
