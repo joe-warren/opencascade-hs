@@ -27,12 +27,15 @@ library
   exposed-modules:
       Lib
       OpenCascade.BRepBuilderAPI
+      OpenCascade.BRepBuilderAPI.FaceError
       OpenCascade.BRepBuilderAPI.Internal.Destructors
       OpenCascade.BRepBuilderAPI.MakeEdge
+      OpenCascade.BRepBuilderAPI.MakeFace
       OpenCascade.BRepBuilderAPI.MakeWire
       OpenCascade.BRepBuilderAPI.Transform
       OpenCascade.BRepBuilderAPI.Types
       OpenCascade.BRepBuilderAPI.WireError
+      OpenCascade.BRepPrimAPI.MakePrism
       OpenCascade.GC.MakeArcOfCircle
       OpenCascade.GC.MakeSegment
       OpenCascade.Geom
@@ -91,8 +94,10 @@ library
   c-sources:
       cpp/bottle.cpp
       cpp/hs_BRepBuilderAPI_MakeEdge.cpp
+      cpp/hs_BRepBuilderAPI_MakeFace.cpp
       cpp/hs_BRepBuilderAPI_MakeWire.cpp
       cpp/hs_BRepBuilderAPI_Transform.cpp
+      cpp/hs_BRepPrimAPI_MakePrism.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
       cpp/hs_Geom_TrimmedCurve.cpp
