@@ -33,6 +33,7 @@ typedef void BRepBuilderAPI_MakeFace;
 typedef int BRepBuilderAPI_WireError;
 typedef int BRepBuilderAPI_FaceError;
 typedef void BRepFilletAPI_MakeFillet;
+typedef void BRepPrimAPI_MakeBox;
 typedef void TopExp_Explorer;
 typedef void BRepPrimAPI_MakeCylinder;
 typedef void TopTools_ListOfShape;

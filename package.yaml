@@ -66,6 +66,11 @@ library:
     - cpp/*.cpp
   cxx-options: -std=c++17
   cpp-options: -Werror-implicit-function-declaration
+internal-libraries:
+  waterfall-cad:
+    source-dirs: waterfall-cad
+    dependencies: 
+      - open-cascade
 executables:
   open-cascade-exe:
     main:                Main.hs
