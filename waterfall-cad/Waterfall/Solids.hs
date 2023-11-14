@@ -1,13 +1,15 @@
 module Waterfall.Solids 
-( Solid
+( Solid (..)
 , unitCube
 , centeredCube
 , unitSphere
+, unitCylinder
 ) where
 
 import qualified OpenCascade.TopoDS.Solid as TDSolid
 import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
 import qualified OpenCascade.BRepPrimAPI.MakeSphere as MakeSphere
+import qualified OpenCascade.BRepPrimAPI.MakeCylinder as MakeCylinder
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 
@@ -33,3 +35,6 @@ centeredCube = Solid $ do
 
 unitSphere :: Solid
 unitSphere = Solid $ MakeSphere.fromRadius 1
+
+unitCylinder :: Solid
+unitCylinder = Solid $ MakeCylinder.fromRadiusAndHeight 1 1

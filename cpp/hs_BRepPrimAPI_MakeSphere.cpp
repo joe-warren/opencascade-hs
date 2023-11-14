@@ -1,5 +1,5 @@
 #include <BRepPrimAPI_MakeSphere.hxx>
-#include "hs_BRepPrimAPI_MakePrism.h"
+#include "hs_BRepPrimAPI_MakeSphere.h"
 
 
 TopoDS_Solid * hs_BRepPrimAPI_MakeSphere_fromRadius(double r){
