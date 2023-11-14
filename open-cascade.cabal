@@ -35,9 +35,14 @@ library
       OpenCascade.BRepBuilderAPI.Transform
       OpenCascade.BRepBuilderAPI.Types
       OpenCascade.BRepBuilderAPI.WireError
+      OpenCascade.BRepMesh.IncrementalMesh
+      OpenCascade.BRepMesh.Internal.Destructors
+      OpenCascade.BRepMesh.Types
       OpenCascade.BRepPrimAPI.Internal.Destructors
       OpenCascade.BRepPrimAPI.MakeBox
+      OpenCascade.BRepPrimAPI.MakeCylinder
       OpenCascade.BRepPrimAPI.MakePrism
+      OpenCascade.BRepPrimAPI.MakeSphere
       OpenCascade.BRepPrimAPI.Types
       OpenCascade.GC.MakeArcOfCircle
       OpenCascade.GC.MakeSegment
@@ -61,6 +66,9 @@ library
       OpenCascade.Handle
       OpenCascade.Inheritance
       OpenCascade.Internal.Bool
+      OpenCascade.StlAPI.Internal.Destructors
+      OpenCascade.StlAPI.Types
+      OpenCascade.StlAPI.Writer
       OpenCascade.TopAbs
       OpenCascade.TopAbs.Orientation
       OpenCascade.TopAbs.ShapeEnum
@@ -99,8 +107,11 @@ library
       cpp/hs_BRepBuilderAPI_MakeFace.cpp
       cpp/hs_BRepBuilderAPI_MakeWire.cpp
       cpp/hs_BRepBuilderAPI_Transform.cpp
+      cpp/hs_BRepMesh_IncrementalMesh.cpp
       cpp/hs_BRepPrimAPI_MakeBox.cpp
+      cpp/hs_BRepPrimAPI_MakeCylinder.cpp
       cpp/hs_BRepPrimAPI_MakePrism.cpp
+      cpp/hs_BRepPrimAPI_MakeSphere.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
       cpp/hs_Geom_TrimmedCurve.cpp
@@ -116,6 +127,7 @@ library
       cpp/hs_gp_Trsf2d.cpp
       cpp/hs_gp_Vec.cpp
       cpp/hs_gp_Vec2d.cpp
+      cpp/hs_StlAPI_Writer.cpp
       cpp/hs_TopLoc_Location.cpp
       cpp/hs_TopoDS_Compound.cpp
       cpp/hs_TopoDS_CompSolid.cpp
@@ -154,7 +166,9 @@ library
 
 library waterfall-cad
   exposed-modules:
+      Waterfall.IO
       Waterfall.Solids
+      Waterfall.Transforms
   other-modules:
       Paths_open_cascade
   autogen-modules:

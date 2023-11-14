@@ -71,6 +71,7 @@ internal-libraries:
     source-dirs: waterfall-cad
     dependencies: 
       - open-cascade
+      - linear
 executables:
   open-cascade-exe:
     main:                Main.hs

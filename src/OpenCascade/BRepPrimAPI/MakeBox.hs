@@ -1,4 +1,3 @@
-
 {-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepPrimAPI.MakeBox
 ( fromPnts

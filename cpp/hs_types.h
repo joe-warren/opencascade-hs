@@ -40,6 +40,8 @@ typedef void TopTools_ListOfShape;
 typedef void BRepOffsetAPI_MakeThickSolid;
 typedef void Geom2d_Ellipse;
 typedef void BRepOffsetAPI_ThruSections;
+typedef void BRepMesh_IncrementalMesh;
+typedef void StlAPI_Writer;
 #define Handle(X) void
 
 #endif // __cplusplus
