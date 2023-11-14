@@ -2,10 +2,12 @@ module Waterfall.Solids
 ( Solid
 , unitCube
 , centeredCube
+, unitSphere
 ) where
 
 import qualified OpenCascade.TopoDS.Solid as TDSolid
 import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
+import qualified OpenCascade.BRepPrimAPI.MakeSphere as MakeSphere
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 
@@ -28,3 +30,6 @@ centeredCube = Solid $ do
     b <- GP.Pnt.new (1/2) (1/2) (1/2)
     builder <- MakeBox.fromPnts a b
     MakeBox.solid builder
+
+unitSphere :: Solid
+unitSphere = Solid $ MakeSphere.fromRadius 1

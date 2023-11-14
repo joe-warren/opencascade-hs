@@ -29,7 +29,7 @@ foreign import capi unsafe "hs_BRepPrimAPI_MakeBox.h hs_BRepPrimAPI_MakeBox_Soli
 solid :: Ptr MakeBox -> Acquire (Ptr TopoDS.Solid)
 solid builder = mkAcquire (rawSolid builder) (deleteShape . castPtr)
 
--- shell/M
+-- shell
 
 foreign import capi unsafe "hs_BRepPrimAPI_MakeBox.h hs_BRepPrimAPI_MakeBox_Shell" rawShell :: Ptr MakeBox ->  IO (Ptr TopoDS.Shell)
 
