@@ -15,10 +15,8 @@ import Prelude hiding (error)
 import OpenCascade.BRepBuilderAPI.Types
 import OpenCascade.BRepBuilderAPI.Internal.Destructors
 import OpenCascade.Handle
-import OpenCascade.Inheritance
 import OpenCascade.Internal.Bool
 import qualified OpenCascade.TopoDS as TopoDS
-import qualified OpenCascade.TopoDS.Internal.Destructors as TopoDS.Destructors
 import qualified OpenCascade.Geom as Geom
 import OpenCascade.BRepBuilderAPI.FaceError (FaceError)
 import Foreign.C

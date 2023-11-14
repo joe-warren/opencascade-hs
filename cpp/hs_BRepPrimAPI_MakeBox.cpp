@@ -4,7 +4,7 @@
 #include "hs_BRepPrimAPI_MakeBox.h"
 
 
-BRepPrimAPI_MakeBox * hs_BRepPrimAPI_MakeBox_fromPnts(gp_Pnt *a, gp_Pnt *b){
+BRepPrimAPI_MakeBox * hs_new_BRepPrimAPI_MakeBox_fromPnts(gp_Pnt *a, gp_Pnt *b){
     return new BRepPrimAPI_MakeBox(*a, *b);
 }
 

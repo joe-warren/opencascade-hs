@@ -73,15 +73,17 @@ internal-libraries:
       - open-cascade
       - linear
 executables:
-  open-cascade-exe:
+  examples:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:         examples
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - open-cascade
+    - waterfall-cad
+    - linear
 
 tests:
   open-cascade-test:

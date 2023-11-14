@@ -8,6 +8,7 @@ import qualified OpenCascade.StlAPI.Writer as StlWriter
 import qualified OpenCascade.Inheritance as Inheritance
 import Control.Monad.IO.Class (liftIO)
 import Data.Acquire
+
 writeSTL :: Double -> FilePath -> Solids.Solid -> IO ()
 writeSTL linDeflection filepath (Solids.Solid runSolid) = (`withAcquire` pure) $ do
     s <- runSolid 
