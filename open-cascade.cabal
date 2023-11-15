@@ -26,8 +26,12 @@ source-repository head
 library
   exposed-modules:
       Lib
+      OpenCascade.BRepAlgoAPI.Common
+      OpenCascade.BRepAlgoAPI.Cut
+      OpenCascade.BRepAlgoAPI.Fuse
       OpenCascade.BRepBuilderAPI
       OpenCascade.BRepBuilderAPI.FaceError
+      OpenCascade.BRepBuilderAPI.GTransform
       OpenCascade.BRepBuilderAPI.Internal.Destructors
       OpenCascade.BRepBuilderAPI.MakeEdge
       OpenCascade.BRepBuilderAPI.MakeFace
@@ -55,6 +59,7 @@ library
       OpenCascade.GP.Ax2d
       OpenCascade.GP.Dir
       OpenCascade.GP.Dir2d
+      OpenCascade.GP.GTrsf
       OpenCascade.GP.Internal.Destructors
       OpenCascade.GP.Pnt
       OpenCascade.GP.Pnt2d
@@ -103,6 +108,10 @@ library
       cpp
       /usr/include/opencascade
   c-sources:
+      cpp/hs_BRepAlgoAPI_Common.cpp
+      cpp/hs_BRepAlgoAPI_Cut.cpp
+      cpp/hs_BRepAlgoAPI_Fuse.cpp
+      cpp/hs_BRepBuilderAPI_GTransform.cpp
       cpp/hs_BRepBuilderAPI_MakeEdge.cpp
       cpp/hs_BRepBuilderAPI_MakeFace.cpp
       cpp/hs_BRepBuilderAPI_MakeWire.cpp
@@ -121,6 +130,7 @@ library
       cpp/hs_gp_Ax2d.cpp
       cpp/hs_gp_Dir.cpp
       cpp/hs_gp_Dir2d.cpp
+      cpp/hs_gp_GTrsf.cpp
       cpp/hs_gp_Pnt.cpp
       cpp/hs_gp_Pnt2d.cpp
       cpp/hs_gp_Trsf.cpp
@@ -166,6 +176,8 @@ library
 
 library waterfall-cad
   exposed-modules:
+      Waterfall.Booleans
+      Waterfall.Booleans.Operators
       Waterfall.IO
       Waterfall.Solids
       Waterfall.Transforms
@@ -206,14 +218,15 @@ library waterfall-cad
     , text
   default-language: Haskell2010
 
-executable open-cascade-exe
+executable examples
   main-is: Main.hs
   other-modules:
+      CsgExample
       Paths_open_cascade
   autogen-modules:
       Paths_open_cascade
   hs-source-dirs:
-      app
+      examples
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   include-dirs:
       cpp
@@ -243,6 +256,7 @@ executable open-cascade-exe
     , open-cascade
     , resourcet
     , text
+    , waterfall-cad
   default-language: Haskell2010
 
 test-suite open-cascade-test

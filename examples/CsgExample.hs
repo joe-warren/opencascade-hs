@@ -4,15 +4,18 @@ module CsgExample
 
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.Transforms as Transforms
-import Waterfall.Booleans.Operators 
-import Linear.V3 as V3
-
+import Waterfall.Booleans.Operators
+import Linear.V3
+import Linear.Vector 
+import Data.Function ((&))
 
 csgExample :: Solids.Solid
 csgExample = let 
     sphere = Solids.unitSphere
     cube = Transforms.uScale 1.5 Solids.centeredCube
-    cylinder = Transforms.scale (V3.V3 0.5 0.5 2) Solids.unitCylinder
-    cylinderA = Transforms.rotate (V3.V3 1 0 0) (pi/2) cylinder
-    cylinderB = Transforms.rotate (V3.V3 0 1 0) (pi/2) cylinder
+    cylinder = Solids.unitCylinder &
+         Transforms.translate (unit _z ^* 0.5) &
+         Transforms.scale (V3 0.5 0.5 2) 
+    cylinderA = Transforms.rotate (unit _x) (pi/2) cylinder
+    cylinderB = Transforms.rotate (unit _y) (pi/2) cylinder
   in (cube ~/\~ sphere) ~-~ (cylinder ~\/~ cylinderA ~\/~ cylinderB)
