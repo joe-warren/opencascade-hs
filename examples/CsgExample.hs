@@ -14,8 +14,8 @@ csgExample = let
     sphere = Solids.unitSphere
     cube = Transforms.uScale 1.5 Solids.centeredCube
     cylinder = Solids.unitCylinder &
-         Transforms.translate (unit _z ^* 0.5) &
-         Transforms.scale (V3 0.5 0.5 2) 
+         Transforms.translate (unit _z ^* (-0.5)) &
+         Transforms.scale (V3 0.55 0.55 4) 
     cylinderA = Transforms.rotate (unit _x) (pi/2) cylinder
     cylinderB = Transforms.rotate (unit _y) (pi/2) cylinder
   in (cube ~/\~ sphere) ~-~ (cylinder ~\/~ cylinderA ~\/~ cylinderB)
