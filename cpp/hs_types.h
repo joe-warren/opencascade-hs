@@ -31,6 +31,7 @@ typedef void BRep_Builder;
 typedef void BRepBuilderAPI_Transform;
 typedef void BRepBuilderAPI_MakeWire;
 typedef void BRepBuilderAPI_MakeFace;
+typedef void BRepBuilderAPI_MakeSolid;
 typedef int BRepBuilderAPI_WireError;
 typedef int BRepBuilderAPI_FaceError;
 typedef void BRepFilletAPI_MakeFillet;
