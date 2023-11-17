@@ -43,6 +43,9 @@ typedef void Geom2d_Ellipse;
 typedef void BRepOffsetAPI_ThruSections;
 typedef void BRepMesh_IncrementalMesh;
 typedef void StlAPI_Writer;
+typedef void STEPControl_Writer;
+typedef int STEPControl_StepModelType;
+typedef int IFSelect_ReturnStatus;
 #define Handle(X) void
 
 #endif // __cplusplus
