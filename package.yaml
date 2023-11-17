@@ -29,7 +29,8 @@ extra-libraries:
 - TKBO 
 - TKPrim 
 - TKTopAlgo 
-- TKSTL 
+- TKSTL
+- TKSTEP
 - TKV3d 
 - TKMesh
 
@@ -72,6 +73,7 @@ internal-libraries:
     dependencies: 
       - open-cascade
       - linear
+      - lattices
 executables:
   examples:
     main:                Main.hs
@@ -84,6 +86,7 @@ executables:
     - open-cascade
     - waterfall-cad
     - linear
+    - optparse-applicative
 
 tests:
   open-cascade-test:

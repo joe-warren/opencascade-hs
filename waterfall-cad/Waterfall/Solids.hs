@@ -1,23 +1,21 @@
 module Waterfall.Solids 
-( Solid (..)
+( Solid
 , unitCube
 , centeredCube
 , unitSphere
 , unitCylinder
 ) where
 
-import qualified OpenCascade.TopoDS.Shape as TDShape
+
+import Waterfall.Internal.Solid(Solid(..))
 import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
 import qualified OpenCascade.BRepPrimAPI.MakeSphere as MakeSphere
 import qualified OpenCascade.BRepPrimAPI.MakeCylinder as MakeCylinder
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.Inheritance as Inheritance
-
-import Foreign.Ptr
 import Data.Acquire
 
-newtype Solid = Solid { runSolid :: Acquire (Ptr TDShape.Shape) }
 
 unitCube :: Solid
 unitCube = Solid $ do

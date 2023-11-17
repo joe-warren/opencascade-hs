@@ -69,8 +69,13 @@ library
       OpenCascade.GP.Vec
       OpenCascade.GP.Vec2d
       OpenCascade.Handle
+      OpenCascade.IFSelect.ReturnStatus
       OpenCascade.Inheritance
       OpenCascade.Internal.Bool
+      OpenCascade.STEPControl.Internal.Destructors
+      OpenCascade.STEPControl.StepModelType
+      OpenCascade.STEPControl.Types
+      OpenCascade.STEPControl.Writer
       OpenCascade.StlAPI.Internal.Destructors
       OpenCascade.StlAPI.Types
       OpenCascade.StlAPI.Writer
@@ -137,6 +142,7 @@ library
       cpp/hs_gp_Trsf2d.cpp
       cpp/hs_gp_Vec.cpp
       cpp/hs_gp_Vec2d.cpp
+      cpp/hs_STEPControl_Writer.cpp
       cpp/hs_StlAPI_Writer.cpp
       cpp/hs_TopLoc_Location.cpp
       cpp/hs_TopoDS_Compound.cpp
@@ -164,6 +170,7 @@ library
       TKPrim
       TKTopAlgo
       TKSTL
+      TKSTEP
       TKV3d
       TKMesh
   build-depends:
@@ -178,6 +185,7 @@ library waterfall-cad
   exposed-modules:
       Waterfall.Booleans
       Waterfall.Booleans.Operators
+      Waterfall.Internal.Solid
       Waterfall.IO
       Waterfall.Solids
       Waterfall.Transforms
@@ -207,10 +215,12 @@ library waterfall-cad
       TKPrim
       TKTopAlgo
       TKSTL
+      TKSTEP
       TKV3d
       TKMesh
   build-depends:
       base >=4.7 && <5
+    , lattices
     , lens
     , linear
     , open-cascade
@@ -247,6 +257,7 @@ executable examples
       TKPrim
       TKTopAlgo
       TKSTL
+      TKSTEP
       TKV3d
       TKMesh
   build-depends:
@@ -254,6 +265,7 @@ executable examples
     , lens
     , linear
     , open-cascade
+    , optparse-applicative
     , resourcet
     , text
     , waterfall-cad
@@ -288,6 +300,7 @@ test-suite open-cascade-test
       TKPrim
       TKTopAlgo
       TKSTL
+      TKSTEP
       TKV3d
       TKMesh
   build-depends:
