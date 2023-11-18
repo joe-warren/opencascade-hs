@@ -5,7 +5,7 @@ module Waterfall.Internal.Solid
 , intersection
 , everywhere
 , nowhere
-, not
+, complement
 , debug
 ) where
 
