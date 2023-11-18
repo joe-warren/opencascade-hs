@@ -3,7 +3,6 @@ module Waterfall.Internal.Solid
 , union
 , difference
 , intersection
-, everywhere
 , nowhere
 , complement
 , debug
@@ -58,10 +57,11 @@ debug name (Solid runSolid) =
             putStrLn =<< ("\t\t" <>) <$> value s
     return s
 
-
+{--
 -- TODO: this does not work, need to fix
 everywhere :: Solid
 everywhere = complement $ nowhere
+--}
 
 complement :: Solid -> Solid
 complement (Solid runSolid) = Solid $ TopoDS.Shape.complemented =<< runSolid 
@@ -99,7 +99,7 @@ instance Lattice Solid where
 
 instance BoundedJoinSemiLattice Solid where
     bottom = nowhere
-
+{--
 -- TODO: because everywhere doesn't work correctly
 -- using the BoundedMeetSemiLattice instance
 -- and by extension, the Heyting instance
@@ -112,3 +112,4 @@ instance BoundedMeetSemiLattice Solid where
 instance Heyting Solid where
     neg = complement
     a ==> b = neg a \/ b
+--}
