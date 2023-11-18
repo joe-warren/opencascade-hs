@@ -1,10 +1,10 @@
 name:                open-cascade
-version:             0.1.0.0
-github:              "githubuser/open-cascade"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2023 Author name here"
+version:             0.0.0.1
+github:              "joe-warren/opencascade-hs"
+license:             LGPL
+author:              "Joe Warren"
+maintainer:          "josephmarkwarren@gmail.com"
+copyright:           "2023 Joe Warren"
 
 extra-source-files:
 - README.md
