@@ -12,4 +12,5 @@ data Vec
 data Vec2d
 data Trsf
 data Trsf2d
+data GTrsf
 

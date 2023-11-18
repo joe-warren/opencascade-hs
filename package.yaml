@@ -1,10 +1,10 @@
 name:                open-cascade
-version:             0.1.0.0
-github:              "githubuser/open-cascade"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2023 Author name here"
+version:             0.0.0.1
+github:              "joe-warren/opencascade-hs"
+license:             LGPL
+author:              "Joe Warren"
+maintainer:          "josephmarkwarren@gmail.com"
+copyright:           "2023 Joe Warren"
 
 extra-source-files:
 - README.md
@@ -29,7 +29,8 @@ extra-libraries:
 - TKBO 
 - TKPrim 
 - TKTopAlgo 
-- TKSTL 
+- TKSTL
+- TKSTEP
 - TKV3d 
 - TKMesh
 
@@ -66,16 +67,27 @@ library:
     - cpp/*.cpp
   cxx-options: -std=c++17
   cpp-options: -Werror-implicit-function-declaration
+internal-libraries:
+  waterfall-cad:
+    source-dirs: waterfall-cad
+    dependencies: 
+      - open-cascade
+      - linear
+      - lattices
 executables:
-  open-cascade-exe:
+  examples:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:         examples
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - open-cascade
+    - waterfall-cad
+    - lattices
+    - linear
+    - optparse-applicative
 
 tests:
   open-cascade-test:

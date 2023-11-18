@@ -3,6 +3,7 @@
 module OpenCascade.Inheritance 
 ( SubTypeOf (..)
 , DiscriminatedSubTypeOf (..)
+, unsafeDowncast
 ) where
 
 import Foreign.Ptr

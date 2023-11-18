@@ -3,4 +3,4 @@ module OpenCascade.TopAbs.Orientation
 ) where
 
 -- this should match the orientation in TopAbs_Orientation
-data Orientation = Forward | Reversed | Internal | External deriving Enum
+data Orientation = Forward | Reversed | Internal | External deriving (Show, Enum)
