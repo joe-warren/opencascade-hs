@@ -14,7 +14,7 @@ void hs_delete_StlAPI_Writer(StlAPI_Writer * writer);
 
 void hs_StlAPI_Writer_setAsciiMode(StlAPI_Writer * writer, bool asciiMode);
 
-void hs_StlAPI_Writer_write(StlAPI_Writer * writer, TopoDS_Shape * shape, char* filename);
+bool hs_StlAPI_Writer_write(StlAPI_Writer * writer, TopoDS_Shape * shape, char* filename);
 
 #ifdef __cplusplus
 }

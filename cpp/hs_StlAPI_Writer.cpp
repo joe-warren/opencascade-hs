@@ -13,6 +13,6 @@ void hs_StlAPI_Writer_setAsciiMode(StlAPI_Writer * writer, bool asciiMode){
     writer->ASCIIMode() = asciiMode;
 }
 
-void hs_StlAPI_Writer_write(StlAPI_Writer * writer, TopoDS_Shape * shape, char* filename){
-    writer->Write(*shape, filename);
+bool hs_StlAPI_Writer_write(StlAPI_Writer * writer, TopoDS_Shape * shape, char* filename){
+    return writer->Write(*shape, filename);
 } 

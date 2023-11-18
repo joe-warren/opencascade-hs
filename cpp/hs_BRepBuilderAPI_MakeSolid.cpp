@@ -3,6 +3,7 @@
 #include "hs_BRepBuilderAPI_MakeSolid.h"
 
 BRepBuilderAPI_MakeSolid * hs_new_BRepBuilderAPI_MakeSolid(){
+    auto everywhere = BRepBuilderAPI_MakeSolid().Shape();
     return new BRepBuilderAPI_MakeSolid();
 }
 

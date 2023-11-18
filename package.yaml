@@ -85,6 +85,7 @@ executables:
     dependencies:
     - open-cascade
     - waterfall-cad
+    - lattices
     - linear
     - optparse-applicative
 
