@@ -26,6 +26,10 @@ BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace_fromSurfaceAndWire(Hand
     return new BRepBuilderAPI_MakeFace(*surface, *wire, inside);
 }
 
+BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace_fromWire(TopoDS_Wire* wire, bool onlyPlane){
+    return new BRepBuilderAPI_MakeFace(*wire, onlyPlane);
+}
+
 void hs_BRepBuilderAPI_MakeFace_Add(BRepBuilderAPI_MakeFace* builder, TopoDS_Wire* wire){
     builder->Add(*wire);
 }

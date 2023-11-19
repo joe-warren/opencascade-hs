@@ -19,6 +19,8 @@ BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace_fromSurfaceAndBounds(Ha
 
 BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace_fromSurfaceAndWire(Handle(Geom_Surface)* surface, TopoDS_Wire* wire, bool inside);
 
+BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace_fromWire(TopoDS_Wire* wire, bool onlyPlane);
+
 void hs_BRepBuilderAPI_MakeFace_Add(BRepBuilderAPI_MakeFace* builder, TopoDS_Wire* wire);
 
 bool hs_BRepBuilderAPI_MakeFace_IsDone(BRepBuilderAPI_MakeFace* builder);

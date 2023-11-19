@@ -1,11 +1,13 @@
 {-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepBuilderAPI.MakeFace 
 ( MakeFace
-, new 
+, new
+, face
 , fromFace
 , fromSurface
 , fromSurfaceAndBounds
 , fromSurfaceAndWire
+, fromWire
 , add
 , isDone
 , error
@@ -17,6 +19,8 @@ import OpenCascade.BRepBuilderAPI.Internal.Destructors
 import OpenCascade.Handle
 import OpenCascade.Internal.Bool
 import qualified OpenCascade.TopoDS as TopoDS
+import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
+import OpenCascade.Inheritance (upcast)
 import qualified OpenCascade.Geom as Geom
 import OpenCascade.BRepBuilderAPI.FaceError (FaceError)
 import Foreign.C
@@ -58,6 +62,13 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_M
 fromSurfaceAndWire :: Ptr (Handle Geom.Surface) -> Ptr TopoDS.Wire -> Bool -> Acquire (Ptr MakeFace)
 fromSurfaceAndWire surf wire inside = mkAcquire (rawFromSurfaceAndWire surf wire (boolToCBool inside)) deleteMakeFace
 
+-- fromWire
+
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_MakeFace_fromWire" rawFromWire :: Ptr TopoDS.Wire -> CBool ->  IO (Ptr MakeFace)
+
+fromWire :: Ptr TopoDS.Wire -> Bool -> Acquire (Ptr MakeFace)
+fromWire wire onlyPlane = mkAcquire (rawFromWire wire (boolToCBool onlyPlane)) deleteMakeFace
+
 -- add 
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_BRepBuilderAPI_MakeFace_Add" add :: Ptr MakeFace -> Ptr TopoDS.Wire -> IO ()
 
@@ -74,3 +85,9 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_BRepBuilderAPI_MakeF
 
 error :: Ptr MakeFace -> IO FaceError 
 error p = toEnum . fromIntegral <$> rawError p
+
+
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_BRepBuilderAPI_MakeFace_Face" rawFace :: Ptr MakeFace ->  IO (Ptr TopoDS.Face)
+
+face :: Ptr MakeFace -> Acquire (Ptr TopoDS.Face)
+face builder = mkAcquire (rawFace builder) (deleteShape . upcast)

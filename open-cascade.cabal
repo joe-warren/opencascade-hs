@@ -199,7 +199,9 @@ library waterfall-cad
       Waterfall.Solids
       Waterfall.Transforms
       Waterfall.TwoD.Internal.Path
+      Waterfall.TwoD.Internal.Shape
       Waterfall.TwoD.Path
+      Waterfall.TwoD.Shape
   other-modules:
       Paths_open_cascade
   autogen-modules:

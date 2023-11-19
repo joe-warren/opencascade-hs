@@ -9,8 +9,8 @@ module Waterfall.Solids
 
 
 import Waterfall.Internal.Solid(Solid(..))
-import Waterfall.TwoD.Internal.Path (runPath)
-import qualified Waterfall.TwoD.Path as TwoD.Path
+import Waterfall.TwoD.Internal.Shape (runShape)
+import qualified Waterfall.TwoD.Shape as TwoD.Shape
 import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
 import qualified OpenCascade.BRepPrimAPI.MakeSphere as MakeSphere
 import qualified OpenCascade.BRepPrimAPI.MakeCylinder as MakeCylinder
@@ -43,11 +43,11 @@ unitSphere = Solid $ Inheritance.upcast <$> MakeSphere.fromRadius 1
 unitCylinder :: Solid
 unitCylinder = Solid $ Inheritance.upcast <$> MakeCylinder.fromRadiusAndHeight 1 1
 
-prism :: Double -> TwoD.Path.Path -> Solid
-prism length path = Solid $ do
-    p <- runPath path
+prism :: Double -> TwoD.Shape.Shape -> Solid
+prism length face = Solid $ do
+    p <- runShape face
     v <- GP.Vec.new 0 0 length
-    MakePrism.fromVec (Inheritance.upcast p) v True True
+    MakePrism.fromVec p v True True
 
 
 
