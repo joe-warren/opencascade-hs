@@ -41,6 +41,7 @@ typedef void BRepPrimAPI_MakeCylinder;
 typedef void TopTools_ListOfShape;
 typedef void BRepOffsetAPI_MakeThickSolid;
 typedef void Geom2d_Ellipse;
+typedef void Geom_BezierCurve;
 typedef void BRepOffsetAPI_ThruSections;
 typedef void BRepMesh_IncrementalMesh;
 typedef void StlAPI_Writer;
@@ -48,7 +49,9 @@ typedef void STEPControl_Writer;
 typedef int STEPControl_StepModelType;
 typedef int IFSelect_ReturnStatus;
 #define Handle(X) void
-
+#define ARRAY_1(X) void
+#else // __cplusplus
+#define ARRAY_1(X) NCollection_Array1<X>
 #endif // __cplusplus
 #endif // HS_TYPES_H
 

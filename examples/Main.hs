@@ -1,6 +1,7 @@
 module Main (main) where
 
 import CsgExample (csgExample)
+import PrismExample (prismExample)
 import Waterfall.IO (writeSTL, writeSTEP)
 import qualified Waterfall.Solids as Solids
 import qualified Options.Applicative as OA
@@ -14,7 +15,9 @@ outputOption =
      in stlOption <|> stepOption
 
 exampleOption :: OA.Parser Solids.Solid
-exampleOption = OA.flag' csgExample (OA.long "csg" <> OA.help "example from the wikipedia page on Constructive Solid Geometry" )  
+exampleOption = OA.flag' csgExample (OA.long "csg" <> OA.help "example from the wikipedia page on Constructive Solid Geometry" ) <|>
+                OA.flag' prismExample (OA.long "prism" <> OA.help "need to give this a better name" )  
+
 
 
 main :: IO ()

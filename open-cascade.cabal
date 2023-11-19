@@ -5,14 +5,14 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           open-cascade
-version:        0.1.0.0
+version:        0.0.0.1
 description:    Please see the README on GitHub at <https://github.com/githubuser/open-cascade#readme>
-homepage:       https://github.com/githubuser/open-cascade#readme
-bug-reports:    https://github.com/githubuser/open-cascade/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2023 Author name here
-license:        BSD-3-Clause
+homepage:       https://github.com/joe-warren/opencascade-hs#readme
+bug-reports:    https://github.com/joe-warren/opencascade-hs/issues
+author:         Joe Warren
+maintainer:     josephmarkwarren@gmail.com
+copyright:      2023 Joe Warren
+license:        LicenseRef-LGPL
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
@@ -21,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/open-cascade
+  location: https://github.com/joe-warren/opencascade-hs
 
 library
   exposed-modules:
@@ -52,6 +52,7 @@ library
       OpenCascade.GC.MakeArcOfCircle
       OpenCascade.GC.MakeSegment
       OpenCascade.Geom
+      OpenCascade.Geom.BezierCurve
       OpenCascade.Geom.Internal.Destructors
       OpenCascade.Geom.Types
       OpenCascade.GP
@@ -73,6 +74,10 @@ library
       OpenCascade.IFSelect.ReturnStatus
       OpenCascade.Inheritance
       OpenCascade.Internal.Bool
+      OpenCascade.NCollection
+      OpenCascade.NCollection.Array1
+      OpenCascade.NCollection.Internal.Destructors
+      OpenCascade.NCollection.Types
       OpenCascade.STEPControl.Internal.Destructors
       OpenCascade.STEPControl.StepModelType
       OpenCascade.STEPControl.Types
@@ -130,6 +135,7 @@ library
       cpp/hs_BRepPrimAPI_MakeSphere.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
+      cpp/hs_Geom_BezierCurve.cpp
       cpp/hs_Geom_TrimmedCurve.cpp
       cpp/hs_gp.cpp
       cpp/hs_gp_Ax1.cpp
@@ -144,6 +150,7 @@ library
       cpp/hs_gp_Trsf2d.cpp
       cpp/hs_gp_Vec.cpp
       cpp/hs_gp_Vec2d.cpp
+      cpp/hs_NCollection_Array1.cpp
       cpp/hs_STEPControl_Writer.cpp
       cpp/hs_StlAPI_Writer.cpp
       cpp/hs_TopLoc_Location.cpp
@@ -191,6 +198,8 @@ library waterfall-cad
       Waterfall.IO
       Waterfall.Solids
       Waterfall.Transforms
+      Waterfall.TwoD.Internal.Path
+      Waterfall.TwoD.Path
   other-modules:
       Paths_open_cascade
   autogen-modules:
@@ -234,6 +243,7 @@ executable examples
   main-is: Main.hs
   other-modules:
       CsgExample
+      PrismExample
       Paths_open_cascade
   autogen-modules:
       Paths_open_cascade
