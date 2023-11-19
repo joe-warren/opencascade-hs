@@ -43,10 +43,10 @@ unitSphere = Solid $ Inheritance.upcast <$> MakeSphere.fromRadius 1
 unitCylinder :: Solid
 unitCylinder = Solid $ Inheritance.upcast <$> MakeCylinder.fromRadiusAndHeight 1 1
 
-prism :: V3 Double -> TwoD.Path.Path -> Solid
-prism (V3 x y z) path = Solid $ do
+prism :: Double -> TwoD.Path.Path -> Solid
+prism length path = Solid $ do
     p <- runPath path
-    v <- GP.Vec.new x y z
+    v <- GP.Vec.new 0 0 length
     MakePrism.fromVec (Inheritance.upcast p) v True True
 
 

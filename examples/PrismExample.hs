@@ -10,7 +10,7 @@ import Linear.Vector
 import Data.Function ((&))
 
 prismExample :: Solids.Solid
-prismExample = Solids.prism (V3 0 0 1) $ 
+prismExample = Solids.prism 1 $ 
     Path.pathFrom (V2 (-1) (-1)) 
         [ Path.arcTo (V2 (-1.5) 0) (V2 (-1) 1)
         , Path.lineTo (V2 1 1)
