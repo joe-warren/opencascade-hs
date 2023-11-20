@@ -202,6 +202,7 @@ library waterfall-cad
       Waterfall.TwoD.Internal.Shape
       Waterfall.TwoD.Path
       Waterfall.TwoD.Shape
+      Waterfall.TwoD.Transforms
   other-modules:
       Paths_open_cascade
   autogen-modules:
@@ -245,6 +246,7 @@ executable examples
   main-is: Main.hs
   other-modules:
       CsgExample
+      GearExample
       PrismExample
       Paths_open_cascade
   autogen-modules:

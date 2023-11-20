@@ -7,6 +7,7 @@ module Waterfall.TwoD.Path
 , bezier
 , bezierTo
 , pathFrom
+, pathFromTo
 ) where 
 
 import Waterfall.TwoD.Internal.Path (Path(..), joinPaths)
@@ -78,9 +79,15 @@ bezierTo :: V2 Double -> V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path
 bezierTo controlPoint1 controlPoint2 end = \start -> (end, bezier start controlPoint1 controlPoint2 end) 
 
 pathFrom :: V2 Double -> [(V2 Double -> (V2 Double, Path))] -> Path
-pathFrom start commands = 
+pathFrom start commands = snd $ pathFromTo commands start 
+
+     
+pathFromTo :: [(V2 Double -> (V2 Double, Path))] -> V2 Double -> (V2 Double, Path)
+pathFromTo commands start = 
     let go (pos, paths) cmd = second (:paths) (cmd pos)
-        (_, allPaths) = foldl' go (start, []) commands
-     in joinPaths allPaths
+        (end, allPaths) = foldl' go (start, []) commands
+     in (end, joinPaths allPaths)
+
+
 
 
