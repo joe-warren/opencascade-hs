@@ -1,6 +1,4 @@
-module GearExample
-( gearExample
-) where 
+module GearExample where 
 
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.TwoD.Shape as Shape
@@ -22,29 +20,51 @@ import Debug.Trace (traceShow)
 -- https://github.com/FreeCAD/FreeCAD/blob/0ac0882eeb4e3390aef464e1807a3631c5f2e858/src/Mod/PartDesign/fcgear/involute.py
 
 
-involuteBezCoeffs :: Double -> Int -> Double -> Double -> Double -> (V2 Double, V2 Double, V2 Double, V2 Double)
-involuteBezCoeffs moduleLength nTeeth pressureAngle fStart fStop = 
+chebyExpnCoeffs :: Int -> (Double -> Double) -> Double
+chebyExpnCoeffs j f = 
+    let n = 50 :: Int
+        jf = fromIntegral j
+        nf = fromIntegral n 
+        c = sum [let kf = fromIntegral k in f (cos (pi * (kf - 0.5)/nf)) * cos (pi * jf * (kf - 0.5)/nf)| k <- [1..n]]
+     in 2 * c / nf
+
+cheby :: [[Double]] 
+cheby = [ [ 1,  0,  0,  0,  0,  0],    
+            [ 0,  1,  0,  0,  0,  0], 
+            [-1,  0,  2,  0,  0,  0],
+            [ 0, -3,  0,  4,  0,  0],
+            [ 1,  0, -8,  0,  8,  0],
+            [ 0,  5,  0,-20,  0, 16]
+        ]
+
+-- limited to p' = 5, but in practice p' = 4
+chebyApprox :: (Double -> Double) -> Int -> [Double]
+chebyApprox f p' = 
+    let fnCoeffs = [chebyExpnCoeffs k f | k <- [0..p'] ]
+        adjust 0 = (fnCoeffs !! 0) /2
+        adjust _ = 0
+     in [ sum [fnCoeffs!!k  * (cheby !! k !! pwr) | k <- [0..p'] ] - adjust pwr | pwr <- [0..p'] ]
+
+{--
+chebyApprox :: (Double -> Double) -> Double -> Double -> Int -> [Double]
+chebyApprox f a b n = 
+    let a' = 0.5 * (b - a)
+        b' = 0.5 * (b + a)
+        y = [ a' * cos (pi * (fromIntegral k + 0.5) / fromIntegral n) + b' | k <- [0..n-1] ]
+        f' = map f y
+    in [ 2 * sum (zipWith (*) f' [ cos (pi * fromIntegral j * (fromIntegral k + 0.5) / fromIntegral n) | k <- [0..n-1] ]) / fromIntegral n | j <- [0..n-1] ]
+--}
+
+binom :: Int -> Int -> Double 
+binom n k = ((fromIntegral $ product [n - k + 1 .. n]) / (fromIntegral $ product [1..k]))
+
+involuteBezCoeffs :: Double -> Double -> Double -> Double -> (V2 Double, V2 Double, V2 Double, V2 Double)
+involuteBezCoeffs rA rB fStart fStop = 
     let 
-        rPitch = moduleLength * (fromIntegral nTeeth) / 2
-        phi = pressureAngle
-        rB = rPitch * cos (phi)
-        rA = rPitch + moduleLength
         p = 3
         ta = sqrt (rA * rA - rB * rB)/ rB -- involute angle at addendum
         ts = (sqrt fStart) * ta
         te = (sqrt fStop) * ta 
-        chebyExpnCoeffs j f = 
-            let n = 50 :: Int
-                nf = fromIntegral n 
-                c = sum [let kf = fromIntegral k in (cos (pi * (kf - 0.5)/nf) * cos (pi * j * (kf - 0.5)/nf))| k <- [1..n]]
-                in 2 * c / nf
-
-        chebyApprox f a b n = 
-            let a' = 0.5 * (b - a)
-                b' = 0.5 * (b + a)
-                y = [ a' * cos (pi * (fromIntegral k + 0.5) / fromIntegral n) + b' | k <- [0..n-1] ]
-                f' = map f y
-            in [ 2 * sum (zipWith (*) f' [ cos (pi * fromIntegral j * (fromIntegral k + 0.5) / fromIntegral n) | k <- [0..n-1] ]) / fromIntegral n | j <- [0..n-1] ]
 
         involuteXbez t =
             let x = t*2 -1
@@ -55,11 +75,9 @@ involuteBezCoeffs moduleLength nTeeth pressureAngle fStart fStop =
                 theta = x * (te - ts) / 2 + (ts + te)/2
             in rB * ( sin theta - theta * cos theta )
 
-        binom n k = ((fromIntegral $ product [n - k + 1 .. n]) / (fromIntegral $ product [1..k]))
-
         bezCoeff i f = 
-            let polyCoeffs = chebyApprox f fStart fStop (p+1)
-            in traceShow polyCoeffs $ sum [binom i j * (polyCoeffs !! j) / binom p j | j<- [0..i]]
+            let polyCoeffs = chebyApprox f p
+            in sum [binom i j * (polyCoeffs !! j) / binom p j | j<- [0..i]]
 
         v i = V2 (bezCoeff i involuteXbez) (bezCoeff i involuteYbez)
 
@@ -103,8 +121,8 @@ genGearToothData m z phi =
             then (rf * rf - rb *rb) / (ra*ra - rb*rb)
             else 0.01 -- fraction of length offset from base to avoid singularity
         fm = fs + (fe - fs)/ 4
-        (dbz1, dbz2, dbz3, dbz4) = involuteBezCoeffs m z phi fs fm 
-        (_, abz2, abz3, abz4) = involuteBezCoeffs m z phi fs fm 
+        (dbz1, dbz2, dbz3, dbz4) = involuteBezCoeffs ra rb fs fm 
+        (_, abz2, abz3, abz4) = involuteBezCoeffs ra rb fm fe 
         rotateBez = (`rotateV2` (-baseToPitchAngle-pitchAngle/4))
         rotateBez' = mirrorYV2 . rotateBez
         fillet = polarToCart rf (-pitchAngle / 4 - pitchToFilletAngle)
