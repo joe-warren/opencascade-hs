@@ -13,7 +13,7 @@ import Data.Function ((&))
 prismExample :: Solids.Solid
 prismExample = Solids.prism 1 . Shape.fromPath $
     Path.pathFrom (V2 (-1) (-1)) 
-        [ Path.arcTo (V2 (-1.5) 0) (V2 (-1) 1)
+        [ Path.arcViaTo (V2 (-1.5) 0) (V2 (-1) 1)
         , Path.lineTo (V2 1 1)
         , Path.bezierTo (V2 1.5 1) (V2 1.5 (-1)) (V2 1 (-1))
         , Path.lineTo (V2 (-1) (-1))

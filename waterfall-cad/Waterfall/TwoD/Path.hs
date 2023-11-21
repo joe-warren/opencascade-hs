@@ -1,9 +1,12 @@
 module Waterfall.TwoD.Path 
 ( Path
+, Sense (..)
 , line
 , lineTo
 , arc
 , arcTo
+, arcVia
+, arcViaTo
 , bezier
 , bezierTo
 , pathFrom
@@ -16,6 +19,7 @@ import Data.Foldable (traverse_, foldl')
 import Linear.V2 (V2(..))
 import Control.Monad.IO.Class (liftIO)
 import qualified Linear.V2 as V2
+import Linear ((^*), distance, normalize)
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.Pnt as GP.Pnt 
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
@@ -48,16 +52,37 @@ line start end = edgesToPath $ do
 lineTo :: V2 Double -> V2 Double -> (V2 Double, Path)
 lineTo end = \start -> (end, line start end) 
 
-arc :: V2 Double -> V2 Double -> V2 Double -> Path
-arc start mid end = edgesToPath $ do
+arcVia :: V2 Double -> V2 Double -> V2 Double -> Path
+arcVia start mid end = edgesToPath $ do
     s <- v2ToPnt start
     m <- v2ToPnt mid
     e <- v2ToPnt end
-    arc <- MakeArcOfCircle.from3Pnts s m e
-    pure <$> MakeEdge.fromCurve (upcast arc)
+    theArc <- MakeArcOfCircle.from3Pnts s m e
+    pure <$> MakeEdge.fromCurve (upcast theArc)
 
-arcTo :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path)
-arcTo mid end = \start -> (end, arc start mid end) 
+arcViaTo :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path)
+arcViaTo mid end = \start -> (end, arcVia start mid end) 
+
+data Sense = Clockwise | Counterclockwise deriving (Eq, Show)
+
+arc :: Sense -> Double -> V2 Double -> V2 Double -> Path 
+arc sense radius start end = 
+    let mid = (start + end) ^* 0.5
+        (V2 dx dy) = normalize $ end - start
+        rotD = case sense of    
+                Clockwise -> V2 dy (-dx)
+                Counterclockwise -> V2 (-dy) dx
+        dse = distance start end 
+        tangent = radius - sqrt (radius * radius - dse * dse / 4) 
+        arcMid = mid + rotD ^* tangent
+    in if dse > 2 * radius
+            then error "points too far apart in arc"
+            else arcVia start arcMid end  
+
+arcTo :: Sense -> Double -> V2 Double -> V2 Double -> (V2 Double, Path)
+arcTo sense radius end = \start -> (end, arc sense radius start end) 
+
+
 
 bezier :: V2 Double -> V2 Double -> V2 Double -> V2 Double -> Path
 bezier start controlPoint1 controlPoint2 end = edgesToPath $ do

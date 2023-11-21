@@ -140,8 +140,7 @@ genGearToothData m z phi =
                 else Nothing
             , Just $ Path.bezierTo (rotateBez dbz2) (rotateBez dbz3) (rotateBez dbz4)
             , Just $ Path.bezierTo (rotateBez abz2) (rotateBez abz3) (rotateBez abz4)
-            --, Just $ Path.arcTo (arcMiddle) (rotateBez' abz4)
-            , Just $ Path.lineTo (rotateBez' abz4) -- this line should be an arc
+            , Just $ Path.arcViaTo (arcMiddle) (rotateBez' abz4)
             , Just $ Path.bezierTo (rotateBez' abz3) (rotateBez' abz2) (rotateBez' dbz4)
             , Just $ Path.bezierTo (rotateBez' dbz3) (rotateBez' dbz2) (rotateBez' dbz1)
             , if (rf < rb ) 
@@ -149,15 +148,15 @@ genGearToothData m z phi =
                 else Nothing
             , if (rootNext ^. _y > rootR ^. _y)
                 then Just $ Path.pathFromTo 
-                    [ Path.lineTo rootR
-                    , Path.lineTo rootNext -- these lines should be arcs
+                    [ Path.arcTo Path.Counterclockwise fRad rootR
+                    , Path.arcTo Path.Counterclockwise rRoot rootNext -- these lines should be arcs
                     ]
                 else Nothing
-            , Just $ Path.lineTo filletNext
+            , Just $ Path.arcTo Path.Counterclockwise fRad filletNext
         ]
--- Module, Number Teeth, pressure Angle 
-gearExample :: Double -> Int -> Double -> Solids.Solid
-gearExample moduleLength nGears pressureAngle =
+-- Thickness, Module, Number Teeth, pressure Angle 
+gearExample :: Double -> Double -> Int -> Double -> Solids.Solid
+gearExample thickness moduleLength nGears pressureAngle =
     let segment = genGearToothData moduleLength nGears pressureAngle
         path = joinPaths [rotate2D (-fromIntegral n * pi * 2 / fromIntegral nGears) segment | n <- [0..nGears]]
-    in Solids.prism 1 . Shape.fromPath $ path
+    in Solids.prism thickness . Shape.fromPath $ path
