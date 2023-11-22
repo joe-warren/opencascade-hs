@@ -186,8 +186,5 @@ library
       TKMesh
   build-depends:
       base >=4.7 && <5
-    , lens
-    , linear
     , resourcet
-    , text
   default-language: Haskell2010
