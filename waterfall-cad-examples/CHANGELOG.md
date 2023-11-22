@@ -1,4 +1,4 @@
-# Changelog for `open-cascade`
+# Changelog for `waterfall-cad-examples`
 
 All notable changes to this project will be documented in this file.
 
@@ -8,4 +8,4 @@ and this project adheres to the
 
 ## Unreleased
 
-## 0.1.0.0 - YYYY-MM-DD
+## 0.0.0.1 - YYYY-MM-DD

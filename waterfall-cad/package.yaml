@@ -1,0 +1,42 @@
+name:                waterfall-cad
+version:             0.0.0.1
+github:              "joe-warren/opencascade-hs"
+license:             LGPL
+author:              "Joe Warren"
+maintainer:          "josephmarkwarren@gmail.com"
+copyright:           "2023 Joe Warren"
+
+extra-source-files:
+- README.md
+- CHANGELOG.md
+
+synopsis:            Declarative CAD/Solid Modeling library
+category:            Graphics
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- opencascade-hs
+- lens
+- text
+- linear
+- lattices
+- resourcet
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
+library:
+    source-dirs: src

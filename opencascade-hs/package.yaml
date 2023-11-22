@@ -1,0 +1,64 @@
+name:                opencascade-hs
+version:             0.0.0.1
+github:              "joe-warren/opencascade-hs"
+license:             LGPL
+author:              "Joe Warren"
+maintainer:          "josephmarkwarren@gmail.com"
+copyright:           "2023 Joe Warren"
+
+extra-source-files:
+- README.md
+- CHANGELOG.md
+
+include-dirs:
+- cpp
+- /usr/include/opencascade
+
+extra-libraries:
+- stdc++
+- TKGeomBase 
+- TKStd 
+- TKG3d 
+- TKG2d 
+- TKMath 
+- TKernel 
+- TKBRep 
+- TKGeomBase 
+- TKOffset 
+- TKFillet 
+- TKBO 
+- TKPrim 
+- TKTopAlgo 
+- TKSTL
+- TKSTEP
+- TKV3d 
+- TKMesh
+
+synopsis:            Thin wrapper for the OpenCASCADE CAD Kernel
+category:            Graphics
+
+description:         Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- lens
+- text
+- linear
+- resourcet
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
+library:
+  source-dirs: src
+  c-sources:
+    - cpp/*.cpp
+  cxx-options: -std=c++17
+  cpp-options: -Werror-implicit-function-declaration
