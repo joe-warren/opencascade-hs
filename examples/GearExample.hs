@@ -1,4 +1,6 @@
-module GearExample where 
+module GearExample 
+( gearExample
+) where 
 
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.TwoD.Shape as Shape
@@ -7,11 +9,9 @@ import Waterfall.TwoD.Internal.Path (joinPaths)
 import Waterfall.TwoD.Transforms (rotate2D)
 import Linear.V3
 import Linear.V2
-import Linear.Vector 
 import Control.Lens ((^.))
-import Data.Function ((&))
 import Data.Maybe (catMaybes)
-import Debug.Trace (traceShow)
+
 -- This is directly implemented from "Gear Drawing with Bézier Curves" by Dr A R Collins 
 -- https://www.arc.id.au/GearDrawing.html
 -- found Indirectly via Mathew Dockrey (attoparsec (the YouTube channel, not the parser library))
@@ -41,12 +41,12 @@ cheby = [ [ 1,  0,  0,  0,  0,  0],
 chebyApprox :: (Double -> Double) -> Int -> [Double]
 chebyApprox f p' = 
     let fnCoeffs = [chebyExpnCoeffs k f | k <- [0..p'] ]
-        adjust 0 = (fnCoeffs !! 0) /2
+        adjust 0 = head fnCoeffs /2
         adjust _ = 0
      in [ sum [fnCoeffs!!k  * (cheby !! k !! pwr) | k <- [0..p'] ] - adjust pwr | pwr <- [0..p'] ]
 
 binom :: Int -> Int -> Double 
-binom n k = ((fromIntegral $ product [n - k + 1 .. n]) / (fromIntegral $ product [1..k]))
+binom n k = (fromIntegral $ product [n - k + 1 .. n]) / (fromIntegral $ product [1..k])
 
 involuteBezCoeffs :: Double -> Double -> Double -> Double -> (V2 Double, V2 Double, V2 Double, V2 Double)
 involuteBezCoeffs rA rB fStart fStop = 
@@ -79,15 +79,12 @@ genInvolutePolar rb r = (sqrt (r * r - rb * rb))/rb - acos (rb / r)
 polarToCart :: Double -> Double -> V2 Double
 polarToCart rad angle = V2 (rad * cos angle) (rad * sin angle)
 
-mirrorYV2 :: V2 Double -> V2 Double 
-mirrorYV2 (V2 x y) = V2 x (-y)
-
 genGearToothData :: Double -> Int -> Double -> Path.Path
 genGearToothData m z phi = 
     let addendum = m
         dedendum = 1.25 * m
         clearance = dedendum - addendum
-        rPitch = (fromIntegral z)  * m / 2
+        rPitch = fromIntegral z  * m / 2
         rb = rPitch * cos phi
         ra = rPitch + addendum
         rRoot = rPitch - dedendum
@@ -114,10 +111,9 @@ genGearToothData m z phi =
         rotateBez' = (* V2 1 (-1))  . rotateBez
         fillet = polarToCart rf (-pitchAngle / 4 - pitchToFilletAngle)
         arcMiddle = polarToCart ra 0
-        filletR = mirrorYV2 fillet
+        filletR = (* V2 1 (-1)) fillet
         rootR = polarToCart rRoot (pitchAngle/4 +pitchToFilletAngle + filletAngle)
         rootNext = polarToCart rRoot (3*pitchAngle/4 - pitchToFilletAngle - filletAngle)
-        filletNext' = rotate2D (pitchAngle/2) fillet
         filletNext = rotate2D pitchAngle fillet
 
     in Path.pathFrom fillet $ 
@@ -127,13 +123,13 @@ genGearToothData m z phi =
                 else Nothing
             , Just $ Path.bezierTo (rotateBez dbz2) (rotateBez dbz3) (rotateBez dbz4)
             , Just $ Path.bezierTo (rotateBez abz2) (rotateBez abz3) (rotateBez abz4)
-            , Just $ Path.arcViaTo (arcMiddle) (rotateBez' abz4)
+            , Just $ Path.arcViaTo arcMiddle (rotateBez' abz4)
             , Just $ Path.bezierTo (rotateBez' abz3) (rotateBez' abz2) (rotateBez' dbz4)
             , Just $ Path.bezierTo (rotateBez' dbz3) (rotateBez' dbz2) (rotateBez' dbz1)
-            , if (rf < rb ) 
+            , if rf < rb 
                 then Just $ Path.lineTo filletR
                 else Nothing
-            , if (rootNext ^. _y > rootR ^. _y)
+            , if rootNext ^. _y > rootR ^. _y
                 then Just $ Path.pathFromTo 
                     [ Path.arcTo Path.Counterclockwise fRad rootR
                     , Path.arcTo Path.Counterclockwise rRoot rootNext -- these lines should be arcs
