@@ -1,7 +1,8 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleInstances #-}
 module Waterfall.Transforms
-( scale
+( Transformable
+, scale
 , uScale
 , rotate
 , translate

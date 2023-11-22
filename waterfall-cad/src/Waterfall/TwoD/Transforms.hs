@@ -1,7 +1,11 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleInstances #-}
 module Waterfall.TwoD.Transforms
-(rotate2D
+( Transformable2D
+, rotate2D
+, scale2D
+, uScale2D
+, translate2D
 ) where
 
 import Waterfall.TwoD.Internal.Path (Path (..))
