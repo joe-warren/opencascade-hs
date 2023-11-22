@@ -45,16 +45,6 @@ chebyApprox f p' =
         adjust _ = 0
      in [ sum [fnCoeffs!!k  * (cheby !! k !! pwr) | k <- [0..p'] ] - adjust pwr | pwr <- [0..p'] ]
 
-{--
-chebyApprox :: (Double -> Double) -> Double -> Double -> Int -> [Double]
-chebyApprox f a b n = 
-    let a' = 0.5 * (b - a)
-        b' = 0.5 * (b + a)
-        y = [ a' * cos (pi * (fromIntegral k + 0.5) / fromIntegral n) + b' | k <- [0..n-1] ]
-        f' = map f y
-    in [ 2 * sum (zipWith (*) f' [ cos (pi * fromIntegral j * (fromIntegral k + 0.5) / fromIntegral n) | k <- [0..n-1] ]) / fromIntegral n | j <- [0..n-1] ]
---}
-
 binom :: Int -> Int -> Double 
 binom n k = ((fromIntegral $ product [n - k + 1 .. n]) / (fromIntegral $ product [1..k]))
 
@@ -89,9 +79,6 @@ genInvolutePolar rb r = (sqrt (r * r - rb * rb))/rb - acos (rb / r)
 polarToCart :: Double -> Double -> V2 Double
 polarToCart rad angle = V2 (rad * cos angle) (rad * sin angle)
 
-rotateV2 :: V2 Double -> Double -> V2 Double 
-rotateV2 (V2 x y) a = V2 (x * cos a - y * sin a) (x * sin a + y * cos a)
-
 mirrorYV2 :: V2 Double -> V2 Double 
 mirrorYV2 (V2 x y) = V2 x (-y)
 
@@ -123,15 +110,15 @@ genGearToothData m z phi =
         fm = fs + (fe - fs)/ 4
         (dbz1, dbz2, dbz3, dbz4) = involuteBezCoeffs ra rb fs fm 
         (_, abz2, abz3, abz4) = involuteBezCoeffs ra rb fm fe 
-        rotateBez = (`rotateV2` (-baseToPitchAngle-pitchAngle/4))
-        rotateBez' = mirrorYV2 . rotateBez
+        rotateBez = rotate2D (-baseToPitchAngle-pitchAngle/4)
+        rotateBez' = (* V2 1 (-1))  . rotateBez
         fillet = polarToCart rf (-pitchAngle / 4 - pitchToFilletAngle)
         arcMiddle = polarToCart ra 0
         filletR = mirrorYV2 fillet
         rootR = polarToCart rRoot (pitchAngle/4 +pitchToFilletAngle + filletAngle)
         rootNext = polarToCart rRoot (3*pitchAngle/4 - pitchToFilletAngle - filletAngle)
-        filletNext' = rotateV2 fillet (pitchAngle/2)
-        filletNext = rotateV2 fillet pitchAngle
+        filletNext' = rotate2D (pitchAngle/2) fillet
+        filletNext = rotate2D pitchAngle fillet
 
     in Path.pathFrom fillet $ 
         catMaybes 
