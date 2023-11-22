@@ -1,0 +1,190 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.36.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           opencascade-hs
+version:        0.0.0.1
+synopsis:       Thin wrapper for the OpenCASCADE CAD Kernel
+description:    Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
+category:       Graphics
+homepage:       https://github.com/joe-warren/opencascade-hs#readme
+bug-reports:    https://github.com/joe-warren/opencascade-hs/issues
+author:         Joe Warren
+maintainer:     josephmarkwarren@gmail.com
+copyright:      2023 Joe Warren
+license:        LicenseRef-LGPL
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/joe-warren/opencascade-hs
+
+library
+  exposed-modules:
+      Lib
+      OpenCascade.BRepAlgoAPI.Common
+      OpenCascade.BRepAlgoAPI.Cut
+      OpenCascade.BRepAlgoAPI.Fuse
+      OpenCascade.BRepBuilderAPI
+      OpenCascade.BRepBuilderAPI.FaceError
+      OpenCascade.BRepBuilderAPI.GTransform
+      OpenCascade.BRepBuilderAPI.Internal.Destructors
+      OpenCascade.BRepBuilderAPI.MakeEdge
+      OpenCascade.BRepBuilderAPI.MakeFace
+      OpenCascade.BRepBuilderAPI.MakeSolid
+      OpenCascade.BRepBuilderAPI.MakeWire
+      OpenCascade.BRepBuilderAPI.Transform
+      OpenCascade.BRepBuilderAPI.Types
+      OpenCascade.BRepBuilderAPI.WireError
+      OpenCascade.BRepMesh.IncrementalMesh
+      OpenCascade.BRepMesh.Internal.Destructors
+      OpenCascade.BRepMesh.Types
+      OpenCascade.BRepPrimAPI.Internal.Destructors
+      OpenCascade.BRepPrimAPI.MakeBox
+      OpenCascade.BRepPrimAPI.MakeCylinder
+      OpenCascade.BRepPrimAPI.MakePrism
+      OpenCascade.BRepPrimAPI.MakeSphere
+      OpenCascade.BRepPrimAPI.Types
+      OpenCascade.GC.MakeArcOfCircle
+      OpenCascade.GC.MakeSegment
+      OpenCascade.Geom
+      OpenCascade.Geom.BezierCurve
+      OpenCascade.Geom.Internal.Destructors
+      OpenCascade.Geom.Types
+      OpenCascade.GP
+      OpenCascade.GP.Ax1
+      OpenCascade.GP.Ax2
+      OpenCascade.GP.Ax2d
+      OpenCascade.GP.Dir
+      OpenCascade.GP.Dir2d
+      OpenCascade.GP.GTrsf
+      OpenCascade.GP.Internal.Destructors
+      OpenCascade.GP.Pnt
+      OpenCascade.GP.Pnt2d
+      OpenCascade.GP.Trsf
+      OpenCascade.GP.Trsf2d
+      OpenCascade.GP.Types
+      OpenCascade.GP.Vec
+      OpenCascade.GP.Vec2d
+      OpenCascade.Handle
+      OpenCascade.IFSelect.ReturnStatus
+      OpenCascade.Inheritance
+      OpenCascade.Internal.Bool
+      OpenCascade.NCollection
+      OpenCascade.NCollection.Array1
+      OpenCascade.NCollection.Internal.Destructors
+      OpenCascade.NCollection.Types
+      OpenCascade.STEPControl.Internal.Destructors
+      OpenCascade.STEPControl.StepModelType
+      OpenCascade.STEPControl.Types
+      OpenCascade.STEPControl.Writer
+      OpenCascade.StlAPI.Internal.Destructors
+      OpenCascade.StlAPI.Types
+      OpenCascade.StlAPI.Writer
+      OpenCascade.TopAbs
+      OpenCascade.TopAbs.Orientation
+      OpenCascade.TopAbs.ShapeEnum
+      OpenCascade.TopLoc
+      OpenCascade.TopLoc.Internal.Destructors
+      OpenCascade.TopLoc.Location
+      OpenCascade.TopLoc.Types
+      OpenCascade.TopoDS
+      OpenCascade.TopoDS.Compound
+      OpenCascade.TopoDS.CompSolid
+      OpenCascade.TopoDS.Edge
+      OpenCascade.TopoDS.Face
+      OpenCascade.TopoDS.Internal.Destructors
+      OpenCascade.TopoDS.Shape
+      OpenCascade.TopoDS.Shell
+      OpenCascade.TopoDS.Solid
+      OpenCascade.TopoDS.Types
+      OpenCascade.TopoDS.Vertex
+      OpenCascade.TopoDS.Wire
+      OpenCascade.TopTools
+      OpenCascade.TopTools.Types
+  other-modules:
+      Paths_opencascade_hs
+  autogen-modules:
+      Paths_opencascade_hs
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  cpp-options: -Werror-implicit-function-declaration
+  cxx-options: -std=c++17
+  include-dirs:
+      cpp
+      /usr/include/opencascade
+  c-sources:
+      cpp/hs_BRepAlgoAPI_Common.cpp
+      cpp/hs_BRepAlgoAPI_Cut.cpp
+      cpp/hs_BRepAlgoAPI_Fuse.cpp
+      cpp/hs_BRepBuilderAPI_GTransform.cpp
+      cpp/hs_BRepBuilderAPI_MakeEdge.cpp
+      cpp/hs_BRepBuilderAPI_MakeFace.cpp
+      cpp/hs_BRepBuilderAPI_MakeSolid.cpp
+      cpp/hs_BRepBuilderAPI_MakeWire.cpp
+      cpp/hs_BRepBuilderAPI_Transform.cpp
+      cpp/hs_BRepMesh_IncrementalMesh.cpp
+      cpp/hs_BRepPrimAPI_MakeBox.cpp
+      cpp/hs_BRepPrimAPI_MakeCylinder.cpp
+      cpp/hs_BRepPrimAPI_MakePrism.cpp
+      cpp/hs_BRepPrimAPI_MakeSphere.cpp
+      cpp/hs_GC_MakeArcOfCircle.cpp
+      cpp/hs_GC_MakeSegment.cpp
+      cpp/hs_Geom_BezierCurve.cpp
+      cpp/hs_Geom_TrimmedCurve.cpp
+      cpp/hs_gp.cpp
+      cpp/hs_gp_Ax1.cpp
+      cpp/hs_gp_Ax2.cpp
+      cpp/hs_gp_Ax2d.cpp
+      cpp/hs_gp_Dir.cpp
+      cpp/hs_gp_Dir2d.cpp
+      cpp/hs_gp_GTrsf.cpp
+      cpp/hs_gp_Pnt.cpp
+      cpp/hs_gp_Pnt2d.cpp
+      cpp/hs_gp_Trsf.cpp
+      cpp/hs_gp_Trsf2d.cpp
+      cpp/hs_gp_Vec.cpp
+      cpp/hs_gp_Vec2d.cpp
+      cpp/hs_NCollection_Array1.cpp
+      cpp/hs_STEPControl_Writer.cpp
+      cpp/hs_StlAPI_Writer.cpp
+      cpp/hs_TopLoc_Location.cpp
+      cpp/hs_TopoDS_Compound.cpp
+      cpp/hs_TopoDS_CompSolid.cpp
+      cpp/hs_TopoDS_Edge.cpp
+      cpp/hs_TopoDS_Face.cpp
+      cpp/hs_TopoDS_Shape.cpp
+      cpp/hs_TopoDS_Shell.cpp
+      cpp/hs_TopoDS_Solid.cpp
+      cpp/hs_TopoDS_Vertex.cpp
+      cpp/hs_TopoDS_Wire.cpp
+  extra-libraries:
+      stdc++
+      TKGeomBase
+      TKStd
+      TKG3d
+      TKG2d
+      TKMath
+      TKernel
+      TKBRep
+      TKGeomBase
+      TKOffset
+      TKFillet
+      TKBO
+      TKPrim
+      TKTopAlgo
+      TKSTL
+      TKSTEP
+      TKV3d
+      TKMesh
+  build-depends:
+      base >=4.7 && <5
+    , resourcet
+  default-language: Haskell2010
