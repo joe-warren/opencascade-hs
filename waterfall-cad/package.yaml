@@ -10,7 +10,7 @@ extra-source-files:
 - README.md
 - CHANGELOG.md
 
-synopsis:            Declarative CAD/Solid Modeling library
+synopsis:            Declarative CAD/Solid Modeling Library
 category:            Graphics
 
 # To avoid duplicated efforts in documentation and dealing with the

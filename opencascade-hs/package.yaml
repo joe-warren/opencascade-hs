@@ -34,7 +34,7 @@ extra-libraries:
 - TKV3d 
 - TKMesh
 
-synopsis:            Thin wrapper for the OpenCASCADE CAD Kernel
+synopsis:            Thin Wrapper for the OpenCASCADE CAD Kernel
 category:            Graphics
 
 description:         Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
