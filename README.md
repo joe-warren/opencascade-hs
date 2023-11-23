@@ -19,7 +19,8 @@ I've been building this project with [`stack`](https://docs.haskellstack.org/en/
 
 As this library depends on OpenCASCADE. 
 I've been developing this on Debian with the following packages installed:
-    * `libocct-data-exchange-7.6` `libocct-data-exchange-dev` `libocct-draw-7.6` `libocct-draw-dev`, `libocct-foundation-7.6`, `libocct-foundation-dev`, `libocct-modeling-algorithms-7.6`, `libocct-modeling-algorithms-dev`, `libocct-modeling-data-7.6`, `libocct-modeling-data-dev`, `libocct-ocaf-7.6`, `libocct-ocaf-dev`, `libocct-visualization-7.6`, `libocct-visualization-dev`, `occt-misc`, 
+
+* `libocct-data-exchange-7.6` `libocct-data-exchange-dev` `libocct-draw-7.6` `libocct-draw-dev`, `libocct-foundation-7.6`, `libocct-foundation-dev`, `libocct-modeling-algorithms-7.6`, `libocct-modeling-algorithms-dev`, `libocct-modeling-data-7.6`, `libocct-modeling-data-dev`, `libocct-ocaf-7.6`, `libocct-ocaf-dev`, `libocct-visualization-7.6`, `libocct-visualization-dev`, `occt-misc`
 
 I think there should be _some_ flexibility as to the exact version of libocct required, and which occt packages are necessary, but I'm not at a stage where I want to nail that down yet.
 
