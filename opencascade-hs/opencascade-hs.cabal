@@ -36,6 +36,7 @@ library
       OpenCascade.BRepBuilderAPI.Internal.Destructors
       OpenCascade.BRepBuilderAPI.MakeEdge
       OpenCascade.BRepBuilderAPI.MakeFace
+      OpenCascade.BRepBuilderAPI.MakeShape
       OpenCascade.BRepBuilderAPI.MakeSolid
       OpenCascade.BRepBuilderAPI.MakeWire
       OpenCascade.BRepBuilderAPI.Transform
@@ -129,6 +130,7 @@ library
       cpp/hs_BRepBuilderAPI_GTransform.cpp
       cpp/hs_BRepBuilderAPI_MakeEdge.cpp
       cpp/hs_BRepBuilderAPI_MakeFace.cpp
+      cpp/hs_BRepBuilderAPI_MakeShape.cpp
       cpp/hs_BRepBuilderAPI_MakeSolid.cpp
       cpp/hs_BRepBuilderAPI_MakeWire.cpp
       cpp/hs_BRepBuilderAPI_Transform.cpp
