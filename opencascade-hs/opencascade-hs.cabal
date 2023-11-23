@@ -27,7 +27,6 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
       OpenCascade.BRepAlgoAPI.Common
       OpenCascade.BRepAlgoAPI.Cut
       OpenCascade.BRepAlgoAPI.Fuse
@@ -42,6 +41,9 @@ library
       OpenCascade.BRepBuilderAPI.Transform
       OpenCascade.BRepBuilderAPI.Types
       OpenCascade.BRepBuilderAPI.WireError
+      OpenCascade.BRepFilletAPI.Internal.Destructors
+      OpenCascade.BRepFilletAPI.MakeFillet
+      OpenCascade.BRepFilletAPI.Types
       OpenCascade.BRepMesh.IncrementalMesh
       OpenCascade.BRepMesh.Internal.Destructors
       OpenCascade.BRepMesh.Types
@@ -130,6 +132,7 @@ library
       cpp/hs_BRepBuilderAPI_MakeSolid.cpp
       cpp/hs_BRepBuilderAPI_MakeWire.cpp
       cpp/hs_BRepBuilderAPI_Transform.cpp
+      cpp/hs_BRepFilletAPI_MakeFillet.cpp
       cpp/hs_BRepMesh_IncrementalMesh.cpp
       cpp/hs_BRepPrimAPI_MakeBox.cpp
       cpp/hs_BRepPrimAPI_MakeCylinder.cpp
