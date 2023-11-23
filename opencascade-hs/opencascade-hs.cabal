@@ -6,7 +6,7 @@ cabal-version: 2.2
 
 name:           opencascade-hs
 version:        0.0.0.1
-synopsis:       Thin wrapper for the OpenCASCADE CAD Kernel
+synopsis:       Thin Wrapper for the OpenCASCADE CAD Kernel
 description:    Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
 category:       Graphics
 homepage:       https://github.com/joe-warren/opencascade-hs#readme

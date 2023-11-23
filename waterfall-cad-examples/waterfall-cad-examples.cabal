@@ -6,7 +6,7 @@ cabal-version: 1.12
 
 name:           waterfall-cad-examples
 version:        0.0.0.1
-synopsis:       Examples for Waterfall CAD, a Declarative CAD/Solid Modeling library
+synopsis:       Examples for Waterfall CAD, a Declarative CAD/Solid Modeling Library
 description:    Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
 category:       Graphics
 homepage:       https://github.com/joe-warren/opencascade-hs#readme
