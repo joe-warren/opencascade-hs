@@ -1,5 +1,5 @@
-#ifndef HS_BREPFILLET_API_MAKEFILLET_H
-#define HS_BREPFILLET_API_MAKEFILLET_H
+#ifndef HS_BREPFILLETAPI_MAKEFILLET_H
+#define HS_BREPFILLETAPI_MAKEFILLET_H
 
 #include "hs_types.h"
 
@@ -21,4 +21,4 @@ void hs_BRepFilletAPI_MakeFillet_addEdgeWithTwoRadiuses(BRepFilletAPI_MakeFillet
 }
 #endif
 
-#endif // HS_BREPFILLET_API_MAKEFILLET_H
+#endif // HS_BREPFILLETAPI_MAKEFILLET_H

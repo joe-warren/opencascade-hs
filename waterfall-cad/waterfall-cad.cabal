@@ -29,6 +29,7 @@ library
   exposed-modules:
       Waterfall.Booleans
       Waterfall.Booleans.Operators
+      Waterfall.Fillet
       Waterfall.Internal.Solid
       Waterfall.IO
       Waterfall.Solids

@@ -29,6 +29,7 @@ executable waterfall-cad-examples
   main-is: Main.hs
   other-modules:
       CsgExample
+      FilletExample
       GearExample
       PrismExample
       Paths_waterfall_cad_examples

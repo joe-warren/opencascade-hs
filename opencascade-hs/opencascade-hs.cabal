@@ -93,6 +93,9 @@ library
       OpenCascade.TopAbs
       OpenCascade.TopAbs.Orientation
       OpenCascade.TopAbs.ShapeEnum
+      OpenCascade.TopExp.Explorer
+      OpenCascade.TopExp.Internal.Destructors
+      OpenCascade.TopExp.Types
       OpenCascade.TopLoc
       OpenCascade.TopLoc.Internal.Destructors
       OpenCascade.TopLoc.Location
@@ -160,6 +163,7 @@ library
       cpp/hs_NCollection_Array1.cpp
       cpp/hs_STEPControl_Writer.cpp
       cpp/hs_StlAPI_Writer.cpp
+      cpp/hs_TopExp_Explorer.cpp
       cpp/hs_TopLoc_Location.cpp
       cpp/hs_TopoDS_Compound.cpp
       cpp/hs_TopoDS_CompSolid.cpp
