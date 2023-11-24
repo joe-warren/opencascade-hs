@@ -9,6 +9,8 @@ extern "C" {
 
 TopoDS_Shape * hs_new_TopoDS_Shape();
 
+TopoDS_Shape * hs_new_TopoDS_Shape_copy(TopoDS_Shape * shape);
+
 void hs_delete_TopoDS_Shape(TopoDS_Shape * shape);
 
 bool hs_TopoDS_Shape_IsNull(TopoDS_Shape * shape);
@@ -92,6 +94,8 @@ bool hs_TopoDS_Shape_IsPartner(TopoDS_Shape * a, TopoDS_Shape* b);
 bool hs_TopoDS_Shape_IsNotEqual(TopoDS_Shape * a, TopoDS_Shape* b);
 
 void hs_TopoDS_Shape_EmptyCopy(TopoDS_Shape * shape);
+
+int hs_TopoDS_Shape_hashCode(TopoDS_Shape * shape, int maxN);
 
 TopoDS_Shape * hs_TopoDS_Shape_EmptyCopied(TopoDS_Shape * shape);
 

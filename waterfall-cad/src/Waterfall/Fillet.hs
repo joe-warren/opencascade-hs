@@ -10,6 +10,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.TopExp.Explorer as Explorer 
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.TopoDS as TopoDS
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BRep.Tool as BRep.Tool
 import qualified OpenCascade.Geom.Curve as Geom.Curve
 import qualified OpenCascade.GP as GP
@@ -37,7 +38,8 @@ addEdgesToMakeFillet radiusFn builder explorer = go [] 0
             isMore <- Explorer.more explorer
             when isMore $ do
                 v <- unsafeDowncast =<< Explorer.value explorer
-                if(False && elem v visited) 
+                hash <- TopoDS.Shape.hashCode (upcast v) (2^31)
+                if(elem hash visited) 
                     then do
                         Explorer.next explorer
                         go visited i
@@ -47,7 +49,7 @@ addEdgesToMakeFillet radiusFn builder explorer = go [] 0
                             Just r | r > 0 -> MakeFillet.addEdgeWithRadius builder r v
                             _ -> pure ()
                         Explorer.next explorer
-                        go (v:visited) (i + 1) 
+                        go (hash:visited) (i + 1) 
 
 roundIndexedConditionalFillet :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
 roundIndexedConditionalFillet radiusFunction (Solid runSolid) = Solid $ do

@@ -16,6 +16,6 @@ filletExample =
      [0, 2 ..]
      [roundFillet 0.1 centeredCube
      , roundConditionalFillet (\(s, e) -> if s ^. _z == e ^._z then Nothing else Just 0.1) centeredCube
-     , roundIndexedConditionalFillet (\i _ -> (fromIntegral i * 0.01) <$ guard (even i)) centeredCube
+     , roundIndexedConditionalFillet (\i _ -> (fromIntegral i* 0.04) <$ guard (odd i)) centeredCube
      ]
 
