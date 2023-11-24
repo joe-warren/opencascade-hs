@@ -42,6 +42,7 @@ typedef void BRepPrimAPI_MakeCylinder;
 typedef void TopTools_ListOfShape;
 typedef void BRepOffsetAPI_MakeThickSolid;
 typedef void Geom2d_Ellipse;
+typedef void Geom_Curve;
 typedef void Geom_BezierCurve;
 typedef void BRepOffsetAPI_ThruSections;
 typedef void BRepMesh_IncrementalMesh;

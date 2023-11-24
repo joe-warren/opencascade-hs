@@ -1,6 +1,7 @@
 module Waterfall.Fillet
-(
-    roundFillet
+( roundFillet
+, roundConditionalFillet
+, roundIndexedConditionalFillet
 ) where
 
 import Waterfall.Internal.Solid (Solid (..))
@@ -8,29 +9,58 @@ import qualified OpenCascade.BRepFilletAPI.MakeFillet as MakeFillet
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.TopExp.Explorer as Explorer 
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
+import qualified OpenCascade.TopoDS as TopoDS
+import qualified OpenCascade.BRep.Tool as BRep.Tool
+import qualified OpenCascade.Geom.Curve as Geom.Curve
+import qualified OpenCascade.GP as GP
+import qualified OpenCascade.GP.Pnt as GP.Pnt
 import Foreign.Ptr (Ptr)
 import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
+import Linear.V3 (V3 (..))
+import Data.Acquire 
 
-addEdgesToMakeFillet :: Double -> Ptr MakeFillet.MakeFillet -> Ptr Explorer.Explorer -> IO ()
-addEdgesToMakeFillet radius builder explorer = 
-    do
-        isMore <- Explorer.more explorer
-        when isMore $ do
-            v <- unsafeDowncast =<< Explorer.value explorer 
-            MakeFillet.addEdgeWithRadius builder radius v
-            
-            Explorer.next explorer
-            addEdgesToMakeFillet radius builder explorer
+gpPntToV3 :: Ptr GP.Pnt -> IO (V3 Double)
+gpPntToV3 pnt = V3 <$> GP.Pnt.getX pnt <*> GP.Pnt.getY pnt <*> GP.Pnt.getZ pnt
 
-roundFillet :: Double -> Solid -> Solid
-roundFillet radius (Solid runSolid) = Solid $ do
+edgeEndpoints :: Ptr TopoDS.Edge -> IO (V3 Double, V3 Double)
+edgeEndpoints e = (`with` pure) $ do
+    curve <- BRep.Tool.curve e 0 1
+    s <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve 0
+    e <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve 1
+    return (s, e)
+
+addEdgesToMakeFillet :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Ptr MakeFillet.MakeFillet -> Ptr Explorer.Explorer -> IO ()
+addEdgesToMakeFillet radiusFn builder explorer = go [] 0
+    where go visited i = do
+            isMore <- Explorer.more explorer
+            when isMore $ do
+                v <- unsafeDowncast =<< Explorer.value explorer
+                if(False && elem v visited) 
+                    then do
+                        Explorer.next explorer
+                        go visited i
+                    else do
+                        endpoints <- edgeEndpoints v
+                        case radiusFn i endpoints of 
+                            Just r | r > 0 -> MakeFillet.addEdgeWithRadius builder r v
+                            _ -> pure ()
+                        Explorer.next explorer
+                        go (v:visited) (i + 1) 
+
+roundIndexedConditionalFillet :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
+roundIndexedConditionalFillet radiusFunction (Solid runSolid) = Solid $ do
     s <- runSolid 
     builder <- MakeFillet.fromShape s
 
     explorer <- Explorer.new s ShapeEnum.Edge
-    liftIO $ addEdgesToMakeFillet radius builder explorer
+    liftIO $ addEdgesToMakeFillet radiusFunction builder explorer
 
     MakeShape.shape (upcast builder)
 
+roundConditionalFillet :: ((V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
+roundConditionalFillet f = roundIndexedConditionalFillet (const f)
+
+roundFillet :: Double -> Solid -> Solid
+roundFillet r = roundConditionalFillet (const . pure $ r)
