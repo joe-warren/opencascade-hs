@@ -3,7 +3,7 @@ module Waterfall.Revolution
 ) where
 
 import Waterfall.Internal.Solid (Solid (..), debug)
-import Waterfall.TwoD.Internal.Path (Path (..))
+import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import qualified OpenCascade.BRepPrimAPI.MakeRevol as MakeRevol
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
@@ -13,8 +13,8 @@ import Waterfall.Transforms (rotate)
 import Control.Monad.IO.Class (liftIO)
 import Linear (unit, _x)
 
-revolution :: Path -> Solid
-revolution (Path runPath) = debug "revolution" .  rotate (unit _x) (pi/2) . Solid $ do
+revolution :: Path2D -> Solid
+revolution (Path2D runPath) = debug "revolution" .  rotate (unit _x) (pi/2) . Solid $ do
     p <- runPath
     axis <- GP.oy -- revolve around the y axis
     revol <- MakeRevol.fromShapeAndAx1 (upcast p) axis True

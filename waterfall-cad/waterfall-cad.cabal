@@ -35,9 +35,9 @@ library
       Waterfall.Revolution
       Waterfall.Solids
       Waterfall.Transforms
-      Waterfall.TwoD.Internal.Path
+      Waterfall.TwoD.Internal.Path2D
       Waterfall.TwoD.Internal.Shape
-      Waterfall.TwoD.Path
+      Waterfall.TwoD.Path2D
       Waterfall.TwoD.Shape
       Waterfall.TwoD.Transforms
   other-modules:

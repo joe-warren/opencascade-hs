@@ -8,7 +8,7 @@ module Waterfall.TwoD.Transforms
 , translate2D
 ) where
 
-import Waterfall.TwoD.Internal.Path (Path (..))
+import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Linear.V2 (V2 (..))
 import Linear ((*^))
 import qualified OpenCascade.GP.Trsf as GP.Trsf
@@ -30,14 +30,14 @@ class Transformable2D a where
     uScale2D :: Double -> a -> a
     translate2D :: V2 Double -> a -> a
 
-fromTrsf :: Acquire (Ptr GP.Trsf) -> Path -> Path
-fromTrsf mkTrsf (Path run) = Path $ do 
+fromTrsf :: Acquire (Ptr GP.Trsf) -> Path2D -> Path2D
+fromTrsf mkTrsf (Path2D run) = Path2D $ do 
     path <- run
     trsf <- mkTrsf 
     (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast path) trsf True 
 
-instance Transformable2D Path where
-    rotate2D :: Double -> Path -> Path
+instance Transformable2D Path2D where
+    rotate2D :: Double -> Path2D -> Path2D
     rotate2D angle = fromTrsf $ do
         trsf <- GP.Trsf.new
         o <- GP.origin
@@ -46,8 +46,8 @@ instance Transformable2D Path where
         liftIO $ GP.Trsf.setRotationAboutAxisAngle trsf axis angle
         return trsf
 
-    scale2D :: V2 Double -> Path -> Path
-    scale2D (V2 x y) (Path run) = Path $ do 
+    scale2D :: V2 Double -> Path2D -> Path2D
+    scale2D (V2 x y) (Path2D run) = Path2D $ do 
         path <- run
         trsf <- GP.GTrsf.new 
         liftIO $ do
@@ -57,14 +57,14 @@ instance Transformable2D Path where
             GP.GTrsf.setForm trsf
         (liftIO .unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
 
-    uScale2D :: Double -> Path -> Path
+    uScale2D :: Double -> Path2D -> Path2D
     uScale2D factor = fromTrsf $ do 
         trsf <- GP.Trsf.new
         o <- GP.origin
         liftIO $ GP.Trsf.setScale trsf o factor 
         return trsf
 
-    translate2D :: V2 Double -> Path -> Path
+    translate2D :: V2 Double -> Path2D -> Path2D
     translate2D (V2 x y) = fromTrsf $ do 
         trsf <- GP.Trsf.new
         vec <- GP.Vec.new x y 0

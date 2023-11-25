@@ -1,5 +1,5 @@
-module Waterfall.TwoD.Path 
-( Path
+module Waterfall.TwoD.Path2D
+( Path2D
 , Sense (..)
 , line
 , lineTo
@@ -13,7 +13,7 @@ module Waterfall.TwoD.Path
 , pathFromTo
 ) where 
 
-import Waterfall.TwoD.Internal.Path (Path(..), joinPaths)
+import Waterfall.TwoD.Internal.Path2D (Path2D(..), joinPaths)
 import Control.Arrow (second)
 import Data.Foldable (traverse_, foldl')
 import Linear.V2 (V2(..))
@@ -36,23 +36,23 @@ import Data.Acquire
 v2ToPnt :: V2 Double -> Acquire (Ptr GP.Pnt)
 v2ToPnt (V2 x y) = GP.Pnt.new x y 0
 
-edgesToPath :: Acquire [Ptr TopoDS.Edge] -> Path 
-edgesToPath es = Path $ do
+edgesToPath :: Acquire [Ptr TopoDS.Edge] -> Path2D
+edgesToPath es = Path2D $ do
     edges <- es
     builder <- MakeWire.new
     liftIO $ traverse_ (MakeWire.addEdge builder) edges
     MakeWire.wire builder
 
-line :: V2 Double -> V2 Double -> Path
+line :: V2 Double -> V2 Double -> Path2D
 line start end = edgesToPath $ do
     pt1 <- v2ToPnt start
     pt2 <- v2ToPnt end
     pure <$> MakeEdge.fromPnts pt1 pt2
 
-lineTo :: V2 Double -> V2 Double -> (V2 Double, Path)
+lineTo :: V2 Double -> V2 Double -> (V2 Double, Path2D)
 lineTo end = \start -> (end, line start end) 
 
-arcVia :: V2 Double -> V2 Double -> V2 Double -> Path
+arcVia :: V2 Double -> V2 Double -> V2 Double -> Path2D
 arcVia start mid end = edgesToPath $ do
     s <- v2ToPnt start
     m <- v2ToPnt mid
@@ -60,12 +60,12 @@ arcVia start mid end = edgesToPath $ do
     theArc <- MakeArcOfCircle.from3Pnts s m e
     pure <$> MakeEdge.fromCurve (upcast theArc)
 
-arcViaTo :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path)
+arcViaTo :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
 arcViaTo mid end = \start -> (end, arcVia start mid end) 
 
 data Sense = Clockwise | Counterclockwise deriving (Eq, Show)
 
-arc :: Sense -> Double -> V2 Double -> V2 Double -> Path 
+arc :: Sense -> Double -> V2 Double -> V2 Double -> Path2D 
 arc sense radius start end = 
     let mid = (start + end) ^* 0.5
         (V2 dx dy) = normalize $ end - start
@@ -79,10 +79,10 @@ arc sense radius start end =
             then error "points too far apart in arc"
             else arcVia start arcMid end  
 
-arcTo :: Sense -> Double -> V2 Double -> V2 Double -> (V2 Double, Path)
+arcTo :: Sense -> Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
 arcTo sense radius end = \start -> (end, arc sense radius start end) 
 
-bezier :: V2 Double -> V2 Double -> V2 Double -> V2 Double -> Path
+bezier :: V2 Double -> V2 Double -> V2 Double -> V2 Double -> Path2D
 bezier start controlPoint1 controlPoint2 end = edgesToPath $ do
     s <- v2ToPnt start
     c1 <- v2ToPnt controlPoint1
@@ -98,14 +98,14 @@ bezier start controlPoint1 controlPoint2 end = edgesToPath $ do
     pure <$> MakeEdge.fromCurve (upcast b)
 
     
-bezierTo :: V2 Double -> V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path)
+bezierTo :: V2 Double -> V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
 bezierTo controlPoint1 controlPoint2 end = \start -> (end, bezier start controlPoint1 controlPoint2 end) 
 
-pathFrom :: V2 Double -> [(V2 Double -> (V2 Double, Path))] -> Path
+pathFrom :: V2 Double -> [(V2 Double -> (V2 Double, Path2D))] -> Path2D
 pathFrom start commands = snd $ pathFromTo commands start 
 
      
-pathFromTo :: [(V2 Double -> (V2 Double, Path))] -> V2 Double -> (V2 Double, Path)
+pathFromTo :: [(V2 Double -> (V2 Double, Path2D))] -> V2 Double -> (V2 Double, Path2D)
 pathFromTo commands start = 
     let go (pos, paths) cmd = second (:paths) (cmd pos)
         (end, allPaths) = foldl' go (start, []) commands

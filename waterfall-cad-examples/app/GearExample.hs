@@ -4,8 +4,7 @@ module GearExample
 
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.TwoD.Shape as Shape
-import qualified Waterfall.TwoD.Path as Path
-import Waterfall.TwoD.Internal.Path (joinPaths)
+import qualified Waterfall.TwoD.Path2D as Path2D
 import Waterfall.TwoD.Transforms (rotate2D)
 import Linear.V3
 import Linear.V2
@@ -79,7 +78,7 @@ genInvolutePolar rb r = (sqrt (r * r - rb * rb))/rb - acos (rb / r)
 polarToCart :: Double -> Double -> V2 Double
 polarToCart rad angle = V2 (rad * cos angle) (rad * sin angle)
 
-genGearToothData :: Double -> Int -> Double -> Path.Path
+genGearToothData :: Double -> Int -> Double -> Path2D.Path2D
 genGearToothData m z phi = 
     let addendum = m
         dedendum = 1.25 * m
@@ -116,30 +115,30 @@ genGearToothData m z phi =
         rootNext = polarToCart rRoot (3*pitchAngle/4 - pitchToFilletAngle - filletAngle)
         filletNext = rotate2D pitchAngle fillet
 
-    in Path.pathFrom fillet $ 
+    in Path2D.pathFrom fillet $ 
         catMaybes 
             [ if rf < rb 
-                then Just $ Path.lineTo (rotateBez dbz1)
+                then Just $ Path2D.lineTo (rotateBez dbz1)
                 else Nothing
-            , Just $ Path.bezierTo (rotateBez dbz2) (rotateBez dbz3) (rotateBez dbz4)
-            , Just $ Path.bezierTo (rotateBez abz2) (rotateBez abz3) (rotateBez abz4)
-            , Just $ Path.arcViaTo arcMiddle (rotateBez' abz4)
-            , Just $ Path.bezierTo (rotateBez' abz3) (rotateBez' abz2) (rotateBez' dbz4)
-            , Just $ Path.bezierTo (rotateBez' dbz3) (rotateBez' dbz2) (rotateBez' dbz1)
+            , Just $ Path2D.bezierTo (rotateBez dbz2) (rotateBez dbz3) (rotateBez dbz4)
+            , Just $ Path2D.bezierTo (rotateBez abz2) (rotateBez abz3) (rotateBez abz4)
+            , Just $ Path2D.arcViaTo arcMiddle (rotateBez' abz4)
+            , Just $ Path2D.bezierTo (rotateBez' abz3) (rotateBez' abz2) (rotateBez' dbz4)
+            , Just $ Path2D.bezierTo (rotateBez' dbz3) (rotateBez' dbz2) (rotateBez' dbz1)
             , if rf < rb 
-                then Just $ Path.lineTo filletR
+                then Just $ Path2D.lineTo filletR
                 else Nothing
             , if rootNext ^. _y > rootR ^. _y
-                then Just $ Path.pathFromTo 
-                    [ Path.arcTo Path.Counterclockwise fRad rootR
-                    , Path.arcTo Path.Counterclockwise rRoot rootNext -- these lines should be arcs
+                then Just $ Path2D.pathFromTo 
+                    [ Path2D.arcTo Path2D.Counterclockwise fRad rootR
+                    , Path2D.arcTo Path2D.Counterclockwise rRoot rootNext -- these lines should be arcs
                     ]
                 else Nothing
-            , Just $ Path.arcTo Path.Counterclockwise fRad filletNext
+            , Just $ Path2D.arcTo Path2D.Counterclockwise fRad filletNext
         ]
 -- Thickness, Module, Number Teeth, pressure Angle 
 gearExample :: Double -> Double -> Int -> Double -> Solids.Solid
 gearExample thickness moduleLength nGears pressureAngle =
     let segment = genGearToothData moduleLength nGears pressureAngle
-        path = joinPaths [rotate2D (-fromIntegral n * pi * 2 / fromIntegral nGears) segment | n <- [0..nGears]]
+        path = mconcat [rotate2D (-fromIntegral n * pi * 2 / fromIntegral nGears) segment | n <- [0..nGears]]
     in Solids.prism thickness . Shape.fromPath $ path
