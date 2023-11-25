@@ -4,6 +4,7 @@ import CsgExample (csgExample)
 import PrismExample (prismExample)
 import GearExample (gearExample)
 import FilletExample (filletExample)
+import RevolutionExample (revolutionExample)
 import Waterfall.IO (writeSTL, writeSTEP)
 import qualified Waterfall.Solids as Solids
 import qualified Options.Applicative as OA
@@ -21,6 +22,7 @@ exampleOption :: OA.Parser Solids.Solid
 exampleOption = OA.flag' csgExample (OA.long "csg" <> OA.help "example from the wikipedia page on Constructive Solid Geometry" ) <|>
                 OA.flag' prismExample (OA.long "prism" <> OA.help "need to give this a better name" ) <|>
                 OA.flag' filletExample (OA.long "fillet" <> OA.help "demonstrates adding fillets to an object" ) <|>
+                OA.flag' revolutionExample (OA.long "revolution" <> OA.help "demonstrates revolving a path into a solid" ) <|>
                 (OA.flag' gearExample (OA.long "gear" <> OA.help "generate an involute gear") <*>
                  (OA.option OA.auto (OA.long "thickness" <> OA.help "gear depth") <|> pure 1.0) <*>
                  (OA.option OA.auto (OA.long "module" <> OA.help "gear module") <|> pure 5.0) <*>

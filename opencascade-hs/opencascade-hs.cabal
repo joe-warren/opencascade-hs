@@ -53,6 +53,7 @@ library
       OpenCascade.BRepPrimAPI.MakeBox
       OpenCascade.BRepPrimAPI.MakeCylinder
       OpenCascade.BRepPrimAPI.MakePrism
+      OpenCascade.BRepPrimAPI.MakeRevol
       OpenCascade.BRepPrimAPI.MakeSphere
       OpenCascade.BRepPrimAPI.Types
       OpenCascade.GC.MakeArcOfCircle
@@ -145,6 +146,7 @@ library
       cpp/hs_BRepPrimAPI_MakeBox.cpp
       cpp/hs_BRepPrimAPI_MakeCylinder.cpp
       cpp/hs_BRepPrimAPI_MakePrism.cpp
+      cpp/hs_BRepPrimAPI_MakeRevol.cpp
       cpp/hs_BRepPrimAPI_MakeSphere.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp

@@ -39,6 +39,7 @@ typedef void BRepFilletAPI_MakeFillet;
 typedef void BRepPrimAPI_MakeBox;
 typedef void TopExp_Explorer;
 typedef void BRepPrimAPI_MakeCylinder;
+typedef void BRepPrimAPI_MakeRevol;
 typedef void TopTools_ListOfShape;
 typedef void BRepOffsetAPI_MakeThickSolid;
 typedef void Geom2d_Ellipse;

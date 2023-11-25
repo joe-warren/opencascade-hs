@@ -82,8 +82,6 @@ arc sense radius start end =
 arcTo :: Sense -> Double -> V2 Double -> V2 Double -> (V2 Double, Path)
 arcTo sense radius end = \start -> (end, arc sense radius start end) 
 
-
-
 bezier :: V2 Double -> V2 Double -> V2 Double -> V2 Double -> Path
 bezier start controlPoint1 controlPoint2 end = edgesToPath $ do
     s <- v2ToPnt start
