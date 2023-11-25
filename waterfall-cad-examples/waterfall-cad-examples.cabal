@@ -38,9 +38,9 @@ executable waterfall-cad-examples
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
-    , lens
-    , linear
-    , opencascade-hs
-    , optparse-applicative
-    , waterfall-cad
+    , lens ==5.*
+    , linear >=1.21 && <2
+    , opencascade-hs >=0.0.0.1 && <0.1
+    , optparse-applicative >=0.17 && <0.19
+    , waterfall-cad >=0.0.0.1 && <0.1
   default-language: Haskell2010
