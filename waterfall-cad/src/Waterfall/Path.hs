@@ -2,10 +2,13 @@ module Waterfall.Path
 ( Path
 , line
 , lineTo
+, lineRelative
 , arcVia
 , arcViaTo
+, arcViaRelative
 , bezier
 , bezierTo
+, bezierRelative
 , pathFrom
 , pathFromTo
 ) where
@@ -50,6 +53,11 @@ line start end = edgesToPath $ do
 lineTo :: V3 Double -> V3 Double -> (V3 Double, Path)
 lineTo end = \start -> (end, line start end) 
 
+lineRelative :: V3 Double -> V3 Double -> (V3 Double, Path)
+lineRelative dEnd = do
+    end <- (+ dEnd)
+    lineTo end
+
 arcVia :: V3 Double -> V3 Double -> V3 Double -> Path
 arcVia start mid end = edgesToPath $ do
     s <- v3ToPnt start
@@ -60,6 +68,12 @@ arcVia start mid end = edgesToPath $ do
 
 arcViaTo :: V3 Double -> V3 Double -> V3 Double -> (V3 Double, Path)
 arcViaTo mid end = \start -> (end, arcVia start mid end) 
+
+arcViaRelative :: V3 Double -> V3 Double -> V3 Double -> (V3 Double, Path)
+arcViaRelative dMid dEnd = do
+    mid <- (+ dMid) 
+    end <- (+ dEnd) 
+    arcViaTo mid end
 
 bezier :: V3 Double -> V3 Double -> V3 Double -> V3 Double -> Path
 bezier start controlPoint1 controlPoint2 end = edgesToPath $ do
@@ -80,9 +94,15 @@ bezier start controlPoint1 controlPoint2 end = edgesToPath $ do
 bezierTo :: V3 Double -> V3 Double -> V3 Double -> V3 Double -> (V3 Double, Path)
 bezierTo controlPoint1 controlPoint2 end = \start -> (end, bezier start controlPoint1 controlPoint2 end) 
 
+bezierRelative :: V3 Double -> V3 Double -> V3 Double -> V3 Double -> (V3 Double, Path)
+bezierRelative dControlPoint1 dControlPoint2 dEnd = do
+    controlPoint1 <- (+ dControlPoint1)
+    controlPoint2 <- (+ dControlPoint2)
+    end <- (+ dEnd)
+    bezierTo controlPoint1 controlPoint2 end
+
 pathFrom :: V3 Double -> [(V3 Double -> (V3 Double, Path))] -> Path
 pathFrom start commands = snd $ pathFromTo commands start 
-
      
 pathFromTo :: [(V3 Double -> (V3 Double, Path))] -> V3 Double -> (V3 Double, Path)
 pathFromTo commands start = 

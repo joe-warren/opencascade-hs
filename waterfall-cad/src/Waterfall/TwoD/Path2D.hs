@@ -3,12 +3,16 @@ module Waterfall.TwoD.Path2D
 , Sense (..)
 , line
 , lineTo
+, lineRelative
 , arc
 , arcTo
+, arcRelative
 , arcVia
 , arcViaTo
+, arcViaRelative
 , bezier
 , bezierTo
+, bezierRelative
 , pathFrom
 , pathFromTo
 ) where 
@@ -52,6 +56,11 @@ line start end = edgesToPath $ do
 lineTo :: V2 Double -> V2 Double -> (V2 Double, Path2D)
 lineTo end = \start -> (end, line start end) 
 
+lineRelative :: V2 Double -> V2 Double -> (V2 Double, Path2D)
+lineRelative dEnd = do
+    end <- (+ dEnd)
+    lineTo end
+
 arcVia :: V2 Double -> V2 Double -> V2 Double -> Path2D
 arcVia start mid end = edgesToPath $ do
     s <- v2ToPnt start
@@ -62,6 +71,12 @@ arcVia start mid end = edgesToPath $ do
 
 arcViaTo :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
 arcViaTo mid end = \start -> (end, arcVia start mid end) 
+
+arcViaRelative :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
+arcViaRelative dMid dEnd = do
+    mid <- (+ dMid) 
+    end <- (+ dEnd) 
+    arcViaTo mid end
 
 data Sense = Clockwise | Counterclockwise deriving (Eq, Show)
 
@@ -82,6 +97,11 @@ arc sense radius start end =
 arcTo :: Sense -> Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
 arcTo sense radius end = \start -> (end, arc sense radius start end) 
 
+arcRelative :: Sense -> Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
+arcRelative sense radius dEnd = do
+    end <- (+ dEnd)
+    arcTo sense radius end
+
 bezier :: V2 Double -> V2 Double -> V2 Double -> V2 Double -> Path2D
 bezier start controlPoint1 controlPoint2 end = edgesToPath $ do
     s <- v2ToPnt start
@@ -100,6 +120,14 @@ bezier start controlPoint1 controlPoint2 end = edgesToPath $ do
     
 bezierTo :: V2 Double -> V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
 bezierTo controlPoint1 controlPoint2 end = \start -> (end, bezier start controlPoint1 controlPoint2 end) 
+
+bezierRelative :: V2 Double -> V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
+bezierRelative dControlPoint1 dControlPoint2 dEnd = do
+    controlPoint1 <- (+ dControlPoint1)
+    controlPoint2 <- (+ dControlPoint2)
+    end <- (+ dEnd)
+    bezierTo controlPoint1 controlPoint2 end
+
 
 pathFrom :: V2 Double -> [(V2 Double -> (V2 Double, Path2D))] -> Path2D
 pathFrom start commands = snd $ pathFromTo commands start 
