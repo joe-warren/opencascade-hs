@@ -14,7 +14,7 @@ import Control.Monad.IO.Class (liftIO)
 import Linear (unit, _x)
 
 revolution :: Path2D -> Solid
-revolution (Path2D runPath) = debug "revolution" .  rotate (unit _x) (pi/2) . Solid $ do
+revolution (Path2D runPath) = rotate (unit _x) (pi/2) . Solid $ do
     p <- runPath
     axis <- GP.oy -- revolve around the y axis
     revol <- MakeRevol.fromShapeAndAx1 (upcast p) axis True
