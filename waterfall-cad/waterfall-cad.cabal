@@ -30,8 +30,10 @@ library
       Waterfall.Booleans
       Waterfall.Booleans.Operators
       Waterfall.Fillet
+      Waterfall.Internal.Path
       Waterfall.Internal.Solid
       Waterfall.IO
+      Waterfall.Path
       Waterfall.Revolution
       Waterfall.Solids
       Waterfall.Transforms
