@@ -22,8 +22,3 @@ sweepExample =
                 Path2D.repeatLooping $
                 Path2D.bezier (0.25 *^ unit _x) (0.5 *^ unit _x) (0.5 *^ angle (pi/6)) (0.25 *^ angle (pi/6))
     in sweep sweepPath sweepProfile
-    
-            {--Shape.fromPath $ (
-                    Path2D.arcVia (V2 0 0.5) (V2 0.5 0) (V2 0 (-0.5))
-                    <> Path2D.arcVia (V2 0 (-0.5)) (V2 (-0.5) 0 ) (V2 0 0.5)
-                )--}
