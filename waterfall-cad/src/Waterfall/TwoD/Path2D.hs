@@ -125,7 +125,6 @@ bezier start controlPoint1 controlPoint2 end = edgesToPath $ do
         NCollection.Array1.setValueGPPnt arr 4 e
     b <- BezierCurve.toHandle =<< BezierCurve.fromPnts arr
     pure <$> MakeEdge.fromCurve (upcast b)
-
     
 bezierTo :: V2 Double -> V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
 bezierTo controlPoint1 controlPoint2 end = \start -> (end, bezier start controlPoint1 controlPoint2 end) 
@@ -136,7 +135,6 @@ bezierRelative dControlPoint1 dControlPoint2 dEnd = do
     controlPoint2 <- (+ dControlPoint2)
     end <- (+ dEnd)
     bezierTo controlPoint1 controlPoint2 end
-
 
 pathFrom :: V2 Double -> [(V2 Double -> (V2 Double, Path2D))] -> Path2D
 pathFrom start commands = snd $ pathFromTo commands start 
@@ -151,8 +149,6 @@ repeatLooping :: Path2D -> Path2D
 repeatLooping p = Path2D $ do
     path <- runPath p 
     (s, e) <- liftIO . Internal.Edges.wireEndpoints $ path
-    let s' = s ^. _xy
-    let e' = e ^. _xy
     let a = unangle (e ^. _xy) - unangle (s ^. _xy)
     let times :: Integer = abs . round $ pi * 2 / a 
     runPath $ mconcat [rotate2D (negate (fromIntegral n) * a) p | n <- [0..times]]
