@@ -25,6 +25,7 @@ joinPaths paths = Path2D $ do
 
 instance Semigroup Path2D where
     sconcat = joinPaths . toList
+    a <> b = joinPaths [a, b] 
     
 instance Monoid Path2D where
     mempty = joinPaths []

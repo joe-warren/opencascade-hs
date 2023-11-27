@@ -7,7 +7,11 @@
 extern "C" {
 #endif
 
-Handle(Geom_Curve) * hs_BRep_Tool_curve(TopoDS_Edge * edge, double first, double last);
+Handle(Geom_Curve) * hs_BRep_Tool_curve(TopoDS_Edge * edge);
+
+double hs_BRep_Tool_curveParamFirst(TopoDS_Edge * edge);
+
+double hs_BRep_Tool_curveParamLast(TopoDS_Edge * edge);
 
 #ifdef __cplusplus
 }

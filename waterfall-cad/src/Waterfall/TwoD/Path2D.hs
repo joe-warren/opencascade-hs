@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Waterfall.TwoD.Path2D
 ( Path2D
 , Sense (..)
@@ -15,25 +16,33 @@ module Waterfall.TwoD.Path2D
 , bezierRelative
 , pathFrom
 , pathFromTo
+, repeatLooping
+, closeLoop
 ) where 
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..), joinPaths)
+import Waterfall.TwoD.Transforms (rotate2D)
+import qualified Waterfall.Internal.Edges as Internal.Edges
 import Control.Arrow (second)
 import Data.Foldable (traverse_, foldl')
 import Linear.V2 (V2(..))
 import Control.Monad.IO.Class (liftIO)
 import qualified Linear.V2 as V2
-import Linear ((^*), distance, normalize)
+import Control.Lens ((^.))
+import Linear ((^*), _xy, V3 (..), distance, normalize, unangle, norm)
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.Pnt as GP.Pnt 
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import qualified OpenCascade.TopoDS as TopoDS
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.GC.MakeArcOfCircle as MakeArcOfCircle
 import qualified OpenCascade.Geom as Geom
 import qualified OpenCascade.NCollection.Array1 as NCollection.Array1
 import qualified OpenCascade.Geom.BezierCurve as BezierCurve
-import OpenCascade.Inheritance (upcast)
+import qualified OpenCascade.Geom.Curve as Geom.Curve
+import qualified OpenCascade.BRep.Tool as BRep.Tool
+import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Foreign.Ptr
 import Data.Acquire
 
@@ -131,7 +140,6 @@ bezierRelative dControlPoint1 dControlPoint2 dEnd = do
 
 pathFrom :: V2 Double -> [(V2 Double -> (V2 Double, Path2D))] -> Path2D
 pathFrom start commands = snd $ pathFromTo commands start 
-
      
 pathFromTo :: [(V2 Double -> (V2 Double, Path2D))] -> V2 Double -> (V2 Double, Path2D)
 pathFromTo commands start = 
@@ -139,6 +147,21 @@ pathFromTo commands start =
         (end, allPaths) = foldl' go (start, []) commands
      in (end, joinPaths allPaths)
 
+repeatLooping :: Path2D -> Path2D
+repeatLooping p = Path2D $ do
+    path <- runPath p 
+    (s, e) <- liftIO . Internal.Edges.wireEndpoints $ path
+    let s' = s ^. _xy
+    let e' = e ^. _xy
+    let a = unangle (e ^. _xy) - unangle (s ^. _xy)
+    let times :: Integer = abs . round $ pi * 2 / a 
+    runPath $ mconcat [rotate2D (negate (fromIntegral n) * a) p | n <- [0..times]]
+    
+closeLoop :: Path2D -> Path2D
+closeLoop p = Path2D $ do
+    path <- runPath p
+    (s, e) <- liftIO . Internal.Edges.wireEndpoints $ path
+    runPath $ mconcat [p, line (e ^. _xy)  (s ^. _xy)]
 
 
 

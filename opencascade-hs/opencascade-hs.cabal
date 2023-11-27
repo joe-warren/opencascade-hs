@@ -49,6 +49,9 @@ library
       OpenCascade.BRepMesh.IncrementalMesh
       OpenCascade.BRepMesh.Internal.Destructors
       OpenCascade.BRepMesh.Types
+      OpenCascade.BRepOffsetAPI.Internal.Destructors
+      OpenCascade.BRepOffsetAPI.MakePipe
+      OpenCascade.BRepOffsetAPI.Types
       OpenCascade.BRepPrimAPI.Internal.Destructors
       OpenCascade.BRepPrimAPI.MakeBox
       OpenCascade.BRepPrimAPI.MakeCylinder
@@ -56,6 +59,9 @@ library
       OpenCascade.BRepPrimAPI.MakeRevol
       OpenCascade.BRepPrimAPI.MakeSphere
       OpenCascade.BRepPrimAPI.Types
+      OpenCascade.BRepTools.Internal.Destructors
+      OpenCascade.BRepTools.Types
+      OpenCascade.BRepTools.WireExplorer
       OpenCascade.GC.MakeArcOfCircle
       OpenCascade.GC.MakeSegment
       OpenCascade.Geom
@@ -143,11 +149,13 @@ library
       cpp/hs_BRepBuilderAPI_Transform.cpp
       cpp/hs_BRepFilletAPI_MakeFillet.cpp
       cpp/hs_BRepMesh_IncrementalMesh.cpp
+      cpp/hs_BRepOffsetAPI_MakePipe.cpp
       cpp/hs_BRepPrimAPI_MakeBox.cpp
       cpp/hs_BRepPrimAPI_MakeCylinder.cpp
       cpp/hs_BRepPrimAPI_MakePrism.cpp
       cpp/hs_BRepPrimAPI_MakeRevol.cpp
       cpp/hs_BRepPrimAPI_MakeSphere.cpp
+      cpp/hs_BRepTools_WireExplorer.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
       cpp/hs_Geom_BezierCurve.cpp

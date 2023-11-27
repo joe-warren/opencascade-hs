@@ -5,6 +5,7 @@ module Waterfall.Fillet
 ) where
 
 import Waterfall.Internal.Solid (Solid (..))
+import Waterfall.Internal.Edges (edgeEndpoints)
 import qualified OpenCascade.BRepFilletAPI.MakeFillet as MakeFillet
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.TopExp.Explorer as Explorer 
@@ -22,15 +23,6 @@ import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Linear.V3 (V3 (..))
 import Data.Acquire 
 
-gpPntToV3 :: Ptr GP.Pnt -> IO (V3 Double)
-gpPntToV3 pnt = V3 <$> GP.Pnt.getX pnt <*> GP.Pnt.getY pnt <*> GP.Pnt.getZ pnt
-
-edgeEndpoints :: Ptr TopoDS.Edge -> IO (V3 Double, V3 Double)
-edgeEndpoints e = (`with` pure) $ do
-    curve <- BRep.Tool.curve e 0 1
-    s <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve 0
-    e <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve 1
-    return (s, e)
 
 addEdgesToMakeFillet :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Ptr MakeFillet.MakeFillet -> Ptr Explorer.Explorer -> IO ()
 addEdgesToMakeFillet radiusFn builder explorer = go [] 0
