@@ -25,15 +25,31 @@ source-repository head
   type: git
   location: https://github.com/joe-warren/opencascade-hs
 
-executable waterfall-cad-examples
-  main-is: Main.hs
-  other-modules:
+library
+  exposed-modules:
       CsgExample
       FilletExample
       GearExample
       PrismExample
       RevolutionExample
       SweepExample
+  other-modules:
+      Paths_waterfall_cad_examples
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+    , lens ==5.*
+    , linear >=1.21 && <2
+    , opencascade-hs >=0.0.0.1 && <0.1
+    , optparse-applicative >=0.17 && <0.19
+    , waterfall-cad >=0.0.0.1 && <0.1
+  default-language: Haskell2010
+
+executable waterfall-cad-examples
+  main-is: Main.hs
+  other-modules:
       Paths_waterfall_cad_examples
   hs-source-dirs:
       app
@@ -45,4 +61,5 @@ executable waterfall-cad-examples
     , opencascade-hs >=0.0.0.1 && <0.1
     , optparse-applicative >=0.17 && <0.19
     , waterfall-cad >=0.0.0.1 && <0.1
+    , waterfall-cad-examples
   default-language: Haskell2010
