@@ -44,15 +44,19 @@ library
       OpenCascade.BRepBuilderAPI.Transform
       OpenCascade.BRepBuilderAPI.Types
       OpenCascade.BRepBuilderAPI.WireError
+      OpenCascade.BRepFilletAPI
       OpenCascade.BRepFilletAPI.Internal.Destructors
       OpenCascade.BRepFilletAPI.MakeFillet
       OpenCascade.BRepFilletAPI.Types
+      OpenCascade.BRepMesh
       OpenCascade.BRepMesh.IncrementalMesh
       OpenCascade.BRepMesh.Internal.Destructors
       OpenCascade.BRepMesh.Types
+      OpenCascade.BRepOffsetAPI
       OpenCascade.BRepOffsetAPI.Internal.Destructors
       OpenCascade.BRepOffsetAPI.MakePipe
       OpenCascade.BRepOffsetAPI.Types
+      OpenCascade.BRepPrimAPI
       OpenCascade.BRepPrimAPI.Internal.Destructors
       OpenCascade.BRepPrimAPI.MakeBox
       OpenCascade.BRepPrimAPI.MakeCylinder
@@ -60,6 +64,7 @@ library
       OpenCascade.BRepPrimAPI.MakeRevol
       OpenCascade.BRepPrimAPI.MakeSphere
       OpenCascade.BRepPrimAPI.Types
+      OpenCascade.BRepTools
       OpenCascade.BRepTools.Internal.Destructors
       OpenCascade.BRepTools.Types
       OpenCascade.BRepTools.WireExplorer
@@ -93,16 +98,19 @@ library
       OpenCascade.NCollection.Array1
       OpenCascade.NCollection.Internal.Destructors
       OpenCascade.NCollection.Types
+      OpenCascade.STEPControl
       OpenCascade.STEPControl.Internal.Destructors
       OpenCascade.STEPControl.StepModelType
       OpenCascade.STEPControl.Types
       OpenCascade.STEPControl.Writer
+      OpenCascade.StlAPI
       OpenCascade.StlAPI.Internal.Destructors
       OpenCascade.StlAPI.Types
       OpenCascade.StlAPI.Writer
       OpenCascade.TopAbs
       OpenCascade.TopAbs.Orientation
       OpenCascade.TopAbs.ShapeEnum
+      OpenCascade.TopExp
       OpenCascade.TopExp.Explorer
       OpenCascade.TopExp.Internal.Destructors
       OpenCascade.TopExp.Types
