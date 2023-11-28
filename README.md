@@ -1,4 +1,4 @@
-# opencascade-hs
+# OpenCASCADE-hs
 
 This is my attempt to write a third party Haskell wrapper to [OpenCASCADE](https://www.opencascade.com/)([wiki](https://en.wikipedia.org/wiki/Open_Cascade_Technology)), which is the underlying framework behind [FreeCAD](https://www.freecad.org/).
 
@@ -13,7 +13,19 @@ This uses opencascade-hs as the kernel, but provides a "more functional" API ove
 
 Like `opencascade-hs` the API is subject to change dramatically.
 
+![](images/csg.png)
+
+![](images/gear.png)
+
+![](images/revolution.png)
+
+![](images/sweep.png)
+
 # Building
+
+I've only been testing this on Debian, it probably won't build on MacOS or Windows. 
+
+The underlying OpenCASCADE library is portable though, so I'd like to fix that eventually.
 
 I've been building this project with [`stack`](https://docs.haskellstack.org/en/stable/).
 
