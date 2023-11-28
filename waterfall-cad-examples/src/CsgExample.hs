@@ -4,9 +4,8 @@ module CsgExample
 
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.Transforms as Transforms
-import Waterfall.Booleans.Operators
-import Linear.V3
-import Linear.Vector 
+import Waterfall.Booleans.Operators ( (~-~), (~/\~), (~\/~) )
+import Linear (V3 (..), (^*), unit, _x, _y, _z )
 import Data.Function ((&))
 
 csgExample :: Solids.Solid

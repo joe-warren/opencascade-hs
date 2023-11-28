@@ -7,7 +7,7 @@ import Waterfall.Solids (Solid)
 import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Path2D as Path2D
 import qualified Waterfall.TwoD.Shape as Shape
-import Linear
+import Linear ( V3 (..), (*^), angle, unit, _x, zero )
 
 sweepExample :: Solid
 sweepExample = 

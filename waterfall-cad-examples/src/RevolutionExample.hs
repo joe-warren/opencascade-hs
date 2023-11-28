@@ -5,7 +5,7 @@ module RevolutionExample
 import Waterfall.Solids (Solid)
 import qualified Waterfall.TwoD.Path2D as Path2D
 import Waterfall.Revolution (revolution)
-import Linear
+import Linear (V2 (..))
 
 revolutionExample :: Solid
 revolutionExample = 

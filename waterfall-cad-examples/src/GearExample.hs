@@ -1,3 +1,13 @@
+{-|
+ This is directly implemented from [\"Gear Drawing with Bézier Curves\" by Dr A R Collins](https://www.arc.id.au/GearDrawing.html).
+
+ Found Indirectly via Mathew Dockrey 
+ ( [Attoparsec](https://www.attoparsec.com/) 
+ ( [the YouTube channel](https://www.youtube.com/attoparsec), not the parser library ) )
+ and his [Inkscape Plugin](https://github.com/attoparsec/inkscape-extensions)
+
+ And David Douard and Jonas Bähr, and their [FreeCAD module](https://github.com/FreeCAD/FreeCAD/blob/0ac0882eeb4e3390aef464e1807a3631c5f2e858/src/Mod/PartDesign/fcgear/involute.py)
+-}
 module GearExample 
 ( gearExample
 ) where 
@@ -6,17 +16,9 @@ import qualified Waterfall.Solids as Solids
 import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.TwoD.Path2D as Path2D
 import Waterfall.TwoD.Transforms (rotate2D)
-import Linear.V3
-import Linear.V2
 import Control.Lens ((^.))
+import Linear (V2 (..), _y)
 import Data.Maybe (catMaybes)
-
--- This is directly implemented from "Gear Drawing with Bézier Curves" by Dr A R Collins 
--- https://www.arc.id.au/GearDrawing.html
--- found Indirectly via Mathew Dockrey (attoparsec (the YouTube channel, not the parser library))
--- https://github.com/attoparsec/inkscape-extensions
--- and David Douard and Jonas Bähr (FreeCAD)
--- https://github.com/FreeCAD/FreeCAD/blob/0ac0882eeb4e3390aef464e1807a3631c5f2e858/src/Mod/PartDesign/fcgear/involute.py
 
 
 chebyExpnCoeffs :: Int -> (Double -> Double) -> Double
@@ -28,12 +30,12 @@ chebyExpnCoeffs j f =
      in 2 * c / nf
 
 cheby :: [[Double]] 
-cheby = [ [ 1,  0,  0,  0,  0,  0],    
-            [ 0,  1,  0,  0,  0,  0], 
-            [-1,  0,  2,  0,  0,  0],
-            [ 0, -3,  0,  4,  0,  0],
-            [ 1,  0, -8,  0,  8,  0],
-            [ 0,  5,  0,-20,  0, 16]
+cheby = [ [ 1,  0,  0,  0,  0,  0]
+        , [ 0,  1,  0,  0,  0,  0]
+        , [-1,  0,  2,  0,  0,  0]
+        , [ 0, -3,  0,  4,  0,  0]
+        , [ 1,  0, -8,  0,  8,  0]
+        , [ 0,  5,  0,-20,  0, 16]
         ]
 
 -- limited to p' = 5, but in practice p' = 4
@@ -45,15 +47,15 @@ chebyApprox f p' =
      in [ sum [fnCoeffs!!k  * (cheby !! k !! pwr) | k <- [0..p'] ] - adjust pwr | pwr <- [0..p'] ]
 
 binom :: Int -> Int -> Double 
-binom n k = (fromIntegral $ product [n - k + 1 .. n]) / (fromIntegral $ product [1..k])
+binom n k = fromIntegral (product [n - k + 1 .. n]) / fromIntegral (product [1..k])
 
 involuteBezCoeffs :: Double -> Double -> Double -> Double -> (V2 Double, V2 Double, V2 Double, V2 Double)
 involuteBezCoeffs rA rB fStart fStop = 
     let 
         p = 3
         ta = sqrt (rA * rA - rB * rB)/ rB -- involute angle at addendum
-        ts = (sqrt fStart) * ta
-        te = (sqrt fStop) * ta 
+        ts = ta * sqrt fStart
+        te = ta * sqrt fStop
 
         involuteXbez t =
             let x = t*2 -1
@@ -73,7 +75,7 @@ involuteBezCoeffs rA rB fStart fStop =
     in (v 0, v 1, v 2, v 3)
 
 genInvolutePolar :: Double -> Double -> Double
-genInvolutePolar rb r = (sqrt (r * r - rb * rb))/rb - acos (rb / r)
+genInvolutePolar rb r = let ra = sqrt (r * r - rb * rb) in ra/rb - acos (rb / r)
 
 polarToCart :: Double -> Double -> V2 Double
 polarToCart rad angle = V2 (rad * cos angle) (rad * sin angle)

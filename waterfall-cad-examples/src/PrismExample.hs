@@ -5,10 +5,7 @@ module PrismExample
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.TwoD.Path2D as Path2D
-import Linear.V3
-import Linear.V2
-import Linear.Vector 
-import Data.Function ((&))
+import Linear (V2 (..))
 
 prismExample :: Solids.Solid
 prismExample = Solids.prism 1 . Shape.fromPath $
