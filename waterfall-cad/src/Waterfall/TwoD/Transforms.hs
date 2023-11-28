@@ -23,6 +23,7 @@ import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Control.Monad.IO.Class (liftIO)
 import Data.Acquire
 import Foreign.Ptr
+import Waterfall.TwoD.Internal.Shape (Shape(..))
 
 class Transformable2D a where
     rotate2D :: Double -> a -> a
@@ -30,46 +31,90 @@ class Transformable2D a where
     uScale2D :: Double -> a -> a
     translate2D :: V2 Double -> a -> a
 
-fromTrsf :: Acquire (Ptr GP.Trsf) -> Path2D -> Path2D
-fromTrsf mkTrsf (Path2D run) = Path2D $ do 
+fromTrsfPath :: Acquire (Ptr GP.Trsf) -> Path2D -> Path2D
+fromTrsfPath mkTrsf (Path2D run) = Path2D $ do 
     path <- run
     trsf <- mkTrsf 
     (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast path) trsf True 
 
+fromTrsfShape :: Acquire (Ptr GP.Trsf) -> Shape -> Shape
+fromTrsfShape mkTrsf (Shape run) = Shape $ do 
+    shape <- run
+    trsf <- mkTrsf 
+    BRepBuilderAPI.Transform.transform shape trsf True 
+
+    
+fromGTrsfPath :: Acquire (Ptr GP.GTrsf) -> Path2D -> Path2D
+fromGTrsfPath mkTrsf (Path2D run) = Path2D $ do 
+    path <- run
+    trsf <- mkTrsf 
+    (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
+
+fromGTrsfShape :: Acquire (Ptr GP.GTrsf) -> Shape -> Shape
+fromGTrsfShape mkTrsf (Shape run) = Shape $ do 
+    shape <- run
+    trsf <- mkTrsf 
+    BRepBuilderAPI.GTransform.gtransform shape trsf True 
+
+rotateTrsf :: Double -> Acquire (Ptr GP.Trsf)
+rotateTrsf angle = do
+    trsf <- GP.Trsf.new
+    o <- GP.origin
+    dir <- GP.Dir.new 0 0 1
+    axis <- GP.Ax1.new o dir
+    liftIO $ GP.Trsf.setRotationAboutAxisAngle trsf axis angle
+    return trsf
+
+scaleGTrsf :: V2 Double -> Acquire (Ptr GP.GTrsf)
+scaleGTrsf (V2 x y) = do
+    trsf <- GP.GTrsf.new 
+    liftIO $ do
+        GP.GTrsf.setValue trsf 1 1 x
+        GP.GTrsf.setValue trsf 2 2 y
+        GP.GTrsf.setValue trsf 3 3 1
+        GP.GTrsf.setForm trsf
+        return trsf
+
+uScaleTrsf :: Double -> Acquire (Ptr GP.Trsf) 
+uScaleTrsf factor = do
+    trsf <- GP.Trsf.new
+    o <- GP.origin
+    liftIO $ GP.Trsf.setScale trsf o factor 
+    return trsf
+
+translateTrsf :: V2 Double -> Acquire (Ptr GP.Trsf)
+translateTrsf (V2 x y) = do 
+    trsf <- GP.Trsf.new
+    vec <- GP.Vec.new x y 0
+    liftIO $ GP.Trsf.setTranslation trsf vec
+    return trsf
+
 instance Transformable2D Path2D where
     rotate2D :: Double -> Path2D -> Path2D
-    rotate2D angle = fromTrsf $ do
-        trsf <- GP.Trsf.new
-        o <- GP.origin
-        dir <- GP.Dir.new 0 0 1
-        axis <- GP.Ax1.new o dir
-        liftIO $ GP.Trsf.setRotationAboutAxisAngle trsf axis angle
-        return trsf
-
+    rotate2D = fromTrsfPath . rotateTrsf  
+    
     scale2D :: V2 Double -> Path2D -> Path2D
-    scale2D (V2 x y) (Path2D run) = Path2D $ do 
-        path <- run
-        trsf <- GP.GTrsf.new 
-        liftIO $ do
-            GP.GTrsf.setValue trsf 1 1 x
-            GP.GTrsf.setValue trsf 2 2 y
-            GP.GTrsf.setValue trsf 3 3 1
-            GP.GTrsf.setForm trsf
-        (liftIO .unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
+    scale2D = fromGTrsfPath . scaleGTrsf
 
     uScale2D :: Double -> Path2D -> Path2D
-    uScale2D factor = fromTrsf $ do 
-        trsf <- GP.Trsf.new
-        o <- GP.origin
-        liftIO $ GP.Trsf.setScale trsf o factor 
-        return trsf
+    uScale2D = fromTrsfPath . uScaleTrsf
 
     translate2D :: V2 Double -> Path2D -> Path2D
-    translate2D (V2 x y) = fromTrsf $ do 
-        trsf <- GP.Trsf.new
-        vec <- GP.Vec.new x y 0
-        liftIO $ GP.Trsf.setTranslation trsf vec
-        return trsf
+    translate2D = fromTrsfPath .translateTrsf
+
+
+instance Transformable2D Shape where
+    rotate2D :: Double -> Shape -> Shape
+    rotate2D = fromTrsfShape . rotateTrsf  
+    
+    scale2D :: V2 Double -> Shape -> Shape
+    scale2D = fromGTrsfShape . scaleGTrsf
+
+    uScale2D :: Double -> Shape -> Shape
+    uScale2D = fromTrsfShape . uScaleTrsf
+
+    translate2D :: V2 Double -> Shape -> Shape
+    translate2D = fromTrsfShape .translateTrsf
 
 instance Transformable2D (V2 Double) where
     scale2D :: V2 Double -> V2 Double  -> V2 Double
