@@ -13,14 +13,6 @@ This uses opencascade-hs as the kernel, but provides a "more functional" API ove
 
 Like `opencascade-hs` the API is subject to change dramatically.
 
-![](images/csg.png)
-
-![](images/gear.png)
-
-![](images/revolution.png)
-
-![](images/sweep.png)
-
 # Building
 
 I've only been testing this on Debian, it probably won't build on MacOS or Windows. 
@@ -40,3 +32,13 @@ I think there should be _some_ flexibility as to the exact version of libocct re
 # Licensing
 
 Because OpenCASCADE is licensed under the LGPL version 2.1, I'm also using that library for this project.
+
+# Examples 
+
+[![](images/csg.png)](waterfall-cad-examples/src/CsgExample.hs)
+
+[![](images/gear.png)](waterfall-cad-examples/src/GearExample.hs)
+
+[![](images/revolution.png)](waterfall-cad-examples/src/RevolutionExample.hs)
+
+[![](images/sweep.png)](waterfall-cad-examples/src/SweepExample.hs)
