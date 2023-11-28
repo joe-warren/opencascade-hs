@@ -58,4 +58,4 @@ library:
   c-sources:
     - cpp/*.cpp
   cxx-options: -std=c++17
-  cpp-options: -Werror-implicit-function-declaration
+  cc-options: -Werror
