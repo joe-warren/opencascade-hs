@@ -8,16 +8,17 @@ name:           opencascade-hs
 version:        0.0.0.1
 synopsis:       Thin Wrapper for the OpenCASCADE CAD Kernel
 description:    Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
-category:       Graphics
+category:       Graphics,FFI
 homepage:       https://github.com/joe-warren/opencascade-hs#readme
 bug-reports:    https://github.com/joe-warren/opencascade-hs/issues
 author:         Joe Warren
 maintainer:     josephmarkwarren@gmail.com
 copyright:      2023 Joe Warren
-license:        LicenseRef-LGPL
+license:        LGPL-2.1-only
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
+    LICENSE
     README.md
     CHANGELOG.md
 
