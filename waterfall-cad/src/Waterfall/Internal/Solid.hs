@@ -1,3 +1,5 @@
+{-# OPTIONS_HADDOCK not-home #-}
+{-# LANGUAGE InstanceSigs #-}
 module Waterfall.Internal.Solid 
 ( Solid (..)
 , union
@@ -11,26 +13,32 @@ module Waterfall.Internal.Solid
 import Data.Acquire
 import Foreign.Ptr
 import Algebra.Lattice
-import Algebra.Heyting
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (forM_)
+import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
-import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
 import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
-import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
-import qualified OpenCascade.TopoDS as TopoDS
-import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
-import qualified OpenCascade.TopoDS.Solid as TopoDS.Solid
-import qualified OpenCascade.TopoDS.CompSolid as TopoDS.CompSolid
 import OpenCascade.Inheritance (upcast)
 
+-- | The Boundary Representation of a solid object.
+--
+-- Alternatively, a region of 3d Space.
+--
+-- Under the hood, this is represented by an OpenCascade `TopoDS.Shape`.
+-- The underlying shape should either be a Solid, or a CompSolid.
+-- 
+-- While you shouldn't need to know what this means to use the library,
+-- please feel free to report a bug if you're able to construct a `Solid`
+-- where this isnt' the case (without using internal functions).
 newtype Solid = Solid { runSolid :: Acquire (Ptr TopoDS.Shape.Shape) }
 
+-- | print debug information about a Solid when it's evaluated 
+-- exposes the properties of the underlying OpenCacade.TopoDS.Shape
 debug :: String -> Solid -> Solid
-debug name (Solid runSolid) = 
+debug name (Solid runTheSolid) = 
     let 
         fshow :: Show a => IO a -> IO String 
         fshow = fmap show
@@ -49,12 +57,12 @@ debug name (Solid runSolid) =
             , ("nbChildren", fshow . TopoDS.Shape.nbChildren)
             ]
     in Solid $ do
-    s <- runSolid
+    s <- runTheSolid
     liftIO $ do 
         putStrLn name
-        forM_ actions $ \(name, value) -> do
-            putStrLn ("\t" <> name)
-            putStrLn =<< ("\t\t" <>) <$> value s
+        forM_ actions $ \(actionName, value) -> do
+            putStrLn ("\t" <> actionName)
+            putStrLn . ("\t\t" <>) =<< value s
     return s
 
 {--
@@ -63,9 +71,18 @@ everywhere :: Solid
 everywhere = complement $ nowhere
 --}
 
+-- | Invert a Solid, equivalent to `not` in boolean algebra.
+--
+-- The complement of a solid represents the solid with the same surface,
+-- but where the opposite side of that surface is the \"inside\" of the solid.
+--
+-- Be warned that @complement nowhere@ does not appear to work correctly.
 complement :: Solid -> Solid
-complement (Solid runSolid) = Solid $ TopoDS.Shape.complemented =<< runSolid 
+complement (Solid run) = Solid $ TopoDS.Shape.complemented =<< run
 
+-- | An empty solid
+--
+-- Be warned that @complement nowhere@ does not appear to work correctly.
 nowhere :: Solid 
 nowhere =  Solid $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
 
@@ -78,16 +95,30 @@ toBoolean f (Solid runA) (Solid runB) = Solid $ do
     b <- runB
     f a b
 
+-- | Take the sum of two solids
+--
+-- The region occupied by either one of them.
 union :: Solid -> Solid -> Solid
 union = toBoolean Fuse.fuse
 
+-- | Take the difference of two solids
+-- 
+-- The region occupied by the first, but not the second.
 difference :: Solid -> Solid -> Solid
 difference = toBoolean Cut.cut
 
+-- | Take the intersection of two solids 
+--
+-- The region occupied by both of them.
 intersection :: Solid -> Solid -> Solid
 intersection = toBoolean Common.common
 
+-- | While `Solid` could form a Semigroup via either `union` or `intersection`.
+-- the default Semigroup is from `union`.
+--
+-- The Semigroup from `intersection` can be obtained using `Meet` from the lattices package.
 instance Semigroup Solid where
+    (<>) :: Solid -> Solid -> Solid
     (<>) = union
 
 instance Monoid Solid where

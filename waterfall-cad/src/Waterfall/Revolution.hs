@@ -2,7 +2,7 @@ module Waterfall.Revolution
 ( revolution
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), debug)
+import Waterfall.Internal.Solid (Solid (..))
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import qualified OpenCascade.BRepPrimAPI.MakeRevol as MakeRevol
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
@@ -13,9 +13,14 @@ import Waterfall.Transforms (rotate)
 import Control.Monad.IO.Class (liftIO)
 import Linear (unit, _x)
 
+-- | Construct a `Solid` of revolution from a `Path2D`.
+--
+-- The `Path2D` is rotated about the y axis, should have endpoints that lie on it ( \(x = 0\) ).
+-- 
+-- The resulting `Solid` is rotated such that the axis of revolution is the z axis.
 revolution :: Path2D -> Solid
-revolution (Path2D runPath) = rotate (unit _x) (pi/2) . Solid $ do
-    p <- runPath
+revolution (Path2D run) = rotate (unit _x) (pi/2) . Solid $ do
+    p <- run
     axis <- GP.oy -- revolve around the y axis
     revol <- MakeRevol.fromShapeAndAx1 (upcast p) axis True
     shell <- MakeShape.shape (upcast revol)

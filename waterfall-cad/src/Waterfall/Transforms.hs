@@ -10,7 +10,6 @@ module Waterfall.Transforms
 import Waterfall.Internal.Solid (Solid(..))
 import Linear.V3 (V3 (..))
 import Linear ((*^))
-import qualified Linear.V3 as V3
 import qualified Linear.Quaternion as Quaternion
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
@@ -26,12 +25,16 @@ import Foreign.Ptr
 import Waterfall.Internal.Path (Path(..))
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 
+-- | Typeclass for objects that can be manipulated in 3D space
 class Transformable a where
+    -- | Scale by different amounts along the x, y and z axes
     scale :: V3 Double -> a -> a
     -- Uniform Scale
+    -- | Scale uniformally along all axes
     uScale :: Double -> a -> a
-    -- rotate by Axis + Angle (raw Quaternions are no fun)
+    -- | Rotate by Axis and Angle (in radians)
     rotate :: V3 Double -> Double -> a -> a
+    -- | Translate by a vector in 3D space
     translate :: V3 Double -> a -> a
 
 

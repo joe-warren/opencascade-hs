@@ -25,10 +25,15 @@ import Data.Acquire
 import Foreign.Ptr
 import Waterfall.TwoD.Internal.Shape (Shape(..))
 
+-- | Typeclass for objects that can be manipulated in 2D space
 class Transformable2D a where
+    -- | Rotate by an angle (in radians) about the origin
     rotate2D :: Double -> a -> a
+    -- | Scale by different amounts along the x and y axes
     scale2D :: V2 Double -> a -> a
+    -- | Scale uniformally along both axes
     uScale2D :: Double -> a -> a
+    -- | Translate by a distance in 2D space
     translate2D :: V2 Double -> a -> a
 
 fromTrsfPath :: Acquire (Ptr GP.Trsf) -> Path2D -> Path2D

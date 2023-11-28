@@ -10,18 +10,12 @@ import qualified OpenCascade.BRepFilletAPI.MakeFillet as MakeFillet
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.TopExp.Explorer as Explorer 
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
-import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
-import qualified OpenCascade.BRep.Tool as BRep.Tool
-import qualified OpenCascade.Geom.Curve as Geom.Curve
-import qualified OpenCascade.GP as GP
-import qualified OpenCascade.GP.Pnt as GP.Pnt
 import Foreign.Ptr (Ptr)
 import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Linear.V3 (V3 (..))
-import Data.Acquire 
 
 
 addEdgesToMakeFillet :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Ptr MakeFillet.MakeFillet -> Ptr Explorer.Explorer -> IO ()
@@ -30,8 +24,8 @@ addEdgesToMakeFillet radiusFn builder explorer = go [] 0
             isMore <- Explorer.more explorer
             when isMore $ do
                 v <- unsafeDowncast =<< Explorer.value explorer
-                hash <- TopoDS.Shape.hashCode (upcast v) (2^31)
-                if(elem hash visited) 
+                hash <- TopoDS.Shape.hashCode (upcast v) (2^(31 :: Int))
+                if hash `elem` visited
                     then do
                         Explorer.next explorer
                         go visited i
@@ -43,9 +37,18 @@ addEdgesToMakeFillet radiusFn builder explorer = go [] 0
                         Explorer.next explorer
                         go (hash:visited) (i + 1) 
 
+-- | Add rounds with the given radius to each edge of a solid, conditional on the endpoints of the edge, and the index of the edge.
+-- 
+-- This can be used to selectively round\/fillet a `Solid`.
+--
+-- In general, relying on the edge index is inelegant,
+-- however, if you consider a Solid with a semicircular face, 
+-- there's no way to select either the curved or the flat edge of the semicircle based on just the endpoints.
+--
+-- Being able to selectively round\/fillet based on edge index is an \"easy\" way to round\/fillet these shapes. 
 roundIndexedConditionalFillet :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
-roundIndexedConditionalFillet radiusFunction (Solid runSolid) = Solid $ do
-    s <- runSolid 
+roundIndexedConditionalFillet radiusFunction (Solid run) = Solid $ do
+    s <- run
     builder <- MakeFillet.fromShape s
 
     explorer <- Explorer.new s ShapeEnum.Edge
@@ -53,8 +56,14 @@ roundIndexedConditionalFillet radiusFunction (Solid runSolid) = Solid $ do
 
     MakeShape.shape (upcast builder)
 
+-- | Add rounds with the given radius to each edge of a solid, conditional on the endpoints of the edge.
+-- 
+-- This can be used to selectively round\/fillet a `Solid`.
 roundConditionalFillet :: ((V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
 roundConditionalFillet f = roundIndexedConditionalFillet (const f)
 
+-- | Add a round with a given radius to every edge of a solid
+--
+-- Because this is applied to both internal (concave) and external (convex) edges, it may technically produce both Rounds and Fillets
 roundFillet :: Double -> Solid -> Solid
 roundFillet r = roundConditionalFillet (const . pure $ r)

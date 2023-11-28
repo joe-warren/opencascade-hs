@@ -6,7 +6,15 @@ import qualified OpenCascade.TopoDS as TopoDS
 import Data.Acquire
 import Foreign.Ptr
 
--- TopoDS_Wire and TopoDS_Face represent shapes in _3d space_
--- however, we're constraining this to the plane `z = 0`
--- the underlying TopoDS_Shape here should _generally_ be a TopoDS_Face
+-- | A Region in 2D Space 
+-- 
+-- In general, this is used as a face, and extruded along some sort of path
+--
+-- Under the hood, this is represented by an OpenCascade `TopoDS.Shape`
+-- 
+-- This should be of type `TopoDS.Face`, constrained to the plane \( z=0 \).
+--
+-- Please feel free to report a bug if you're able to construct a `Shape`
+-- which does not lie on this plane (without using Internal functions).
+-- Or which is not either a `TopoDS.Face`, or a composite of faces.
 newtype Shape = Shape { runShape :: Acquire (Ptr TopoDS.Shape) }
