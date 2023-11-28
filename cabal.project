@@ -1,0 +1,8 @@
+packages:
+  ./opencascade-hs/opencascade-hs.cabal
+  ./waterfall-cad/waterfall-cad.cabal
+  ./waterfall-cad-examples/waterfall-cad-examples.cabal
+
+package *
+  ghc-options: -haddock
+  documentation: True
