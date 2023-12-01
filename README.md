@@ -1,6 +1,6 @@
 # OpenCASCADE-hs
 
-This is my attempt to write a third party Haskell wrapper to [OpenCASCADE](https://www.opencascade.com/)([wiki](https://en.wikipedia.org/wiki/Open_Cascade_Technology)), which is the underlying framework behind [FreeCAD](https://www.freecad.org/).
+This is my attempt to write a third party Haskell wrapper to [Open CASCADE](https://dev.opencascade.org) ([wiki](https://en.wikipedia.org/wiki/Open_Cascade_Technology)), which is the underlying framework behind [FreeCAD](https://www.freecad.org/).
 
 It's _very early days_, so the API is subject to change dramatically.
 
