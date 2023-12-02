@@ -7,12 +7,12 @@ import Waterfall.Solids (Solid)
 import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Path2D as Path2D
 import qualified Waterfall.TwoD.Shape as Shape
-import Linear ( V3 (..), (*^), angle, unit, _x, zero )
+import Linear ( V3 (..), (*^), angle, unit, _x, zero)
 
 sweepExample :: Solid
 sweepExample = 
 
-    let sweepPath = Path.pathFrom zero 
+    let sweepPath = Path.pathFrom zero
             [ Path.bezierRelative (V3 0 0 0.5) (V3 0.5 0.5 0.5) (V3 0.5 0.5 1)
             , Path.bezierRelative (V3 0 0 0.5) (V3 (-0.5) (-0.5) 0.5) (V3 (-0.5) (-0.5) 1)
             , Path.arcViaRelative (V3 0 1 1) (V3 0 2 0)

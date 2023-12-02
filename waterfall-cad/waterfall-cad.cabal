@@ -28,6 +28,7 @@ source-repository head
 
 library
   exposed-modules:
+      Waterfall
       Waterfall.Booleans
       Waterfall.Booleans.Operators
       Waterfall.Fillet
@@ -36,6 +37,7 @@ library
       Waterfall.Internal.Solid
       Waterfall.IO
       Waterfall.Path
+      Waterfall.Path.Common
       Waterfall.Revolution
       Waterfall.Solids
       Waterfall.Sweep
