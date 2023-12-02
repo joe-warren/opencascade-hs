@@ -9,7 +9,8 @@ This module defines functions that can be used with "Waterfall.Path" or "Waterfa
 Those modules both export monomorphized variants of the functions defined in this module
 -}
 module Waterfall.Path.Common 
-( line
+( AnyPath ()
+, line
 , lineTo
 , lineRelative
 , arcVia
@@ -42,7 +43,7 @@ import qualified OpenCascade.GP.Pnt as GP.Pnt
 
 -- | Class used to abstract over constructing `Path` and `Path2D` 
 -- 
--- there are instances for @AnyPath (V3 Double) Path@
+-- There are instances for @AnyPath (V3 Double) Path@
 -- and for @AnyPath (V2 Double) Path2D@
 class AnyPath point path | path -> point where
     fromWire :: Acquire (Ptr TopoDS.Wire) -> path

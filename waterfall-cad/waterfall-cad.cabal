@@ -28,6 +28,7 @@ source-repository head
 
 library
   exposed-modules:
+      Waterfall
       Waterfall.Booleans
       Waterfall.Booleans.Operators
       Waterfall.Fillet
