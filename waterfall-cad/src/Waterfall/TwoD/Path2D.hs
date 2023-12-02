@@ -34,16 +34,15 @@ import Control.Lens ((^.))
 import Linear ((^*), _xy, distance, normalize, unangle)
 import Waterfall.Path.Common
 
-
-
 data Sense = Clockwise | Counterclockwise deriving (Eq, Show)
-
 
 -- | Section of a circle, with a given radius, that lies between two points.
 --
 -- This may fail, if the radius is less than half of the distance between the points.
 --
--- In general, `arcVia` is the \"safer\" way to construct an arc
+-- In general, `arcVia` is the \"safer\" way to construct an arc.
+--
+-- `arc` is not polymorphic, as it would not be possible to define an arc in 3D space in this way.
 arc :: Sense -> Double -> V2 Double -> V2 Double -> Path2D 
 arc sense radius start end = 
     let mid = (start + end) ^* 0.5
