@@ -34,25 +34,26 @@ import Data.Proxy (Proxy (..))
 import Linear (V3 (..), V2 (..))
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 
-class AnyPath point path | point -> path where
-    fromWire :: Proxy point -> Acquire (Ptr TopoDS.Wire) -> path
-    pointToGPPnt :: point -> Acquire (Ptr GP.Pnt)
+-- | Class used to abstract over constructing `Path` and `Path2D` 
+-- 
+-- there are instances for @AnyPath (V3 Double) Path@
+-- and for @AnyPath (V2 Double) Path2D@
+class AnyPath point path | path -> point where
+    fromWire :: Acquire (Ptr TopoDS.Wire) -> path
+    pointToGPPnt :: Proxy path -> point -> Acquire (Ptr GP.Pnt)
 
-edgesToPath :: (AnyPath point path) => Proxy point -> Acquire [Ptr TopoDS.Edge] -> path
-edgesToPath proxy es = fromWire proxy $ do
+edgesToPath :: (AnyPath point path) => Acquire [Ptr TopoDS.Edge] -> path
+edgesToPath es = fromWire $ do
     edges <- es
     builder <- MakeWire.new
     liftIO $ traverse_ (MakeWire.addEdge builder) edges
     MakeWire.wire builder
 
-toProxy :: a -> Proxy a
-toProxy = pure
-
 -- | A straight line between two points
-line :: (AnyPath point path) => point -> point -> path
-line start end = edgesToPath (toProxy start) $ do
-    pt1 <- pointToGPPnt start
-    pt2 <- pointToGPPnt end
+line :: forall point path. (AnyPath point path) => point -> point -> path
+line start end = edgesToPath $ do
+    pt1 <- pointToGPPnt (Proxy :: Proxy path) start
+    pt2 <- pointToGPPnt (Proxy :: Proxy path) end
     pure <$> MakeEdge.fromPnts pt1 pt2
 
 -- | Version of `line` designed to work with `pathFrom`
@@ -69,11 +70,11 @@ lineRelative dEnd = do
     lineTo end
 
 -- | Section of a circle based on three arguments, the start point, a point on the arc, and the endpoint
-arcVia ::(AnyPath point path) => point -> point -> point -> path
-arcVia start mid end = edgesToPath (toProxy start) $ do
-    s <- pointToGPPnt start
-    m <- pointToGPPnt mid
-    e <- pointToGPPnt end
+arcVia :: forall point path. (AnyPath point path) => point -> point -> point -> path
+arcVia start mid end = edgesToPath $ do
+    s <- pointToGPPnt (Proxy :: Proxy path) start
+    m <- pointToGPPnt (Proxy :: Proxy path) mid
+    e <- pointToGPPnt (Proxy :: Proxy path) end
     theArc <- MakeArcOfCircle.from3Pnts s m e
     pure <$> MakeEdge.fromCurve (upcast theArc)
 
@@ -97,12 +98,12 @@ arcViaRelative dMid dEnd = do
 -- | Bezier curve of order 3
 -- 
 -- The arguments are, the start of the curve, the two control points, and the end of the curve
-bezier :: (AnyPath point path) => point -> point -> point -> point -> path
-bezier start controlPoint1 controlPoint2 end = edgesToPath (toProxy start) $ do
-    s <- pointToGPPnt start
-    c1 <- pointToGPPnt controlPoint1
-    c2 <- pointToGPPnt controlPoint2
-    e <- pointToGPPnt end
+bezier :: forall point path. (AnyPath point path) => point -> point -> point -> point -> path
+bezier start controlPoint1 controlPoint2 end = edgesToPath $ do
+    s <- pointToGPPnt (Proxy :: Proxy path) start
+    c1 <- pointToGPPnt (Proxy :: Proxy path) controlPoint1
+    c2 <- pointToGPPnt (Proxy :: Proxy path) controlPoint2
+    e <- pointToGPPnt (Proxy :: Proxy path) end
     arr <- NCollection.Array1.newGPPntArray 1 4
     liftIO $ do 
         NCollection.Array1.setValueGPPnt arr 1 s
@@ -153,13 +154,13 @@ pathFromTo commands start =
      in (end, mconcat allPaths)
 
 instance AnyPath (V3 Double) Path where
-    fromWire :: Proxy (V3 Double) -> Acquire (Ptr TopoDS.Wire) -> Path
-    fromWire _proxy = Path
-    pointToGPPnt :: V3 Double -> Acquire (Ptr GP.Pnt)
-    pointToGPPnt (V3 x y z) = GP.Pnt.new x y z 
+    fromWire :: Acquire (Ptr TopoDS.Wire) -> Path
+    fromWire = Path
+    pointToGPPnt :: Proxy Path -> V3 Double -> Acquire (Ptr GP.Pnt)
+    pointToGPPnt _ (V3 x y z) = GP.Pnt.new x y z 
 
 instance AnyPath (V2 Double) Path2D where
-    fromWire :: Proxy (V2 Double) -> Acquire (Ptr TopoDS.Wire) -> Path2D
-    fromWire _proxy = Path2D
-    pointToGPPnt :: V2 Double -> Acquire (Ptr GP.Pnt)
-    pointToGPPnt (V2 x y) = GP.Pnt.new x y 0
+    fromWire :: Acquire (Ptr TopoDS.Wire) -> Path2D
+    fromWire = Path2D
+    pointToGPPnt :: Proxy Path2D -> V2 Double -> Acquire (Ptr GP.Pnt)
+    pointToGPPnt _ (V2 x y) = GP.Pnt.new x y 0
