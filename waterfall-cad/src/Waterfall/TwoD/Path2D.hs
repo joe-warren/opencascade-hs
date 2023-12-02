@@ -1,8 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-|
 Paths in 2D space.
-
-This module exposes functions with the same names as "Waterfall.Path", and if used together they should be imported qualified.
 -}
 module Waterfall.TwoD.Path2D
 ( Path2D
@@ -13,6 +11,18 @@ module Waterfall.TwoD.Path2D
 , arcRelative
 , repeatLooping
 , closeLoop
+-- $ reexports
+, line2D
+, lineTo2D
+, lineRelative2D
+, arcVia2D
+, arcViaTo2D
+, arcViaRelative2D
+, bezier2D
+, bezierTo2D
+, bezierRelative2D
+, pathFrom2D
+, pathFromTo2D
 ) where 
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..))
@@ -23,6 +33,8 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Lens ((^.))
 import Linear ((^*), _xy, distance, normalize, unangle)
 import Waterfall.Path.Common
+
+
 
 data Sense = Clockwise | Counterclockwise deriving (Eq, Show)
 
@@ -81,5 +93,50 @@ closeLoop p = Path2D $ do
     (s, e) <- liftIO . Internal.Edges.wireEndpoints $ path
     runPath $ mconcat [p, line (e ^. _xy)  (s ^. _xy)]
 
+-- $reexports
+--
+-- reexports from Waterfall.Path.Common, but monomorphised
 
+-- | `line`, with the type fixed to `Path2D`
+line2D :: V2 Double -> V2 Double -> Path2D
+line2D = line 
 
+-- | `lineTo`, with the type fixed to `Path2D`
+lineTo2D :: V2 Double -> V2 Double -> (V2 Double, Path2D)
+lineTo2D = lineTo
+
+-- | `lineRelative`, with the type fixed to `Path2D`
+lineRelative2D :: V2 Double -> V2 Double -> (V2 Double, Path2D)
+lineRelative2D = lineRelative
+
+-- | `arcVia`, with the type fixed to `Path2D`
+arcVia2D :: V2 Double -> V2 Double -> V2 Double -> Path2D
+arcVia2D = arcVia
+
+-- | `arcViaTo`, with the type fixed to `Path2D`
+arcViaTo2D :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
+arcViaTo2D = arcViaTo
+
+-- | `arcViaRelative`, with the type fixed to `Path2D`
+arcViaRelative2D :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
+arcViaRelative2D = arcViaRelative
+
+-- | `bezier`, with the type fixed to `Path2D`
+bezier2D :: V2 Double -> V2 Double -> V2 Double -> V2 Double ->  Path2D
+bezier2D = bezier
+
+-- | `bezierTo`, with the type fixed to `Path2D`
+bezierTo2D :: V2 Double -> V2 Double -> V2 Double -> V2 Double ->  (V2 Double, Path2D)
+bezierTo2D = bezierTo
+
+-- | `bezierRelative`, with the type fixed to `Path2D`
+bezierRelative2D :: V2 Double -> V2 Double -> V2 Double -> V2 Double ->  (V2 Double, Path2D)
+bezierRelative2D = bezierRelative
+
+-- | `pathFrom`, with the type fixed to `Path2D`
+pathFrom2D :: V2 Double -> [V2 Double -> (V2 Double, Path2D)] -> Path2D
+pathFrom2D = pathFrom
+
+-- | `pathFromTo`, with the type fixed to `Path2D`
+pathFromTo2D :: [V2 Double -> (V2 Double, Path2D)] -> V2 Double -> (V2 Double, Path2D)
+pathFromTo2D = pathFromTo

@@ -2,6 +2,12 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-|
+Paths in 2D / 3D space.
+
+This module defines functions that can be used with "Waterfall.Path" or "Waterfall.TwoD.Path2D".
+Those modules both export monomorphized variants of the functions defined in this module
+-}
 module Waterfall.Path.Common 
 ( line
 , lineTo
