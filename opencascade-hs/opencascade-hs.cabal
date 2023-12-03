@@ -69,6 +69,7 @@ library
       OpenCascade.BRepTools.Types
       OpenCascade.BRepTools.WireExplorer
       OpenCascade.Font.BRepFont
+      OpenCascade.Font.BRepTextBuilder
       OpenCascade.Font.Internal.Destructors
       OpenCascade.Font.Types
       OpenCascade.GC.MakeArcOfCircle
@@ -94,6 +95,8 @@ library
       OpenCascade.GP.Types
       OpenCascade.GP.Vec
       OpenCascade.GP.Vec2d
+      OpenCascade.Graphic3D.HorizontalTextAlignment
+      OpenCascade.Graphic3D.VerticalTextAlignment
       OpenCascade.Handle
       OpenCascade.IFSelect.ReturnStatus
       OpenCascade.Inheritance
@@ -170,6 +173,7 @@ library
       cpp/hs_BRepPrimAPI_MakeSphere.cpp
       cpp/hs_BRepTools_WireExplorer.cpp
       cpp/hs_Font_BRepFont.cpp
+      cpp/hs_Font_BRepTextBuilder.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
       cpp/hs_Geom_BezierCurve.cpp
