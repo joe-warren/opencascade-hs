@@ -141,9 +141,9 @@ foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_mirrored" rawMirrored:: Ptr Ax
 mirrored :: Ptr Ax3 -> Ptr Ax1 -> Acquire (Ptr Ax3)
 mirrored axis mirrorAxis = mkAcquire (rawMirrored axis mirrorAxis) deleteAx3
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_mirrorAx2" mirrorAx2:: Ptr Ax3 -> Ptr Ax2 -> IO ()
+foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_mirror_Ax2" mirrorAx2:: Ptr Ax3 -> Ptr Ax2 -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_mirroredAx2" rawMirroredAx2 :: Ptr Ax3 -> Ptr Ax2 -> IO (Ptr Ax3)
+foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_mirrored_Ax2" rawMirroredAx2 :: Ptr Ax3 -> Ptr Ax2 -> IO (Ptr Ax3)
 
 mirroredAx2 :: Ptr Ax3 -> Ptr Ax2 -> Acquire (Ptr Ax3)
 mirroredAx2 axis mirrorAxis = mkAcquire (rawMirroredAx2 axis mirrorAxis) deleteAx3

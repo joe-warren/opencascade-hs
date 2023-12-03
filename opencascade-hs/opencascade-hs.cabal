@@ -226,6 +226,7 @@ library
       TKSTEP
       TKV3d
       TKMesh
+      TKService
   build-depends:
       base >=4.7 && <5
     , resourcet >=1.2 && <1.4
