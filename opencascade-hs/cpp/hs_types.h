@@ -53,6 +53,7 @@ typedef void StlAPI_Writer;
 typedef void STEPControl_Writer;
 typedef int STEPControl_StepModelType;
 typedef int IFSelect_ReturnStatus;
+typedef void Font_BRepFont;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus
