@@ -70,6 +70,7 @@ library
       OpenCascade.BRepTools.WireExplorer
       OpenCascade.Font.BRepFont
       OpenCascade.Font.BRepTextBuilder
+      OpenCascade.Font.FontAspect
       OpenCascade.Font.Internal.Destructors
       OpenCascade.Font.Types
       OpenCascade.GC.MakeArcOfCircle

@@ -56,6 +56,7 @@ typedef int STEPControl_StepModelType;
 typedef int IFSelect_ReturnStatus;
 typedef void Font_BRepFont;
 typedef void Font_BRepTextBuilder;
+typedef int Font_FontAspect;
 typedef int Graphic3d_HorizontalTextAlignment;
 typedef int Graphic3d_VerticalTextAlignment;
 #define Handle(X) void
