@@ -82,6 +82,7 @@ library
       OpenCascade.GP.Ax1
       OpenCascade.GP.Ax2
       OpenCascade.GP.Ax2d
+      OpenCascade.GP.Ax3
       OpenCascade.GP.Dir
       OpenCascade.GP.Dir2d
       OpenCascade.GP.GTrsf
@@ -178,6 +179,7 @@ library
       cpp/hs_gp_Ax1.cpp
       cpp/hs_gp_Ax2.cpp
       cpp/hs_gp_Ax2d.cpp
+      cpp/hs_gp_Ax3.cpp
       cpp/hs_gp_Dir.cpp
       cpp/hs_gp_Dir2d.cpp
       cpp/hs_gp_GTrsf.cpp

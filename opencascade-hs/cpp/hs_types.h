@@ -18,6 +18,7 @@ typedef int TopAbs_ShapeEnum;
 typedef void gp_Pnt;
 typedef void gp_Ax1;
 typedef void gp_Ax2;
+typedef void gp_Ax3;
 typedef void gp_Ax2d;
 typedef void gp_Pnt2d;
 typedef void gp_Dir;
