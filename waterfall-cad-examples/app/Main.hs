@@ -6,6 +6,7 @@ import GearExample (gearExample)
 import FilletExample (filletExample)
 import RevolutionExample (revolutionExample)
 import SweepExample (sweepExample)
+import TextExample (textExample)
 import Waterfall.IO (writeSTL, writeSTEP)
 import qualified Waterfall.Solids as Solids
 import qualified Options.Applicative as OA
@@ -32,6 +33,12 @@ exampleOption = OA.flag' csgExample (OA.long "csg" <> OA.help "example from the 
                  (OA.option OA.auto (OA.long "pitch" <> OA.help "pitchAngle") 
                     <|> ((* (pi/180)) <$> OA.option OA.auto (OA.long "pitchDegrees" <> OA.help "pitch angle in degrees"))
                     <|> pure (20*pi/180)) 
+                ) <|> 
+                (OA.flag' textExample (OA.long "text" <> OA.help "render text") <*>
+                 (OA.strOption (OA.long "font" <> OA.help "font path")) <*>
+                 (OA.option OA.auto (OA.long "size" <> OA.help "font size") <|> pure 12.0) <*>
+                 (OA.strOption (OA.long "content" <> OA.help "text to render") <|> pure "Waterfall CAD") <*>
+                 (OA.option OA.auto (OA.long "depth" <> OA.help "depth to extrude the text to") <|> pure 10.0) 
                 )
 
 

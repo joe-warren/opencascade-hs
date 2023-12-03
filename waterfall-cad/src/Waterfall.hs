@@ -12,6 +12,7 @@ module Waterfall
 , module Waterfall.TwoD.Transforms
 , module Waterfall.TwoD.Path2D
 , module Waterfall.TwoD.Shape
+, module Waterfall.TwoD.Text
 )where
 
 import Waterfall.Booleans
@@ -27,3 +28,4 @@ import Waterfall.Transforms
 import Waterfall.TwoD.Transforms
 import Waterfall.TwoD.Path2D
 import Waterfall.TwoD.Shape
+import Waterfall.TwoD.Text

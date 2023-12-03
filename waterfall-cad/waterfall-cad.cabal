@@ -46,6 +46,7 @@ library
       Waterfall.TwoD.Internal.Shape
       Waterfall.TwoD.Path2D
       Waterfall.TwoD.Shape
+      Waterfall.TwoD.Text
       Waterfall.TwoD.Transforms
   other-modules:
       Paths_waterfall_cad
