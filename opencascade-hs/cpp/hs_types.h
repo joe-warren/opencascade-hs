@@ -18,6 +18,7 @@ typedef int TopAbs_ShapeEnum;
 typedef void gp_Pnt;
 typedef void gp_Ax1;
 typedef void gp_Ax2;
+typedef void gp_Ax3;
 typedef void gp_Ax2d;
 typedef void gp_Pnt2d;
 typedef void gp_Dir;
@@ -53,6 +54,10 @@ typedef void StlAPI_Writer;
 typedef void STEPControl_Writer;
 typedef int STEPControl_StepModelType;
 typedef int IFSelect_ReturnStatus;
+typedef void Font_BRepFont;
+typedef void Font_BRepTextBuilder;
+typedef int Graphic3d_HorizontalTextAlignment;
+typedef int Graphic3d_VerticalTextAlignment;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus

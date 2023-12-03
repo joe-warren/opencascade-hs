@@ -42,3 +42,5 @@ Because OpenCASCADE is licensed under the LGPL version 2.1, I'm also using that 
 [![](images/revolution.png)](waterfall-cad-examples/src/RevolutionExample.hs)
 
 [![](images/sweep.png)](waterfall-cad-examples/src/SweepExample.hs)
+
+[![](images/text.png)](waterfall-cad-examples/src/TextExample.hs)

@@ -6,6 +6,7 @@ data Pnt2d
 data Ax1
 data Ax2
 data Ax2d
+data Ax3
 data Dir
 data Dir2d
 data Vec

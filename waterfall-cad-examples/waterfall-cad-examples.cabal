@@ -34,6 +34,7 @@ library
       PrismExample
       RevolutionExample
       SweepExample
+      TextExample
   other-modules:
       Paths_waterfall_cad_examples
   hs-source-dirs:
