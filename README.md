@@ -1,3 +1,5 @@
+# OpenCASCADE-hs & Waterfall CAD
+
 ## OpenCASCADE-hs
 
 A third party Haskell wrapper to [Open CASCADE](https://dev.opencascade.org) ([wiki](https://en.wikipedia.org/wiki/Open_Cascade_Technology)), which is the underlying framework behind [FreeCAD](https://www.freecad.org/).
@@ -24,7 +26,7 @@ I think there should be _some_ flexibility as to the exact version of libocct re
 
 ### MacOS
 
-On MacOs, you should be able to install [OpenCASCADE](https://formulae.brew.sh/formula/opencascade) via [homebrew](https://brew.sh/):
+On MacOS, you should be able to install [OpenCASCADE](https://formulae.brew.sh/formula/opencascade) via [homebrew](https://brew.sh/):
 
 ```
 brew install opencascade
