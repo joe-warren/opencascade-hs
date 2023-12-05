@@ -64,7 +64,7 @@ new = mkAcquire rawNew  deleteShape
 
 -- copy
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_new_TopoDS_Shape" rawCopy :: Ptr Shape -> IO (Ptr Shape)
+foreign import capi unsafe "hs_TopoDS_Shape.h hs_new_TopoDS_Shape_copy" rawCopy :: Ptr Shape -> IO (Ptr Shape)
 
 copy :: Ptr Shape -> Acquire (Ptr Shape)
 copy shape = mkAcquire (rawCopy shape)  deleteShape
