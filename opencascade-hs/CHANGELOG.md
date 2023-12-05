@@ -8,4 +8,21 @@ and this project adheres to the
 
 ## Unreleased
 
-## 0.0.0.1 - YYYY-MM-DD
+## 0.1.0.0 - 2023-12-05 
+
+### Added 
+
+- Add OpenCascade.Font, including:
+    - Add OpenCascade.Font.BRepFont
+    - Add OpenCascade.Font.BRepTextBuilder
+    - Add OpenCascade.Font.FontAspect
+    - Add OpenCascade.Graphic3D.HorizontalTextAlignment
+    - Add OpenCascade.Graphic3D.VerticalTextAlignment
+- Add OpenCascade.GP.Ax3
+
+### Fixed
+
+- Fix build on MacOS (tested with the homebrew install of OpenCASCADE)
+- Fix OpenCascade.TopoDS.Shape.copy
+
+## 0.0.0.1 - 2023-11-29

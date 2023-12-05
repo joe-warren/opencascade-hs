@@ -1,5 +1,5 @@
 name:                opencascade-hs
-version:             0.0.0.1
+version:             0.1.0.0
 github:              "joe-warren/opencascade-hs"
 license:             LGPL-2.1
 author:              "Joe Warren"
@@ -61,6 +61,7 @@ cc-options:
 cxx-options:
   - --std=c++17
   - -Werror-implicit-function-declaration
+  
 library:
   source-dirs: src
   cxx-sources:
