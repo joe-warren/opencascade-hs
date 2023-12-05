@@ -152,7 +152,6 @@ library
   include-dirs:
       cpp
       /usr/include/opencascade
-      /usr/local/Cellar/opencascade/7.7.2_2/include/opencascade/
   cxx-sources:
       cpp/hs_BRep_Tool.cpp
       cpp/hs_BRepAlgoAPI_Common.cpp
