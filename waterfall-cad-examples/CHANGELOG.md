@@ -12,12 +12,6 @@ and this project adheres to the
 
 ### Added
 
-- Reexported all modules under top level `Waterfall` module
-- Refactored common code in `Path` and `Path2D` into the `AnyPath` typeclass
 - Added Waterfall.Text, containing text rendering functions
-
-### Fixed
-
-- Fix build on MacOS (tested with the homebrew install of OpenCASCADE)
 
 ## 0.0.0.1 - 2023-11-29

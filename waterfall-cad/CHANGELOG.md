@@ -8,4 +8,17 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.1.0.0 - 2023-12-05 
+
+### Added
+
+- Reexported all modules under top level `Waterfall` module
+- Refactored common code in `Path` and `Path2D` into the `AnyPath` typeclass
+- Added Waterfall.Text, containing text rendering functions
+
+### Fixed
+
+- Fix build on MacOS (tested with the homebrew install of OpenCASCADE)
+
+
 ## 0.0.0.1 - YYYY-MM-DD
