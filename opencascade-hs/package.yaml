@@ -60,7 +60,6 @@ cc-options:
 
 cxx-options:
   - --std=c++17
-  - -Werror-implicit-function-declaration
   
 library:
   source-dirs: src
