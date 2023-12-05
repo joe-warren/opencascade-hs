@@ -55,9 +55,13 @@ ghc-options:
 - -Wpartial-fields
 - -Wredundant-constraints
 
+cc-options:
+  - -Werror-implicit-function-declaration
+
+cxx-options:
+  - --std=c++17
+  - -Werror-implicit-function-declaration
 library:
   source-dirs: src
-  c-sources:
+  cxx-sources:
     - cpp/*.cpp
-  cxx-options: -std=c++17
-  cc-options: -Werror
