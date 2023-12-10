@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added 
+
+Add Waterfall.Offset, offsetting an object by a certain amount
+
 ## 0.1.0.0 - 2023-12-05 
 
 ### Added

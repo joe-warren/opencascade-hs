@@ -59,6 +59,9 @@ typedef void Font_BRepTextBuilder;
 typedef int Font_FontAspect;
 typedef int Graphic3d_HorizontalTextAlignment;
 typedef int Graphic3d_VerticalTextAlignment;
+typedef void BRepOffsetAPI_MakeOffsetShape;
+typedef int BRepOffset_Mode;
+typedef int GeomAbs_JoinType;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus

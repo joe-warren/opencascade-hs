@@ -36,6 +36,7 @@ library
       Waterfall.Internal.Path
       Waterfall.Internal.Solid
       Waterfall.IO
+      Waterfall.Offset
       Waterfall.Path
       Waterfall.Path.Common
       Waterfall.Revolution

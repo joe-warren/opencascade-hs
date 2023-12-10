@@ -52,8 +52,10 @@ library
       OpenCascade.BRepMesh.IncrementalMesh
       OpenCascade.BRepMesh.Internal.Destructors
       OpenCascade.BRepMesh.Types
+      OpenCascade.BRepOffset.Mode
       OpenCascade.BRepOffsetAPI
       OpenCascade.BRepOffsetAPI.Internal.Destructors
+      OpenCascade.BRepOffsetAPI.MakeOffsetShape
       OpenCascade.BRepOffsetAPI.MakePipe
       OpenCascade.BRepOffsetAPI.Types
       OpenCascade.BRepPrimAPI
@@ -80,6 +82,7 @@ library
       OpenCascade.Geom.Curve
       OpenCascade.Geom.Internal.Destructors
       OpenCascade.Geom.Types
+      OpenCascade.GeomAbs.JoinType
       OpenCascade.GP
       OpenCascade.GP.Ax1
       OpenCascade.GP.Ax2
@@ -166,6 +169,7 @@ library
       cpp/hs_BRepBuilderAPI_Transform.cpp
       cpp/hs_BRepFilletAPI_MakeFillet.cpp
       cpp/hs_BRepMesh_IncrementalMesh.cpp
+      cpp/hs_BRepOffsetAPI_MakeOffsetShape.cpp
       cpp/hs_BRepOffsetAPI_MakePipe.cpp
       cpp/hs_BRepPrimAPI_MakeBox.cpp
       cpp/hs_BRepPrimAPI_MakeCylinder.cpp

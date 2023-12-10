@@ -3,6 +3,7 @@ module Waterfall
 , module Waterfall.Booleans.Operators
 , module Waterfall.Fillet
 , module Waterfall.IO
+, module Waterfall.Offset
 , module Waterfall.Path.Common
 , module Waterfall.Path
 , module Waterfall.Revolution
@@ -19,6 +20,7 @@ import Waterfall.Booleans
 import Waterfall.Booleans.Operators
 import Waterfall.Fillet
 import Waterfall.IO
+import Waterfall.Offset
 import Waterfall.Path.Common
 import Waterfall.Path
 import Waterfall.Revolution

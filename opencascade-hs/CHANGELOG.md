@@ -8,6 +8,12 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added
+
+- Add OpenCascade.BRepOffsetAPI.MakeOffsetShape
+- Add OpenCascade.GeomAbs.JoinType
+- Add OpenCascade.BRepOffset.Mode
+
 ## 0.1.0.0 - 2023-12-05 
 
 ### Added 
