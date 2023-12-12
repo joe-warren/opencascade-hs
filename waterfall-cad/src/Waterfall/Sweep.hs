@@ -31,10 +31,6 @@ positionFace :: V3 Double -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 positionFace p = runSolid . translate p . Solid . pure
 
 -- | Sweep a 2D `Shape` along a `Path`, constructing a `Solid`
--- 
--- I may still need to make some tweaks to the alignment of the `Shape` and the `Path`.
--- This will likely impact the shapes that are generated when the start point of the `Path` 
--- is not parallel to the z axis.
 sweep :: Path -> Shape -> Solid
 sweep (Path runThePath) (Shape runTheShape) = Solid $ do
     path <- runThePath
