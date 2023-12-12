@@ -14,7 +14,7 @@ and this project adheres to the
 
 ### Fixed
 
-- Correctly rotate faces to match the direction of the `Path` at the start of a `sweep`
+- Correctly rotate and translate endcaps to the `Path` in a `sweep`
 
 ## 0.1.0.0 - 2023-12-05 
 
