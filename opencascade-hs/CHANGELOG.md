@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.1.1.1 - 2023-12-12 
+
+- Include header files in package, fixing build
+
 ## 0.1.1.0 - 2023-12-12 
 
 ### Added

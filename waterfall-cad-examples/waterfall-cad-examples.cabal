@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           waterfall-cad-examples
-version:        0.1.1.0
+version:        0.1.1.1
 synopsis:       Examples for Waterfall CAD, a Declarative CAD/Solid Modeling Library
 description:    Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
 category:       Graphics
@@ -46,7 +46,7 @@ library
     , linear >=1.21 && <2
     , opencascade-hs >=0.1.1.0 && <0.2
     , optparse-applicative >=0.17 && <0.19
-    , waterfall-cad >=0.1.1.0 && <0.2
+    , waterfall-cad >=0.1.1.1 && <0.2
   default-language: Haskell2010
 
 executable waterfall-cad-examples
@@ -62,6 +62,6 @@ executable waterfall-cad-examples
     , linear >=1.21 && <2
     , opencascade-hs >=0.1.1.0 && <0.2
     , optparse-applicative >=0.17 && <0.19
-    , waterfall-cad >=0.1.1.0 && <0.2
+    , waterfall-cad >=0.1.1.1 && <0.2
     , waterfall-cad-examples
   default-language: Haskell2010

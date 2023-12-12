@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           opencascade-hs
-version:        0.1.1.0
+version:        0.1.1.1
 synopsis:       Thin Wrapper for the OpenCASCADE CAD Kernel
 description:    Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
 category:       Graphics,FFI
@@ -21,6 +21,63 @@ extra-source-files:
     LICENSE
     README.md
     CHANGELOG.md
+    cpp/hs_BRep_Tool.h
+    cpp/hs_BRepAlgoAPI_Common.h
+    cpp/hs_BRepAlgoAPI_Cut.h
+    cpp/hs_BRepAlgoAPI_Fuse.h
+    cpp/hs_BRepBuilderAPI_GTransform.h
+    cpp/hs_BRepBuilderAPI_MakeEdge.h
+    cpp/hs_BRepBuilderAPI_MakeFace.h
+    cpp/hs_BRepBuilderAPI_MakeShape.h
+    cpp/hs_BRepBuilderAPI_MakeSolid.h
+    cpp/hs_BRepBuilderAPI_MakeWire.h
+    cpp/hs_BRepBuilderAPI_Transform.h
+    cpp/hs_BRepFilletAPI_MakeFillet.h
+    cpp/hs_BRepMesh_IncrementalMesh.h
+    cpp/hs_BRepOffsetAPI_MakeOffsetShape.h
+    cpp/hs_BRepOffsetAPI_MakePipe.h
+    cpp/hs_BRepPrimAPI_MakeBox.h
+    cpp/hs_BRepPrimAPI_MakeCylinder.h
+    cpp/hs_BRepPrimAPI_MakePrism.h
+    cpp/hs_BRepPrimAPI_MakeRevol.h
+    cpp/hs_BRepPrimAPI_MakeSphere.h
+    cpp/hs_BRepTools_WireExplorer.h
+    cpp/hs_Font_BRepFont.h
+    cpp/hs_Font_BRepTextBuilder.h
+    cpp/hs_GC_MakeArcOfCircle.h
+    cpp/hs_GC_MakeSegment.h
+    cpp/hs_Geom_BezierCurve.h
+    cpp/hs_Geom_Curve.h
+    cpp/hs_Geom_TrimmedCurve.h
+    cpp/hs_gp.h
+    cpp/hs_gp_Ax1.h
+    cpp/hs_gp_Ax2.h
+    cpp/hs_gp_Ax2d.h
+    cpp/hs_gp_Ax3.h
+    cpp/hs_gp_Dir.h
+    cpp/hs_gp_Dir2d.h
+    cpp/hs_gp_GTrsf.h
+    cpp/hs_gp_Pnt.h
+    cpp/hs_gp_Pnt2d.h
+    cpp/hs_gp_Trsf.h
+    cpp/hs_gp_Trsf2d.h
+    cpp/hs_gp_Vec.h
+    cpp/hs_gp_Vec2d.h
+    cpp/hs_NCollection_Array1.h
+    cpp/hs_STEPControl_Writer.h
+    cpp/hs_StlAPI_Writer.h
+    cpp/hs_TopExp_Explorer.h
+    cpp/hs_TopLoc_Location.h
+    cpp/hs_TopoDS_Compound.h
+    cpp/hs_TopoDS_CompSolid.h
+    cpp/hs_TopoDS_Edge.h
+    cpp/hs_TopoDS_Face.h
+    cpp/hs_TopoDS_Shape.h
+    cpp/hs_TopoDS_Shell.h
+    cpp/hs_TopoDS_Solid.h
+    cpp/hs_TopoDS_Vertex.h
+    cpp/hs_TopoDS_Wire.h
+    cpp/hs_types.h
 
 source-repository head
   type: git
