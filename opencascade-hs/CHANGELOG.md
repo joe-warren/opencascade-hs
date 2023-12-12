@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.1.1.0 - 2023-12-12 
+
 ### Added
 
 - Add OpenCascade.BRepOffsetAPI.MakeOffsetShape
