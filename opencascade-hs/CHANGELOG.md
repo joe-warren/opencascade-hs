@@ -13,6 +13,7 @@ and this project adheres to the
 - Add OpenCascade.BRepOffsetAPI.MakeOffsetShape
 - Add OpenCascade.GeomAbs.JoinType
 - Add OpenCascade.BRepOffset.Mode
+- Add `dn` to OpenCascade.Geom.Curve
 
 ## 0.1.0.0 - 2023-12-05 
 

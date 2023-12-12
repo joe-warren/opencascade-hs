@@ -2,6 +2,7 @@ module Waterfall.Internal.Edges
 ( gpPntToV3
 , edgeEndpoints
 , wireEndpoints
+, wireTangent
 ) where
 
 import qualified OpenCascade.TopoDS as TopoDS
@@ -14,10 +15,14 @@ import Data.Acquire
 import Control.Monad.IO.Class (liftIO)
 import Linear (V3 (..))
 import Foreign.Ptr
+import qualified OpenCascade.GP.Vec as GP.Vec
 
 
 gpPntToV3 :: Ptr GP.Pnt -> IO (V3 Double)
 gpPntToV3 pnt = V3 <$> GP.Pnt.getX pnt <*> GP.Pnt.getY pnt <*> GP.Pnt.getZ pnt
+
+gpVecToV3 :: Ptr GP.Vec -> IO (V3 Double)
+gpVecToV3 vec = V3 <$> GP.Vec.getX vec <*> GP.Vec.getY vec <*> GP.Vec.getZ vec
 
 edgeEndpoints :: Ptr TopoDS.Edge -> IO (V3 Double, V3 Double)
 edgeEndpoints e = (`with` pure) $ do
@@ -42,3 +47,15 @@ wireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
                 else pure e'
     e <- runToEnd
     return (s, e)
+
+
+edgeTangent :: Ptr TopoDS.Edge -> IO (V3 Double)
+edgeTangent e = (`with` pure) $ do
+    curve <- BRep.Tool.curve e
+    p1 <- liftIO . BRep.Tool.curveParamFirst $ e
+    liftIO . gpVecToV3 =<< Geom.Curve.dn curve p1 1
+
+wireTangent :: Ptr TopoDS.Wire -> IO (V3 Double)
+wireTangent wire = with (WireExplorer.fromWire wire) $ \explorer -> do
+    v1 <- WireExplorer.current explorer
+    edgeTangent v1

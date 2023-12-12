@@ -10,7 +10,11 @@ and this project adheres to the
 
 ### Added 
 
-Add Waterfall.Offset, offsetting an object by a certain amount
+- Add Waterfall.Offset, offsetting an object by a certain amount
+
+### Fixed
+
+- Correctly rotate faces to match the direction of the `Path` at the start of a `sweep`
 
 ## 0.1.0.0 - 2023-12-05 
 
