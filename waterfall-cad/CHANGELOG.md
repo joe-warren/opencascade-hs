@@ -11,6 +11,7 @@ and this project adheres to the
 ### Added 
 
 - Add Waterfall.Offset, offsetting an object by a certain amount
+- Add `unitCircle`, `unitSquare` and `centeredSquare` to `Waterfall.TwoD.Shape`
 
 ### Fixed
 
