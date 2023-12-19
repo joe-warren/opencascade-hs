@@ -10,6 +10,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.BRepOffset.Mode as Mode
 import qualified OpenCascade.GeomAbs.JoinType as GeomAbs.JoinType
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
+import Linear.Epsilon (nearZero)
 
 -- | Expand or contract a `Solid` by a certain amount.
 -- 
@@ -19,7 +20,12 @@ offset :: Double    -- ^ Amount to offset by, positive values expand, negative v
     -> Double       -- ^ Tolerance, this can be relatively small
     -> Solid        -- ^ the `Solid` to offset 
     -> Solid
-offset value tolerance (Solid run) = Solid $ do
+offset value tolerance (Solid run)
+    | nearZero value = Solid run
+    | otherwise = 
+  Solid $ do
+
+
     builder <- MakeOffsetShape.new
     s <- run 
     --liftIO $ MakeOffsetShape.performBySimple builder s value

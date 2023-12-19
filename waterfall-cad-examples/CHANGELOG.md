@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added 
+
+- Add an example for `Waterfall.Offset`
+
 ## 0.1.1.1 - 2023-12-12 
 
 ## 0.1.1.0 - 2023-12-12 
