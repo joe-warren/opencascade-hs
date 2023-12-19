@@ -38,6 +38,7 @@ ghc-options:
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints
+- -fno-warn-name-shadowing
 
 library:
     source-dirs: src
