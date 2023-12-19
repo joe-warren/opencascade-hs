@@ -10,7 +10,6 @@ import OpenCascade.BRepBuilderAPI.Internal.Destructors
 import qualified OpenCascade.TopoDS as TopoDS
 import OpenCascade.Inheritance (upcast)
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
-import Foreign.C
 import Foreign.Ptr
 import Data.Acquire 
 

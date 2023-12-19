@@ -15,7 +15,6 @@ import qualified OpenCascade.Graphic3D.HorizontalTextAlignment as HTA
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.GP as GP
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
-import Foreign.C (withCString)
 
 foreign import capi unsafe "hs_Font_BRepTextBuilder.h hs_new_Font_BRepTextBuilder" rawNew :: IO (Ptr BRepTextBuilder)
 

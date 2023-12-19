@@ -39,7 +39,7 @@ wireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
     (s, _) <- edgeEndpoints v1
     let runToEnd = do
             edge <- WireExplorer.current explorer
-            (s, e') <- edgeEndpoints edge
+            (_s, e') <- edgeEndpoints edge
             WireExplorer.next explorer
             more <- WireExplorer.more explorer
             if more 

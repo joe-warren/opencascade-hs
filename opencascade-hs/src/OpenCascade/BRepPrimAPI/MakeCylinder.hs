@@ -3,7 +3,6 @@ module OpenCascade.BRepPrimAPI.MakeCylinder
 ( fromRadiusAndHeight
 ) where
 
-import qualified OpenCascade.GP as GP
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Internal.Destructors as TopoDS.Destructors
 import Foreign.C
