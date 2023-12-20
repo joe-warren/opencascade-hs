@@ -4,6 +4,7 @@ Paths in 3D space.
 module Waterfall.Path
 ( Path
 , module Waterfall.Path.Common
+, fromPath2D
 -- $ reexports
 , line3D
 , lineTo3D
@@ -22,9 +23,12 @@ import Waterfall.Internal.Path (Path(..))
 
 
 import Waterfall.Path.Common
+import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Linear (V3)
 
-
+-- | convert a `Path2D` into a `Path` on the \( xy \) plane (with \( z = 0 \) )
+fromPath2D :: Path2D -> Path
+fromPath2D (Path2D runPath) = Path runPath
 
 -- $reexports
 --

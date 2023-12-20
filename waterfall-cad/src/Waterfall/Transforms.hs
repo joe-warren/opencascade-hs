@@ -6,15 +6,17 @@ module Waterfall.Transforms
 , uScale
 , rotate
 , translate
+, mirror
 ) where
 import Waterfall.Internal.Solid (Solid(..))
 import Linear.V3 (V3 (..))
-import Linear ((*^))
+import Linear ((*^), normalize, dot )
 import qualified Linear.Quaternion as Quaternion
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.GTrsf as GP.GTrsf
 import qualified OpenCascade.GP.Ax1 as GP.Ax1
+import qualified OpenCascade.GP.Ax2 as GP.Ax2
 import qualified OpenCascade.GP.Dir as GP.Dir
 import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.BRepBuilderAPI.Transform  as BRepBuilderAPI.Transform
@@ -36,6 +38,8 @@ class Transformable a where
     rotate :: V3 Double -> Double -> a -> a
     -- | Translate by a vector in 3D space
     translate :: V3 Double -> a -> a
+    -- | Mirror in the plane, which passes through the origin, tangent to the specified vector
+    mirror :: V3 Double -> a -> a
 
 
 fromTrsfSolid :: Acquire (Ptr GP.Trsf) -> Solid -> Solid
@@ -96,6 +100,16 @@ translateTrsf (V3 x y z) = do
     vec <- GP.Vec.new x y z
     liftIO $ GP.Trsf.setTranslation trsf vec
     return trsf
+
+mirrorTrsf :: V3 Double -> Acquire (Ptr GP.Trsf)
+mirrorTrsf (V3 x y z) = do
+    trsf <- GP.Trsf.new
+    dir <- GP.Dir.new x y z
+    axis <- GP.xoy
+    liftIO $ do 
+        GP.Ax2.setDirection axis dir
+        GP.Trsf.setMirrorAboutAx2 trsf axis
+    return trsf
     
 instance Transformable Solid where
     scale :: V3 Double -> Solid -> Solid
@@ -110,6 +124,9 @@ instance Transformable Solid where
     translate :: V3 Double -> Solid -> Solid
     translate = fromTrsfSolid . translateTrsf
 
+    mirror :: V3 Double -> Solid -> Solid
+    mirror = fromTrsfSolid . mirrorTrsf
+
 instance Transformable Path where
     scale :: V3 Double -> Path -> Path
     scale = fromGTrsfPath . scaleTrsf
@@ -122,6 +139,9 @@ instance Transformable Path where
 
     translate :: V3 Double -> Path -> Path
     translate = fromTrsfPath . translateTrsf
+    
+    mirror :: V3 Double -> Path -> Path
+    mirror = fromTrsfPath . mirrorTrsf
 
         
 instance Transformable (V3 Double) where
@@ -137,4 +157,9 @@ instance Transformable (V3 Double) where
 
     translate :: V3 Double -> V3 Double -> V3 Double 
     translate = (+)
+
+    mirror :: V3 Double -> V3 Double -> V3 Double 
+    mirror mirrorVec toMirror = 
+        let nm = normalize mirrorVec
+        in toMirror - (2 * (nm `dot` toMirror) *^ nm)
 

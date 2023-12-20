@@ -9,6 +9,11 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added
+
+- Added `mirror` to `Transformable` typeclass, and `mirror2D` to `Transformable2D`
+- Added `fromPath2D` to `Waterfall.Path` to make 2D paths into 3D ones.
+
 ### Fixed
 
 - Handle offsetting by zero (return the unmodified shape)

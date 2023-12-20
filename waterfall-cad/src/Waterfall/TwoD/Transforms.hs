@@ -6,15 +6,17 @@ module Waterfall.TwoD.Transforms
 , scale2D
 , uScale2D
 , translate2D
+, mirror2D
 ) where
 
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Linear.V2 (V2 (..))
-import Linear ((*^))
+import Linear ((*^), normalize, dot)
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.GTrsf as GP.GTrsf
 import qualified OpenCascade.GP.Ax1 as GP.Ax1
+import qualified OpenCascade.GP.Ax2 as GP.Ax2
 import qualified OpenCascade.GP.Dir as GP.Dir
 import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.BRepBuilderAPI.Transform  as BRepBuilderAPI.Transform
@@ -35,6 +37,11 @@ class Transformable2D a where
     uScale2D :: Double -> a -> a
     -- | Translate by a distance in 2D space
     translate2D :: V2 Double -> a -> a
+    -- | Mirror in the line, which passes through the origin, tangent to the specified vector
+    -- 
+    -- Note that in order to maintain consistency with 'Waterfall.Transforms.Transformable',
+    -- the mirror is in the line / tangent / to the vector, not in the line / parallel / to the vector
+    mirror2D :: V2 Double -> a -> a
 
 fromTrsfPath :: Acquire (Ptr GP.Trsf) -> Path2D -> Path2D
 fromTrsfPath mkTrsf (Path2D run) = Path2D $ do 
@@ -93,6 +100,16 @@ translateTrsf (V2 x y) = do
     vec <- GP.Vec.new x y 0
     liftIO $ GP.Trsf.setTranslation trsf vec
     return trsf
+    
+mirrorTrsf :: V2 Double -> Acquire (Ptr GP.Trsf)
+mirrorTrsf (V2 x y) = do 
+    trsf <- GP.Trsf.new
+    dir <- GP.Dir.new x y 0
+    axis <- GP.xoy
+    liftIO $ do
+        GP.Ax2.setDirection axis dir
+        GP.Trsf.setMirrorAboutAx2 trsf axis
+    return trsf
 
 instance Transformable2D Path2D where
     rotate2D :: Double -> Path2D -> Path2D
@@ -107,6 +124,10 @@ instance Transformable2D Path2D where
     translate2D :: V2 Double -> Path2D -> Path2D
     translate2D = fromTrsfPath .translateTrsf
 
+    mirror2D :: V2 Double -> Path2D -> Path2D
+    mirror2D = fromTrsfPath . mirrorTrsf
+    
+
 
 instance Transformable2D Shape where
     rotate2D :: Double -> Shape -> Shape
@@ -120,6 +141,9 @@ instance Transformable2D Shape where
 
     translate2D :: V2 Double -> Shape -> Shape
     translate2D = fromTrsfShape .translateTrsf
+
+    mirror2D :: V2 Double -> Shape -> Shape
+    mirror2D = fromTrsfShape . mirrorTrsf
 
 instance Transformable2D (V2 Double) where
     scale2D :: V2 Double -> V2 Double  -> V2 Double
@@ -137,3 +161,8 @@ instance Transformable2D (V2 Double) where
 
     translate2D :: V2 Double -> V2 Double -> V2 Double 
     translate2D = (+)
+
+    mirror2D :: V2 Double -> V2 Double -> V2 Double 
+    mirror2D mirrorVec toMirror = 
+        let nm = normalize mirrorVec
+        in toMirror - (2 * (nm `dot` toMirror) *^ nm)
