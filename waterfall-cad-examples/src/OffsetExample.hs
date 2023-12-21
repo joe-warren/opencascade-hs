@@ -3,7 +3,7 @@ module OffsetExample
 ) where
 
 import qualified Waterfall.Solids as Solids
-import Waterfall.Transforms (translate, rotate, scale )
+import Waterfall.Transforms (translate, rotate, scale)
 import Waterfall.Offset (offset)
 import Linear ( V3(V3), unit, _x, _y, _z, (^*))
 
