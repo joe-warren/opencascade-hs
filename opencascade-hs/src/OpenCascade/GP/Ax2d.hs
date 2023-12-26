@@ -116,7 +116,7 @@ foreign import capi unsafe "hs_gp_Ax2d.h hs_gp_Ax2d_Mirror" mirror :: Ptr Ax2d -
 foreign import capi unsafe "hs_gp_Ax2d.h hs_gp_Ax2d_Mirrored" rawMirrored :: Ptr Ax2d -> Ptr Ax2d -> IO (Ptr Ax2d)
 
 mirrored :: Ptr Ax2d -> Ptr Ax2d -> Acquire (Ptr Ax2d)
-mirrored axis mirror = mkAcquire (rawMirrored axis mirror) deleteAx2d
+mirrored axis mirrorAxis = mkAcquire (rawMirrored axis mirrorAxis) deleteAx2d
 
 
 foreign import capi unsafe "hs_gp_Ax2d.h hs_gp_Ax2d_MirrorAboutPnt2d" mirrorAboutPnt2d :: Ptr Ax2d -> Ptr Pnt2d -> IO ()
@@ -124,7 +124,7 @@ foreign import capi unsafe "hs_gp_Ax2d.h hs_gp_Ax2d_MirrorAboutPnt2d" mirrorAbou
 foreign import capi unsafe "hs_gp_Ax2d.h hs_gp_Ax2d_MirroredAboutPnt2d" rawMirroredAboutPnt2d :: Ptr Ax2d -> Ptr Pnt2d -> IO (Ptr Ax2d)
 
 mirroredAboutPnt2d :: Ptr Ax2d -> Ptr Pnt2d -> Acquire (Ptr Ax2d)
-mirroredAboutPnt2d axis mirror = mkAcquire (rawMirroredAboutPnt2d axis mirror) deleteAx2d
+mirroredAboutPnt2d axis mirrorPnt = mkAcquire (rawMirroredAboutPnt2d axis mirrorPnt) deleteAx2d
 
 -- rotate/rotated 
 
@@ -136,7 +136,7 @@ rotate = coerce rawRotate
 foreign import capi unsafe "hs_gp_Ax2d.h hs_gp_Ax2d_Rotated" rawRotated :: Ptr Ax2d -> Ptr Pnt2d -> CDouble -> IO (Ptr Ax2d)
 
 rotated :: Ptr Ax2d -> Ptr Pnt2d -> Double -> Acquire (Ptr Ax2d)
-rotated axis axisOfRotation angle = mkAcquire (rawRotated axis axisOfRotation (CDouble angle)) deleteAx2d
+rotated axis axisOfRotation angleOfRotation = mkAcquire (rawRotated axis axisOfRotation (CDouble angleOfRotation)) deleteAx2d
 
 -- scale/scaled 
 

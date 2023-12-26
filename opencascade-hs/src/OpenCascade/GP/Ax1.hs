@@ -117,7 +117,7 @@ foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Mirror" mirror :: Ptr Ax1 -> P
 foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Mirrored" rawMirrored :: Ptr Ax1 -> Ptr Ax1 -> IO (Ptr Ax1)
 
 mirrored :: Ptr Ax1 -> Ptr Ax1 -> Acquire (Ptr Ax1)
-mirrored axis mirror = mkAcquire (rawMirrored axis mirror) deleteAx1
+mirrored axis mirrorAxis = mkAcquire (rawMirrored axis mirrorAxis) deleteAx1
 
 
 foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirrorAboutPnt" mirrorAboutPnt :: Ptr Ax1 -> Ptr Pnt -> IO ()
@@ -125,7 +125,7 @@ foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirrorAboutPnt" mirrorAboutPnt
 foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirroredAboutPnt" rawMirroredAboutPnt :: Ptr Ax1 -> Ptr Pnt -> IO (Ptr Ax1)
 
 mirroredAboutPnt :: Ptr Ax1 -> Ptr Pnt -> Acquire (Ptr Ax1)
-mirroredAboutPnt axis mirror = mkAcquire (rawMirroredAboutPnt axis mirror) deleteAx1
+mirroredAboutPnt axis mirrorPnt = mkAcquire (rawMirroredAboutPnt axis mirrorPnt) deleteAx1
 
 
 foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirrorAboutAx2" mirrorAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> IO ()
@@ -133,7 +133,7 @@ foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirrorAboutAx2" mirrorAboutAx2
 foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirroredAboutAx2" rawMirroredAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> IO (Ptr Ax1)
 
 mirroredAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> Acquire (Ptr Ax1)
-mirroredAboutAx2 axis mirror = mkAcquire (rawMirroredAboutAx2 axis mirror) deleteAx1
+mirroredAboutAx2 axis mirrorAxis = mkAcquire (rawMirroredAboutAx2 axis mirrorAxis) deleteAx1
 
 -- rotate/rotated 
 
@@ -145,7 +145,7 @@ rotate = coerce rawRotate
 foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Rotated" rawRotated :: Ptr Ax1 -> Ptr Ax1 -> CDouble -> IO (Ptr Ax1)
 
 rotated :: Ptr Ax1 -> Ptr Ax1 -> Double -> Acquire (Ptr Ax1)
-rotated axis axisOfRotation angle = mkAcquire (rawRotated axis axisOfRotation (CDouble angle)) deleteAx1
+rotated axis axisOfRotation angleOfRotation = mkAcquire (rawRotated axis axisOfRotation (CDouble angleOfRotation)) deleteAx1
 
 -- scale/scaled 
 

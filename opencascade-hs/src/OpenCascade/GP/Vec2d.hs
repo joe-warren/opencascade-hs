@@ -237,7 +237,7 @@ foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Rotate" rotate :: Ptr Vec2
 foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Rotated" rawRotated :: Ptr Vec2d -> CDouble -> IO (Ptr Vec2d)
 
 rotated :: Ptr Vec2d -> Double -> Acquire (Ptr Vec2d)
-rotated point angle = mkAcquire (rawRotated point (CDouble angle)) deleteVec2d
+rotated point angleOfRotation = mkAcquire (rawRotated point (CDouble angleOfRotation)) deleteVec2d
 
 -- scale/scaled
 

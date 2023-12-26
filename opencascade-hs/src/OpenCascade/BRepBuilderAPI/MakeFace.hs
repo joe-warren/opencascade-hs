@@ -39,7 +39,7 @@ new = mkAcquire rawNew deleteMakeFace
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_MakeFace_fromFace" rawFromFace :: Ptr TopoDS.Face ->  IO (Ptr MakeFace)
 
 fromFace :: Ptr TopoDS.Face -> Acquire (Ptr MakeFace)
-fromFace face = mkAcquire (rawFromFace face) deleteMakeFace
+fromFace theFace = mkAcquire (rawFromFace theFace) deleteMakeFace
 
 -- fromSurface
 

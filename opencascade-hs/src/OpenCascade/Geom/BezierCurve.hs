@@ -7,7 +7,7 @@ import Foreign.Ptr
 import Data.Acquire
 import OpenCascade.Geom.Types (BezierCurve)
 import OpenCascade.Geom.Internal.Destructors (deleteBezierCurve, deleteHandleBezierCurve)
-import OpenCascade.GP (Pnt(..))
+import OpenCascade.GP (Pnt)
 import OpenCascade.NCollection (Array1)
 import OpenCascade.Handle (Handle)
 foreign import capi unsafe "hs_Geom_BezierCurve.h hs_new_Geom_BezierCurve_fromPnts" rawFromPnts :: Ptr (Array1 Pnt) -> IO(Ptr BezierCurve)

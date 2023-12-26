@@ -25,10 +25,10 @@ gpVecToV3 :: Ptr GP.Vec -> IO (V3 Double)
 gpVecToV3 vec = V3 <$> GP.Vec.getX vec <*> GP.Vec.getY vec <*> GP.Vec.getZ vec
 
 edgeEndpoints :: Ptr TopoDS.Edge -> IO (V3 Double, V3 Double)
-edgeEndpoints e = (`with` pure) $ do
-    curve <- BRep.Tool.curve e
-    p1 <- liftIO . BRep.Tool.curveParamFirst $ e
-    p2 <- liftIO . BRep.Tool.curveParamLast $ e
+edgeEndpoints edge = (`with` pure) $ do
+    curve <- BRep.Tool.curve edge
+    p1 <- liftIO . BRep.Tool.curveParamFirst $ edge
+    p2 <- liftIO . BRep.Tool.curveParamLast $ edge
     s <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve p1
     e <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve p2
     return (s, e)

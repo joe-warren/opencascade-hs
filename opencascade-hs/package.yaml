@@ -47,6 +47,7 @@ dependencies:
 - resourcet >= 1.2 && < 1.4
 ghc-options:
 - -Wall
+- -Werror 
 - -Wcompat
 - -Widentities
 - -Wincomplete-record-updates
@@ -54,7 +55,6 @@ ghc-options:
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints
-- -fno-warn-name-shadowing
 
 cc-options:
   - -Werror-implicit-function-declaration
