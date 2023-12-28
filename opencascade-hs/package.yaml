@@ -55,12 +55,12 @@ ghc-options:
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints
-
-cc-options:
-  - -Werror-implicit-function-declaration
+- -optc -Werror-implicit-function-declaration
 
 cxx-options:
   - --std=c++17
+  - -Wall
+  - -Werror
   - -Wno-deprecated
   
 library:
