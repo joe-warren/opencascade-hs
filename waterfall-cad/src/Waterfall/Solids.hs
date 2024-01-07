@@ -6,18 +6,20 @@ module Waterfall.Solids
 , box
 , unitSphere
 , unitCylinder
+, centeredCylinder
 , prism
 ) where
 
 
 import Waterfall.Internal.Solid(Solid(..), nowhere)
 import Waterfall.TwoD.Internal.Shape (runShape)
+import Waterfall.Transforms (translate)
 import qualified Waterfall.TwoD.Shape as TwoD.Shape
 import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
 import qualified OpenCascade.BRepPrimAPI.MakeSphere as MakeSphere
 import qualified OpenCascade.BRepPrimAPI.MakeCylinder as MakeCylinder
 import qualified OpenCascade.GP as GP
-import Linear (V3 (..))
+import Linear (V3 (..), unit, _z, (^*))
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.BRepPrimAPI.MakePrism as MakePrism
@@ -56,6 +58,11 @@ unitSphere = Solid $ Inheritance.upcast <$> MakeSphere.fromRadius 1
 -- the other centered on \( (0, 0, 1) \)
 unitCylinder :: Solid
 unitCylinder = Solid $ Inheritance.upcast <$> MakeCylinder.fromRadiusAndHeight 1 1
+
+-- | A cylinder with radius 1, length 1,
+-- centered on the origin,
+centeredCylinder :: Solid
+centeredCylinder = translate (unit _z ^* (-0.5)) $ unitCylinder
 
 -- | Extruded a 2D face into a prism with a given length \(len\).
 --
