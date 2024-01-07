@@ -13,7 +13,7 @@ and this project adheres to the
 
 - Added `mirror` to `Transformable` typeclass, and `mirror2D` to `Transformable2D`
 - Added `fromPath2D` to `Waterfall.Path` to make 2D paths into 3D ones.
-- Added `centeredCylinder` to `Waterfall.Solids`
+- Added `centeredCylinder` and `unitCone` to `Waterfall.Solids`
 
 ### Fixed
 
