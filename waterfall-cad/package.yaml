@@ -1,5 +1,5 @@
 name:                waterfall-cad
-version:             0.1.2.1
+version:             0.1.2.2
 github:              "joe-warren/opencascade-hs"
 license:             LGPL-2.1
 license-file:        LICENSE
@@ -22,7 +22,7 @@ description:         Please see the README on GitHub at <https://github.com/joe-
 
 dependencies:
 - base >= 4.7 && < 5
-- opencascade-hs ^>=0.1.1.1
+- opencascade-hs ^>=0.1.2.2
 - linear >= 1.21 && < 2
 - lens >= 5 && < 6
 - lattices >= 2.0 && < 3
