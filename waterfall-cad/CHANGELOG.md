@@ -9,6 +9,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.1.2.1 - 2024-01-09 
+
 ### Added
 
 - Added `mirror` to `Transformable` typeclass, and `mirror2D` to `Transformable2D`

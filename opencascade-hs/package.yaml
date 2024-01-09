@@ -1,5 +1,5 @@
 name:                opencascade-hs
-version:             0.1.1.1
+version:             0.1.2.1
 github:              "joe-warren/opencascade-hs"
 license:             LGPL-2.1
 author:              "Joe Warren"
@@ -47,7 +47,6 @@ dependencies:
 - resourcet >= 1.2 && < 1.4
 ghc-options:
 - -Wall
-- -Werror 
 - -Wcompat
 - -Widentities
 - -Wincomplete-record-updates
