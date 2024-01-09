@@ -23,8 +23,8 @@ rotateFace v face =
         in if nearZero (vn - z)
             then pure face
             else
-                let axis = if nearZero (vn + z) then unit _x else cross vn z
-                    angle = acos (dot vn z) 
+                let axis = if nearZero (vn + z) then unit _x else z `cross` vn
+                    angle = acos (vn `dot` z)
                 in runSolid . rotate axis angle . Solid . pure $ face 
 
 positionFace :: V3 Double -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)

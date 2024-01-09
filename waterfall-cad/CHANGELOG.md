@@ -18,6 +18,7 @@ and this project adheres to the
 ### Fixed
 
 - Handle offsetting by zero (return the unmodified shape)
+- Fix rotation of endcaps in a `sweep`
 
 ## 0.1.1.1 - 2023-12-12 
 
