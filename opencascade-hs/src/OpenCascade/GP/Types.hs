@@ -1,5 +1,19 @@
 {-# LANGUAGE EmptyDataDecls #-}
-module OpenCascade.GP.Types where
+module OpenCascade.GP.Types
+( Pnt
+, Pnt2d
+, Ax1
+, Ax2
+, Ax2d
+, Ax3
+, Dir
+, Dir2d
+, Vec
+, Vec2d
+, Trsf
+, Trsf2d
+, GTrsf
+) where
 
 data Pnt
 data Pnt2d

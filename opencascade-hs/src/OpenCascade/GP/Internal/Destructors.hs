@@ -1,5 +1,19 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.GP.Internal.Destructors where
+module OpenCascade.GP.Internal.Destructors
+( deletePnt
+, deletePnt2d
+, deleteAx1
+, deleteAx2
+, deleteAx2d
+, deleteAx3
+, deleteDir
+, deleteDir2d
+, deleteVec
+, deleteVec2d
+, deleteTrsf
+, deleteTrsf2d
+, deleteGTrsf
+) where
 
 import OpenCascade.GP.Types
 

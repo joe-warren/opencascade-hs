@@ -1,5 +1,8 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.BRepOffsetAPI.Internal.Destructors where
+module OpenCascade.BRepOffsetAPI.Internal.Destructors
+( deleteMakePipe
+, deleteMakeOffsetShape
+) where
 
 import OpenCascade.BRepOffsetAPI.Types
 

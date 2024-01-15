@@ -1,6 +1,11 @@
 {-# LANGUAGE MultiParamTypeClasses #-} 
 {-# LANGUAGE EmptyDataDecls #-}
-module OpenCascade.BRepBuilderAPI.Types where
+module OpenCascade.BRepBuilderAPI.Types 
+( MakeWire
+, MakeFace
+, MakeSolid
+, MakeShape
+) where
 
 import qualified OpenCascade.Inheritance as Inheritance
 

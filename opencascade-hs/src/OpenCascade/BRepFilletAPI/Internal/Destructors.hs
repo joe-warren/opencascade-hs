@@ -1,5 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.BRepFilletAPI.Internal.Destructors where
+module OpenCascade.BRepFilletAPI.Internal.Destructors
+( deleteMakeFillet
+) where
 
 import OpenCascade.BRepFilletAPI.Types
 

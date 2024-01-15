@@ -1,5 +1,10 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.Geom.Internal.Destructors where
+module OpenCascade.Geom.Internal.Destructors 
+( deleteHandleCurve
+, deleteHandleTrimmedCurve
+, deleteHandleBezierCurve
+, deleteBezierCurve
+) where
 
 import OpenCascade.Geom.Types
 

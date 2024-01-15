@@ -25,16 +25,7 @@ dependencies:
 - lens >= 5 && < 6
 - optparse-applicative >= 0.17 && < 0.19
 
-ghc-options:
-- -Wall
-- -Wcompat
-- -Widentities
-- -Wincomplete-record-updates
-- -Wincomplete-uni-patterns
-- -Wmissing-export-lists
-- -Wmissing-home-modules
-- -Wpartial-fields
-- -Wredundant-constraints
+ghc-options: *ghc-options
 
 executables:
   waterfall-cad-examples:

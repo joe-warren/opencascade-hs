@@ -1,5 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.TopExp.Internal.Destructors where
+module OpenCascade.TopExp.Internal.Destructors 
+( deleteExplorer
+) where
 
 import OpenCascade.TopExp.Types
 

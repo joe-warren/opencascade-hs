@@ -1,5 +1,8 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.BRepPrimAPI.Internal.Destructors where
+module OpenCascade.BRepPrimAPI.Internal.Destructors 
+( deleteMakeBox
+, deleteMakeRevol
+) where
 
 import OpenCascade.BRepPrimAPI.Types
 

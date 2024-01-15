@@ -1,3 +1,14 @@
 _version: &version "0.1.2.2"
 _opencascade-hs-bound: &opencascade-hs-bound "opencascade-hs ^>=0.1.2.2"
 _waterfall-cad-bound: &waterfall-cad-bound "waterfall-cad ^>=0.1.2.2"
+_ghc_options: &ghc-options
+- -Wall
+- -Werror=compat
+- -Werror=identities
+- -Werror=incomplete-record-updates
+- -Werror=incomplete-uni-patterns
+- -Werror=missing-home-modules
+- -Werror=missing-export-lists
+- -Werror=partial-fields
+- -Werror=redundant-constraints
+- -optc -Werror-implicit-function-declaration

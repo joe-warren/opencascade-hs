@@ -1,4 +1,6 @@
 {-# LANGUAGE EmptyDataDecls #-}
-module OpenCascade.TopTools.Types where
+module OpenCascade.TopTools.Types 
+( ListOfShape
+) where
 
 data ListOfShape

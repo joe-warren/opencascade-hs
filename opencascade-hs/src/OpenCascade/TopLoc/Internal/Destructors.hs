@@ -1,5 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.TopLoc.Internal.Destructors where
+module OpenCascade.TopLoc.Internal.Destructors
+( deleteLocation
+) where
 
 import OpenCascade.TopLoc.Types
 

@@ -1,5 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.TopoDS.Internal.Destructors where
+module OpenCascade.TopoDS.Internal.Destructors 
+( deleteShape
+) where
 
 import OpenCascade.TopoDS.Types
 

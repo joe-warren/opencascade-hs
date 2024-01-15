@@ -1,5 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.StlAPI.Internal.Destructors where
+module OpenCascade.StlAPI.Internal.Destructors 
+( deleteWriter
+) where
 
 import OpenCascade.StlAPI.Types
 

@@ -1,5 +1,9 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.BRepBuilderAPI.Internal.Destructors where
+module OpenCascade.BRepBuilderAPI.Internal.Destructors
+( deleteMakeWire
+, deleteMakeFace
+, deleteMakeSolid
+) where
 
 import OpenCascade.BRepBuilderAPI.Types
 

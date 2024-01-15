@@ -29,16 +29,7 @@ dependencies:
 - lattices >= 2.0 && < 3
 - resourcet >= 1.2 && < 1.4
 
-ghc-options:
-- -Wall
-- -Wcompat
-- -Widentities
-- -Wincomplete-record-updates
-- -Wincomplete-uni-patterns
-- -Wmissing-export-lists
-- -Wmissing-home-modules
-- -Wpartial-fields
-- -Wredundant-constraints
+ghc-options: *ghc-options
 
 library:
     source-dirs: src

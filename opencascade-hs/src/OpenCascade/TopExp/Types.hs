@@ -1,4 +1,6 @@
 {-# LANGUAGE EmptyDataDecls #-}
-module OpenCascade.TopExp.Types where
+module OpenCascade.TopExp.Types 
+( Explorer
+) where
 
 data Explorer

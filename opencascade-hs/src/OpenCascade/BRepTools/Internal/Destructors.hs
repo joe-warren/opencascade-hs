@@ -1,5 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.BRepTools.Internal.Destructors where
+module OpenCascade.BRepTools.Internal.Destructors
+( deleteWireExplorer
+) where
 
 import OpenCascade.BRepTools.Types
 

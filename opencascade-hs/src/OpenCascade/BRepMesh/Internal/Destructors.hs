@@ -1,5 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.BRepMesh.Internal.Destructors where
+module OpenCascade.BRepMesh.Internal.Destructors 
+( deleteIncrementalMesh
+) where
 
 import OpenCascade.BRepMesh.Types
 

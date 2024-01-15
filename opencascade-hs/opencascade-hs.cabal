@@ -208,7 +208,7 @@ library
       Paths_opencascade_hs
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -optc -Werror-implicit-function-declaration
+  ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration
   cxx-options: --std=c++17 -Wall -Werror -Wno-deprecated
   include-dirs:
       cpp

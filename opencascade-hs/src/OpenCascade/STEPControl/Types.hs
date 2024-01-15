@@ -1,4 +1,6 @@
 {-# LANGUAGE EmptyDataDecls #-}
-module OpenCascade.STEPControl.Types where
+module OpenCascade.STEPControl.Types
+( Writer
+) where
 
 data Writer

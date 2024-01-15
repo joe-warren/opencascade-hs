@@ -46,16 +46,8 @@ description:         Please see the README on GitHub at <https://github.com/joe-
 dependencies:
 - base >= 4.7 && < 5
 - resourcet >= 1.2 && < 1.4
-ghc-options:
-- -Wall
-- -Wcompat
-- -Widentities
-- -Wincomplete-record-updates
-- -Wincomplete-uni-patterns
-- -Wmissing-home-modules
-- -Wpartial-fields
-- -Wredundant-constraints
-- -optc -Werror-implicit-function-declaration
+
+ghc-options: *ghc-options
 
 cxx-options:
   - --std=c++17

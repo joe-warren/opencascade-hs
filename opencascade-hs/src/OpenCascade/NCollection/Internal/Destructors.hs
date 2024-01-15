@@ -1,5 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.NCollection.Internal.Destructors where
+module OpenCascade.NCollection.Internal.Destructors
+( deletePntArray
+) where
 
 import OpenCascade.NCollection.Types
 import OpenCascade.GP.Types

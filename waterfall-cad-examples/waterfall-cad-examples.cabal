@@ -40,7 +40,7 @@ library
       Paths_waterfall_cad_examples
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration
   build-depends:
       base >=4.7 && <5
     , lens ==5.*
@@ -56,7 +56,7 @@ executable waterfall-cad-examples
       Paths_waterfall_cad_examples
   hs-source-dirs:
       app
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , lens ==5.*

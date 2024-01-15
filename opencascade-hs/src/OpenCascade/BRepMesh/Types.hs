@@ -1,4 +1,6 @@
 {-# LANGUAGE EmptyDataDecls #-}
-module OpenCascade.BRepMesh.Types where
+module OpenCascade.BRepMesh.Types 
+( IncrementalMesh
+) where
 
 data IncrementalMesh

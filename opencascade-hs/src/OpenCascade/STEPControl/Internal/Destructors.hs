@@ -1,5 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.STEPControl.Internal.Destructors where
+module OpenCascade.STEPControl.Internal.Destructors 
+( deleteWriter
+) where
 
 import OpenCascade.STEPControl.Types
 

@@ -1,5 +1,8 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.Font.Internal.Destructors where
+module OpenCascade.Font.Internal.Destructors
+( deleteBRepFont
+, deleteBRepTextBuilder
+) where
 
 
 import OpenCascade.Font.Types
