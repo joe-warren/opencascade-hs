@@ -1,0 +1,3 @@
+_version: &version "0.1.2.2"
+_opencascade-hs-bound: &opencascade-hs-bound "opencascade-hs ^>=0.1.2.2"
+_waterfall-cad-bound: &waterfall-cad-bound "waterfall-cad ^>=0.1.2.2"
