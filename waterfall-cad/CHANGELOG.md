@@ -9,6 +9,10 @@ and this project adheres to the
 
 ## Unreleased
 
+### Fixed
+
+- Typo in documentation for `Waterfall.Solids.unitCone` 
+
 ## 0.1.2.2 - 2024-01-09 
 
 ### Fixed

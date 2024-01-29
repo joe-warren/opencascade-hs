@@ -68,7 +68,7 @@ centeredCylinder = translate (unit _z ^* (-0.5)) $ unitCylinder
 
 -- | A cone 
 -- With a point at the origin 
--- and a circular face with Radius 1, centered on \( (0, 1, 1) \)
+-- and a circular face with Radius 1, centered on \( (0, 0, 1) \)
 unitCone :: Solid
 unitCone = Solid $ Inheritance.upcast <$> MakeCone.fromTwoRadiiAndHeight 0 1 1
 
