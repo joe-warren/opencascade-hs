@@ -8,7 +8,7 @@ module Waterfall.Transforms
 , translate
 , mirror
 ) where
-import Waterfall.Internal.Solid (Solid(..))
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
 import Linear.V3 (V3 (..))
 import Linear ((*^), normalize, dot )
 import qualified Linear.Quaternion as Quaternion
@@ -43,15 +43,15 @@ class Transformable a where
 
 
 fromTrsfSolid :: Acquire (Ptr GP.Trsf) -> Solid -> Solid
-fromTrsfSolid mkTrsf (Solid run) = Solid $ do 
-    solid <- run
+fromTrsfSolid mkTrsf s = solidFromAcquire $ do 
+    solid <- acquireSolid s
     trsf <- mkTrsf 
     BRepBuilderAPI.Transform.transform solid trsf True 
 
 
 fromGTrsfSolid :: Acquire (Ptr GP.GTrsf) -> Solid -> Solid
-fromGTrsfSolid mkTrsf (Solid run) = Solid $ do 
-    solid <- run
+fromGTrsfSolid mkTrsf s = solidFromAcquire $ do 
+    solid <- acquireSolid s
     trsf <- mkTrsf 
     BRepBuilderAPI.GTransform.gtransform solid trsf True 
 

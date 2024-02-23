@@ -2,7 +2,7 @@ module Waterfall.Sweep
 ( sweep
 ) where
 
-import Waterfall.Internal.Solid (Solid (..))
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.Internal.Edges (wireTangent, wireEndpoints)
 import Waterfall.Transforms (rotate, translate)
@@ -25,14 +25,14 @@ rotateFace v face =
             else
                 let axis = if nearZero (vn + z) then unit _x else z `cross` vn
                     angle = acos (vn `dot` z)
-                in runSolid . rotate axis angle . Solid . pure $ face 
+                in acquireSolid . rotate axis angle . solidFromAcquire . pure $ face 
 
 positionFace :: V3 Double -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
-positionFace p = runSolid . translate p . Solid . pure
+positionFace p = acquireSolid . translate p . solidFromAcquire . pure
 
 -- | Sweep a 2D `Shape` along a `Path`, constructing a `Solid`
 sweep :: Path -> Shape -> Solid
-sweep (Path runThePath) (Shape runTheShape) = Solid $ do
+sweep (Path runThePath) (Shape runTheShape) = solidFromAcquire $ do
     path <- runThePath
     shape <- runTheShape
     tangent <- liftIO $ wireTangent path

@@ -11,6 +11,7 @@ import qualified OpenCascade.STEPControl.StepModelType as StepModelType
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (void, unless)
 import System.IO (hPutStrLn, stderr)
+import Waterfall.Internal.Finalizers (toAcquire)
 import Data.Acquire
 
 -- | Write a `Solid` to a (binary) STL file at a given path
@@ -21,8 +22,8 @@ import Data.Acquire
 --
 -- The deflection is the maximum allowable distance between a curve and the generated triangulation.
 writeSTL :: Double -> FilePath -> Solid -> IO ()
-writeSTL linDeflection filepath (Solid run) = (`withAcquire` pure) $ do
-    s <- run
+writeSTL linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
+    s <- toAcquire ptr
     mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
     liftIO $ BRepMesh.IncrementalMesh.perform mesh
     writer <- StlWriter.new
@@ -36,8 +37,8 @@ writeSTL linDeflection filepath (Solid run) = (`withAcquire` pure) $ do
 --
 -- STEP files can be imported by [FreeCAD](https://www.freecad.org/)
 writeSTEP :: FilePath -> Solid -> IO ()
-writeSTEP filepath (Solid run) = (`withAcquire` pure) $ do
-    s <- run
+writeSTEP filepath (Solid ptr) = (`withAcquire` pure) $ do
+    s <- toAcquire ptr
     writer <- StepWriter.new
     _ <- liftIO $ StepWriter.transfer writer s StepModelType.Asls True
     void . liftIO $ StepWriter.write writer filepath

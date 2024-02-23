@@ -4,7 +4,7 @@ module Waterfall.Fillet
 , roundIndexedConditionalFillet
 ) where
 
-import Waterfall.Internal.Solid (Solid (..))
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
 import Waterfall.Internal.Edges (edgeEndpoints)
 import qualified OpenCascade.BRepFilletAPI.MakeFillet as MakeFillet
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
@@ -47,8 +47,8 @@ addEdgesToMakeFillet radiusFn builder explorer = go [] 0
 --
 -- Being able to selectively round\/fillet based on edge index is an \"easy\" way to round\/fillet these shapes. 
 roundIndexedConditionalFillet :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
-roundIndexedConditionalFillet radiusFunction (Solid run) = Solid $ do
-    s <- run
+roundIndexedConditionalFillet radiusFunction solid = solidFromAcquire $ do
+    s <- acquireSolid solid
     builder <- MakeFillet.fromShape s
 
     explorer <- Explorer.new s ShapeEnum.Edge

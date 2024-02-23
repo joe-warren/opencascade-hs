@@ -2,7 +2,7 @@ module Waterfall.Offset
 ( offset
 ) where 
 
-import Waterfall.Internal.Solid (Solid (..))
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
@@ -20,14 +20,12 @@ offset :: Double    -- ^ Amount to offset by, positive values expand, negative v
     -> Double       -- ^ Tolerance, this can be relatively small
     -> Solid        -- ^ the `Solid` to offset 
     -> Solid
-offset value tolerance (Solid run)
-    | nearZero value = Solid run
+offset value tolerance solid
+    | nearZero value = solid
     | otherwise = 
-  Solid $ do
-
-
+  solidFromAcquire $ do
     builder <- MakeOffsetShape.new
-    s <- run 
+    s <- acquireSolid solid 
     --liftIO $ MakeOffsetShape.performBySimple builder s value
     liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False 
     shell <- MakeShape.shape (upcast builder)
