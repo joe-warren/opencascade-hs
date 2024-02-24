@@ -8,6 +8,11 @@ and this project adheres to the
 
 
 ## Unreleased
+
+### Added 
+
+- `volume`, `momentOfInertia` and `centerOfMass` queries in `Waterfall.Solids`
+
 ### Changed 
 - `Waterfall.Text.fontFromPath` and `Waterfall.Text.fontFromSystem` now return `IO` actions rather than embedding the action into the underlying `Shape`
 

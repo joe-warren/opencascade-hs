@@ -8,6 +8,11 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added
+
+- Added OpenCascade.BRepGProp
+- Added OpenCascade.GProp.GProps
+
 ## 0.1.2.2 - 2024-01-09 
 
 ## 0.1.2.1 - 2024-01-09 
