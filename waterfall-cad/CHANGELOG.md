@@ -8,6 +8,8 @@ and this project adheres to the
 
 
 ## Unreleased
+### Changed 
+- `Waterfall.Text.fontFromPath` and `Waterfall.Text.fontFromSystem` now return `IO` actions rather than embedding the action into the underlying `Shape`
 
 ### Fixed
 

@@ -4,7 +4,7 @@ module TextExample (
 
 import qualified Waterfall
 
-textExample :: FilePath -> Double -> String -> Double -> Waterfall.Solid
-textExample fontpath fontSize content depth = 
-    let font = Waterfall.fontFromPath fontpath fontSize
-    in Waterfall.prism depth $ Waterfall.text font content
+textExample :: FilePath -> Double -> String -> Double -> IO Waterfall.Solid
+textExample fontpath fontSize content depth = do
+    font <- Waterfall.fontFromPath fontpath fontSize
+    return . Waterfall.prism depth $ Waterfall.text font content

@@ -51,8 +51,8 @@ fromTrsfPath mkTrsf (Path2D p) = Path2D . unsafeFromAcquire $ do
     (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast path) trsf True 
 
 fromTrsfShape :: Acquire (Ptr GP.Trsf) -> Shape -> Shape
-fromTrsfShape mkTrsf (Shape run) = Shape $ do 
-    shape <- run
+fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
+    shape <- toAcquire theRawShape
     trsf <- mkTrsf 
     BRepBuilderAPI.Transform.transform shape trsf True 
 
@@ -64,8 +64,8 @@ fromGTrsfPath mkTrsf (Path2D p) = Path2D . unsafeFromAcquire  $ do
     (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
 
 fromGTrsfShape :: Acquire (Ptr GP.GTrsf) -> Shape -> Shape
-fromGTrsfShape mkTrsf (Shape run) = Shape $ do 
-    shape <- run
+fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
+    shape <- toAcquire theRawShape 
     trsf <- mkTrsf 
     BRepBuilderAPI.GTransform.gtransform shape trsf True 
 

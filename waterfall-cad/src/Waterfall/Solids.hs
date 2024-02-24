@@ -12,8 +12,9 @@ module Waterfall.Solids
 ) where
 
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, nowhere)
-import Waterfall.TwoD.Internal.Shape (runShape)
+import Waterfall.Internal.Solid (Solid (..), solidFromAcquire, nowhere)
+import Waterfall.Internal.Finalizers (toAcquire)
+import Waterfall.TwoD.Internal.Shape (rawShape)
 import Waterfall.Transforms (translate)
 import qualified Waterfall.TwoD.Shape as TwoD.Shape
 import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
@@ -78,7 +79,7 @@ unitCone = solidFromAcquire $ Inheritance.upcast <$> MakeCone.fromTwoRadiiAndHei
 -- the other on the plane \(z = len\).
 prism :: Double -> TwoD.Shape.Shape -> Solid
 prism len face = solidFromAcquire $ do
-    p <- runShape face
+    p <- toAcquire . rawShape $ face
     v <- GP.Vec.new 0 0 len
     MakePrism.fromVec p v True True
 

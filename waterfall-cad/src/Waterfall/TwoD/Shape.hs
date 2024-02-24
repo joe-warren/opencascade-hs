@@ -17,7 +17,7 @@ import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo)
 
 -- | Construct a 2D Shape from a closed path 
 fromPath :: Path2D -> Shape
-fromPath (Path2D r)= Shape $ do
+fromPath (Path2D r)= Shape . unsafeFromAcquire  $ do
     p <- toAcquire r
     upcast <$> (MakeFace.face =<< MakeFace.fromWire p False)
 

@@ -3,7 +3,6 @@ module Waterfall.TwoD.Internal.Shape
 ) where
 
 import qualified OpenCascade.TopoDS as TopoDS
-import Data.Acquire
 import Foreign.Ptr
 
 -- | A Region in 2D Space 
@@ -17,4 +16,4 @@ import Foreign.Ptr
 -- Please feel free to report a bug if you're able to construct a `Shape`
 -- which does not lie on this plane (without using Internal functions).
 -- Or which is not either a `TopoDS.Face`, or a composite of faces.
-newtype Shape = Shape { runShape :: Acquire (Ptr TopoDS.Shape) }
+newtype Shape = Shape { rawShape :: Ptr TopoDS.Shape }

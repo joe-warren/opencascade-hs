@@ -33,9 +33,9 @@ positionFace p = acquireSolid . translate p . solidFromAcquire . pure
 
 -- | Sweep a 2D `Shape` along a `Path`, constructing a `Solid`
 sweep :: Path -> Shape -> Solid
-sweep (Path theRawPath) (Shape runTheShape) = solidFromAcquire $ do
+sweep (Path theRawPath) (Shape theRawShape) = solidFromAcquire $ do
     path <- toAcquire theRawPath
-    shape <- runTheShape
+    shape <- toAcquire theRawShape
     tangent <- liftIO $ wireTangent path
     (start,_)  <- liftIO $ wireEndpoints path
     adjustedFace <- positionFace start =<< rotateFace tangent shape
