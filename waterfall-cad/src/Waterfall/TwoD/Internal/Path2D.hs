@@ -4,7 +4,7 @@ module Waterfall.TwoD.Internal.Path2D
 ) where
 
 import Data.Foldable (traverse_, toList)
-import Data.Acquire
+import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Control.Monad ((<=<))
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.TopoDS as TopoDS
@@ -18,12 +18,12 @@ import Data.Semigroup (sconcat)
 --
 -- Please feel free to report a bug if you're able to construct a `Path2D`
 -- which does not lie on this plane (without using Internal functions).
-newtype Path2D = Path2D { runPath :: Acquire (Ptr TopoDS.Wire) }
+newtype Path2D = Path2D { rawPath :: Ptr TopoDS.Wire }
 
 joinPaths :: [Path2D] -> Path2D
-joinPaths paths = Path2D $ do
+joinPaths paths = Path2D . unsafeFromAcquire $ do
     builder <- MakeWire.new
-    traverse_ (liftIO . MakeWire.addWire builder <=< runPath) paths
+    traverse_ (liftIO . MakeWire.addWire builder <=< toAcquire . rawPath) paths
     MakeWire.wire builder
 
 -- | The Semigroup for `Path2D` attempts to join two paths that share a common endpoint.

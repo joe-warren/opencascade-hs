@@ -9,6 +9,7 @@ module Waterfall.Transforms
 , mirror
 ) where
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
+import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire) 
 import Linear.V3 (V3 (..))
 import Linear ((*^), normalize, dot )
 import qualified Linear.Quaternion as Quaternion
@@ -57,14 +58,14 @@ fromGTrsfSolid mkTrsf s = solidFromAcquire $ do
 
 
 fromTrsfPath :: Acquire (Ptr GP.Trsf) -> Path -> Path
-fromTrsfPath mkTrsf (Path run) = Path $ do 
-    path <- run
+fromTrsfPath mkTrsf (Path p) = Path . unsafeFromAcquire $ do 
+    path <- toAcquire p
     trsf <- mkTrsf 
     (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast path) trsf True 
 
 fromGTrsfPath :: Acquire (Ptr GP.GTrsf) -> Path -> Path
-fromGTrsfPath mkTrsf (Path run) = Path $ do 
-    path <- run
+fromGTrsfPath mkTrsf (Path p) = Path . unsafeFromAcquire $ do 
+    path <- toAcquire p
     trsf <- mkTrsf 
     (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
 

@@ -5,6 +5,7 @@ module Waterfall.Sweep
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.Internal.Edges (wireTangent, wireEndpoints)
+import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Waterfall.Transforms (rotate, translate)
 import Waterfall.TwoD.Internal.Shape (Shape (..))
 import qualified OpenCascade.BRepOffsetAPI.MakePipe as MakePipe
@@ -32,8 +33,8 @@ positionFace p = acquireSolid . translate p . solidFromAcquire . pure
 
 -- | Sweep a 2D `Shape` along a `Path`, constructing a `Solid`
 sweep :: Path -> Shape -> Solid
-sweep (Path runThePath) (Shape runTheShape) = solidFromAcquire $ do
-    path <- runThePath
+sweep (Path theRawPath) (Shape runTheShape) = solidFromAcquire $ do
+    path <- toAcquire theRawPath
     shape <- runTheShape
     tangent <- liftIO $ wireTangent path
     (start,_)  <- liftIO $ wireEndpoints path

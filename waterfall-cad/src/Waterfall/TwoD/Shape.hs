@@ -9,6 +9,7 @@ module Waterfall.TwoD.Shape
 import Waterfall.TwoD.Internal.Shape (Shape (..))
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.TwoD.Transforms (translate2D)
+import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import OpenCascade.Inheritance (upcast)
 import Linear (unit, _x, _y, zero, V2 (..))
@@ -16,8 +17,8 @@ import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo)
 
 -- | Construct a 2D Shape from a closed path 
 fromPath :: Path2D -> Shape
-fromPath (Path2D run)= Shape $ do
-    p <- run
+fromPath (Path2D r)= Shape $ do
+    p <- toAcquire r
     upcast <$> (MakeFace.face =<< MakeFace.fromWire p False)
 
 -- | Circle with radius 1, centered on the origin

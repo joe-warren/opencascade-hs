@@ -4,6 +4,7 @@ module Waterfall.Revolution
 
 import Waterfall.Internal.Solid (Solid (..), solidFromAcquire)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
+import Waterfall.Internal.Finalizers (toAcquire)
 import qualified OpenCascade.BRepPrimAPI.MakeRevol as MakeRevol
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
@@ -19,8 +20,8 @@ import Linear (unit, _x)
 -- 
 -- The resulting `Solid` is rotated such that the axis of revolution is the z axis.
 revolution :: Path2D -> Solid
-revolution (Path2D run) = rotate (unit _x) (pi/2) . solidFromAcquire $ do
-    p <- run
+revolution (Path2D theRawPath) = rotate (unit _x) (pi/2) . solidFromAcquire $ do
+    p <- toAcquire theRawPath
     axis <- GP.oy -- revolve around the y axis
     revol <- MakeRevol.fromShapeAndAx1 (upcast p) axis True
     shell <- MakeShape.shape (upcast revol)

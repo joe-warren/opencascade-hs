@@ -28,6 +28,7 @@ import qualified OpenCascade.GP as GP
 import Foreign.Ptr
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
+import Waterfall.Internal.Finalizers (unsafeFromAcquire)
 import Control.Arrow (second)
 import Data.Foldable (foldl', traverse_)
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
@@ -162,12 +163,12 @@ pathFromTo commands start =
 
 instance AnyPath (V3 Double) Path where
     fromWire :: Acquire (Ptr TopoDS.Wire) -> Path
-    fromWire = Path
+    fromWire = Path . unsafeFromAcquire
     pointToGPPnt :: Proxy Path -> V3 Double -> Acquire (Ptr GP.Pnt)
     pointToGPPnt _ (V3 x y z) = GP.Pnt.new x y z 
 
 instance AnyPath (V2 Double) Path2D where
     fromWire :: Acquire (Ptr TopoDS.Wire) -> Path2D
-    fromWire = Path2D
+    fromWire = Path2D . unsafeFromAcquire
     pointToGPPnt :: Proxy Path2D -> V2 Double -> Acquire (Ptr GP.Pnt)
     pointToGPPnt _ (V2 x y) = GP.Pnt.new x y 0
