@@ -5,7 +5,7 @@ module Waterfall.Sweep
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.Internal.Edges (wireTangent, wireEndpoints)
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
+import Waterfall.Internal.Finalizers (toAcquire)
 import Waterfall.Transforms (rotate, translate)
 import Waterfall.TwoD.Internal.Shape (Shape (..))
 import qualified OpenCascade.BRepOffsetAPI.MakePipe as MakePipe

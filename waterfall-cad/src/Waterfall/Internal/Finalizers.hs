@@ -18,7 +18,8 @@ fromAcquire a = runResourceT $ do
     release <- fromMaybe (pure ()) <$> unprotect releaseKey
     liftIO $ addFinalizer v release
     return v
-
+    
+{-# NOINLINE unsafeFromAcquire #-}
 unsafeFromAcquire :: Acquire a -> a 
 unsafeFromAcquire = unsafePerformIO . fromAcquire
 
