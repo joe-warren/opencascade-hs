@@ -67,6 +67,7 @@ extra-source-files:
     cpp/hs_gp_Trsf2d.h
     cpp/hs_gp_Vec.h
     cpp/hs_gp_Vec2d.h
+    cpp/hs_gp_XYZ.h
     cpp/hs_GProp_GProps.h
     cpp/hs_NCollection_Array1.h
     cpp/hs_STEPControl_Writer.h
@@ -167,6 +168,7 @@ library
       OpenCascade.GP.Types
       OpenCascade.GP.Vec
       OpenCascade.GP.Vec2d
+      OpenCascade.GP.XYZ
       OpenCascade.GProp.GProps
       OpenCascade.GProp.Internal.Destructors
       OpenCascade.GProp.Types
@@ -272,6 +274,7 @@ library
       cpp/hs_gp_Trsf2d.cpp
       cpp/hs_gp_Vec.cpp
       cpp/hs_gp_Vec2d.cpp
+      cpp/hs_gp_XYZ.cpp
       cpp/hs_GProp_GProps.cpp
       cpp/hs_NCollection_Array1.cpp
       cpp/hs_STEPControl_Writer.cpp

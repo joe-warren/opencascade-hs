@@ -28,6 +28,7 @@ typedef void gp_Vec2d;
 typedef void gp_Trsf;
 typedef void gp_GTrsf;
 typedef void gp_Trsf2d;
+typedef void gp_XYZ;
 typedef void BRep_Builder;
 typedef void BRepBuilderAPI_Transform;
 typedef void BRepBuilderAPI_MakeWire;
