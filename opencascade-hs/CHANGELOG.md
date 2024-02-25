@@ -12,6 +12,8 @@ and this project adheres to the
 
 - Added OpenCascade.BRepGProp
 - Added OpenCascade.GProp.GProps
+- Added OpenCascade.BRepBndLib 
+- Added OpenCascade.Bnd.Box
 
 ## 0.1.2.2 - 2024-01-09 
 

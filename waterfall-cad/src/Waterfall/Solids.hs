@@ -12,6 +12,7 @@ module Waterfall.Solids
 , volume
 , centerOfMass
 , momentOfInertia
+, axisAlignedBoundingBox
 ) where
 
 
@@ -27,6 +28,8 @@ import qualified OpenCascade.BRepPrimAPI.MakeCylinder as MakeCylinder
 import qualified OpenCascade.BRepPrimAPI.MakeCone as MakeCone
 import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
+import qualified OpenCascade.Bnd.Box as Bnd.Box
+import qualified OpenCascade.BRepBndLib as BRepBndLib
 import qualified OpenCascade.GP as GP
 import Control.Lens ((^.))
 import Linear (V3 (..), unit, _x, _y, _z, (^*))
@@ -36,6 +39,7 @@ import qualified OpenCascade.GP.Dir as GP.Dir
 import qualified OpenCascade.GP.Ax1 as GP.Ax1
 import qualified OpenCascade.BRepPrimAPI.MakePrism as MakePrism
 import qualified OpenCascade.Inheritance as Inheritance
+
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad ((<=<))
 import Foreign.Ptr (Ptr)
@@ -121,3 +125,15 @@ momentOfInertia center axis = gPropQuery $ \gprop -> do
     dir <- GP.Dir.new (axis ^. _x) (axis ^. _y) (axis ^. _z)
     ax1 <- GP.Ax1.new pnt dir
     liftIO $ GProps.momentOfInertia gprop ax1
+
+axisAlignedBoundingBox :: Solid -> Maybe (V3 Double, V3 Double)
+axisAlignedBoundingBox s =  
+    if volume s <= 0
+        then Nothing 
+        else Just . unsafeFromAcquire $ do
+            solid <- acquireSolid s
+            theBox <- Bnd.Box.new
+            liftIO $ BRepBndLib.add solid theBox True
+            p1 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMin theBox
+            p2 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax theBox
+            return (p1, p2)

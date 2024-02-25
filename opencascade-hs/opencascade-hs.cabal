@@ -21,10 +21,12 @@ extra-source-files:
     LICENSE
     README.md
     CHANGELOG.md
+    cpp/hs_Bnd_Box.h
     cpp/hs_BRep_Tool.h
     cpp/hs_BRepAlgoAPI_Common.h
     cpp/hs_BRepAlgoAPI_Cut.h
     cpp/hs_BRepAlgoAPI_Fuse.h
+    cpp/hs_BRepBndLib.h
     cpp/hs_BRepBuilderAPI_GTransform.h
     cpp/hs_BRepBuilderAPI_MakeEdge.h
     cpp/hs_BRepBuilderAPI_MakeFace.h
@@ -88,10 +90,14 @@ source-repository head
 
 library
   exposed-modules:
+      OpenCascade.Bnd.Box
+      OpenCascade.Bnd.Internal.Destructors
+      OpenCascade.Bnd.Types
       OpenCascade.BRep.Tool
       OpenCascade.BRepAlgoAPI.Common
       OpenCascade.BRepAlgoAPI.Cut
       OpenCascade.BRepAlgoAPI.Fuse
+      OpenCascade.BRepBndLib
       OpenCascade.BRepBuilderAPI
       OpenCascade.BRepBuilderAPI.FaceError
       OpenCascade.BRepBuilderAPI.GTransform
@@ -220,10 +226,12 @@ library
       cpp
       /usr/include/opencascade
   cxx-sources:
+      cpp/hs_Bnd_Box.cpp
       cpp/hs_BRep_Tool.cpp
       cpp/hs_BRepAlgoAPI_Common.cpp
       cpp/hs_BRepAlgoAPI_Cut.cpp
       cpp/hs_BRepAlgoAPI_Fuse.cpp
+      cpp/hs_BRepBndLib.cpp
       cpp/hs_BRepBuilderAPI_GTransform.cpp
       cpp/hs_BRepBuilderAPI_MakeEdge.cpp
       cpp/hs_BRepBuilderAPI_MakeFace.cpp

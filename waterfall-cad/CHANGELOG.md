@@ -11,7 +11,11 @@ and this project adheres to the
 
 ### Added 
 
-- `volume`, `momentOfInertia` and `centerOfMass` queries in `Waterfall.Solids`
+- the following `volume`, `momentOfInertia` and `centerOfMass` queries in `Waterfall.Solids`
+    - `volume`
+    - `momentOfInertia`
+    - `centerOfMass`
+    - `axisAlignedBoundingBox`
 
 ### Changed 
 - `Waterfall.Text.fontFromPath` and `Waterfall.Text.fontFromSystem` now return `IO` actions rather than embedding the action into the underlying `Shape`
