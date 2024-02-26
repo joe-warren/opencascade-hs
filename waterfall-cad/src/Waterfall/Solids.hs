@@ -29,7 +29,7 @@ import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
 import qualified OpenCascade.GP as GP
 import Control.Lens ((^.))
-import Linear (V3 (..), unit, _x, _y, _z, (^*), (^-^))
+import Linear (V3 (..), unit, _x, _y, _z, (^*))
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.GP.Dir as GP.Dir
@@ -113,7 +113,7 @@ volume = gPropQuery (liftIO . GProps.mass)
 centerOfMass :: Solid -> V3 Double 
 centerOfMass = gPropQuery ((liftIO . gpPntToV3) <=< GProps.centreOfMass)
 
--- | Moment of Inertia of the Solid 
+-- | Moment of Inertia of the Solid around a particular point and axis
 momentOfInertia :: V3 Double -- ^ Point on the Axis of the Moment
     -> V3 Double -- ^ Direction of the Axis of the Moment 
     -> Solid

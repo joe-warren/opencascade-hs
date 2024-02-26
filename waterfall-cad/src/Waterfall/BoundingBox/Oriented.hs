@@ -31,7 +31,7 @@ import Control.Monad ((<=<))
 -- 
 data OrientedBoundingBox = OrientedBoundingBox { rawOBB :: Ptr OBB }
 
--- | compute an OrientedBoundingBox for a solid
+-- | Compute an OrientedBoundingBox for a solid
 orientedBoundingBox :: Solid -> Maybe OrientedBoundingBox
 orientedBoundingBox s = 
     if volume s == 0
@@ -45,7 +45,7 @@ orientedBoundingBox s =
 queryOBB :: (Ptr OBB -> Acquire (V3 Double)) -> OrientedBoundingBox -> V3 Double
 queryOBB f = unsafeFromAcquire . ( f <=< toAcquire . rawOBB)
 
--- | The center point of an oriented Bounding Box
+-- | The center point of an `OrientedBoundingBox`
 obbCenter :: OrientedBoundingBox -> V3 Double
 obbCenter = queryOBB (liftIO . gpXYZToV3 <=< OBB.center)
 
@@ -55,25 +55,28 @@ getSide fxyz fLength = queryOBB $ \obb -> do
     len <- liftIO $ fLength obb
     return $ normalize side ^* len
 
--- | the "X" side of the oriented bounding box
--- This is measured from the center to one Face
--- So the length of this vector is _half_ of the side length of the bounding box
+-- | The "X" side of the oriented bounding box.
+--
+-- This is measured from the center to one Face.
+-- So the length of this vector is _half_ of the side length of the bounding box.
 obbSideX :: OrientedBoundingBox -> V3 Double 
 obbSideX = getSide OBB.xDirection OBB.xHSize
     
--- | the "Y" side of the oriented bounding box
--- This is measured from the center to one face
--- So the length of this vector is _half_ of the side length of the bounding box
+-- | The "Y" side of the oriented bounding box.
+--
+-- This is measured from the center to one face.
+-- So the length of this vector is _half_ of the side length of the bounding box.
 obbSideY :: OrientedBoundingBox -> V3 Double 
 obbSideY = getSide OBB.yDirection OBB.yHSize
     
 -- | the "Z" side of the oriented bounding box
--- This is measured from the center to one face
--- So the length of this vector is _half_ of the side length of the bounding box
+--
+-- This is measured from the center to one face.
+-- So the length of this vector is _half_ of the side length of the bounding box.
 obbSideZ :: OrientedBoundingBox -> V3 Double
 obbSideZ =  getSide OBB.zDirection OBB.zHSize
 
--- | reify an OrientedBoundingBox as  a Solid
+-- | Reify an `OrientedBoundingBox` as a `Solid`
 obbToSolid :: OrientedBoundingBox -> Solid
 obbToSolid obb = solidFromAcquire $ do
     obb' <- toAcquire . rawOBB $ obb
