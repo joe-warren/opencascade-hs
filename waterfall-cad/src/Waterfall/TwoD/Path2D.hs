@@ -27,6 +27,7 @@ module Waterfall.TwoD.Path2D
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..))
 import Waterfall.TwoD.Transforms (rotate2D)
+import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import qualified Waterfall.Internal.Edges as Internal.Edges
 import Linear.V2 (V2(..))
 import Control.Monad.IO.Class (liftIO)
@@ -78,19 +79,19 @@ arcRelative sense radius dEnd = do
 --
 -- This can be used to construct paths with rotational symmetry, such as regular polygons, or gears.
 repeatLooping :: Path2D -> Path2D
-repeatLooping p = Path2D $ do
-    path <- runPath p 
+repeatLooping p = Path2D . unsafeFromAcquire $ do
+    path <- toAcquire . rawPath $ p 
     (s, e) <- liftIO . Internal.Edges.wireEndpoints $ path
     let a = unangle (e ^. _xy) - unangle (s ^. _xy)
     let times :: Integer = abs . round $ pi * 2 / a 
-    runPath $ mconcat [rotate2D (negate (fromIntegral n) * a) p | n <- [0..times]]
+    toAcquire . rawPath . mconcat $ [rotate2D (negate (fromIntegral n) * a) p | n <- [0..times]]
 
 -- | Given a path, return a new path with the endpoints joined by a straight line.
 closeLoop :: Path2D -> Path2D
-closeLoop p = Path2D $ do
-    path <- runPath p
+closeLoop p = Path2D . unsafeFromAcquire $ do
+    path <- toAcquire . rawPath $ p
     (s, e) <- liftIO . Internal.Edges.wireEndpoints $ path
-    runPath $ mconcat [p, line (e ^. _xy)  (s ^. _xy)]
+    toAcquire .rawPath . mconcat $ [p, line (e ^. _xy)  (s ^. _xy)]
 
 -- $reexports
 --

@@ -10,6 +10,7 @@ module Waterfall.TwoD.Transforms
 ) where
 
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
+import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Linear.V2 (V2 (..))
 import Linear ((*^), normalize, dot)
 import qualified OpenCascade.GP.Trsf as GP.Trsf
@@ -44,27 +45,27 @@ class Transformable2D a where
     mirror2D :: V2 Double -> a -> a
 
 fromTrsfPath :: Acquire (Ptr GP.Trsf) -> Path2D -> Path2D
-fromTrsfPath mkTrsf (Path2D run) = Path2D $ do 
-    path <- run
+fromTrsfPath mkTrsf (Path2D p) = Path2D . unsafeFromAcquire $ do 
+    path <- toAcquire p
     trsf <- mkTrsf 
     (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast path) trsf True 
 
 fromTrsfShape :: Acquire (Ptr GP.Trsf) -> Shape -> Shape
-fromTrsfShape mkTrsf (Shape run) = Shape $ do 
-    shape <- run
+fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
+    shape <- toAcquire theRawShape
     trsf <- mkTrsf 
     BRepBuilderAPI.Transform.transform shape trsf True 
 
     
 fromGTrsfPath :: Acquire (Ptr GP.GTrsf) -> Path2D -> Path2D
-fromGTrsfPath mkTrsf (Path2D run) = Path2D $ do 
-    path <- run
+fromGTrsfPath mkTrsf (Path2D p) = Path2D . unsafeFromAcquire  $ do 
+    path <- toAcquire p
     trsf <- mkTrsf 
     (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
 
 fromGTrsfShape :: Acquire (Ptr GP.GTrsf) -> Shape -> Shape
-fromGTrsfShape mkTrsf (Shape run) = Shape $ do 
-    shape <- run
+fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
+    shape <- toAcquire theRawShape 
     trsf <- mkTrsf 
     BRepBuilderAPI.GTransform.gtransform shape trsf True 
 

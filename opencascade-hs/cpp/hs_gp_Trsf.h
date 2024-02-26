@@ -39,6 +39,8 @@ bool hs_gp_Trsf_IsNegative(gp_Trsf * trsf);
 
 double hs_gp_Trsf_ScaleFactor(gp_Trsf * trsf);
 
+void hs_gp_Trsf_SetDisplacement(gp_Trsf * trsf, gp_Ax3 *from, gp_Ax3 * to);
+
 double hs_gp_Trsf_Value(gp_Trsf* trsf, int row, int col);
 
 void hs_gp_Trsf_Invert(gp_Trsf* trsf);

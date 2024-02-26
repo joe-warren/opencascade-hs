@@ -28,6 +28,7 @@ dependencies:
 - lens >= 5 && < 6
 - lattices >= 2.0 && < 3
 - resourcet >= 1.2 && < 1.4
+- primitive >= 0.7 && < 0.10 
 
 ghc-options: *ghc-options
 

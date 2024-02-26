@@ -28,6 +28,7 @@ typedef void gp_Vec2d;
 typedef void gp_Trsf;
 typedef void gp_GTrsf;
 typedef void gp_Trsf2d;
+typedef void gp_XYZ;
 typedef void BRep_Builder;
 typedef void BRepBuilderAPI_Transform;
 typedef void BRepBuilderAPI_MakeWire;
@@ -62,6 +63,9 @@ typedef int Graphic3d_VerticalTextAlignment;
 typedef void BRepOffsetAPI_MakeOffsetShape;
 typedef int BRepOffset_Mode;
 typedef int GeomAbs_JoinType;
+typedef void GProp_GProps;
+typedef void Bnd_Box;
+typedef void Bnd_OBB;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus

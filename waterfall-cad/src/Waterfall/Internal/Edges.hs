@@ -1,6 +1,5 @@
 module Waterfall.Internal.Edges
-( gpPntToV3
-, edgeEndpoints
+( edgeEndpoints
 , wireEndpoints
 , wireTangent
 ) where
@@ -9,20 +8,13 @@ import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.BRep.Tool as BRep.Tool
 import qualified OpenCascade.Geom.Curve as Geom.Curve
 import qualified OpenCascade.BRepTools.WireExplorer as WireExplorer
-import qualified OpenCascade.GP.Pnt as GP.Pnt
-import qualified OpenCascade.GP as GP
+import Waterfall.Internal.FromOpenCascade (gpPntToV3, gpVecToV3)
 import Data.Acquire
 import Control.Monad.IO.Class (liftIO)
 import Linear (V3 (..))
 import Foreign.Ptr
-import qualified OpenCascade.GP.Vec as GP.Vec
 
 
-gpPntToV3 :: Ptr GP.Pnt -> IO (V3 Double)
-gpPntToV3 pnt = V3 <$> GP.Pnt.getX pnt <*> GP.Pnt.getY pnt <*> GP.Pnt.getZ pnt
-
-gpVecToV3 :: Ptr GP.Vec -> IO (V3 Double)
-gpVecToV3 vec = V3 <$> GP.Vec.getX vec <*> GP.Vec.getY vec <*> GP.Vec.getZ vec
 
 edgeEndpoints :: Ptr TopoDS.Edge -> IO (V3 Double, V3 Double)
 edgeEndpoints edge = (`with` pure) $ do

@@ -7,7 +7,7 @@ module Waterfall.Internal.Path
 
 import Data.List.NonEmpty (NonEmpty ())
 import Data.Foldable (traverse_, toList)
-import Data.Acquire
+import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire) 
 import Control.Monad ((<=<))
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.TopoDS as TopoDS
@@ -18,12 +18,12 @@ import Data.Semigroup (sconcat)
 -- | A Path in 3D Space 
 --
 -- Under the hood, this is represented by an OpenCascade `TopoDS.Wire`.
-newtype Path = Path { runPath :: Acquire (Ptr TopoDS.Wire) }
+newtype Path = Path { rawPath :: Ptr TopoDS.Wire }
 
 joinPaths :: [Path] -> Path
-joinPaths paths = Path $ do
+joinPaths paths = Path . unsafeFromAcquire $ do
     builder <- MakeWire.new
-    traverse_ (liftIO . MakeWire.addWire builder <=< runPath) paths
+    traverse_ (liftIO . MakeWire.addWire builder <=< toAcquire . rawPath) paths
     MakeWire.wire builder
 
 -- | The Semigroup for `Path` attempts to join two paths that share a common endpoint.

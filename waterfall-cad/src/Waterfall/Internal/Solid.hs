@@ -2,6 +2,8 @@
 {-# LANGUAGE InstanceSigs #-}
 module Waterfall.Internal.Solid 
 ( Solid (..)
+, acquireSolid
+, solidFromAcquire
 , union
 , difference
 , intersection
@@ -22,6 +24,7 @@ import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import OpenCascade.Inheritance (upcast)
+import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 
 -- | The Boundary Representation of a solid object.
 --
@@ -33,12 +36,18 @@ import OpenCascade.Inheritance (upcast)
 -- While you shouldn't need to know what this means to use the library,
 -- please feel free to report a bug if you're able to construct a `Solid`
 -- where this isnt' the case (without using internal functions).
-newtype Solid = Solid { runSolid :: Acquire (Ptr TopoDS.Shape.Shape) }
+newtype Solid = Solid { rawSolid :: Ptr TopoDS.Shape.Shape }
+
+acquireSolid :: Solid -> Acquire (Ptr TopoDS.Shape.Shape)
+acquireSolid (Solid ptr) = toAcquire ptr
+
+solidFromAcquire :: Acquire (Ptr TopoDS.Shape.Shape) -> Solid
+solidFromAcquire = Solid . unsafeFromAcquire
 
 -- | print debug information about a Solid when it's evaluated 
 -- exposes the properties of the underlying OpenCacade.TopoDS.Shape
 debug :: String -> Solid -> Solid
-debug name (Solid runTheSolid) = 
+debug name (Solid ptr) = 
     let 
         fshow :: Show a => IO a -> IO String 
         fshow = fmap show
@@ -56,14 +65,14 @@ debug name (Solid runTheSolid) =
             , ("convex", fshow . TopoDS.Shape.convex)
             , ("nbChildren", fshow . TopoDS.Shape.nbChildren)
             ]
-    in Solid $ do
-    s <- runTheSolid
-    liftIO $ do 
-        putStrLn name
-        forM_ actions $ \(actionName, value) -> do
-            putStrLn ("\t" <> actionName)
-            putStrLn . ("\t\t" <>) =<< value s
-    return s
+    in Solid $ unsafeFromAcquire $ do
+        s <- toAcquire ptr
+        liftIO $ do 
+            putStrLn name
+            forM_ actions $ \(actionName, value) -> do
+                putStrLn ("\t" <> actionName)
+                putStrLn . ("\t\t" <>) =<< value s
+        return s
 
 {--
 -- TODO: this does not work, need to fix
@@ -78,21 +87,21 @@ everywhere = complement $ nowhere
 --
 -- Be warned that @complement nowhere@ does not appear to work correctly.
 complement :: Solid -> Solid
-complement (Solid run) = Solid $ TopoDS.Shape.complemented =<< run
+complement (Solid ptr) = Solid . unsafeFromAcquire $ TopoDS.Shape.complemented =<< toAcquire ptr
 
 -- | An empty solid
 --
 -- Be warned that @complement nowhere@ does not appear to work correctly.
 nowhere :: Solid 
-nowhere =  Solid $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
+nowhere =  Solid . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
 
 -- defining the boolean CSG operators here, rather than in Waterfall.Booleans 
 -- means that we can use them in typeclass instances without resorting to orphans
 
 toBoolean :: (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)) -> Solid -> Solid -> Solid
-toBoolean f (Solid runA) (Solid runB) = Solid $ do
-    a <- runA
-    b <- runB
+toBoolean f (Solid ptrA) (Solid ptrB) = Solid . unsafeFromAcquire $ do
+    a <- toAcquire ptrA
+    b <- toAcquire ptrB
     f a b
 
 -- | Take the sum of two solids

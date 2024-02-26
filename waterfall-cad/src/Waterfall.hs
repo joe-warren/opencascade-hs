@@ -1,6 +1,8 @@
 module Waterfall 
 ( module Waterfall.Booleans
 , module Waterfall.Booleans.Operators
+, module Waterfall.BoundingBox.AxisAligned
+, module Waterfall.BoundingBox.Oriented
 , module Waterfall.Fillet
 , module Waterfall.IO
 , module Waterfall.Offset
@@ -18,6 +20,8 @@ module Waterfall
 
 import Waterfall.Booleans
 import Waterfall.Booleans.Operators
+import Waterfall.BoundingBox.AxisAligned
+import Waterfall.BoundingBox.Oriented
 import Waterfall.Fillet
 import Waterfall.IO
 import Waterfall.Offset

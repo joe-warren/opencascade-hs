@@ -31,8 +31,12 @@ library
       Waterfall
       Waterfall.Booleans
       Waterfall.Booleans.Operators
+      Waterfall.BoundingBox.AxisAligned
+      Waterfall.BoundingBox.Oriented
       Waterfall.Fillet
       Waterfall.Internal.Edges
+      Waterfall.Internal.Finalizers
+      Waterfall.Internal.FromOpenCascade
       Waterfall.Internal.Path
       Waterfall.Internal.Solid
       Waterfall.IO
@@ -60,5 +64,6 @@ library
     , lens ==5.*
     , linear >=1.21 && <2
     , opencascade-hs >=0.1.2.2 && <0.2
+    , primitive >=0.7 && <0.10
     , resourcet >=1.2 && <1.4
   default-language: Haskell2010

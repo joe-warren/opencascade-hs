@@ -13,6 +13,7 @@ module OpenCascade.GP.Internal.Destructors
 , deleteTrsf
 , deleteTrsf2d
 , deleteGTrsf
+, deleteXYZ
 ) where
 
 import OpenCascade.GP.Types
@@ -32,4 +33,5 @@ foreign import capi unsafe "hs_gp_Vec2d.h hs_delete_gp_Vec2d" deleteVec2d :: Ptr
 foreign import capi unsafe "hs_gp_Trsf.h hs_delete_gp_Trsf" deleteTrsf :: Ptr Trsf -> IO ()
 foreign import capi unsafe "hs_gp_GTrsf.h hs_delete_gp_GTrsf" deleteGTrsf :: Ptr GTrsf -> IO ()
 foreign import capi unsafe "hs_gp_Trsf2d.h hs_delete_gp_Trsf2d" deleteTrsf2d :: Ptr Trsf2d -> IO ()
+foreign import capi unsafe "hs_gp_XYZ.h hs_delete_gp_XYZ" deleteXYZ :: Ptr XYZ -> IO ()
 

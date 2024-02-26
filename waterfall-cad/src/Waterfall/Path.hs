@@ -28,7 +28,7 @@ import Linear (V3)
 
 -- | convert a `Path2D` into a `Path` on the \( xy \) plane (with \( z = 0 \) )
 fromPath2D :: Path2D -> Path
-fromPath2D (Path2D run) = Path run
+fromPath2D (Path2D raw) = Path raw
 
 -- $reexports
 --

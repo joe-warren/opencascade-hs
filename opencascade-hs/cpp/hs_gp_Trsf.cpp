@@ -45,6 +45,10 @@ void hs_gp_Trsf_SetScaleFactor(gp_Trsf * trsf, double s){
     trsf->SetScaleFactor(s);
 }
 
+void hs_gp_Trsf_SetDisplacement(gp_Trsf * trsf, gp_Ax3 *from, gp_Ax3 * to){
+    trsf->SetDisplacement(*from, *to);
+}
+
 void hs_gp_Trsf_SetValues(gp_Trsf * trsf, 
         double a11, double a12, double a13, double a14,
         double a21, double a22, double a23, double a24,
