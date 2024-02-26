@@ -15,9 +15,15 @@ and this project adheres to the
     - `volume`
     - `momentOfInertia`
     - `centerOfMass`
-    - `axisAlignedBoundingBox`
+- `aabbToSolid` to `Waterfall.Solids` (converts the output of `axisAlignedBoundingBox` into a solid)
+- `Waterfall.BoundingBox.AxisAligned`, for calculating (and reifying) an (axis aligned) bounding box of a solid 
+- `Waterfall.BoundingBox.Oriented`, for calculating (and reifying) an (oriented) bounding box of a solid 
 
 ### Changed 
+
+- Changed the representation of `Solid` (and other Waterfall values) from a newtype wrapper to `Data.Acquire` to a naked `Ptr`, with destructors called using Finalizers.
+    - This means it's possible to support "queries", like calculating the volume of a Solid
+    - It also means there's some risk of exceptions being thrown when working with plain values, which wasn't present before
 - `Waterfall.Text.fontFromPath` and `Waterfall.Text.fontFromSystem` now return `IO` actions rather than embedding the action into the underlying `Shape`
 
 ### Fixed

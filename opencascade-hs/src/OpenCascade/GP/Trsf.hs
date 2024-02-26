@@ -9,6 +9,7 @@ module OpenCascade.GP.Trsf
 , setRotationAboutAxisAngle
 , setScale
 , setTranslation
+, setDisplacement
 , setScaleFactor
 , setTranslationPart
 , setValues
@@ -71,6 +72,10 @@ setScale = coerce rawSetScale
 foreign import capi unsafe "hs_gp_Trsf.h hs_gp_Trsf_SetTranslation" setTranslation :: Ptr Trsf -> Ptr Vec -> IO ()
 
 foreign import capi unsafe "hs_gp_Trsf.h hs_gp_Trsf_SetTranslationPart" setTranslationPart :: Ptr Trsf -> Ptr Vec -> IO ()
+
+-- setDisplacement
+
+foreign import capi unsafe "hs_gp_Trsf.h hs_gp_Trsf_SetDisplacement" setDisplacement :: Ptr Trsf -> Ptr Ax3 -> Ptr Ax3 -> IO ()
 
 -- scaleFactor
 

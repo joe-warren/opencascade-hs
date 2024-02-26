@@ -65,6 +65,7 @@ typedef int BRepOffset_Mode;
 typedef int GeomAbs_JoinType;
 typedef void GProp_GProps;
 typedef void Bnd_Box;
+typedef void Bnd_OBB;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus

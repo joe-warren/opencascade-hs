@@ -12,14 +12,13 @@ module Waterfall.Solids
 , volume
 , centerOfMass
 , momentOfInertia
-, axisAlignedBoundingBox
 ) where
 
 
 import Waterfall.Internal.Solid (Solid (..), solidFromAcquire, acquireSolid, nowhere)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Waterfall.TwoD.Internal.Shape (rawShape)
-import Waterfall.Internal.Edges (gpPntToV3)
+import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Waterfall.Transforms (translate)
 import qualified Waterfall.TwoD.Shape as TwoD.Shape
 import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
@@ -28,11 +27,9 @@ import qualified OpenCascade.BRepPrimAPI.MakeCylinder as MakeCylinder
 import qualified OpenCascade.BRepPrimAPI.MakeCone as MakeCone
 import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
-import qualified OpenCascade.Bnd.Box as Bnd.Box
-import qualified OpenCascade.BRepBndLib as BRepBndLib
 import qualified OpenCascade.GP as GP
 import Control.Lens ((^.))
-import Linear (V3 (..), unit, _x, _y, _z, (^*))
+import Linear (V3 (..), unit, _x, _y, _z, (^*), (^-^))
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.GP.Dir as GP.Dir
@@ -68,6 +65,7 @@ box (V3 x y z) = solidFromAcquire $ do
     b <- GP.Pnt.new x y z
     builder <- MakeBox.fromPnts a b
     Inheritance.upcast <$> MakeBox.solid builder
+
     
 -- | A sphere with radius of 1, centered on the origin
 unitSphere :: Solid
@@ -125,15 +123,3 @@ momentOfInertia center axis = gPropQuery $ \gprop -> do
     dir <- GP.Dir.new (axis ^. _x) (axis ^. _y) (axis ^. _z)
     ax1 <- GP.Ax1.new pnt dir
     liftIO $ GProps.momentOfInertia gprop ax1
-
-axisAlignedBoundingBox :: Solid -> Maybe (V3 Double, V3 Double)
-axisAlignedBoundingBox s =  
-    if volume s <= 0
-        then Nothing 
-        else Just . unsafeFromAcquire $ do
-            solid <- acquireSolid s
-            theBox <- Bnd.Box.new
-            liftIO $ BRepBndLib.add solid theBox True
-            p1 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMin theBox
-            p2 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax theBox
-            return (p1, p2)

@@ -14,6 +14,9 @@ and this project adheres to the
 - Added OpenCascade.GProp.GProps
 - Added OpenCascade.BRepBndLib 
 - Added OpenCascade.Bnd.Box
+- Added OpenCascade.Bnd.OBB
+- Added OpenCascade.GP.XYZ (just the barebones Constructor and Getter/Setter methods)
+- Added `setDisplacement` to OpenCascade.GP.Trsf
 
 ## 0.1.2.2 - 2024-01-09 
 

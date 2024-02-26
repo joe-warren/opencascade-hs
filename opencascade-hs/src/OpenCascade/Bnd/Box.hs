@@ -12,6 +12,7 @@ import OpenCascade.GP.Types (Pnt)
 import OpenCascade.GP.Internal.Destructors (deletePnt)
 import Data.Acquire (Acquire, mkAcquire)
 import Foreign.Ptr (Ptr)
+
 foreign import capi unsafe "hs_Bnd_Box.h hs_new_Bnd_Box" rawNew ::  IO (Ptr Box)
 
 new :: Acquire (Ptr Box)
