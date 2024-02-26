@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.2.0.0
+
 - Add an example demonstrating both `Waterfall.BoundingBox.Oriented` and `Waterfall.BoundingBox.AxisAligned`
 
 ## 0.1.2.2 - 2024-01-09 

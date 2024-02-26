@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.2.0.0
+
 ### Added
 
 - Added OpenCascade.BRepGProp

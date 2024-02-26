@@ -9,6 +9,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.2.0.0
+
 ### Added 
 
 - the following `volume`, `momentOfInertia` and `centerOfMass` queries in `Waterfall.Solids`
