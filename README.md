@@ -55,3 +55,5 @@ Because OpenCASCADE is licensed under the LGPL version 2.1, I'm also using that 
 [![](images/offset.png)](waterfall-cad-examples/src/OffsetExample.hs)
 
 [![](images/text.png)](waterfall-cad-examples/src/TextExample.hs)
+
+[![](images/bounding_boxes.png)](waterfall-cad-examples/src/BoundingBoxExample.hs)
