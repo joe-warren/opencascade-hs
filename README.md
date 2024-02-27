@@ -4,7 +4,7 @@
 
 A third party Haskell wrapper to [Open CASCADE](https://dev.opencascade.org) ([wiki](https://en.wikipedia.org/wiki/Open_Cascade_Technology)), which is the underlying framework behind [FreeCAD](https://www.freecad.org/).
 
-The API is only partially complete, and largely consists of the modeling functionality (BRep/Boolean Ops/Curves/etc), ignoring the visualization components. 
+Wrapping the Open Cascade API has been done on an incremental basis, and only a partially subset has been extracted, this largely consists of the modeling functionality (BRep/Boolean Ops/Curves/etc), and does not include the visualization components.
 
 ## Waterfall CAD
 
