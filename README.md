@@ -1,12 +1,12 @@
-# OpenCASCADE-hs & Waterfall CAD
+This repository contains two libraries, "OpenCascade-hs" and "Waterfall CAD".
 
-## OpenCASCADE-hs
+## ![OpenCASCADE-hs](images/logo/opencascade-hs-logo-name.svg)
 
 A third party Haskell wrapper to [Open CASCADE](https://dev.opencascade.org) ([wiki](https://en.wikipedia.org/wiki/Open_Cascade_Technology)), which is the underlying framework behind [FreeCAD](https://www.freecad.org/).
 
 Wrapping the Open Cascade API has been done on an incremental basis, and only a partially subset has been extracted, this largely consists of the modeling functionality (BRep/Boolean Ops/Curves/etc), and does not include the visualization components.
 
-## Waterfall CAD
+## ![Waterfall CAD](images/logo/waterfall-cad-logo-name.svg)
 
 Waterfall CAD is a declarative CAD/Solid Modeling library.
 
