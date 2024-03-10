@@ -290,58 +290,68 @@
          d="m 19.74414,57.998892 -1.027936,2 h 8.789615 l 0.0098,-2 z"
          id="path625" />
     </g>
+    <style>
+        #text730 {
+            fill: black;
+        }
+        @media (prefers-color-scheme: dark) {
+            #text730 {
+                fill: white;
+            }
+        }
+    </style>
     <g
        aria-label="Waterfall CAD"
        transform="matrix(1.1738694,0,0,1.1738694,6.315557,-4.4664845)"
        id="text730"
-       style="font-size:56px;line-height:1.25;font-family:Montserrat;-inkscape-font-specification:Montserrat;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect732);display:inline;stroke-width:0.851883;fill:#666666">
+       style="font-size:56px;line-height:1.25;font-family:Montserrat;-inkscape-font-specification:Montserrat;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect732);display:inline;stroke-width:0.851883;">
       <path
          d="m 94.504,59.469237 -12.992,-39.2 h 7.56 l 11.592,35.448 h -3.752 l 12.04,-35.448 h 6.72 l 11.704,35.448 h -3.64 l 11.872,-35.448 h 6.944 l -12.992,39.2 h -7.728 l -10.696,-31.976 h 2.016 l -10.864,31.976 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path968" />
       <path
          d="m 164.00004,59.469237 v -6.048 l -0.392,-1.288 v -10.584 q 0,-3.08 -1.848,-4.76 -1.848,-1.736 -5.6,-1.736 -2.52,0 -4.984,0.784 -2.408,0.784 -4.088,2.184 l -2.744,-5.096 q 2.408,-1.848 5.712,-2.744 3.36,-0.952 6.944,-0.952 6.496,0 10.024,3.136 3.584,3.08 3.584,9.576 v 17.528 z m -9.408,0.392 q -3.36,0 -5.88,-1.12 -2.52,-1.176 -3.92,-3.192 -1.344,-2.072 -1.344,-4.648 0,-2.52 1.176,-4.536 1.232,-2.016 3.976,-3.192 2.744,-1.176 7.28,-1.176 h 8.68 v 4.648 h -8.176 q -3.584,0 -4.816,1.176 -1.232,1.12 -1.232,2.8 0,1.904 1.512,3.024 1.512,1.12 4.2,1.12 2.576,0 4.592,-1.176 2.072,-1.176 2.968,-3.472 l 1.176,4.2 q -1.008,2.632 -3.64,4.088 -2.576,1.456 -6.552,1.456 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path970" />
       <path
          d="m 190.82406,59.861237 q -4.928,0 -7.616,-2.52 -2.688,-2.576 -2.688,-7.56 v -26.824 h 7 v 26.656 q 0,2.128 1.064,3.304 1.12,1.176 3.08,1.176 2.352,0 3.92,-1.232 l 1.96,4.984 q -1.232,1.008 -3.024,1.512 -1.792,0.504 -3.696,0.504 z m -15.232,-24.472 v -5.6 h 19.936 v 5.6 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path972" />
       <path
          d="m 216.38175,59.861237 q -4.984,0 -8.736,-1.96 -3.696,-2.016 -5.768,-5.488 -2.016,-3.472 -2.016,-7.896 0,-4.48 1.96,-7.896 2.016,-3.472 5.488,-5.432 3.528,-1.96 8.008,-1.96 4.368,0 7.784,1.904 3.416,1.904 5.376,5.376 1.96,3.472 1.96,8.176 0,0.448 -0.056,1.008 0,0.56 -0.056,1.064 h -24.92 v -4.648 h 21.224 l -2.744,1.456 q 0.056,-2.576 -1.064,-4.536 -1.12,-1.96 -3.08,-3.08 -1.904,-1.12 -4.424,-1.12 -2.576,0 -4.536,1.12 -1.904,1.12 -3.024,3.136 -1.064,1.96 -1.064,4.648 v 1.12 q 0,2.688 1.232,4.76 1.232,2.072 3.472,3.192 2.24,1.12 5.152,1.12 2.52,0 4.536,-0.784 2.016,-0.784 3.584,-2.464 l 3.752,4.312 q -2.016,2.352 -5.096,3.64 -3.024,1.232 -6.944,1.232 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path974" />
       <path
          d="m 237.15773,59.469237 v -29.904 h 6.664 v 8.232 l -0.784,-2.408 q 1.344,-3.024 4.2,-4.592 2.912,-1.568 7.224,-1.568 v 6.664 q -0.448,-0.112 -0.84,-0.112 -0.392,-0.056 -0.784,-0.056 -3.976,0 -6.328,2.352 -2.352,2.296 -2.352,6.888 v 14.504 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path976" />
       <path
          d="m 261.62974,59.469237 v -31.584 q 0,-4.704 2.744,-7.504 2.8,-2.856 7.952,-2.856 1.848,0 3.472,0.392 1.68,0.392 2.8,1.232 l -1.904,5.264 q -0.784,-0.616 -1.792,-0.896 -1.008,-0.336 -2.072,-0.336 -2.184,0 -3.304,1.232 -1.12,1.176 -1.12,3.584 v 3.36 l 0.224,3.136 v 24.976 z m -4.928,-24.08 v -5.6 h 19.936 v 5.6 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path978" />
       <path
          d="m 299.2057,59.469237 v -6.048 l -0.392,-1.288 v -10.584 q 0,-3.08 -1.848,-4.76 -1.848,-1.736 -5.6,-1.736 -2.52,0 -4.984,0.784 -2.408,0.784 -4.088,2.184 l -2.744,-5.096 q 2.408,-1.848 5.712,-2.744 3.36,-0.952 6.944,-0.952 6.496,0 10.024,3.136 3.584,3.08 3.584,9.576 v 17.528 z m -9.408,0.392 q -3.36,0 -5.88,-1.12 -2.52,-1.176 -3.92,-3.192 -1.344,-2.072 -1.344,-4.648 0,-2.52 1.176,-4.536 1.232,-2.016 3.976,-3.192 2.744,-1.176 7.28,-1.176 h 8.68 v 4.648 h -8.176 q -3.584,0 -4.816,1.176 -1.232,1.12 -1.232,2.8 0,1.904 1.512,3.024 1.512,1.12 4.2,1.12 2.576,0 4.592,-1.176 2.072,-1.176 2.968,-3.472 l 1.176,4.2 q -1.008,2.632 -3.64,4.088 -2.576,1.456 -6.552,1.456 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path980" />
       <path
          d="m 314.77372,59.469237 v -41.552 h 7 v 41.552 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path982" />
       <path
          d="m 330.95769,59.469237 v -41.552 h 7 v 41.552 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path984" />
       <path
          d="m 381.41362,60.029237 q -4.48,0 -8.344,-1.456 -3.808,-1.512 -6.664,-4.2 -2.8,-2.744 -4.368,-6.44 -1.568,-3.696 -1.568,-8.064 0,-4.368 1.568,-8.064 1.568,-3.696 4.424,-6.384 2.856,-2.744 6.664,-4.2 3.808,-1.512 8.344,-1.512 4.816,0 8.792,1.68 3.976,1.624 6.72,4.872 l -4.704,4.424 q -2.128,-2.296 -4.76,-3.416 -2.632,-1.176 -5.712,-1.176 -3.08,0 -5.656,1.008 -2.52,1.008 -4.424,2.856 -1.848,1.848 -2.912,4.368 -1.008,2.52 -1.008,5.544 0,3.024 1.008,5.544 1.064,2.52 2.912,4.368 1.904,1.848 4.424,2.856 2.576,1.008 5.656,1.008 3.08,0 5.712,-1.12 2.632,-1.176 4.76,-3.528 l 4.704,4.48 q -2.744,3.192 -6.72,4.872 -3.976,1.68 -8.848,1.68 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path986" />
       <path
          d="m 397.58499,59.469237 17.64,-39.2 h 7.168 l 17.696,39.2 h -7.616 l -15.176,-35.336 h 2.912 l -15.12,35.336 z m 8.12,-9.072 1.96,-5.712 h 21.168 l 1.96,5.712 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path988" />
       <path
          d="m 445.07302,59.469237 v -39.2 h 17.136 q 6.384,0 11.2,2.464 4.816,2.464 7.504,6.832 2.688,4.368 2.688,10.304 0,5.88 -2.688,10.304 -2.688,4.368 -7.504,6.832 -4.816,2.464 -11.2,2.464 z m 7.28,-6.16 h 9.52 q 4.424,0 7.616,-1.68 3.248,-1.68 4.984,-4.704 1.792,-3.024 1.792,-7.056 0,-4.088 -1.792,-7.056 -1.736,-3.024 -4.984,-4.704 -3.192,-1.68 -7.616,-1.68 h -9.52 z"
-         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';fill:#666666"
+         style="font-weight:600;-inkscape-font-specification:'Montserrat Semi-Bold';"
          id="path990" />
     </g>
   </g>
