@@ -1,6 +1,8 @@
 module Waterfall.IO
 (  writeSTL
 , writeSTEP
+, writeGLTF
+, writeGLB
 ) where 
 
 import Waterfall.Internal.Solid (Solid(..))
@@ -8,6 +10,12 @@ import qualified OpenCascade.BRepMesh.IncrementalMesh as BRepMesh.IncrementalMes
 import qualified OpenCascade.StlAPI.Writer as StlWriter
 import qualified OpenCascade.STEPControl.Writer as StepWriter
 import qualified OpenCascade.STEPControl.StepModelType as StepModelType
+import qualified OpenCascade.TDocStd.Document as TDocStd.Document
+import qualified OpenCascade.Message.ProgressRange as Message.ProgressRange
+import qualified OpenCascade.TColStd.IndexedDataMapOfStringString as TColStd.IndexedDataMapOfStringString
+import qualified OpenCascade.RWGltf.CafWriter as RWGltf.CafWriter
+import qualified OpenCascade.XCAFDoc.DocumentTool as XCafDoc.DocumentTool
+import qualified OpenCascade.XCAFDoc.ShapeTool as XCafDoc.ShapeTool
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (void, unless)
 import System.IO (hPutStrLn, stderr)
@@ -43,3 +51,30 @@ writeSTEP filepath (Solid ptr) = (`withAcquire` pure) $ do
     _ <- liftIO $ StepWriter.transfer writer s StepModelType.Asls True
     void . liftIO $ StepWriter.write writer filepath
 
+writeGLTFOrGLB :: Bool -> Double -> FilePath -> Solid -> IO ()
+writeGLTFOrGLB binary linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
+    s <- toAcquire ptr
+    mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
+    liftIO $ BRepMesh.IncrementalMesh.perform mesh
+    doc <- TDocStd.Document.fromStorageFormat ""
+    mainLabel <- TDocStd.Document.main doc
+    shapeTool <- XCafDoc.DocumentTool.shapeTool mainLabel
+    _ <- XCafDoc.ShapeTool.addShape shapeTool s True True
+    meta <- TColStd.IndexedDataMapOfStringString.new
+    progress <- Message.ProgressRange.new
+    writer <- RWGltf.CafWriter.new filepath binary
+    liftIO $ RWGltf.CafWriter.perform writer doc meta progress
+    return ()
+
+-- | Write a `Solid` to a glTF file at a given path
+--
+-- glTF, or Graphics Library Transmission Format is a JSON based format 
+-- used for three-dimensional scenes and models
+writeGLTF :: Double -> FilePath -> Solid -> IO ()
+writeGLTF = writeGLTFOrGLB False
+
+-- | Write a `Solid` to a glb file at a given path
+--
+-- glb is the binary variant of the glTF file format
+writeGLB :: Double -> FilePath -> Solid -> IO ()
+writeGLB = writeGLTFOrGLB True

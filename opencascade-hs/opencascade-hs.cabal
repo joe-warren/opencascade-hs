@@ -70,9 +70,14 @@ extra-source-files:
     cpp/hs_gp_Vec2d.h
     cpp/hs_gp_XYZ.h
     cpp/hs_GProp_GProps.h
+    cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
+    cpp/hs_RWGltf_CafWriter.h
     cpp/hs_STEPControl_Writer.h
     cpp/hs_StlAPI_Writer.h
+    cpp/hs_TColStd_IndexedDataMapOfStringString.h
+    cpp/hs_TDF_Label.h
+    cpp/hs_TDocStd_Document.h
     cpp/hs_TopExp_Explorer.h
     cpp/hs_TopLoc_Location.h
     cpp/hs_TopoDS_Compound.h
@@ -85,6 +90,8 @@ extra-source-files:
     cpp/hs_TopoDS_Vertex.h
     cpp/hs_TopoDS_Wire.h
     cpp/hs_types.h
+    cpp/hs_XCAFDoc_DocumentTool.h
+    cpp/hs_XCAFDoc_ShapeTool.h
 
 source-repository head
   type: git
@@ -180,10 +187,16 @@ library
       OpenCascade.IFSelect.ReturnStatus
       OpenCascade.Inheritance
       OpenCascade.Internal.Bool
+      OpenCascade.Message.Internal.Destructors
+      OpenCascade.Message.ProgressRange
+      OpenCascade.Message.Types
       OpenCascade.NCollection
       OpenCascade.NCollection.Array1
       OpenCascade.NCollection.Internal.Destructors
       OpenCascade.NCollection.Types
+      OpenCascade.RWGltf.CafWriter
+      OpenCascade.RWGltf.Internal.Destructors
+      OpenCascade.RWGltf.Types
       OpenCascade.STEPControl
       OpenCascade.STEPControl.Internal.Destructors
       OpenCascade.STEPControl.StepModelType
@@ -193,6 +206,14 @@ library
       OpenCascade.StlAPI.Internal.Destructors
       OpenCascade.StlAPI.Types
       OpenCascade.StlAPI.Writer
+      OpenCascade.TColStd.IndexedDataMapOfStringString
+      OpenCascade.TColStd.Internal.Destructors
+      OpenCascade.TColStd.Types
+      OpenCascade.TDF.Internal.Destructors
+      OpenCascade.TDF.Types
+      OpenCascade.TDocStd.Document
+      OpenCascade.TDocStd.Internal.Destructors
+      OpenCascade.TDocStd.Types
       OpenCascade.TopAbs
       OpenCascade.TopAbs.Orientation
       OpenCascade.TopAbs.ShapeEnum
@@ -218,6 +239,10 @@ library
       OpenCascade.TopoDS.Wire
       OpenCascade.TopTools
       OpenCascade.TopTools.Types
+      OpenCascade.XCAFDoc.DocumentTool
+      OpenCascade.XCAFDoc.Internal.Destructors
+      OpenCascade.XCAFDoc.ShapeTool
+      OpenCascade.XCAFDoc.Types
   other-modules:
       Paths_opencascade_hs
   autogen-modules:
@@ -279,9 +304,14 @@ library
       cpp/hs_gp_Vec2d.cpp
       cpp/hs_gp_XYZ.cpp
       cpp/hs_GProp_GProps.cpp
+      cpp/hs_Message_ProgressRange.cpp
       cpp/hs_NCollection_Array1.cpp
+      cpp/hs_RWGltf_CafWriter.cpp
       cpp/hs_STEPControl_Writer.cpp
       cpp/hs_StlAPI_Writer.cpp
+      cpp/hs_TColStd_IndexedDataMapOfStringString.cpp
+      cpp/hs_TDF_Label.cpp
+      cpp/hs_TDocStd_Document.cpp
       cpp/hs_TopExp_Explorer.cpp
       cpp/hs_TopLoc_Location.cpp
       cpp/hs_TopoDS_Compound.cpp
@@ -293,6 +323,8 @@ library
       cpp/hs_TopoDS_Solid.cpp
       cpp/hs_TopoDS_Vertex.cpp
       cpp/hs_TopoDS_Wire.cpp
+      cpp/hs_XCAFDoc_DocumentTool.cpp
+      cpp/hs_XCAFDoc_ShapeTool.cpp
   extra-libraries:
       stdc++
       TKGeomBase
@@ -312,6 +344,9 @@ library
       TKSTEP
       TKV3d
       TKMesh
+      TKRWMesh
+      TKLCAF
+      TKXCAF
       TKService
   build-depends:
       base >=4.7 && <5

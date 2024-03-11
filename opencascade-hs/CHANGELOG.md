@@ -8,6 +8,16 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added
+
+- Added OpenCascade.Message.ProgressRange
+- Added OpenCascade.RWGltf.CafWriter
+- Added OpenCascade.RWGltf.Types
+- Added OpenCascade.TColStd.IndexedDataMapOfStringString
+- Added OpenCascade.TDocStd.Document
+- Added OpenCascade.XCAFDoc.DocumentTool
+- Added OpenCascade.XCAFDoc.ShapeTool
+
 ## 0.2.0.0
 
 ### Added

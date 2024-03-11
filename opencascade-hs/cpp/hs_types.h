@@ -66,6 +66,12 @@ typedef int GeomAbs_JoinType;
 typedef void GProp_GProps;
 typedef void Bnd_Box;
 typedef void Bnd_OBB;
+typedef void Message_ProgressRange;
+typedef void RWGltf_CafWriter;
+typedef void TColStd_IndexedDataMapOfStringString;
+typedef void TDF_Label;
+typedef void TDocStd_Document;
+typedef void XCAFDoc_ShapeTool;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus

@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Added support for writing files as GLTF/GLB
+
 ## 0.2.0.0
 
 - Add an example demonstrating both `Waterfall.BoundingBox.Oriented` and `Waterfall.BoundingBox.AxisAligned`

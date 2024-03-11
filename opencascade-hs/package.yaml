@@ -36,6 +36,9 @@ extra-libraries:
 - TKSTEP
 - TKV3d 
 - TKMesh
+- TKRWMesh
+- TKLCAF
+- TKXCAF
 - TKService
 
 synopsis:            Thin Wrapper for the OpenCASCADE CAD Kernel
