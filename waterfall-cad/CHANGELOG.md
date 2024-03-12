@@ -9,6 +9,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.2.1.0
+
 ### Added
 
 - graphicsLibraryTransmissionFormat support: `writeGLTF` and `writeGLB` in `Waterfall.IO`

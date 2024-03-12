@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.2.1.0
+
 - Added support for writing files as GLTF/GLB
 
 ## 0.2.0.0
