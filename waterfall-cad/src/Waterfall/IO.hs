@@ -1,13 +1,16 @@
 module Waterfall.IO
-(  writeSTL
+( ReadError
+, writeSTL
 , writeSTEP
 , writeGLTF
 , writeGLB
+, readSTL
 ) where 
 
 import Waterfall.Internal.Solid (Solid(..))
 import qualified OpenCascade.BRepMesh.IncrementalMesh as BRepMesh.IncrementalMesh
 import qualified OpenCascade.StlAPI.Writer as StlWriter
+import qualified OpenCascade.StlAPI.Reader as StlReader
 import qualified OpenCascade.STEPControl.Writer as StepWriter
 import qualified OpenCascade.STEPControl.StepModelType as StepModelType
 import qualified OpenCascade.TDocStd.Document as TDocStd.Document
@@ -16,10 +19,11 @@ import qualified OpenCascade.TColStd.IndexedDataMapOfStringString as TColStd.Ind
 import qualified OpenCascade.RWGltf.CafWriter as RWGltf.CafWriter
 import qualified OpenCascade.XCAFDoc.DocumentTool as XCafDoc.DocumentTool
 import qualified OpenCascade.XCAFDoc.ShapeTool as XCafDoc.ShapeTool
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (void, unless)
 import System.IO (hPutStrLn, stderr)
-import Waterfall.Internal.Finalizers (toAcquire)
+import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
 import Data.Acquire
 
 -- | Write a `Solid` to a (binary) STL file at a given path
@@ -78,3 +82,15 @@ writeGLTF = writeGLTFOrGLB False
 -- glb is the binary variant of the glTF file format
 writeGLB :: Double -> FilePath -> Solid -> IO ()
 writeGLB = writeGLTFOrGLB True
+
+data ReadError = FileReadError
+
+-- | Read a `Solid` from an STL file at a given path
+readSTL :: FilePath -> IO (Either ReadError Solid)
+readSTL filepath = (fmap (fmap Solid)) . fromAcquire $ do
+    shape <- TopoDS.Shape.new
+    reader <- StlReader.new
+    res <- liftIO $ StlReader.read reader shape filepath
+    return $ if res 
+        then Right shape
+        else Left FileReadError
