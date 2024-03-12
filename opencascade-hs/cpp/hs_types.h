@@ -52,6 +52,7 @@ typedef void Geom_BezierCurve;
 typedef void BRepOffsetAPI_ThruSections;
 typedef void BRepMesh_IncrementalMesh;
 typedef void StlAPI_Writer;
+typedef void StlAPI_Reader;
 typedef void STEPControl_Writer;
 typedef int STEPControl_StepModelType;
 typedef int IFSelect_ReturnStatus;

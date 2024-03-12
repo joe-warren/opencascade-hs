@@ -12,6 +12,10 @@ and this project adheres to the
 
 - Fix `OpenCascade.GProps.fromSystemLocation`
 
+### Added 
+
+- Added OpenCascade.StlAPI.Reader
+
 ## 0.2.1.0
 
 ### Added

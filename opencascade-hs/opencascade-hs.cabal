@@ -74,6 +74,7 @@ extra-source-files:
     cpp/hs_NCollection_Array1.h
     cpp/hs_RWGltf_CafWriter.h
     cpp/hs_STEPControl_Writer.h
+    cpp/hs_StlAPI_Reader.h
     cpp/hs_StlAPI_Writer.h
     cpp/hs_TColStd_IndexedDataMapOfStringString.h
     cpp/hs_TDF_Label.h
@@ -204,6 +205,7 @@ library
       OpenCascade.STEPControl.Writer
       OpenCascade.StlAPI
       OpenCascade.StlAPI.Internal.Destructors
+      OpenCascade.StlAPI.Reader
       OpenCascade.StlAPI.Types
       OpenCascade.StlAPI.Writer
       OpenCascade.TColStd.IndexedDataMapOfStringString
@@ -308,6 +310,7 @@ library
       cpp/hs_NCollection_Array1.cpp
       cpp/hs_RWGltf_CafWriter.cpp
       cpp/hs_STEPControl_Writer.cpp
+      cpp/hs_StlAPI_Reader.cpp
       cpp/hs_StlAPI_Writer.cpp
       cpp/hs_TColStd_IndexedDataMapOfStringString.cpp
       cpp/hs_TDF_Label.cpp
