@@ -22,7 +22,7 @@ foreign import capi unsafe "hs_GProp_GProps.h hs_new_GProp_GProps" rawNew :: IO 
 new :: Acquire (Ptr GProps)
 new = mkAcquire rawNew deleteGProps
 
-foreign import capi unsafe "hs_GProp_GProps.h hs_new_GProp_GProps" rawFromSystemLocation :: Ptr Pnt -> IO (Ptr GProps)
+foreign import capi unsafe "hs_GProp_GProps.h hs_new_GProp_GProps_fromSystemLocation" rawFromSystemLocation :: Ptr Pnt -> IO (Ptr GProps)
 
 fromSystemLocation :: Ptr Pnt -> Acquire (Ptr GProps)
 fromSystemLocation pnt = mkAcquire (rawFromSystemLocation pnt) deleteGProps
