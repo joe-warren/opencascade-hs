@@ -73,6 +73,7 @@ extra-source-files:
     cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
     cpp/hs_RWGltf_CafWriter.h
+    cpp/hs_ShapeFix_Solid.h
     cpp/hs_STEPControl_Writer.h
     cpp/hs_StlAPI_Reader.h
     cpp/hs_StlAPI_Writer.h
@@ -198,6 +199,10 @@ library
       OpenCascade.RWGltf.CafWriter
       OpenCascade.RWGltf.Internal.Destructors
       OpenCascade.RWGltf.Types
+      OpenCascade.ShapeExtend.Status
+      OpenCascade.ShapeFix.Internal.Destructors
+      OpenCascade.ShapeFix.Solid
+      OpenCascade.ShapeFix.Types
       OpenCascade.STEPControl
       OpenCascade.STEPControl.Internal.Destructors
       OpenCascade.STEPControl.StepModelType
@@ -309,6 +314,7 @@ library
       cpp/hs_Message_ProgressRange.cpp
       cpp/hs_NCollection_Array1.cpp
       cpp/hs_RWGltf_CafWriter.cpp
+      cpp/hs_ShapeFix_Solid.cpp
       cpp/hs_STEPControl_Writer.cpp
       cpp/hs_StlAPI_Reader.cpp
       cpp/hs_StlAPI_Writer.cpp

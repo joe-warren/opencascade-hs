@@ -15,6 +15,8 @@ and this project adheres to the
 ### Added 
 
 - Added OpenCascade.StlAPI.Reader
+- Added OpenCascade.ShapeFix.Solid
+- Added OpenCascade.ShapeExtend.Status
 
 ## 0.2.1.0
 

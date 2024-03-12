@@ -73,6 +73,8 @@ typedef void TColStd_IndexedDataMapOfStringString;
 typedef void TDF_Label;
 typedef void TDocStd_Document;
 typedef void XCAFDoc_ShapeTool;
+typedef void ShapeFix_Solid;
+typedef int ShapeExtend_Status;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus
