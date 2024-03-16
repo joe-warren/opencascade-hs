@@ -357,6 +357,7 @@ library
       TKLCAF
       TKXCAF
       TKService
+      TKShHealing
   build-depends:
       base >=4.7 && <5
     , resourcet >=1.2 && <1.4
