@@ -17,6 +17,8 @@ and this project adheres to the
 - Added OpenCascade.StlAPI.Reader
 - Added OpenCascade.ShapeFix.Solid
 - Added OpenCascade.ShapeExtend.Status
+- Added OpenCascade.STEPControl.Reader
+- Added OpenCascade.XSControl.Reader
 
 ## 0.2.1.0
 

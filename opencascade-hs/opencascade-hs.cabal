@@ -74,6 +74,7 @@ extra-source-files:
     cpp/hs_NCollection_Array1.h
     cpp/hs_RWGltf_CafWriter.h
     cpp/hs_ShapeFix_Solid.h
+    cpp/hs_STEPControl_Reader.h
     cpp/hs_STEPControl_Writer.h
     cpp/hs_StlAPI_Reader.h
     cpp/hs_StlAPI_Writer.h
@@ -94,6 +95,7 @@ extra-source-files:
     cpp/hs_types.h
     cpp/hs_XCAFDoc_DocumentTool.h
     cpp/hs_XCAFDoc_ShapeTool.h
+    cpp/hs_XSControl_Reader.h
 
 source-repository head
   type: git
@@ -205,6 +207,7 @@ library
       OpenCascade.ShapeFix.Types
       OpenCascade.STEPControl
       OpenCascade.STEPControl.Internal.Destructors
+      OpenCascade.STEPControl.Reader
       OpenCascade.STEPControl.StepModelType
       OpenCascade.STEPControl.Types
       OpenCascade.STEPControl.Writer
@@ -250,6 +253,8 @@ library
       OpenCascade.XCAFDoc.Internal.Destructors
       OpenCascade.XCAFDoc.ShapeTool
       OpenCascade.XCAFDoc.Types
+      OpenCascade.XSControl.Reader
+      OpenCascade.XSControl.Types
   other-modules:
       Paths_opencascade_hs
   autogen-modules:
@@ -315,6 +320,7 @@ library
       cpp/hs_NCollection_Array1.cpp
       cpp/hs_RWGltf_CafWriter.cpp
       cpp/hs_ShapeFix_Solid.cpp
+      cpp/hs_STEPControl_Reader.cpp
       cpp/hs_STEPControl_Writer.cpp
       cpp/hs_StlAPI_Reader.cpp
       cpp/hs_StlAPI_Writer.cpp
@@ -334,6 +340,7 @@ library
       cpp/hs_TopoDS_Wire.cpp
       cpp/hs_XCAFDoc_DocumentTool.cpp
       cpp/hs_XCAFDoc_ShapeTool.cpp
+      cpp/hs_XSControl_Reader.cpp
   extra-libraries:
       stdc++
       TKGeomBase
