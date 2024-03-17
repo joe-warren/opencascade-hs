@@ -22,6 +22,7 @@ import qualified OpenCascade.XCAFDoc.ShapeTool as XCafDoc.ShapeTool
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.ShapeFix.Solid as ShapeFix.Solid
+import qualified OpenCascade.ShapeExtend.Status as ShapeExtend.Status
 import OpenCascade.Inheritance (upcast, downcast)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (void, unless)
@@ -95,7 +96,14 @@ makeMeshSolid s = do
     maybeShell <- liftIO $ downcast s
     case maybeShell of 
         Nothing -> pure . Left $ FileReadError
-        Just shell -> Right . upcast <$> ShapeFix.Solid.solidFromShell shapeFix shell
+        Just shell -> do 
+            solid <- upcast <$> ShapeFix.Solid.solidFromShell shapeFix shell
+            open <- fmap not . liftIO $ TopoDS.Shape.closed s
+            failed <- liftIO $ ShapeFix.Solid.status shapeFix ShapeExtend.Status.FAIL
+            if failed || open
+                then return . Left $ NonManifoldError
+                else return . Right $ solid
+
 
 -- | Read a `Solid` from an STL file at a given path
 readSTL :: FilePath -> IO (Either ReadError Solid)
