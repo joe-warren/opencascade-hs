@@ -41,6 +41,7 @@ extra-libraries:
 - TKXCAF
 - TKService
 - TKShHealing
+- TKXSBase
 
 synopsis:            Thin Wrapper for the OpenCASCADE CAD Kernel
 category:            Graphics,FFI

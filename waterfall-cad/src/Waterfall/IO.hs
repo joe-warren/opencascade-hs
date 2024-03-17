@@ -5,6 +5,7 @@ module Waterfall.IO
 , writeGLTF
 , writeGLB
 , readSTL
+, readSTEP
 ) where 
 
 import Waterfall.Internal.Solid (Solid(..))
@@ -13,6 +14,9 @@ import qualified OpenCascade.StlAPI.Writer as StlWriter
 import qualified OpenCascade.StlAPI.Reader as StlReader
 import qualified OpenCascade.STEPControl.Writer as StepWriter
 import qualified OpenCascade.STEPControl.StepModelType as StepModelType
+import qualified OpenCascade.STEPControl.Reader as STEPReader
+import qualified OpenCascade.XSControl.Reader as XSControl.Reader
+import qualified OpenCascade.IFSelect.ReturnStatus as IFSelect.ReturnStatus
 import qualified OpenCascade.TDocStd.Document as TDocStd.Document
 import qualified OpenCascade.Message.ProgressRange as Message.ProgressRange
 import qualified OpenCascade.TColStd.IndexedDataMapOfStringString as TColStd.IndexedDataMapOfStringString
@@ -24,7 +28,7 @@ import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.ShapeFix.Solid as ShapeFix.Solid
 import qualified OpenCascade.ShapeExtend.Status as ShapeExtend.Status
 import OpenCascade.Inheritance (upcast, downcast)
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad (void, unless)
 import System.IO (hPutStrLn, stderr)
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
@@ -90,6 +94,24 @@ writeGLB = writeGLTFOrGLB True
 
 data ReadError = FileReadError | NonManifoldError deriving (Eq, Show)
 
+checkManifold :: MonadIO m => Ptr TopoDS.Shape -> m (Either ReadError (Ptr TopoDS.Shape))
+checkManifold shape = do
+    isNull <- liftIO . TopoDS.Shape.isNull $ shape
+    if isNull 
+        then return . Left $ FileReadError
+        else do
+            closed <- liftIO . TopoDS.Shape.closed $ shape
+            return $ if closed 
+                then Right $ shape
+                else Left NonManifoldError
+
+checkNonNull:: MonadIO m => Ptr TopoDS.Shape -> m (Either ReadError (Ptr TopoDS.Shape))
+checkNonNull shape = do
+    isNull <- liftIO . TopoDS.Shape.isNull $ shape
+    return $ if isNull 
+        then Left FileReadError
+        else Right shape
+
 makeMeshSolid :: Ptr TopoDS.Shape -> Acquire (Either ReadError (Ptr TopoDS.Shape))
 makeMeshSolid s = do 
     shapeFix <- ShapeFix.Solid.new
@@ -98,11 +120,10 @@ makeMeshSolid s = do
         Nothing -> pure . Left $ FileReadError
         Just shell -> do 
             solid <- upcast <$> ShapeFix.Solid.solidFromShell shapeFix shell
-            open <- fmap not . liftIO $ TopoDS.Shape.closed s
             failed <- liftIO $ ShapeFix.Solid.status shapeFix ShapeExtend.Status.FAIL
-            if failed || open
+            if failed
                 then return . Left $ NonManifoldError
-                else return . Right $ solid
+                else checkManifold solid
 
 
 -- | Read a `Solid` from an STL file at a given path
@@ -114,3 +135,14 @@ readSTL filepath = (fmap (fmap Solid)) . fromAcquire $ do
     if res 
         then makeMeshSolid shape
         else return $ Left FileReadError
+
+-- | Read a `Solid` from a STEP file at a given path
+readSTEP :: FilePath -> IO (Either ReadError Solid)
+readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
+    reader <- STEPReader.new
+    status <- liftIO $ XSControl.Reader.readFile (upcast reader) filepath
+    _ <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
+    shape <- XSControl.Reader.oneShape (upcast reader)
+    if status == IFSelect.ReturnStatus.Done
+        then checkNonNull shape
+        else return . Left $ FileReadError

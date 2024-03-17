@@ -9,6 +9,8 @@ extern "C" {
 
 IFSelect_ReturnStatus hs_XSControl_Reader_readFile(XSControl_Reader * reader, char * filename);
 
+bool hs_XSControl_Reader_transferRoots(XSControl_Reader * reader);
+
 TopoDS_Shape * hs_XSControl_Reader_oneShape(XSControl_Reader * reader);
 
 #ifdef __cplusplus

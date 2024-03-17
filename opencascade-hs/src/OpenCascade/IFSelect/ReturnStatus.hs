@@ -3,4 +3,4 @@ module OpenCascade.IFSelect.ReturnStatus
 ) where
 
 -- Should match the order in IFSelect_ReturnStatus.hxx
-data ReturnStatus = Void | Done | Error | Fail | Stop deriving Enum
+data ReturnStatus = Void | Done | Error | Fail | Stop deriving (Eq, Enum, Show)
