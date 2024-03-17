@@ -19,6 +19,8 @@ and this project adheres to the
 - Added OpenCascade.ShapeExtend.Status
 - Added OpenCascade.STEPControl.Reader
 - Added OpenCascade.XSControl.Reader
+- Added OpenCascade.RWGltf.CafReader
+- Added OpenCascade.RWMesh.CafReader
 
 ## 0.2.1.0
 

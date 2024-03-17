@@ -72,7 +72,9 @@ extra-source-files:
     cpp/hs_GProp_GProps.h
     cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
+    cpp/hs_RWGltf_CafReader.h
     cpp/hs_RWGltf_CafWriter.h
+    cpp/hs_RWMesh_CafReader.h
     cpp/hs_ShapeFix_Solid.h
     cpp/hs_STEPControl_Reader.h
     cpp/hs_STEPControl_Writer.h
@@ -198,9 +200,12 @@ library
       OpenCascade.NCollection.Array1
       OpenCascade.NCollection.Internal.Destructors
       OpenCascade.NCollection.Types
+      OpenCascade.RWGltf.CafReader
       OpenCascade.RWGltf.CafWriter
       OpenCascade.RWGltf.Internal.Destructors
       OpenCascade.RWGltf.Types
+      OpenCascade.RWMesh.CafReader
+      OpenCascade.RWMesh.Types
       OpenCascade.ShapeExtend.Status
       OpenCascade.ShapeFix.Internal.Destructors
       OpenCascade.ShapeFix.Solid
@@ -318,7 +323,9 @@ library
       cpp/hs_GProp_GProps.cpp
       cpp/hs_Message_ProgressRange.cpp
       cpp/hs_NCollection_Array1.cpp
+      cpp/hs_RWGltf_CafReader.cpp
       cpp/hs_RWGltf_CafWriter.cpp
+      cpp/hs_RWMesh_CafReader.cpp
       cpp/hs_ShapeFix_Solid.cpp
       cpp/hs_STEPControl_Reader.cpp
       cpp/hs_STEPControl_Writer.cpp
