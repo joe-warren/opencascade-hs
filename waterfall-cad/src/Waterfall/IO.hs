@@ -144,7 +144,7 @@ makeMeshSolid s = do
             failed <- liftIO $ ShapeFix.Solid.status shapeFix ShapeExtend.Status.FAIL
             if failed
                 then return . Left $ NonManifoldError
-                else checkManifold solid
+                else return . Right $ solid
 
 
 -- | Read a `Solid` from an STL file at a given path
@@ -174,20 +174,22 @@ readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
 buildSolid :: Ptr TopoDS.Shape -> Acquire (Either ReadError (Ptr TopoDS.Shape))
 buildSolid s = do
     explorer <- TopExp.Explorer.new s ShapeEnum.Face
-    shell <- TopoDS.Shell.new
-    builder <- TopoDS.Builder.new
-    liftIO $ TopoDS.Builder.makeShell builder shell
+    tdsBuilder <- TopoDS.Builder.new
+    makeSolid <- MakeSolid.new
     let go = do
-            isMore <- TopExp.Explorer.more explorer
+            isMore <- liftIO $ TopExp.Explorer.more explorer
             when isMore $ do
-                print "more"
-                face <- TopExp.Explorer.value explorer
-                TopoDS.Builder.add builder (upcast shell) face
-                --MakeSolid.add builder v
-                TopExp.Explorer.next explorer
+                liftIO $ print "more"
+                face <- liftIO $ TopExp.Explorer.value explorer
+                shell <- TopoDS.Shell.new
+                liftIO $ TopoDS.Builder.makeShell tdsBuilder shell
+                liftIO $ TopoDS.Builder.add tdsBuilder (upcast shell) face
+                liftIO $ MakeSolid.add makeSolid shell
+                liftIO $ TopExp.Explorer.next explorer
                 go
-    liftIO go
-    return . Right . upcast $ shell
+    go
+    res <- MakeSolid.solid makeSolid
+    return . Right . upcast $ res
     -- makeMeshSolid (upcast shell)
     
 -- | Read a `Solid` from a GLTF file at a given path
