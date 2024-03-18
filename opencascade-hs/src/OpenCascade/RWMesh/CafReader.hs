@@ -4,6 +4,7 @@ module OpenCascade.RWMesh.CafReader
 , setDocument
 , perform
 , singleShape
+, setFileLengthUnit
 ) where
 
 import OpenCascade.RWMesh.Types (CafReader)
@@ -13,12 +14,18 @@ import qualified OpenCascade.TopoDS.Types as TopoDS
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
 import OpenCascade.Handle (Handle)
 import OpenCascade.Internal.Bool (cBoolToBool)
-import Foreign.C (CBool (..))
+import Foreign.C (CBool (..), CDouble (..))
 import Foreign.C.String (CString, withCString)
 import Foreign.Ptr (Ptr)
+import Data.Coerce (coerce)
 import Data.Acquire (Acquire, mkAcquire)
 
 foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_setDocument" setDocument :: Ptr CafReader -> Ptr (Handle TDocStd.Document) -> IO ()
+
+foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_setFileLengthUnit" rawSetFileLengthUnit :: Ptr CafReader -> CDouble -> IO ()
+
+setFileLengthUnit :: Ptr CafReader -> Double -> IO ()
+setFileLengthUnit = coerce rawSetFileLengthUnit
 
 foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_perform" rawPerform :: Ptr CafReader -> CString -> Ptr Message.ProgressRange -> IO CBool
 

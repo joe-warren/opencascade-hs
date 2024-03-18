@@ -10,7 +10,7 @@ module Waterfall.IO
 , readGLB
 ) where 
 
-import Waterfall.Internal.Solid (Solid(..))
+import Waterfall.Internal.Solid (Solid(..), debug)
 import qualified OpenCascade.BRepMesh.IncrementalMesh as BRepMesh.IncrementalMesh
 import qualified OpenCascade.StlAPI.Writer as StlWriter
 import qualified OpenCascade.StlAPI.Reader as StlReader
@@ -36,6 +36,7 @@ import qualified OpenCascade.ShapeExtend.Status as ShapeExtend.Status
 import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
+import qualified OpenCascade.BRepBuilderAPI.Copy as BRepBuilderAPI.Copy
 import OpenCascade.Inheritance (upcast, downcast, unsafeDowncast)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad (void, unless, when)
@@ -136,10 +137,13 @@ checkNonNull shape = do
 makeMeshSolid :: Ptr TopoDS.Shape -> Acquire (Either ReadError (Ptr TopoDS.Shape))
 makeMeshSolid s = do 
     shapeFix <- ShapeFix.Solid.new
+    liftIO (print =<< TopoDS.Shape.shapeType s )
+    maybeSolid <- liftIO $ downcast s :: Acquire (Maybe (Ptr TopoDS.Solid))
     maybeShell <- liftIO $ downcast s
-    case maybeShell of 
-        Nothing -> pure . Left $ FileReadError
-        Just shell -> do 
+    case (maybeSolid, maybeShell) of 
+        (Nothing, Nothing) -> pure . Left $ FileReadError
+        (Just solid, _) -> return . Right $ s
+        (_, Just shell) -> do 
             solid <- upcast <$> ShapeFix.Solid.solidFromShell shapeFix shell
             failed <- liftIO $ ShapeFix.Solid.status shapeFix ShapeExtend.Status.FAIL
             if failed
@@ -154,7 +158,7 @@ readSTL filepath = (fmap (fmap Solid)) . fromAcquire $ do
     reader <- StlReader.new
     res <- liftIO $ StlReader.read reader shape filepath
     if res 
-        then makeMeshSolid shape
+        then buildSolid shape
         else return $ Left FileReadError
 
 -- | Read a `Solid` from a STEP file at a given path
@@ -181,9 +185,11 @@ buildSolid s = do
             when isMore $ do
                 liftIO $ print "more"
                 face <- liftIO $ TopExp.Explorer.value explorer
+                face' <- BRepBuilderAPI.Copy.copy face True True
+                liftIO . putStrLn . debug . Solid $ face
                 shell <- TopoDS.Shell.new
                 liftIO $ TopoDS.Builder.makeShell tdsBuilder shell
-                liftIO $ TopoDS.Builder.add tdsBuilder (upcast shell) face
+                liftIO $ TopoDS.Builder.add tdsBuilder (upcast shell) face'
                 liftIO $ MakeSolid.add makeSolid shell
                 liftIO $ TopExp.Explorer.next explorer
                 go
@@ -200,6 +206,8 @@ buildSolid s = do
 readGLTF :: FilePath -> IO (Either ReadError Solid)
 readGLTF  filepath = fmap (fmap Solid) . fromAcquire $ do
     reader <- RWGltf.CafReader.new 
+    liftIO $ RWGltf.CafReader.setDoublePrecision reader True
+    liftIO $ RWMesh.CafReader.setFileLengthUnit (upcast reader) 1
     doc <- TDocStd.Document.fromStorageFormat ""
     progress <- Message.ProgressRange.new
     _ <- liftIO $ RWMesh.CafReader.setDocument (upcast reader) doc

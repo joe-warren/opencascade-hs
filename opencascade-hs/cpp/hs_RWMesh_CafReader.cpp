@@ -5,6 +5,10 @@ void hs_RWMesh_CafReader_setDocument(RWMesh_CafReader * reader, Handle(TDocStd_D
     reader->SetDocument(*document);
 }
 
+void hs_RWMesh_CafReader_setFileLengthUnit(RWMesh_CafReader * reader, double scale){
+    reader->SetFileLengthUnit(scale);
+}
+
 TopoDS_Shape * hs_RWMesh_CafReader_singleShape(RWMesh_CafReader * reader){
     return new TopoDS_Shape(reader->SingleShape());
 }

@@ -9,6 +9,8 @@ extern "C" {
 
 RWGltf_CafReader * hs_new_RWGltf_CafReader(void);
 
+void hs_RWGltf_CafReader_setDoublePrecision(RWGltf_CafReader *reader, bool isDouble);
+
 void hs_delete_RWGltf_CafReader(RWGltf_CafReader *reader);
 
 #ifdef __cplusplus
