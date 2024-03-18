@@ -6,6 +6,8 @@ module Waterfall.IO
 , writeGLB
 , readSTL
 , readSTEP
+, readGLTF
+, readGLB
 ) where 
 
 import Waterfall.Internal.Solid (Solid(..))
@@ -21,15 +23,20 @@ import qualified OpenCascade.TDocStd.Document as TDocStd.Document
 import qualified OpenCascade.Message.ProgressRange as Message.ProgressRange
 import qualified OpenCascade.TColStd.IndexedDataMapOfStringString as TColStd.IndexedDataMapOfStringString
 import qualified OpenCascade.RWGltf.CafWriter as RWGltf.CafWriter
+import qualified OpenCascade.RWGltf.CafReader as RWGltf.CafReader
+import qualified OpenCascade.RWMesh.CafReader as RWMesh.CafReader
 import qualified OpenCascade.XCAFDoc.DocumentTool as XCafDoc.DocumentTool
 import qualified OpenCascade.XCAFDoc.ShapeTool as XCafDoc.ShapeTool
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.ShapeFix.Solid as ShapeFix.Solid
 import qualified OpenCascade.ShapeExtend.Status as ShapeExtend.Status
-import OpenCascade.Inheritance (upcast, downcast)
+import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
+import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
+import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
+import OpenCascade.Inheritance (upcast, downcast, unsafeDowncast)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad (void, unless)
+import Control.Monad (void, unless, when)
 import System.IO (hPutStrLn, stderr)
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
 import Data.Acquire
@@ -83,12 +90,24 @@ writeGLTFOrGLB binary linDeflection filepath (Solid ptr) = (`withAcquire` pure) 
 --
 -- glTF, or Graphics Library Transmission Format is a JSON based format 
 -- used for three-dimensional scenes and models
+--
+-- Because BRep representations of objects can store arbitrary precision curves,
+-- but glTF files store triangulated surfaces, 
+-- this function takes a "deflection" argument used to discretize curves.
+--
+-- The deflection is the maximum allowable distance between a curve and the generated triangulation.
 writeGLTF :: Double -> FilePath -> Solid -> IO ()
 writeGLTF = writeGLTFOrGLB False
 
 -- | Write a `Solid` to a glb file at a given path
 --
 -- glb is the binary variant of the glTF file format
+--
+-- Because BRep representations of objects can store arbitrary precision curves,
+-- but glTF files store triangulated surfaces, 
+-- this function takes a "deflection" argument used to discretize curves.
+--
+-- The deflection is the maximum allowable distance between a curve and the generated triangulation.
 writeGLB :: Double -> FilePath -> Solid -> IO ()
 writeGLB = writeGLTFOrGLB True
 
@@ -137,6 +156,8 @@ readSTL filepath = (fmap (fmap Solid)) . fromAcquire $ do
         else return $ Left FileReadError
 
 -- | Read a `Solid` from a STEP file at a given path
+--
+-- This does far less validation on the returned data than it should
 readSTEP :: FilePath -> IO (Either ReadError Solid)
 readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
     reader <- STEPReader.new
@@ -146,3 +167,41 @@ readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
     if status == IFSelect.ReturnStatus.Done
         then checkNonNull shape
         else return . Left $ FileReadError
+
+
+buildSolid :: Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
+buildSolid s = do
+    explorer <- TopExp.Explorer.new s ShapeEnum.Face
+    builder <- MakeSolid.new
+    let go = do
+            isMore <- TopExp.Explorer.more explorer
+            when isMore $ do
+                print "more"
+                --v <- unsafeDowncast =<< TopExp.Explorer.value explorer
+                --MakeSolid.add builder v
+                TopExp.Explorer.next explorer
+                go
+    liftIO go
+    upcast <$> MakeSolid.solid builder
+    
+-- | Read a `Solid` from a GLTF file at a given path
+--
+-- This should support reading both the GLTF (json) and GLB (binary) formats
+--
+-- This does far less validation on the returned data than it should
+readGLTF :: FilePath -> IO (Either ReadError Solid)
+readGLTF  filepath = fmap (fmap Solid) . fromAcquire $ do
+    reader <- RWGltf.CafReader.new 
+    doc <- TDocStd.Document.fromStorageFormat ""
+    progress <- Message.ProgressRange.new
+    _ <- liftIO $ RWMesh.CafReader.setDocument (upcast reader) doc
+    res <- liftIO $ RWMesh.CafReader.perform (upcast reader) filepath progress
+    if res 
+        then Right <$> (buildSolid =<< RWMesh.CafReader.singleShape (upcast reader))
+        else return . Left $ FileReadError 
+
+-- | Alias for `readGLTF`
+--
+-- This does far less validation on the returned data than it should
+readGLB :: FilePath -> IO (Either ReadError Solid)
+readGLB = readGLTF

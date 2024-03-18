@@ -26,5 +26,5 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeSolid.h hs_BRepBuilderAPI_Make
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeSolid.h hs_BRepBuilderAPI_MakeSolid_solid" rawSolid :: Ptr MakeSolid -> IO (Ptr TopoDS.Solid)
 
 solid :: Ptr MakeSolid -> Acquire (Ptr TopoDS.Solid)
-solid builder = mkAcquire (rawSolid builder) (deleteShape . upcast)  
+solid builder = mkAcquire (rawSolid builder) (deleteShape . upcast)
 
