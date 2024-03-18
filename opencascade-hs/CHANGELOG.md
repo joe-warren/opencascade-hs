@@ -22,6 +22,7 @@ and this project adheres to the
 - Added OpenCascade.RWGltf.CafReader
 - Added OpenCascade.RWMesh.CafReader
 - Added OpenCascade.TopoDS.Builder
+- Added OpenCascade.BRepBuilderAPI.Copy
 
 ## 0.2.1.0
 

@@ -28,6 +28,7 @@ extra-source-files:
     cpp/hs_BRepAlgoAPI_Cut.h
     cpp/hs_BRepAlgoAPI_Fuse.h
     cpp/hs_BRepBndLib.h
+    cpp/hs_BRepBuilderAPI_Copy.h
     cpp/hs_BRepBuilderAPI_GTransform.h
     cpp/hs_BRepBuilderAPI_MakeEdge.h
     cpp/hs_BRepBuilderAPI_MakeFace.h
@@ -116,6 +117,7 @@ library
       OpenCascade.BRepAlgoAPI.Fuse
       OpenCascade.BRepBndLib
       OpenCascade.BRepBuilderAPI
+      OpenCascade.BRepBuilderAPI.Copy
       OpenCascade.BRepBuilderAPI.FaceError
       OpenCascade.BRepBuilderAPI.GTransform
       OpenCascade.BRepBuilderAPI.Internal.Destructors
@@ -281,6 +283,7 @@ library
       cpp/hs_BRepAlgoAPI_Cut.cpp
       cpp/hs_BRepAlgoAPI_Fuse.cpp
       cpp/hs_BRepBndLib.cpp
+      cpp/hs_BRepBuilderAPI_Copy.cpp
       cpp/hs_BRepBuilderAPI_GTransform.cpp
       cpp/hs_BRepBuilderAPI_MakeEdge.cpp
       cpp/hs_BRepBuilderAPI_MakeFace.cpp
