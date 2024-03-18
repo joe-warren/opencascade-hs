@@ -29,6 +29,8 @@ import qualified OpenCascade.XCAFDoc.DocumentTool as XCafDoc.DocumentTool
 import qualified OpenCascade.XCAFDoc.ShapeTool as XCafDoc.ShapeTool
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import qualified OpenCascade.TopoDS.Shell as TopoDS.Shell
+import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
 import qualified OpenCascade.ShapeFix.Solid as ShapeFix.Solid
 import qualified OpenCascade.ShapeExtend.Status as ShapeExtend.Status
 import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
@@ -169,20 +171,24 @@ readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
         else return . Left $ FileReadError
 
 
-buildSolid :: Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
+buildSolid :: Ptr TopoDS.Shape -> Acquire (Either ReadError (Ptr TopoDS.Shape))
 buildSolid s = do
     explorer <- TopExp.Explorer.new s ShapeEnum.Face
-    builder <- MakeSolid.new
+    shell <- TopoDS.Shell.new
+    builder <- TopoDS.Builder.new
+    liftIO $ TopoDS.Builder.makeShell builder shell
     let go = do
             isMore <- TopExp.Explorer.more explorer
             when isMore $ do
                 print "more"
-                --v <- unsafeDowncast =<< TopExp.Explorer.value explorer
+                face <- TopExp.Explorer.value explorer
+                TopoDS.Builder.add builder (upcast shell) face
                 --MakeSolid.add builder v
                 TopExp.Explorer.next explorer
                 go
     liftIO go
-    upcast <$> MakeSolid.solid builder
+    return . Right . upcast $ shell
+    -- makeMeshSolid (upcast shell)
     
 -- | Read a `Solid` from a GLTF file at a given path
 --
@@ -197,7 +203,7 @@ readGLTF  filepath = fmap (fmap Solid) . fromAcquire $ do
     _ <- liftIO $ RWMesh.CafReader.setDocument (upcast reader) doc
     res <- liftIO $ RWMesh.CafReader.perform (upcast reader) filepath progress
     if res 
-        then Right <$> (buildSolid =<< RWMesh.CafReader.singleShape (upcast reader))
+        then buildSolid =<< RWMesh.CafReader.singleShape (upcast reader)
         else return . Left $ FileReadError 
 
 -- | Alias for `readGLTF`

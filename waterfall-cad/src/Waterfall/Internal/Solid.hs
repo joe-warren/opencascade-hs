@@ -16,7 +16,6 @@ import Data.Acquire
 import Foreign.Ptr
 import Algebra.Lattice
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (forM_)
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
