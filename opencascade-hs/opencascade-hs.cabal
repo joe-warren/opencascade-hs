@@ -85,6 +85,7 @@ extra-source-files:
     cpp/hs_TDocStd_Document.h
     cpp/hs_TopExp_Explorer.h
     cpp/hs_TopLoc_Location.h
+    cpp/hs_TopoDS_Builder.h
     cpp/hs_TopoDS_Compound.h
     cpp/hs_TopoDS_CompSolid.h
     cpp/hs_TopoDS_Edge.h
@@ -241,6 +242,7 @@ library
       OpenCascade.TopLoc.Location
       OpenCascade.TopLoc.Types
       OpenCascade.TopoDS
+      OpenCascade.TopoDS.Builder
       OpenCascade.TopoDS.Compound
       OpenCascade.TopoDS.CompSolid
       OpenCascade.TopoDS.Edge
@@ -336,6 +338,7 @@ library
       cpp/hs_TDocStd_Document.cpp
       cpp/hs_TopExp_Explorer.cpp
       cpp/hs_TopLoc_Location.cpp
+      cpp/hs_TopoDS_Builder.cpp
       cpp/hs_TopoDS_Compound.cpp
       cpp/hs_TopoDS_CompSolid.cpp
       cpp/hs_TopoDS_Edge.cpp

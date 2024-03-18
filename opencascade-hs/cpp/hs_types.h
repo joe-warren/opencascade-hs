@@ -12,6 +12,7 @@ typedef void TopoDS_Compound;
 typedef void TopoDS_CompSolid;
 typedef void TopoDS_Solid;
 typedef void TopoDS_Shell;
+typedef void TopoDS_Builder;
 typedef void TopLoc_Location;
 typedef int TopAbs_Orientation;
 typedef int TopAbs_ShapeEnum;

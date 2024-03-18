@@ -21,6 +21,7 @@ and this project adheres to the
 - Added OpenCascade.XSControl.Reader
 - Added OpenCascade.RWGltf.CafReader
 - Added OpenCascade.RWMesh.CafReader
+- Added OpenCascade.TopoDS.Builder
 
 ## 0.2.1.0
 

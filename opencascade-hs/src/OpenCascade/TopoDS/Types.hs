@@ -11,6 +11,7 @@ module OpenCascade.TopoDS.Types
 , Solid
 , Vertex
 , Wire
+, Builder
 )
 
 where
@@ -32,6 +33,8 @@ data Shell
 data Solid
 data Vertex
 data Wire
+
+data Builder
 
 -- duplicate definition of shape type from TopoDS.Shape
 -- to simultaniously avoid Orphan Instances + circular dependencies
