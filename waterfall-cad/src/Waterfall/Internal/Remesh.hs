@@ -90,12 +90,7 @@ remesh s = do
                         makeFace <- BRepBuilderAPI.MakeFace.fromWire polygon False
                         newFace <- BRepBuilderAPI.MakeShape.shape (upcast makeFace)
                         faceIsNull <- liftIO $ TopoDS.Shape.isNull newFace
-                        unless faceIsNull $ liftIO $ do
-                            TopoDS.Builder.add builder (upcast compound) newFace 
-                        return ()
-                    return ()
-                return ()
-            return ()
+                        unless faceIsNull $ liftIO $ TopoDS.Builder.add builder (upcast compound) newFace 
 
     let go = do
             isMore <- liftIO $ TopExp.Explorer.more explorer
