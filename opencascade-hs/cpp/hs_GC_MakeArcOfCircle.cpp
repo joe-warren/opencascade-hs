@@ -8,3 +8,4 @@ Handle(Geom_TrimmedCurve) * hs_GC_MakeArcOfCircle_from3Pnts(gp_Pnt * a, gp_Pnt *
 Handle(Geom_TrimmedCurve) * hs_GC_MakeArcOfCircle_fromPntsAndVec(gp_Pnt * a, gp_Vec * b, gp_Pnt * c){
     return new opencascade::handle(GC_MakeArcOfCircle(*a, *b, *c).Value());
 }
+

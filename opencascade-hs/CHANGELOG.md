@@ -24,6 +24,9 @@ and this project adheres to the
 - Added OpenCascade.TopoDS.Builder
 - Added OpenCascade.BRepBuilderAPI.Copy
 - Added OpenCascade.BRepBuilderAPI.Sewing
+- Added OpenCascade.Poly.Triangulation
+- Added OpenCascade.Poly.Triangle
+- Added OpenCascade.BRep.Tool.triangulation
 
 ## 0.2.1.0
 

@@ -81,6 +81,8 @@ typedef void TDocStd_Document;
 typedef void XCAFDoc_ShapeTool;
 typedef void ShapeFix_Solid;
 typedef int ShapeExtend_Status;
+typedef void Poly_Triangulation;
+typedef void Poly_Triangle;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus

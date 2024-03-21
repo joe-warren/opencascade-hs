@@ -19,4 +19,8 @@ double hs_BRep_Tool_curveParamLast(TopoDS_Edge * edge){
     return e;
 } 
 
+Handle(Poly_Triangulation) * hs_BRep_Tool_triangulation(TopoDS_Face * face, TopLoc_Location * loc){
+    return new opencascade::handle<Poly_Triangulation>(BRep_Tool::Triangulation(*face, *loc));
+}
+
 
