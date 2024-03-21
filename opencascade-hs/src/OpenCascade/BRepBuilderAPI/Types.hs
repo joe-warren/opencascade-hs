@@ -5,6 +5,7 @@ module OpenCascade.BRepBuilderAPI.Types
 , MakeFace
 , MakeSolid
 , MakeShape
+, Sewing
 ) where
 
 import qualified OpenCascade.Inheritance as Inheritance
@@ -14,6 +15,8 @@ data MakeFace
 data MakeSolid
 
 data MakeShape
+
+data Sewing
 
 instance Inheritance.SubTypeOf MakeShape MakeWire
 instance Inheritance.SubTypeOf MakeShape MakeSolid

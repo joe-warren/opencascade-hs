@@ -23,6 +23,7 @@ and this project adheres to the
 - Added OpenCascade.RWMesh.CafReader
 - Added OpenCascade.TopoDS.Builder
 - Added OpenCascade.BRepBuilderAPI.Copy
+- Added OpenCascade.BRepBuilderAPI.Sewing
 
 ## 0.2.1.0
 

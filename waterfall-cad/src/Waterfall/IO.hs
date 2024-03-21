@@ -29,6 +29,7 @@ import qualified OpenCascade.XCAFDoc.DocumentTool as XCafDoc.DocumentTool
 import qualified OpenCascade.XCAFDoc.ShapeTool as XCafDoc.ShapeTool
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import qualified OpenCascade.TopoDS.Solid as TopoDS.Solid
 import qualified OpenCascade.TopoDS.Shell as TopoDS.Shell
 import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
 import qualified OpenCascade.ShapeFix.Solid as ShapeFix.Solid
@@ -37,6 +38,7 @@ import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import qualified OpenCascade.BRepBuilderAPI.Copy as BRepBuilderAPI.Copy
+import qualified OpenCascade.BRepBuilderAPI.Sewing as BRepBuilderAPI.Sewing
 import OpenCascade.Inheritance (upcast, downcast, unsafeDowncast)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad (void, unless, when)
@@ -142,7 +144,7 @@ makeMeshSolid s = do
     maybeShell <- liftIO $ downcast s
     case (maybeSolid, maybeShell) of 
         (Nothing, Nothing) -> pure . Left $ FileReadError
-        (Just solid, _) -> return . Right $ s
+        (Just _solid, _) -> return . Right $ s
         (_, Just shell) -> do 
             solid <- upcast <$> ShapeFix.Solid.solidFromShell shapeFix shell
             failed <- liftIO $ ShapeFix.Solid.status shapeFix ShapeExtend.Status.FAIL
@@ -177,9 +179,15 @@ readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
 
 buildSolid :: Ptr TopoDS.Shape -> Acquire (Either ReadError (Ptr TopoDS.Shape))
 buildSolid s = do
+    let linDeflection = 0.01
+    mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
+    liftIO $ BRepMesh.IncrementalMesh.perform mesh
     explorer <- TopExp.Explorer.new s ShapeEnum.Face
     tdsBuilder <- TopoDS.Builder.new
     makeSolid <- MakeSolid.new
+    sewing <- BRepBuilderAPI.Sewing.new 1e-5 True True True False
+    solid <- TopoDS.Solid.new
+    liftIO $ BRepBuilderAPI.Sewing.load sewing (upcast solid)
     let go = do
             isMore <- liftIO $ TopExp.Explorer.more explorer
             when isMore $ do
@@ -190,11 +198,15 @@ buildSolid s = do
                 shell <- TopoDS.Shell.new
                 liftIO $ TopoDS.Builder.makeShell tdsBuilder shell
                 liftIO $ TopoDS.Builder.add tdsBuilder (upcast shell) face'
+                liftIO $ BRepBuilderAPI.Sewing.add sewing (upcast shell)
                 liftIO $ MakeSolid.add makeSolid shell
                 liftIO $ TopExp.Explorer.next explorer
                 go
     go
     res <- MakeSolid.solid makeSolid
+    liftIO . BRepBuilderAPI.Sewing.perform $ sewing
+    res' <- BRepBuilderAPI.Sewing.sewedShape sewing
+
     return . Right . upcast $ res
     -- makeMeshSolid (upcast shell)
     
