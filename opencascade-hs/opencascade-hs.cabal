@@ -32,6 +32,7 @@ extra-source-files:
     cpp/hs_BRepBuilderAPI_GTransform.h
     cpp/hs_BRepBuilderAPI_MakeEdge.h
     cpp/hs_BRepBuilderAPI_MakeFace.h
+    cpp/hs_BRepBuilderAPI_MakePolygon.h
     cpp/hs_BRepBuilderAPI_MakeShape.h
     cpp/hs_BRepBuilderAPI_MakeSolid.h
     cpp/hs_BRepBuilderAPI_MakeWire.h
@@ -126,6 +127,7 @@ library
       OpenCascade.BRepBuilderAPI.Internal.Destructors
       OpenCascade.BRepBuilderAPI.MakeEdge
       OpenCascade.BRepBuilderAPI.MakeFace
+      OpenCascade.BRepBuilderAPI.MakePolygon
       OpenCascade.BRepBuilderAPI.MakeShape
       OpenCascade.BRepBuilderAPI.MakeSolid
       OpenCascade.BRepBuilderAPI.MakeWire
@@ -295,6 +297,7 @@ library
       cpp/hs_BRepBuilderAPI_GTransform.cpp
       cpp/hs_BRepBuilderAPI_MakeEdge.cpp
       cpp/hs_BRepBuilderAPI_MakeFace.cpp
+      cpp/hs_BRepBuilderAPI_MakePolygon.cpp
       cpp/hs_BRepBuilderAPI_MakeShape.cpp
       cpp/hs_BRepBuilderAPI_MakeSolid.cpp
       cpp/hs_BRepBuilderAPI_MakeWire.cpp

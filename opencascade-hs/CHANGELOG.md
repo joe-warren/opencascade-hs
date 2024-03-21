@@ -27,6 +27,7 @@ and this project adheres to the
 - Added OpenCascade.Poly.Triangulation
 - Added OpenCascade.Poly.Triangle
 - Added OpenCascade.BRep.Tool.triangulation
+- Added OpenCascade.BRepBuilderAPI.MakePolygon
 
 ## 0.2.1.0
 
