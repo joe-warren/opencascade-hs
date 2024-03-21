@@ -11,6 +11,7 @@ module Waterfall.IO
 ) where 
 
 import Waterfall.Internal.Solid (Solid(..), debug)
+import qualified Waterfall.Internal.Remesh as Remesh
 import qualified OpenCascade.BRepMesh.IncrementalMesh as BRepMesh.IncrementalMesh
 import qualified OpenCascade.StlAPI.Writer as StlWriter
 import qualified OpenCascade.StlAPI.Reader as StlReader
@@ -225,7 +226,7 @@ readGLTF  filepath = fmap (fmap Solid) . fromAcquire $ do
     _ <- liftIO $ RWMesh.CafReader.setDocument (upcast reader) doc
     res <- liftIO $ RWMesh.CafReader.perform (upcast reader) filepath progress
     if res 
-        then buildSolid =<< RWMesh.CafReader.singleShape (upcast reader)
+        then fmap Right . Remesh.remesh =<< RWMesh.CafReader.singleShape (upcast reader)
         else return . Left $ FileReadError 
 
 -- | Alias for `readGLTF`

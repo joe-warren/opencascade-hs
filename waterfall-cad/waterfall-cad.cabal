@@ -38,6 +38,7 @@ library
       Waterfall.Internal.Finalizers
       Waterfall.Internal.FromOpenCascade
       Waterfall.Internal.Path
+      Waterfall.Internal.Remesh
       Waterfall.Internal.Solid
       Waterfall.IO
       Waterfall.Offset
