@@ -61,6 +61,7 @@ library
   ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration
   build-depends:
       base >=4.7 && <5
+    , filepath >=1.4 && <1.6
     , lattices >=2.0 && <3
     , lens ==5.*
     , linear >=1.21 && <2

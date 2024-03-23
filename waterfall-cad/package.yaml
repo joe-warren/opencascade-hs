@@ -29,6 +29,7 @@ dependencies:
 - lattices >= 2.0 && < 3
 - resourcet >= 1.2 && < 1.4
 - primitive >= 0.7 && < 0.10 
+- filepath >= 1.4 && < 1.6
 
 ghc-options: *ghc-options
 

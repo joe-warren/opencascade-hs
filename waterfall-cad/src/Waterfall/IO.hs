@@ -1,10 +1,19 @@
 module Waterfall.IO
-( ReadError (..)
+( -- * Solid Writers
+  writeSolid
 , writeSTL
+, writeAsciiSTL
 , writeSTEP
 , writeGLTF
 , writeGLB
 , writeOBJ
+  -- * Solid Readers
+  -- 
+  -- | Load a `Waterfall.Solid` from a file
+  --
+  -- At present, the "read*" functions do far less validation on the loaded solid 
+  -- than they arguably should  
+, readSolid
 , readSTL
 , readSTEP
 , readGLTF
@@ -47,8 +56,48 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad (void, unless, when)
 import System.IO (hPutStrLn, stderr)
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
-import Data.Acquire
+import Data.Acquire ( Acquire, withAcquire )
 import Foreign.Ptr (Ptr)
+import Data.Char (toLower)
+import System.FilePath (takeExtension)
+
+extensionToFormats :: String -> Maybe (Double -> FilePath -> Solid -> IO(), FilePath -> IO (Maybe Solid))
+extensionToFormats s =
+    let ext = fmap toLower . takeExtension $ s 
+     in case ext of  
+        "stl" -> Just (writeSTL, readSTL)
+        "step" -> Just (const writeSTEP, readSTEP)
+        "gltf" -> Just (writeGLTF, readGLTF)
+        "glb" -> Just (writeGLB, readGLB)
+        "obj" -> Just (writeOBJ, readOBJ)
+        _ -> Nothing
+
+-- | Write a `Solid` to a file, work out the format from the file extension
+-- 
+-- Errors if passed a filename with an unrecognized extension
+--
+-- Because BRep representations of objects can store arbitrary precision curves,
+-- but some of the supported file formats store triangulated surfaces, 
+-- this function takes a "deflection" argument used to discretize curves.
+--
+-- The deflection is the maximum allowable distance between a curve and the generated triangulation.
+writeSolid :: Double -> FilePath -> Solid -> IO ()
+writeSolid res filepath = 
+    case extensionToFormats filepath of
+        Just (writer, _) -> writer res filepath
+        Nothing -> const . fail $ "Unable to determine file format from path: " <> filepath
+
+writeSTLAsciiOrBinary :: Bool -> Double -> FilePath -> Solid -> IO ()
+writeSTLAsciiOrBinary asciiMode linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
+    s <- toAcquire ptr
+    mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
+    liftIO $ BRepMesh.IncrementalMesh.perform mesh
+    writer <- StlWriter.new
+    liftIO $ do
+            StlWriter.setAsciiMode writer asciiMode
+            res <- StlWriter.write writer s filepath
+            unless res (hPutStrLn stderr ("failed to write " <> filepath))
+    return ()
 
 -- | Write a `Solid` to a (binary) STL file at a given path
 --
@@ -58,16 +107,17 @@ import Foreign.Ptr (Ptr)
 --
 -- The deflection is the maximum allowable distance between a curve and the generated triangulation.
 writeSTL :: Double -> FilePath -> Solid -> IO ()
-writeSTL linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
-    s <- toAcquire ptr
-    mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
-    liftIO $ BRepMesh.IncrementalMesh.perform mesh
-    writer <- StlWriter.new
-    liftIO $ do
-            StlWriter.setAsciiMode writer False
-            res <- StlWriter.write writer s filepath
-            unless res (hPutStrLn stderr ("failed to write " <> filepath))
-    return ()
+writeSTL = writeSTLAsciiOrBinary False
+
+-- | Write a `Solid` to an Ascii STL file at a given path
+--
+-- Because BRep representations of objects can store arbitrary precision curves,
+-- but STL files store triangulated surfaces, 
+-- this function takes a "deflection" argument used to discretize curves.
+--
+-- The deflection is the maximum allowable distance between a curve and the generated triangulation.
+writeAsciiSTL :: Double -> FilePath -> Solid -> IO ()
+writeAsciiSTL = writeSTLAsciiOrBinary True
 
 -- | Write a `Solid` to a STEP file at a given path
 --
@@ -140,16 +190,14 @@ writeOBJ =
             liftIO $ RWObj.CafWriter.perform writer doc meta progress
     in cafWriter write
 
-data ReadError = FileReadError | NonManifoldError deriving (Eq, Show)
-
-checkNonNull:: MonadIO m => Ptr TopoDS.Shape -> m (Either ReadError (Ptr TopoDS.Shape))
+checkNonNull:: MonadIO m => Ptr TopoDS.Shape -> m (Maybe (Ptr TopoDS.Shape))
 checkNonNull shape = do
     isNull <- liftIO . TopoDS.Shape.isNull $ shape
     return $ if isNull 
-        then Left FileReadError
-        else Right shape
+        then Nothing
+        else Just shape
 
-possibleShellToSolid :: Ptr TopoDS.Shape -> Acquire (Either ReadError (Ptr TopoDS.Shape))
+possibleShellToSolid :: Ptr TopoDS.Shape -> Acquire (Maybe (Ptr TopoDS.Shape))
 possibleShellToSolid s = do
     explorer <- TopExp.Explorer.new s ShapeEnum.Shell
     makeSolid <- MakeSolid.new
@@ -162,22 +210,32 @@ possibleShellToSolid s = do
                 liftIO $ TopExp.Explorer.next explorer
                 go
     go
-    Right . upcast <$> MakeSolid.solid makeSolid
+    checkNonNull =<< upcast <$> MakeSolid.solid makeSolid
 
 -- | Read a `Solid` from an STL file at a given path
-readSTL :: FilePath -> IO (Either ReadError Solid)
+-- 
+-- Throws an error if loading fails, or if it's unable to work out
+-- the intended file format from the path
+readSolid :: FilePath -> IO Solid
+readSolid filepath = 
+    case extensionToFormats filepath of 
+        Nothing -> fail $ "Unable to determine file format from path: " <> filepath
+        Just (_, reader) -> 
+            let errorMsg = "Failed to read file: " <> filepath
+             in maybe (fail errorMsg) return =<< reader filepath
+
+-- | Read a `Solid` from an STL file at a given path
+readSTL :: FilePath -> IO (Maybe Solid)
 readSTL filepath = (fmap (fmap Solid)) . fromAcquire $ do
     shape <- TopoDS.Shape.new
     reader <- StlReader.new
     res <- liftIO $ StlReader.read reader shape filepath
     if res 
         then possibleShellToSolid shape
-        else return $ Left FileReadError
+        else return Nothing
 
 -- | Read a `Solid` from a STEP file at a given path
---
--- This does far less validation on the returned data than it should
-readSTEP :: FilePath -> IO (Either ReadError Solid)
+readSTEP :: FilePath -> IO (Maybe Solid)
 readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
     reader <- STEPReader.new
     status <- liftIO $ XSControl.Reader.readFile (upcast reader) filepath
@@ -185,9 +243,9 @@ readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
     shape <- XSControl.Reader.oneShape (upcast reader)
     if status == IFSelect.ReturnStatus.Done
         then checkNonNull shape
-        else return . Left $ FileReadError
+        else return Nothing
 
-cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO (Either ReadError Solid)
+cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO (Maybe Solid)
 cafReader mkReader filepath = fmap (fmap Solid) . fromAcquire $ do
     reader <- mkReader
     doc <- TDocStd.Document.fromStorageFormat ""
@@ -195,15 +253,13 @@ cafReader mkReader filepath = fmap (fmap Solid) . fromAcquire $ do
     _ <- liftIO $ RWMesh.CafReader.setDocument reader doc
     res <- liftIO $ RWMesh.CafReader.perform reader filepath progress
     if res 
-        then fmap Right . Remesh.remesh =<< RWMesh.CafReader.singleShape reader
-        else return . Left $ FileReadError 
+        then checkNonNull =<< Remesh.remesh =<< RWMesh.CafReader.singleShape reader
+        else return Nothing
 
 -- | Read a `Solid` from a GLTF file at a given path
 --
 -- This should support reading both the GLTF (json) and GLB (binary) formats
---
--- This does far less validation on the returned data than it should
-readGLTF :: FilePath -> IO (Either ReadError Solid)
+readGLTF :: FilePath -> IO (Maybe Solid)
 readGLTF  = cafReader $ do
     reader <- RWGltf.CafReader.new 
     liftIO $ RWGltf.CafReader.setDoublePrecision reader True
@@ -211,17 +267,13 @@ readGLTF  = cafReader $ do
     return (upcast reader)
 
 -- | Alias for `readGLTF`
---
--- This does far less validation on the returned data than it should
-readGLB :: FilePath -> IO (Either ReadError Solid)
+readGLB :: FilePath -> IO (Maybe Solid)
 readGLB = readGLTF
 
 -- | Read a `Solid` from an obj file at a given path
 --
 -- This should support reading both the GLTF (json) and GLB (binary) formats
---
--- This does far less validation on the returned data than it should
-readOBJ :: FilePath -> IO (Either ReadError Solid)
+readOBJ :: FilePath -> IO (Maybe Solid)
 readOBJ  = cafReader $ do
     reader <- RWObj.CafReader.new 
     liftIO $ RWObj.CafReader.setSinglePrecision reader False
