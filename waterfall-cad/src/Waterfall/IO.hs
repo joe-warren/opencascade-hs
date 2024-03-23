@@ -4,6 +4,7 @@ module Waterfall.IO
 , writeSTEP
 , writeGLTF
 , writeGLB
+, writeOBJ
 , readSTL
 , readSTEP
 , readGLTF
@@ -21,11 +22,15 @@ import qualified OpenCascade.STEPControl.Reader as STEPReader
 import qualified OpenCascade.XSControl.Reader as XSControl.Reader
 import qualified OpenCascade.IFSelect.ReturnStatus as IFSelect.ReturnStatus
 import qualified OpenCascade.TDocStd.Document as TDocStd.Document
+import qualified OpenCascade.Message.Types as Message
 import qualified OpenCascade.Message.ProgressRange as Message.ProgressRange
 import qualified OpenCascade.TColStd.IndexedDataMapOfStringString as TColStd.IndexedDataMapOfStringString
 import qualified OpenCascade.RWGltf.CafWriter as RWGltf.CafWriter
 import qualified OpenCascade.RWGltf.CafReader as RWGltf.CafReader
+import qualified OpenCascade.RWObj.CafWriter as RWObj.CafWriter
 import qualified OpenCascade.RWMesh.CafReader as RWMesh.CafReader
+import qualified OpenCascade.TDocStd.Types as TDocStd
+import qualified OpenCascade.TColStd.Types as TColStd
 import qualified OpenCascade.XCAFDoc.DocumentTool as XCafDoc.DocumentTool
 import qualified OpenCascade.XCAFDoc.ShapeTool as XCafDoc.ShapeTool
 import qualified OpenCascade.TopoDS.Types as TopoDS
@@ -33,6 +38,7 @@ import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
+import OpenCascade.Handle (Handle)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad (void, unless, when)
@@ -70,8 +76,8 @@ writeSTEP filepath (Solid ptr) = (`withAcquire` pure) $ do
     _ <- liftIO $ StepWriter.transfer writer s StepModelType.Asls True
     void . liftIO $ StepWriter.write writer filepath
 
-writeGLTFOrGLB :: Bool -> Double -> FilePath -> Solid -> IO ()
-writeGLTFOrGLB binary linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
+cafWriter :: (FilePath -> Ptr (Handle TDocStd.Document) -> Ptr TColStd.IndexedDataMapOfStringString -> Ptr Message.ProgressRange -> Acquire ()) -> Double -> FilePath -> Solid-> IO ()
+cafWriter write linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
     liftIO $ BRepMesh.IncrementalMesh.perform mesh
@@ -81,9 +87,14 @@ writeGLTFOrGLB binary linDeflection filepath (Solid ptr) = (`withAcquire` pure) 
     _ <- XCafDoc.ShapeTool.addShape shapeTool s True True
     meta <- TColStd.IndexedDataMapOfStringString.new
     progress <- Message.ProgressRange.new
-    writer <- RWGltf.CafWriter.new filepath binary
-    liftIO $ RWGltf.CafWriter.perform writer doc meta progress
-    return ()
+    write filepath doc meta progress
+
+writeGLTFOrGLB :: Bool -> Double -> FilePath -> Solid -> IO ()
+writeGLTFOrGLB binary =
+    let write filepath doc meta progress = do 
+            writer <- RWGltf.CafWriter.new filepath binary
+            liftIO $ RWGltf.CafWriter.perform writer doc meta progress
+    in cafWriter write
 
 -- | Write a `Solid` to a glTF file at a given path
 --
@@ -109,6 +120,22 @@ writeGLTF = writeGLTFOrGLB False
 -- The deflection is the maximum allowable distance between a curve and the generated triangulation.
 writeGLB :: Double -> FilePath -> Solid -> IO ()
 writeGLB = writeGLTFOrGLB True
+
+-- | Write a `Solid` to an obj file at a given path
+--
+-- Wavefront OBJ is a simple ascii file format that stores geometric data.
+--
+-- Because BRep representations of objects can store arbitrary precision curves,
+-- but obj files store triangulated surfaces, 
+-- this function takes a "deflection" argument used to discretize curves.
+--
+-- The deflection is the maximum allowable distance between a curve and the generated triangulation.
+writeOBJ :: Double -> FilePath -> Solid -> IO ()
+writeOBJ = 
+    let write filepath doc meta progress = do 
+            writer <- RWObj.CafWriter.new filepath
+            liftIO $ RWObj.CafWriter.perform writer doc meta progress
+    in cafWriter write
 
 data ReadError = FileReadError | NonManifoldError deriving (Eq, Show)
 

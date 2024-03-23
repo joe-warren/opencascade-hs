@@ -74,6 +74,7 @@ typedef void Bnd_OBB;
 typedef void Message_ProgressRange;
 typedef void RWGltf_CafWriter;
 typedef void RWGltf_CafReader;
+typedef void RWObj_CafWriter;
 typedef void RWMesh_CafReader;
 typedef void TColStd_IndexedDataMapOfStringString;
 typedef void TDF_Label;

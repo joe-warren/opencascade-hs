@@ -13,7 +13,8 @@ and this project adheres to the
 
 ### Added
 
-- graphicsLibraryTransmissionFormat support: `writeGLTF` and `writeGLB` in `Waterfall.IO`
+- GLTF (graphics library transmission format) support: `writeGLTF` and `writeGLB` in `Waterfall.IO`
+- obj file format support `writeOBJ` in `Waterfall.IO`
 
 ## 0.2.0.0
 
