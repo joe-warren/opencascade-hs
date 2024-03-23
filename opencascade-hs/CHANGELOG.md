@@ -29,6 +29,7 @@ and this project adheres to the
 - Added OpenCascade.BRep.Tool.triangulation
 - Added OpenCascade.BRepBuilderAPI.MakePolygon
 - Added OpenCascade.RWObj.CafWriter
+- Added OpenCascade.RWObj.CafReader
 
 ## 0.2.1.0
 

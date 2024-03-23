@@ -80,6 +80,7 @@ extra-source-files:
     cpp/hs_RWGltf_CafReader.h
     cpp/hs_RWGltf_CafWriter.h
     cpp/hs_RWMesh_CafReader.h
+    cpp/hs_RWObj_CafReader.h
     cpp/hs_RWObj_CafWriter.h
     cpp/hs_ShapeFix_Solid.h
     cpp/hs_STEPControl_Reader.h
@@ -220,6 +221,7 @@ library
       OpenCascade.RWGltf.Types
       OpenCascade.RWMesh.CafReader
       OpenCascade.RWMesh.Types
+      OpenCascade.RWObj.CafReader
       OpenCascade.RWObj.CafWriter
       OpenCascade.RWObj.Internal.Destructors
       OpenCascade.RWObj.Types
@@ -349,6 +351,7 @@ library
       cpp/hs_RWGltf_CafReader.cpp
       cpp/hs_RWGltf_CafWriter.cpp
       cpp/hs_RWMesh_CafReader.cpp
+      cpp/hs_RWObj_CafReader.cpp
       cpp/hs_RWObj_CafWriter.cpp
       cpp/hs_ShapeFix_Solid.cpp
       cpp/hs_STEPControl_Reader.cpp

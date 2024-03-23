@@ -9,6 +9,7 @@ module Waterfall.IO
 , readSTEP
 , readGLTF
 , readGLB
+, readOBJ
 ) where 
 
 import Waterfall.Internal.Solid (Solid(..))
@@ -28,6 +29,8 @@ import qualified OpenCascade.TColStd.IndexedDataMapOfStringString as TColStd.Ind
 import qualified OpenCascade.RWGltf.CafWriter as RWGltf.CafWriter
 import qualified OpenCascade.RWGltf.CafReader as RWGltf.CafReader
 import qualified OpenCascade.RWObj.CafWriter as RWObj.CafWriter
+import qualified OpenCascade.RWObj.CafReader as RWObj.CafReader
+import qualified OpenCascade.RWMesh.Types as RWMesh
 import qualified OpenCascade.RWMesh.CafReader as RWMesh.CafReader
 import qualified OpenCascade.TDocStd.Types as TDocStd
 import qualified OpenCascade.TColStd.Types as TColStd
@@ -184,26 +187,43 @@ readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
         then checkNonNull shape
         else return . Left $ FileReadError
 
+cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO (Either ReadError Solid)
+cafReader mkReader filepath = fmap (fmap Solid) . fromAcquire $ do
+    reader <- mkReader
+    doc <- TDocStd.Document.fromStorageFormat ""
+    progress <- Message.ProgressRange.new
+    _ <- liftIO $ RWMesh.CafReader.setDocument reader doc
+    res <- liftIO $ RWMesh.CafReader.perform reader filepath progress
+    if res 
+        then fmap Right . Remesh.remesh =<< RWMesh.CafReader.singleShape reader
+        else return . Left $ FileReadError 
+
 -- | Read a `Solid` from a GLTF file at a given path
 --
 -- This should support reading both the GLTF (json) and GLB (binary) formats
 --
 -- This does far less validation on the returned data than it should
 readGLTF :: FilePath -> IO (Either ReadError Solid)
-readGLTF  filepath = fmap (fmap Solid) . fromAcquire $ do
+readGLTF  = cafReader $ do
     reader <- RWGltf.CafReader.new 
     liftIO $ RWGltf.CafReader.setDoublePrecision reader True
     liftIO $ RWMesh.CafReader.setFileLengthUnit (upcast reader) 1
-    doc <- TDocStd.Document.fromStorageFormat ""
-    progress <- Message.ProgressRange.new
-    _ <- liftIO $ RWMesh.CafReader.setDocument (upcast reader) doc
-    res <- liftIO $ RWMesh.CafReader.perform (upcast reader) filepath progress
-    if res 
-        then fmap Right . Remesh.remesh =<< RWMesh.CafReader.singleShape (upcast reader)
-        else return . Left $ FileReadError 
+    return (upcast reader)
 
 -- | Alias for `readGLTF`
 --
 -- This does far less validation on the returned data than it should
 readGLB :: FilePath -> IO (Either ReadError Solid)
 readGLB = readGLTF
+
+-- | Read a `Solid` from an obj file at a given path
+--
+-- This should support reading both the GLTF (json) and GLB (binary) formats
+--
+-- This does far less validation on the returned data than it should
+readOBJ :: FilePath -> IO (Either ReadError Solid)
+readOBJ  = cafReader $ do
+    reader <- RWObj.CafReader.new 
+    liftIO $ RWObj.CafReader.setSinglePrecision reader False
+    liftIO $ RWMesh.CafReader.setFileLengthUnit (upcast reader) 1
+    return (upcast reader)
