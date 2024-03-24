@@ -204,7 +204,6 @@ possibleShellToSolid s = do
     let go = do
             isMore <- liftIO $ TopExp.Explorer.more explorer
             when isMore $ do
-                liftIO $ print "more"
                 shell <- liftIO $ unsafeDowncast =<< TopExp.Explorer.value explorer
                 liftIO $ MakeSolid.add makeSolid shell
                 liftIO $ TopExp.Explorer.next explorer
