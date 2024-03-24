@@ -34,6 +34,7 @@ library
       GearExample
       OffsetExample
       PrismExample
+      ReadSolidExpressionExample
       RevolutionExample
       SweepExample
       TextExample
@@ -48,6 +49,8 @@ library
     , linear >=1.21 && <2
     , opencascade-hs >=0.2.1.0 && <0.3
     , optparse-applicative >=0.17 && <0.19
+    , parsec ==3.1.*
+    , parser-combinators >=1.2 && <1.4
     , waterfall-cad >=0.2.1.0 && <0.3
   default-language: Haskell2010
 
@@ -64,6 +67,8 @@ executable waterfall-cad-examples
     , linear >=1.21 && <2
     , opencascade-hs >=0.2.1.0 && <0.3
     , optparse-applicative >=0.17 && <0.19
+    , parsec ==3.1.*
+    , parser-combinators >=1.2 && <1.4
     , waterfall-cad >=0.2.1.0 && <0.3
     , waterfall-cad-examples
   default-language: Haskell2010

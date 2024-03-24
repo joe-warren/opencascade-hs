@@ -9,6 +9,7 @@ import SweepExample (sweepExample)
 import OffsetExample (offsetExample)
 import TextExample (textExample)
 import BoundingBoxExample (boundingBoxExample)
+import ReadSolidExpressionExample (readSolidExpressionExample)
 import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB)
 import qualified Waterfall.Solids as Solids
 import qualified Options.Applicative as OA
@@ -44,6 +45,8 @@ exampleOption =
           <|> ((* (pi/180)) <$> OA.option OA.auto (OA.long "pitchDegrees" <> OA.help "pitch angle in degrees"))
           <|> pure (20*pi/180)) 
       )) <|> 
+      (readSolidExpressionExample <$> OA.strOption (OA.long "read-expression" <> OA.help "load files, and combine them with boolean operatiors according to an expression")
+      ) <|>
       (OA.flag' textExample (OA.long "text" <> OA.help "render text") <*>
        (OA.strOption (OA.long "font" <> OA.help "font path")) <*>
        (OA.option OA.auto (OA.long "size" <> OA.help "font size") <|> pure 12.0) <*>
