@@ -65,11 +65,11 @@ extensionToFormats :: String -> Maybe (Double -> FilePath -> Solid -> IO(), File
 extensionToFormats s =
     let ext = fmap toLower . takeExtension $ s 
      in case ext of  
-        "stl" -> Just (writeSTL, readSTL)
-        "step" -> Just (const writeSTEP, readSTEP)
-        "gltf" -> Just (writeGLTF, readGLTF)
-        "glb" -> Just (writeGLB, readGLB)
-        "obj" -> Just (writeOBJ, readOBJ)
+        ".stl" -> Just (writeSTL, readSTL)
+        ".step" -> Just (const writeSTEP, readSTEP)
+        ".gltf" -> Just (writeGLTF, readGLTF)
+        ".glb" -> Just (writeGLB, readGLB)
+        ".obj" -> Just (writeOBJ, readOBJ)
         _ -> Nothing
 
 -- | Write a `Solid` to a file, work out the format from the file extension
