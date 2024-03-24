@@ -16,7 +16,6 @@ import Data.Acquire
 import Foreign.Ptr
 import Algebra.Lattice
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (forM_)
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
@@ -46,8 +45,8 @@ solidFromAcquire = Solid . unsafeFromAcquire
 
 -- | print debug information about a Solid when it's evaluated 
 -- exposes the properties of the underlying OpenCacade.TopoDS.Shape
-debug :: String -> Solid -> Solid
-debug name (Solid ptr) = 
+debug :: Solid -> String
+debug (Solid ptr) = 
     let 
         fshow :: Show a => IO a -> IO String 
         fshow = fmap show
@@ -65,14 +64,10 @@ debug name (Solid ptr) =
             , ("convex", fshow . TopoDS.Shape.convex)
             , ("nbChildren", fshow . TopoDS.Shape.nbChildren)
             ]
-    in Solid $ unsafeFromAcquire $ do
+    in unsafeFromAcquire $ do
         s <- toAcquire ptr
-        liftIO $ do 
-            putStrLn name
-            forM_ actions $ \(actionName, value) -> do
-                putStrLn ("\t" <> actionName)
-                putStrLn . ("\t\t" <>) =<< value s
-        return s
+        liftIO $ (`foldMap` actions) $ \(actionName, value) -> 
+                (return $ "\t" <> actionName <> "\t\t") <> value s <> (return "\n")
 
 {--
 -- TODO: this does not work, need to fix

@@ -12,6 +12,25 @@ and this project adheres to the
 
 - Fix `OpenCascade.GProps.fromSystemLocation`
 
+### Added 
+
+- Added OpenCascade.StlAPI.Reader
+- Added OpenCascade.ShapeFix.Solid
+- Added OpenCascade.ShapeExtend.Status
+- Added OpenCascade.STEPControl.Reader
+- Added OpenCascade.XSControl.Reader
+- Added OpenCascade.RWGltf.CafReader
+- Added OpenCascade.RWMesh.CafReader
+- Added OpenCascade.TopoDS.Builder
+- Added OpenCascade.BRepBuilderAPI.Copy
+- Added OpenCascade.BRepBuilderAPI.Sewing
+- Added OpenCascade.Poly.Triangulation
+- Added OpenCascade.Poly.Triangle
+- Added OpenCascade.BRep.Tool.triangulation
+- Added OpenCascade.BRepBuilderAPI.MakePolygon
+- Added OpenCascade.RWObj.CafWriter
+- Added OpenCascade.RWObj.CafReader
+
 ## 0.2.1.0
 
 ### Added

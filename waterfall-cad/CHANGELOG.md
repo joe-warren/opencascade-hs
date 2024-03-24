@@ -9,11 +9,19 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added 
+- New functions in `Waterfall.IO`
+    - Support for reading (as well as writing) all file formats
+        - `readSTL`, `readSTEP`, `readGLTF`, `readGLB`, `readOBJ`
+    - (Wavefront) OBJ support (`writeOBJ`)
+    - Convenience methods `readSolid` and `writeSolid` inferring the format from the file extension
+
 ## 0.2.1.0
 
 ### Added
 
-- graphicsLibraryTransmissionFormat support: `writeGLTF` and `writeGLB` in `Waterfall.IO`
+- GLTF (graphics library transmission format) support: `writeGLTF` and `writeGLB` in `Waterfall.IO`
+- obj file format support `writeOBJ` in `Waterfall.IO`
 
 ## 0.2.0.0
 

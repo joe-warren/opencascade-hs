@@ -1,18 +1,14 @@
-#include <StlAPI_Writer.hxx>
-#include "hs_StlAPI_Writer.h"
+#include <StlAPI_Reader.hxx>
+#include "hs_StlAPI_Reader.h"
 
-StlAPI_Writer * hs_new_StlAPI_Writer(){
-    return new StlAPI_Writer();
+StlAPI_Reader * hs_new_StlAPI_Reader(){
+    return new StlAPI_Reader();
 }
 
-void hs_delete_StlAPI_Writer(StlAPI_Writer * writer){
-    delete writer;
+void hs_delete_StlAPI_Reader(StlAPI_Reader * reader){
+    delete reader;
 }
 
-void hs_StlAPI_Writer_setAsciiMode(StlAPI_Writer * writer, bool asciiMode){
-    writer->ASCIIMode() = asciiMode;
-}
-
-bool hs_StlAPI_Writer_write(StlAPI_Writer * writer, TopoDS_Shape * shape, char* filename){
-    return writer->Write(*shape, filename);
+bool hs_StlAPI_Reader_read(StlAPI_Reader * reader, TopoDS_Shape * shape, char* filename){
+    return reader->Read(*shape, filename);
 } 

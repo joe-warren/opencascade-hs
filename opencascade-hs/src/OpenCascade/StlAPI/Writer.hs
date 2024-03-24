@@ -1,6 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
 module OpenCascade.StlAPI.Writer
-( new
+( Writer
+, new
 , setAsciiMode
 , write
 ) where

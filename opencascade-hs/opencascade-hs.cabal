@@ -28,12 +28,15 @@ extra-source-files:
     cpp/hs_BRepAlgoAPI_Cut.h
     cpp/hs_BRepAlgoAPI_Fuse.h
     cpp/hs_BRepBndLib.h
+    cpp/hs_BRepBuilderAPI_Copy.h
     cpp/hs_BRepBuilderAPI_GTransform.h
     cpp/hs_BRepBuilderAPI_MakeEdge.h
     cpp/hs_BRepBuilderAPI_MakeFace.h
+    cpp/hs_BRepBuilderAPI_MakePolygon.h
     cpp/hs_BRepBuilderAPI_MakeShape.h
     cpp/hs_BRepBuilderAPI_MakeSolid.h
     cpp/hs_BRepBuilderAPI_MakeWire.h
+    cpp/hs_BRepBuilderAPI_Sewing.h
     cpp/hs_BRepBuilderAPI_Transform.h
     cpp/hs_BRepFilletAPI_MakeFillet.h
     cpp/hs_BRepGProp.h
@@ -72,14 +75,24 @@ extra-source-files:
     cpp/hs_GProp_GProps.h
     cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
+    cpp/hs_Poly_Triangle.h
+    cpp/hs_Poly_Triangulation.h
+    cpp/hs_RWGltf_CafReader.h
     cpp/hs_RWGltf_CafWriter.h
+    cpp/hs_RWMesh_CafReader.h
+    cpp/hs_RWObj_CafReader.h
+    cpp/hs_RWObj_CafWriter.h
+    cpp/hs_ShapeFix_Solid.h
+    cpp/hs_STEPControl_Reader.h
     cpp/hs_STEPControl_Writer.h
+    cpp/hs_StlAPI_Reader.h
     cpp/hs_StlAPI_Writer.h
     cpp/hs_TColStd_IndexedDataMapOfStringString.h
     cpp/hs_TDF_Label.h
     cpp/hs_TDocStd_Document.h
     cpp/hs_TopExp_Explorer.h
     cpp/hs_TopLoc_Location.h
+    cpp/hs_TopoDS_Builder.h
     cpp/hs_TopoDS_Compound.h
     cpp/hs_TopoDS_CompSolid.h
     cpp/hs_TopoDS_Edge.h
@@ -92,6 +105,7 @@ extra-source-files:
     cpp/hs_types.h
     cpp/hs_XCAFDoc_DocumentTool.h
     cpp/hs_XCAFDoc_ShapeTool.h
+    cpp/hs_XSControl_Reader.h
 
 source-repository head
   type: git
@@ -109,14 +123,17 @@ library
       OpenCascade.BRepAlgoAPI.Fuse
       OpenCascade.BRepBndLib
       OpenCascade.BRepBuilderAPI
+      OpenCascade.BRepBuilderAPI.Copy
       OpenCascade.BRepBuilderAPI.FaceError
       OpenCascade.BRepBuilderAPI.GTransform
       OpenCascade.BRepBuilderAPI.Internal.Destructors
       OpenCascade.BRepBuilderAPI.MakeEdge
       OpenCascade.BRepBuilderAPI.MakeFace
+      OpenCascade.BRepBuilderAPI.MakePolygon
       OpenCascade.BRepBuilderAPI.MakeShape
       OpenCascade.BRepBuilderAPI.MakeSolid
       OpenCascade.BRepBuilderAPI.MakeWire
+      OpenCascade.BRepBuilderAPI.Sewing
       OpenCascade.BRepBuilderAPI.Transform
       OpenCascade.BRepBuilderAPI.Types
       OpenCascade.BRepBuilderAPI.WireError
@@ -194,16 +211,33 @@ library
       OpenCascade.NCollection.Array1
       OpenCascade.NCollection.Internal.Destructors
       OpenCascade.NCollection.Types
+      OpenCascade.Poly.Internal.Destructors
+      OpenCascade.Poly.Triangle
+      OpenCascade.Poly.Triangulation
+      OpenCascade.Poly.Types
+      OpenCascade.RWGltf.CafReader
       OpenCascade.RWGltf.CafWriter
       OpenCascade.RWGltf.Internal.Destructors
       OpenCascade.RWGltf.Types
+      OpenCascade.RWMesh.CafReader
+      OpenCascade.RWMesh.Types
+      OpenCascade.RWObj.CafReader
+      OpenCascade.RWObj.CafWriter
+      OpenCascade.RWObj.Internal.Destructors
+      OpenCascade.RWObj.Types
+      OpenCascade.ShapeExtend.Status
+      OpenCascade.ShapeFix.Internal.Destructors
+      OpenCascade.ShapeFix.Solid
+      OpenCascade.ShapeFix.Types
       OpenCascade.STEPControl
       OpenCascade.STEPControl.Internal.Destructors
+      OpenCascade.STEPControl.Reader
       OpenCascade.STEPControl.StepModelType
       OpenCascade.STEPControl.Types
       OpenCascade.STEPControl.Writer
       OpenCascade.StlAPI
       OpenCascade.StlAPI.Internal.Destructors
+      OpenCascade.StlAPI.Reader
       OpenCascade.StlAPI.Types
       OpenCascade.StlAPI.Writer
       OpenCascade.TColStd.IndexedDataMapOfStringString
@@ -226,6 +260,7 @@ library
       OpenCascade.TopLoc.Location
       OpenCascade.TopLoc.Types
       OpenCascade.TopoDS
+      OpenCascade.TopoDS.Builder
       OpenCascade.TopoDS.Compound
       OpenCascade.TopoDS.CompSolid
       OpenCascade.TopoDS.Edge
@@ -243,6 +278,8 @@ library
       OpenCascade.XCAFDoc.Internal.Destructors
       OpenCascade.XCAFDoc.ShapeTool
       OpenCascade.XCAFDoc.Types
+      OpenCascade.XSControl.Reader
+      OpenCascade.XSControl.Types
   other-modules:
       Paths_opencascade_hs
   autogen-modules:
@@ -262,12 +299,15 @@ library
       cpp/hs_BRepAlgoAPI_Cut.cpp
       cpp/hs_BRepAlgoAPI_Fuse.cpp
       cpp/hs_BRepBndLib.cpp
+      cpp/hs_BRepBuilderAPI_Copy.cpp
       cpp/hs_BRepBuilderAPI_GTransform.cpp
       cpp/hs_BRepBuilderAPI_MakeEdge.cpp
       cpp/hs_BRepBuilderAPI_MakeFace.cpp
+      cpp/hs_BRepBuilderAPI_MakePolygon.cpp
       cpp/hs_BRepBuilderAPI_MakeShape.cpp
       cpp/hs_BRepBuilderAPI_MakeSolid.cpp
       cpp/hs_BRepBuilderAPI_MakeWire.cpp
+      cpp/hs_BRepBuilderAPI_Sewing.cpp
       cpp/hs_BRepBuilderAPI_Transform.cpp
       cpp/hs_BRepFilletAPI_MakeFillet.cpp
       cpp/hs_BRepGProp.cpp
@@ -306,14 +346,24 @@ library
       cpp/hs_GProp_GProps.cpp
       cpp/hs_Message_ProgressRange.cpp
       cpp/hs_NCollection_Array1.cpp
+      cpp/hs_Poly_Triangle.cpp
+      cpp/hs_Poly_Triangulation.cpp
+      cpp/hs_RWGltf_CafReader.cpp
       cpp/hs_RWGltf_CafWriter.cpp
+      cpp/hs_RWMesh_CafReader.cpp
+      cpp/hs_RWObj_CafReader.cpp
+      cpp/hs_RWObj_CafWriter.cpp
+      cpp/hs_ShapeFix_Solid.cpp
+      cpp/hs_STEPControl_Reader.cpp
       cpp/hs_STEPControl_Writer.cpp
+      cpp/hs_StlAPI_Reader.cpp
       cpp/hs_StlAPI_Writer.cpp
       cpp/hs_TColStd_IndexedDataMapOfStringString.cpp
       cpp/hs_TDF_Label.cpp
       cpp/hs_TDocStd_Document.cpp
       cpp/hs_TopExp_Explorer.cpp
       cpp/hs_TopLoc_Location.cpp
+      cpp/hs_TopoDS_Builder.cpp
       cpp/hs_TopoDS_Compound.cpp
       cpp/hs_TopoDS_CompSolid.cpp
       cpp/hs_TopoDS_Edge.cpp
@@ -325,6 +375,7 @@ library
       cpp/hs_TopoDS_Wire.cpp
       cpp/hs_XCAFDoc_DocumentTool.cpp
       cpp/hs_XCAFDoc_ShapeTool.cpp
+      cpp/hs_XSControl_Reader.cpp
   extra-libraries:
       stdc++
       TKGeomBase
@@ -348,6 +399,8 @@ library
       TKLCAF
       TKXCAF
       TKService
+      TKShHealing
+      TKXSBase
   build-depends:
       base >=4.7 && <5
     , resourcet >=1.2 && <1.4
