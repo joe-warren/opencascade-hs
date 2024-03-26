@@ -211,7 +211,7 @@ possibleShellToSolid s = do
     go
     checkNonNull =<< upcast <$> MakeSolid.solid makeSolid
 
--- | Read a `Solid` from an STL file at a given path
+-- | Read a `Solid` from a file at a given path
 -- 
 -- Throws an error if loading fails, or if it's unable to work out
 -- the intended file format from the path
