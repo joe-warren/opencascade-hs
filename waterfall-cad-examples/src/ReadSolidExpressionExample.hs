@@ -8,13 +8,22 @@ import qualified Waterfall.IO
 import Control.Applicative (liftA2)
 import Text.Parsec
 import Control.Monad.Combinators.Expr
+import Waterfall.Internal.Solid (debug)
 
 type Parser a = Parsec String () a
 
+readS :: FilePath -> IO Solids.Solid
+readS file = do
+    f <- Waterfall.IO.readSolid file
+    putStrLn file
+    putStrLn . debug $ f
+    return f
+
+ 
 atomParser :: Parser (IO Solids.Solid)
 atomParser = 
     let filenameParser = char '{' *> (manyTill anyChar (try $ char '}')) <?> "filename"
-    in Waterfall.IO.readSolid <$> filenameParser
+    in readS <$> filenameParser
 
 termParser :: Parser (IO Solids.Solid)
 termParser = 
