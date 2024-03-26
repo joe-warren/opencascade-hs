@@ -52,7 +52,7 @@ import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import OpenCascade.Handle (Handle)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
-import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad (void, unless, when)
 import System.IO (hPutStrLn, stderr)
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
@@ -190,12 +190,6 @@ writeOBJ =
             liftIO $ RWObj.CafWriter.perform writer doc meta progress
     in cafWriter write
 
-checkNonNull:: MonadIO m => Ptr TopoDS.Shape -> m (Maybe (Ptr TopoDS.Shape))
-checkNonNull shape = do
-    isNull <- liftIO . TopoDS.Shape.isNull $ shape
-    return $ if isNull 
-        then Nothing
-        else Just shape
 
 possibleShellToSolid :: Ptr TopoDS.Shape -> Acquire (Maybe (Ptr TopoDS.Shape))
 possibleShellToSolid s = do
@@ -209,7 +203,7 @@ possibleShellToSolid s = do
                 liftIO $ TopExp.Explorer.next explorer
                 go
     go
-    checkNonNull =<< upcast <$> MakeSolid.solid makeSolid
+    Remesh.checkNonNull =<< upcast <$> MakeSolid.solid makeSolid
 
 -- | Read a `Solid` from a file at a given path
 -- 
@@ -230,7 +224,7 @@ readSTL filepath = (fmap (fmap Solid)) . fromAcquire $ do
     reader <- StlReader.new
     res <- liftIO $ StlReader.read reader shape filepath
     if res 
-        then possibleShellToSolid shape
+        then Remesh.remesh shape
         else return Nothing
 
 -- | Read a `Solid` from a STEP file at a given path
@@ -241,7 +235,7 @@ readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
     _ <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
     shape <- XSControl.Reader.oneShape (upcast reader)
     if status == IFSelect.ReturnStatus.Done
-        then checkNonNull shape
+        then Remesh.checkNonNull shape
         else return Nothing
 
 cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO (Maybe Solid)
@@ -252,7 +246,7 @@ cafReader mkReader filepath = fmap (fmap Solid) . fromAcquire $ do
     _ <- liftIO $ RWMesh.CafReader.setDocument reader doc
     res <- liftIO $ RWMesh.CafReader.perform reader filepath progress
     if res 
-        then checkNonNull =<< Remesh.remesh =<< RWMesh.CafReader.singleShape reader
+        then Remesh.remesh =<< RWMesh.CafReader.singleShape reader
         else return Nothing
 
 -- | Read a `Solid` from a GLTF file at a given path
