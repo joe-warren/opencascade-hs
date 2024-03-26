@@ -110,6 +110,9 @@ remesh s = do
     go
     liftIO $ BRepBuilderAPI.Sewing.load sewing (upcast compound)
     liftIO . BRepBuilderAPI.Sewing.perform $ sewing
+    liftIO $ print=<< BRepBuilderAPI.Sewing.nbFreeEdges sewing
+    liftIO $ print=<< BRepBuilderAPI.Sewing.nbContigousEdges sewing
+    liftIO $ print=<< BRepBuilderAPI.Sewing.nbMultipleEdges sewing
     shape <- BRepBuilderAPI.Sewing.sewedShape sewing
     makeSolid <- BRepBuilderAPI.MakeSolid.new 
     shapeAsShell <- liftIO $ unsafeDowncast shape

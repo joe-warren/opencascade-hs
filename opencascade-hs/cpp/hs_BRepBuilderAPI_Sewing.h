@@ -19,6 +19,12 @@ void hs_BRepBuilderAPI_Sewing_perform(BRepBuilderAPI_Sewing * builder);
 
 TopoDS_Shape * hs_BRepBuilderAPI_Sewing_sewedShape(BRepBuilderAPI_Sewing * builder);
 
+int hs_BRepBuilderAPI_Sewing_nbFreeEdges(BRepBuilderAPI_Sewing * builder);
+
+int hs_BRepBuilderAPI_Sewing_nbContigousEdges(BRepBuilderAPI_Sewing * builder);
+
+int hs_BRepBuilderAPI_Sewing_nbMultipleEdges(BRepBuilderAPI_Sewing * builder);
+
 #ifdef __cplusplus
 }
 #endif
