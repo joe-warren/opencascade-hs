@@ -55,7 +55,7 @@ import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (void, unless, when)
 import System.IO (hPutStrLn, stderr)
-import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
+import Waterfall.Internal.Finalizers (toAcquire, fromAcquireMay)
 import Data.Acquire ( Acquire, withAcquire )
 import Foreign.Ptr (Ptr)
 import Data.Char (toLower)
@@ -219,7 +219,7 @@ readSolid filepath =
 
 -- | Read a `Solid` from an STL file at a given path
 readSTL :: FilePath -> IO (Maybe Solid)
-readSTL filepath = (fmap (fmap Solid)) . fromAcquire $ do
+readSTL filepath = (fmap (fmap Solid)) . fromAcquireMay $ do
     shape <- TopoDS.Shape.new
     reader <- StlReader.new
     res <- liftIO $ StlReader.read reader shape filepath
@@ -229,7 +229,7 @@ readSTL filepath = (fmap (fmap Solid)) . fromAcquire $ do
 
 -- | Read a `Solid` from a STEP file at a given path
 readSTEP :: FilePath -> IO (Maybe Solid)
-readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
+readSTEP filepath = (fmap (fmap Solid)) . fromAcquireMay $ do
     reader <- STEPReader.new
     status <- liftIO $ XSControl.Reader.readFile (upcast reader) filepath
     _ <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
@@ -239,7 +239,7 @@ readSTEP filepath = (fmap (fmap Solid)) . fromAcquire $ do
         else return Nothing
 
 cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO (Maybe Solid)
-cafReader mkReader filepath = fmap (fmap Solid) . fromAcquire $ do
+cafReader mkReader filepath = fmap (fmap Solid) . fromAcquireMay $ do
     reader <- mkReader
     doc <- TDocStd.Document.fromStorageFormat ""
     progress <- Message.ProgressRange.new

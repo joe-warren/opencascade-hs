@@ -10,6 +10,7 @@ However `waterfall-cad` does not (at the highest level) keep values in the `Acqu
 module Waterfall.Internal.Finalizers 
 ( unsafeFromAcquire
 , fromAcquire
+, fromAcquireMay
 , toAcquire
 ) where
 
@@ -30,6 +31,20 @@ fromAcquire a = runResourceT $ do
     release <- fromMaybe (pure ()) <$> unprotect releaseKey
     liftIO $ addFinalizer v release
     return v
+
+    
+-- | variant of `fromAcquire` which registers the finalizer on the _value_ in a `Maybe` 
+-- as opposed to the maybe itself 
+-- this is useful for wrapping IO actions that return the type `IO (Maybe a)` where the `Maybe` will often be finalized well before the value
+fromAcquireMay :: Acquire (Maybe a) -> IO (Maybe a) 
+fromAcquireMay a = runResourceT $ do
+    (releaseKey, v) <- allocateAcquire a
+    release <- fromMaybe (pure ()) <$> unprotect releaseKey
+    case v of
+        Nothing -> liftIO $ Nothing <$ release
+        Just v' -> do
+            liftIO $ addFinalizer v' release
+            return . Just $ v'
 
 -- | Converting to a value in the `Data.Acquire.Acquire` monad, to a raw value.
 -- Analagous to calling `unsafePerformIO` to extract a value in the `IO` monad.
