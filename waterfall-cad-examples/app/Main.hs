@@ -12,7 +12,6 @@ import BoundingBoxExample (boundingBoxExample)
 import ReadSolidExpressionExample (readSolidExpressionExample)
 import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB)
 import qualified Waterfall.Solids as Solids
-import Waterfall.Internal.Solid (debug)
 import qualified Options.Applicative as OA
 import Control.Applicative ((<|>), liftA2)
 import Control.Monad (join)
@@ -55,19 +54,10 @@ exampleOption =
        (OA.option OA.auto (OA.long "depth" <> OA.help "depth to extrude the text to") <|> pure 10.0) 
       )
 
-
-printDebug :: Solids.Solid -> IO Solids.Solid
-printDebug s = do
-    putStrLn $ debug s
-    return s
-
-debugInline :: (Solids.Solid -> IO r) ->IO Solids.Solid -> IO r
-debugInline save generate = save =<< printDebug =<< generate 
-
 main :: IO ()
 main = join (OA.execParser opts)
     where
-        opts = OA.info ((liftA2 (debugInline)  outputOption  exampleOption) OA.<**> OA.helper) 
+        opts = OA.info ((liftA2 (=<<)  outputOption  exampleOption) OA.<**> OA.helper) 
             (OA.fullDesc
              <> OA.progDesc "generate and write a 3D model"
              <> OA.header "examples for Waterfall-CAD")
