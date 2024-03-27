@@ -1,6 +1,8 @@
 module Waterfall.IO
-( -- * Solid Writers
-  writeSolid
+( IOException (..)
+, IOExceptionCause (..)
+  -- * Solid Writers
+, writeSolid
 , writeSTL
 , writeAsciiSTL
 , writeSTEP
@@ -11,8 +13,9 @@ module Waterfall.IO
   -- 
   -- | Load a `Waterfall.Solid` from a file
   --
-  -- At present, the "read*" functions do far less validation on the loaded solid 
+  -- At present, the "read*" functions do slightly less validation on the loaded solid 
   -- than they arguably should  
+  -- and may succeed when reading solids that may generate invalid geometry when processed
 , readSolid
 , readSTL
 , readSTEP
@@ -55,13 +58,25 @@ import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (void, unless, when)
 import System.IO (hPutStrLn, stderr)
-import Waterfall.Internal.Finalizers (toAcquire, fromAcquireMay)
+import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
 import Data.Acquire ( Acquire, withAcquire )
 import Foreign.Ptr (Ptr)
 import Data.Char (toLower)
 import System.FilePath (takeExtension)
+import Control.Exception (Exception, throwIO)
 
-extensionToFormats :: String -> Maybe (Double -> FilePath -> Solid -> IO(), FilePath -> IO (Maybe Solid))
+data IOExceptionCause = FileError | BadGeometryError | UnrecognizedFormatError deriving (Show, Eq)
+
+data IOException = 
+    IOException 
+      { ioExceptionCause :: IOExceptionCause
+      , ioExceptionFilePath :: FilePath 
+      }
+    deriving Show
+
+instance Exception IOException
+
+extensionToFormats :: String -> Maybe (Double -> FilePath -> Solid -> IO(), FilePath -> IO Solid)
 extensionToFormats s =
     let ext = fmap toLower . takeExtension $ s 
      in case ext of  
@@ -85,7 +100,7 @@ writeSolid :: Double -> FilePath -> Solid -> IO ()
 writeSolid res filepath = 
     case extensionToFormats filepath of
         Just (writer, _) -> writer res filepath
-        Nothing -> const . fail $ "Unable to determine file format from path: " <> filepath
+        Nothing -> const $ throwIO (IOException UnrecognizedFormatError filepath)
 
 writeSTLAsciiOrBinary :: Bool -> Double -> FilePath -> Solid -> IO ()
 writeSTLAsciiOrBinary asciiMode linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
@@ -96,7 +111,7 @@ writeSTLAsciiOrBinary asciiMode linDeflection filepath (Solid ptr) = (`withAcqui
     liftIO $ do
             StlWriter.setAsciiMode writer asciiMode
             res <- StlWriter.write writer s filepath
-            unless res (hPutStrLn stderr ("failed to write " <> filepath))
+            unless res (throwIO (IOException FileError filepath))
     return ()
 
 -- | Write a `Solid` to a (binary) STL file at a given path
@@ -126,8 +141,10 @@ writeSTEP :: FilePath -> Solid -> IO ()
 writeSTEP filepath (Solid ptr) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     writer <- StepWriter.new
-    _ <- liftIO $ StepWriter.transfer writer s StepModelType.Asls True
-    void . liftIO $ StepWriter.write writer filepath
+    resTransfer <- liftIO $ StepWriter.transfer writer s StepModelType.Asls True
+    unless (resTransfer == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ IOException BadGeometryError filepath)
+    resWrite <- liftIO $ StepWriter.write writer filepath
+    unless (resWrite == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ IOException FileError filepath)
 
 cafWriter :: (FilePath -> Ptr (Handle TDocStd.Document) -> Ptr TColStd.IndexedDataMapOfStringString -> Ptr Message.ProgressRange -> Acquire ()) -> Double -> FilePath -> Solid-> IO ()
 cafWriter write linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
@@ -190,21 +207,6 @@ writeOBJ =
             liftIO $ RWObj.CafWriter.perform writer doc meta progress
     in cafWriter write
 
-
-possibleShellToSolid :: Ptr TopoDS.Shape -> Acquire (Maybe (Ptr TopoDS.Shape))
-possibleShellToSolid s = do
-    explorer <- TopExp.Explorer.new s ShapeEnum.Shell
-    makeSolid <- MakeSolid.new
-    let go = do
-            isMore <- liftIO $ TopExp.Explorer.more explorer
-            when isMore $ do
-                shell <- liftIO $ unsafeDowncast =<< TopExp.Explorer.value explorer
-                liftIO $ MakeSolid.add makeSolid shell
-                liftIO $ TopExp.Explorer.next explorer
-                go
-    go
-    Remesh.checkNonNull =<< upcast <$> MakeSolid.solid makeSolid
-
 -- | Read a `Solid` from a file at a given path
 -- 
 -- Throws an error if loading fails, or if it's unable to work out
@@ -212,47 +214,51 @@ possibleShellToSolid s = do
 readSolid :: FilePath -> IO Solid
 readSolid filepath = 
     case extensionToFormats filepath of 
-        Nothing -> fail $ "Unable to determine file format from path: " <> filepath
-        Just (_, reader) -> 
-            let errorMsg = "Failed to read file: " <> filepath
-             in maybe (fail errorMsg) return =<< reader filepath
+        Nothing -> throwIO (IOException UnrecognizedFormatError filepath)
+        Just (_, reader) -> reader filepath
+
+remeshOrThrow :: FilePath -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
+remeshOrThrow filepath shape = do
+    remeshed <- Remesh.remesh shape
+    case remeshed of 
+        Just solid -> pure solid
+        Nothing -> liftIO . throwIO $ IOException BadGeometryError filepath
 
 -- | Read a `Solid` from an STL file at a given path
-readSTL :: FilePath -> IO (Maybe Solid)
-readSTL filepath = (fmap (fmap Solid)) . fromAcquireMay $ do
+readSTL :: FilePath -> IO Solid
+readSTL filepath = fmap Solid . fromAcquire $ do
     shape <- TopoDS.Shape.new
     reader <- StlReader.new
     res <- liftIO $ StlReader.read reader shape filepath
-    if res 
-        then Remesh.remesh shape
-        else return Nothing
+    unless res $ liftIO . throwIO $ IOException FileError filepath
+    remeshOrThrow filepath shape
 
 -- | Read a `Solid` from a STEP file at a given path
-readSTEP :: FilePath -> IO (Maybe Solid)
-readSTEP filepath = (fmap (fmap Solid)) . fromAcquireMay $ do
+readSTEP :: FilePath -> IO Solid
+readSTEP filepath = fmap Solid . fromAcquire $ do
     reader <- STEPReader.new
     status <- liftIO $ XSControl.Reader.readFile (upcast reader) filepath
     _ <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
     shape <- XSControl.Reader.oneShape (upcast reader)
-    if status == IFSelect.ReturnStatus.Done
-        then Remesh.checkNonNull shape
-        else return Nothing
+    unless (status == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ IOException FileError filepath)
+    shapeIsNull <- liftIO $ TopoDS.Shape.isNull shape
+    when shapeIsNull (liftIO . throwIO $ IOException BadGeometryError filepath)
+    return shape
 
-cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO (Maybe Solid)
-cafReader mkReader filepath = fmap (fmap Solid) . fromAcquireMay $ do
+cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO Solid
+cafReader mkReader filepath = fmap Solid . fromAcquire $ do
     reader <- mkReader
     doc <- TDocStd.Document.fromStorageFormat ""
     progress <- Message.ProgressRange.new
     _ <- liftIO $ RWMesh.CafReader.setDocument reader doc
     res <- liftIO $ RWMesh.CafReader.perform reader filepath progress
-    if res 
-        then Remesh.remesh =<< RWMesh.CafReader.singleShape reader
-        else return Nothing
+    unless res (liftIO . throwIO $ IOException FileError filepath)
+    remeshOrThrow filepath =<< RWMesh.CafReader.singleShape reader
 
 -- | Read a `Solid` from a GLTF file at a given path
 --
 -- This should support reading both the GLTF (json) and GLB (binary) formats
-readGLTF :: FilePath -> IO (Maybe Solid)
+readGLTF :: FilePath -> IO Solid
 readGLTF  = cafReader $ do
     reader <- RWGltf.CafReader.new 
     liftIO $ RWGltf.CafReader.setDoublePrecision reader True
@@ -260,13 +266,13 @@ readGLTF  = cafReader $ do
     return (upcast reader)
 
 -- | Alias for `readGLTF`
-readGLB :: FilePath -> IO (Maybe Solid)
+readGLB :: FilePath -> IO Solid
 readGLB = readGLTF
 
 -- | Read a `Solid` from an obj file at a given path
 --
 -- This should support reading both the GLTF (json) and GLB (binary) formats
-readOBJ :: FilePath -> IO (Maybe Solid)
+readOBJ :: FilePath -> IO Solid
 readOBJ  = cafReader $ do
     reader <- RWObj.CafReader.new 
     liftIO $ RWObj.CafReader.setSinglePrecision reader False
