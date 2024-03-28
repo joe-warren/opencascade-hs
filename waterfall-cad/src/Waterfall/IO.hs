@@ -1,6 +1,6 @@
 module Waterfall.IO
-( IOException (..)
-, IOExceptionCause (..)
+( WaterfallIOException (..)
+, WaterfallIOExceptionCause (..)
   -- * Solid Writers
 , writeSolid
 , writeSTL
@@ -62,17 +62,17 @@ import System.FilePath (takeExtension)
 import Control.Exception (Exception, throwIO)
 
 -- | The type of exceptions thrown by IO actions defined in `Waterfall.IO`
-data IOException = 
-    IOException 
-      { ioExceptionCause :: IOExceptionCause
+data WaterfallIOException = 
+    WaterfallIOException 
+      { ioExceptionCause :: WaterfallIOExceptionCause
       , ioExceptionFilePath :: FilePath 
       }
     deriving Show
 
-instance Exception IOException
+instance Exception WaterfallIOException
 
 -- | Reason for an IO action to have failed
-data IOExceptionCause = 
+data WaterfallIOExceptionCause = 
     -- | Something went wrong when accessing a file,
     -- eg. a write to a file path that is unreachable,
     -- or a read to a file in the wrong format 
@@ -109,7 +109,7 @@ writeSolid :: Double -> FilePath -> Solid -> IO ()
 writeSolid res filepath = 
     case extensionToFormats filepath of
         Just (writer, _) -> writer res filepath
-        Nothing -> const $ throwIO (IOException UnrecognizedFormatError filepath)
+        Nothing -> const $ throwIO (WaterfallIOException UnrecognizedFormatError filepath)
 
 writeSTLAsciiOrBinary :: Bool -> Double -> FilePath -> Solid -> IO ()
 writeSTLAsciiOrBinary asciiMode linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
@@ -120,7 +120,7 @@ writeSTLAsciiOrBinary asciiMode linDeflection filepath (Solid ptr) = (`withAcqui
     liftIO $ do
             StlWriter.setAsciiMode writer asciiMode
             res <- StlWriter.write writer s filepath
-            unless res (throwIO (IOException FileError filepath))
+            unless res (throwIO (WaterfallIOException FileError filepath))
     return ()
 
 -- | Write a `Solid` to a (binary) STL file at a given path
@@ -151,9 +151,9 @@ writeSTEP filepath (Solid ptr) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     writer <- StepWriter.new
     resTransfer <- liftIO $ StepWriter.transfer writer s StepModelType.Asls True
-    unless (resTransfer == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ IOException BadGeometryError filepath)
+    unless (resTransfer == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException BadGeometryError filepath)
     resWrite <- liftIO $ StepWriter.write writer filepath
-    unless (resWrite == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ IOException FileError filepath)
+    unless (resWrite == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
 
 cafWriter :: (FilePath -> Ptr (Handle TDocStd.Document) -> Ptr TColStd.IndexedDataMapOfStringString -> Ptr Message.ProgressRange -> Acquire ()) -> Double -> FilePath -> Solid-> IO ()
 cafWriter write linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
@@ -223,7 +223,7 @@ writeOBJ =
 readSolid :: FilePath -> IO Solid
 readSolid filepath = 
     case extensionToFormats filepath of 
-        Nothing -> throwIO (IOException UnrecognizedFormatError filepath)
+        Nothing -> throwIO (WaterfallIOException UnrecognizedFormatError filepath)
         Just (_, reader) -> reader filepath
 
 remeshOrThrow :: FilePath -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
@@ -231,7 +231,7 @@ remeshOrThrow filepath shape = do
     remeshed <- Remesh.remesh shape
     case remeshed of 
         Just solid -> pure solid
-        Nothing -> liftIO . throwIO $ IOException BadGeometryError filepath
+        Nothing -> liftIO . throwIO $ WaterfallIOException BadGeometryError filepath
 
 -- | Read a `Solid` from an STL file at a given path
 readSTL :: FilePath -> IO Solid
@@ -239,7 +239,7 @@ readSTL filepath = fmap Solid . fromAcquire $ do
     shape <- TopoDS.Shape.new
     reader <- StlReader.new
     res <- liftIO $ StlReader.read reader shape filepath
-    unless res $ liftIO . throwIO $ IOException FileError filepath
+    unless res $ liftIO . throwIO $ WaterfallIOException FileError filepath
     remeshOrThrow filepath shape
 
 -- | Read a `Solid` from a STEP file at a given path
@@ -249,9 +249,9 @@ readSTEP filepath = fmap Solid . fromAcquire $ do
     status <- liftIO $ XSControl.Reader.readFile (upcast reader) filepath
     _ <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
     shape <- XSControl.Reader.oneShape (upcast reader)
-    unless (status == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ IOException FileError filepath)
+    unless (status == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
     shapeIsNull <- liftIO $ TopoDS.Shape.isNull shape
-    when shapeIsNull (liftIO . throwIO $ IOException BadGeometryError filepath)
+    when shapeIsNull (liftIO . throwIO $ WaterfallIOException BadGeometryError filepath)
     return shape
 
 cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO Solid
@@ -261,7 +261,7 @@ cafReader mkReader filepath = fmap Solid . fromAcquire $ do
     progress <- Message.ProgressRange.new
     _ <- liftIO $ RWMesh.CafReader.setDocument reader doc
     res <- liftIO $ RWMesh.CafReader.perform reader filepath progress
-    unless res (liftIO . throwIO $ IOException FileError filepath)
+    unless res (liftIO . throwIO $ WaterfallIOException FileError filepath)
     remeshOrThrow filepath =<< RWMesh.CafReader.singleShape reader
 
 -- | Read a `Solid` from a GLTF file at a given path
