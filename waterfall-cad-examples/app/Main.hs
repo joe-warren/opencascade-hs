@@ -10,7 +10,7 @@ import OffsetExample (offsetExample)
 import TextExample (textExample)
 import BoundingBoxExample (boundingBoxExample)
 import ReadSolidExpressionExample (readSolidExpressionExample)
-import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB)
+import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB, writeOBJ)
 import qualified Waterfall.Solids as Solids
 import qualified Options.Applicative as OA
 import Control.Applicative ((<|>), liftA2)
@@ -21,7 +21,8 @@ outputOption =
     let stlOption = (flip writeSTL) <$> OA.strOption (OA.long "stl" <> OA.metavar "Stl file to write results to")
         gltfOption = (flip writeGLTF) <$> OA.strOption (OA.long "gltf" <> OA.metavar "GLTF file to write results to")
         glbOption = (flip writeGLB) <$> OA.strOption (OA.long "glb" <> OA.metavar "GLB file to write results to")
-        meshOptionsNoResolution = stlOption <|> gltfOption <|> glbOption
+        objOption = (flip writeOBJ) <$> OA.strOption (OA.long "obj" <> OA.metavar "OBJ file to write results to")
+        meshOptionsNoResolution = stlOption <|> gltfOption <|> glbOption <|> objOption
         meshOptions = meshOptionsNoResolution <*>
             (OA.option OA.auto (OA.long "resolution" <> OA.help "linear tolerance for mesh file formats") <|> pure 0.001)
         stepOption = writeSTEP <$> OA.strOption (OA.long "step" <> OA.metavar "Stl file to write results to")

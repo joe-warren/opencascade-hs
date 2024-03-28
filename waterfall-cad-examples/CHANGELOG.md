@@ -8,6 +8,9 @@ and this project adheres to the
 
 ## Unreleased
 
+- Added an example demonstrating `Waterfall.IO.readSolid`
+- Added support for writing files as OBJ
+
 ## 0.2.1.0
 
 - Added support for writing files as GLTF/GLB
