@@ -61,8 +61,7 @@ import Data.Char (toLower)
 import System.FilePath (takeExtension)
 import Control.Exception (Exception, throwIO)
 
-data IOExceptionCause = FileError | BadGeometryError | UnrecognizedFormatError deriving (Show, Eq)
-
+-- | The type of exceptions thrown by IO actions defined in `Waterfall.IO`
 data IOException = 
     IOException 
       { ioExceptionCause :: IOExceptionCause
@@ -71,6 +70,20 @@ data IOException =
     deriving Show
 
 instance Exception IOException
+
+-- | Reason for an IO action to have failed
+data IOExceptionCause = 
+    -- | Something went wrong when accessing a file,
+    -- eg. a write to a file path that is unreachable,
+    -- or a read to a file in the wrong format 
+    FileError  
+    -- | The contents of a file could not be converted into a `Waterfall.Solid`
+    -- e.g the file did not contain a solid object
+    | BadGeometryError
+    -- | The `readSolid`/`writeSolid` functions could not infer the correct file format from a filepath
+    | UnrecognizedFormatError 
+    deriving (Show, Eq)
+
 
 extensionToFormats :: String -> Maybe (Double -> FilePath -> Solid -> IO(), FilePath -> IO Solid)
 extensionToFormats s =
