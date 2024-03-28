@@ -9,7 +9,8 @@ import SweepExample (sweepExample)
 import OffsetExample (offsetExample)
 import TextExample (textExample)
 import BoundingBoxExample (boundingBoxExample)
-import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB)
+import ReadSolidExpressionExample (readSolidExpressionExample)
+import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB, writeOBJ)
 import qualified Waterfall.Solids as Solids
 import qualified Options.Applicative as OA
 import Control.Applicative ((<|>), liftA2)
@@ -20,7 +21,8 @@ outputOption =
     let stlOption = (flip writeSTL) <$> OA.strOption (OA.long "stl" <> OA.metavar "Stl file to write results to")
         gltfOption = (flip writeGLTF) <$> OA.strOption (OA.long "gltf" <> OA.metavar "GLTF file to write results to")
         glbOption = (flip writeGLB) <$> OA.strOption (OA.long "glb" <> OA.metavar "GLB file to write results to")
-        meshOptionsNoResolution = stlOption <|> gltfOption <|> glbOption
+        objOption = (flip writeOBJ) <$> OA.strOption (OA.long "obj" <> OA.metavar "OBJ file to write results to")
+        meshOptionsNoResolution = stlOption <|> gltfOption <|> glbOption <|> objOption
         meshOptions = meshOptionsNoResolution <*>
             (OA.option OA.auto (OA.long "resolution" <> OA.help "linear tolerance for mesh file formats") <|> pure 0.001)
         stepOption = writeSTEP <$> OA.strOption (OA.long "step" <> OA.metavar "Stl file to write results to")
@@ -44,6 +46,13 @@ exampleOption =
           <|> ((* (pi/180)) <$> OA.option OA.auto (OA.long "pitchDegrees" <> OA.help "pitch angle in degrees"))
           <|> pure (20*pi/180)) 
       )) <|> 
+      ( let readSolidExprDescription = 
+                "load solid files, and combine them with boolean operatiors according to an expression.\n" <> 
+                "filenames in expressions should be wrapped in braces {}, Expressions support brackets (),\n" <>
+                "and the + * and - infix operators, meaning union, intersection and difference.\n" <>
+                "eg. \"({fileA.stl}*{fileB.stl})-{fileC.stl}\"" 
+         in readSolidExpressionExample <$> OA.strOption (OA.long "read-solid-expression" <> OA.help readSolidExprDescription)
+      ) <|>
       (OA.flag' textExample (OA.long "text" <> OA.help "render text") <*>
        (OA.strOption (OA.long "font" <> OA.help "font path")) <*>
        (OA.option OA.auto (OA.long "size" <> OA.help "font size") <|> pure 12.0) <*>
@@ -51,11 +60,10 @@ exampleOption =
        (OA.option OA.auto (OA.long "depth" <> OA.help "depth to extrude the text to") <|> pure 10.0) 
       )
 
-
 main :: IO ()
 main = join (OA.execParser opts)
     where
-        opts = OA.info ((liftA2 (=<<) outputOption  exampleOption) OA.<**> OA.helper) 
+        opts = OA.info ((liftA2 (=<<)  outputOption  exampleOption) OA.<**> OA.helper) 
             (OA.fullDesc
              <> OA.progDesc "generate and write a 3D model"
              <> OA.header "examples for Waterfall-CAD")

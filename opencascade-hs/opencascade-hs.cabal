@@ -40,6 +40,7 @@ extra-source-files:
     cpp/hs_BRepBuilderAPI_Transform.h
     cpp/hs_BRepFilletAPI_MakeFillet.h
     cpp/hs_BRepGProp.h
+    cpp/hs_BRepLib.h
     cpp/hs_BRepMesh_IncrementalMesh.h
     cpp/hs_BRepOffsetAPI_MakeOffsetShape.h
     cpp/hs_BRepOffsetAPI_MakePipe.h
@@ -142,6 +143,7 @@ library
       OpenCascade.BRepFilletAPI.MakeFillet
       OpenCascade.BRepFilletAPI.Types
       OpenCascade.BRepGProp
+      OpenCascade.BRepLib
       OpenCascade.BRepMesh
       OpenCascade.BRepMesh.IncrementalMesh
       OpenCascade.BRepMesh.Internal.Destructors
@@ -311,6 +313,7 @@ library
       cpp/hs_BRepBuilderAPI_Transform.cpp
       cpp/hs_BRepFilletAPI_MakeFillet.cpp
       cpp/hs_BRepGProp.cpp
+      cpp/hs_BRepLib.cpp
       cpp/hs_BRepMesh_IncrementalMesh.cpp
       cpp/hs_BRepOffsetAPI_MakeOffsetShape.cpp
       cpp/hs_BRepOffsetAPI_MakePipe.cpp

@@ -24,3 +24,17 @@ void hs_BRepBuilderAPI_Sewing_perform(BRepBuilderAPI_Sewing * builder){
 TopoDS_Shape * hs_BRepBuilderAPI_Sewing_sewedShape(BRepBuilderAPI_Sewing * builder){
     return new TopoDS_Shape(builder->SewedShape());
 }
+
+
+int hs_BRepBuilderAPI_Sewing_nbFreeEdges(BRepBuilderAPI_Sewing * builder){
+    return builder->NbFreeEdges();
+}
+
+
+int hs_BRepBuilderAPI_Sewing_nbContigousEdges(BRepBuilderAPI_Sewing * builder){
+    return builder->NbContigousEdges();
+}
+
+int hs_BRepBuilderAPI_Sewing_nbMultipleEdges(BRepBuilderAPI_Sewing * builder){
+    return builder->NbMultipleEdges();
+}

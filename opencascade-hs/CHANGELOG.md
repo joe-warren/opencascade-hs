@@ -30,6 +30,7 @@ and this project adheres to the
 - Added OpenCascade.BRepBuilderAPI.MakePolygon
 - Added OpenCascade.RWObj.CafWriter
 - Added OpenCascade.RWObj.CafReader
+- Added OpenCascade.BRepLib (orientClosedSolid)
 
 ## 0.2.1.0
 

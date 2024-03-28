@@ -35,6 +35,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeFace as BRepBuilderAPI.MakeFace
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as BRepBuilderAPI.MakeSolid
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as BRepBuilderAPI.MakeShape
 import qualified OpenCascade.BRep.Tool as BRep.Tool
+import qualified OpenCascade.BRepLib as BRepLib
 import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
 import qualified OpenCascade.BRepMesh.IncrementalMesh as BRepMesh.IncrementalMesh
 import qualified OpenCascade.Poly.Triangulation as Poly.Triangulation
@@ -43,11 +44,18 @@ import qualified OpenCascade.TopLoc.Location as TopLoc.Location
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad (when, unless, forM_, (<=<))
 
 
-remesh :: Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
+checkNonNull:: MonadIO m => Ptr TopoDS.Shape -> m (Maybe (Ptr TopoDS.Shape))
+checkNonNull shape = do
+    isNull <- liftIO . TopoDS.Shape.isNull $ shape
+    return $ if isNull 
+        then Nothing
+        else Just shape
+
+remesh :: Ptr TopoDS.Shape -> Acquire (Maybe (Ptr TopoDS.Shape))
 remesh s = do
 
     let linDeflection = 0.01
@@ -105,5 +113,15 @@ remesh s = do
     makeSolid <- BRepBuilderAPI.MakeSolid.new 
     shapeAsShell <- liftIO $ unsafeDowncast shape
     liftIO $ BRepBuilderAPI.MakeSolid.add makeSolid shapeAsShell
-    upcast <$> BRepBuilderAPI.MakeSolid.solid makeSolid
+    shapeAsSolid <- BRepBuilderAPI.MakeSolid.solid makeSolid
+    maybeNotNull <- checkNonNull (upcast shapeAsSolid)
+    case maybeNotNull of
+        Nothing -> return Nothing
+        Just _ -> do 
+            orientable <- liftIO $ BRepLib.orientClosedSolid (shapeAsSolid)
+            if orientable 
+                then return . Just . upcast $ shapeAsSolid
+                else return Nothing
+            
+
     
