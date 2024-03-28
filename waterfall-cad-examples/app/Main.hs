@@ -45,7 +45,12 @@ exampleOption =
           <|> ((* (pi/180)) <$> OA.option OA.auto (OA.long "pitchDegrees" <> OA.help "pitch angle in degrees"))
           <|> pure (20*pi/180)) 
       )) <|> 
-      (readSolidExpressionExample <$> OA.strOption (OA.long "read-expression" <> OA.help "load files, and combine them with boolean operatiors according to an expression")
+      ( let readSolidExprDescription = 
+                "load solid files, and combine them with boolean operatiors according to an expression.\n" <> 
+                "filenames in expressions should be wrapped in braces {}, Expressions support brackets (),\n" <>
+                "and the + * and - infix operators, meaning union, intersection and difference.\n" <>
+                "eg. \"({fileA.stl}*{fileB.stl})-{fileC.stl}\"" 
+         in readSolidExpressionExample <$> OA.strOption (OA.long "read-solid-expression" <> OA.help readSolidExprDescription)
       ) <|>
       (OA.flag' textExample (OA.long "text" <> OA.help "render text") <*>
        (OA.strOption (OA.long "font" <> OA.help "font path")) <*>
