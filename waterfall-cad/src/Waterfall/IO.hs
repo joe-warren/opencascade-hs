@@ -50,14 +50,10 @@ import qualified OpenCascade.XCAFDoc.DocumentTool as XCafDoc.DocumentTool
 import qualified OpenCascade.XCAFDoc.ShapeTool as XCafDoc.ShapeTool
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
-import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
-import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
-import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import OpenCascade.Handle (Handle)
-import OpenCascade.Inheritance (upcast, unsafeDowncast)
+import OpenCascade.Inheritance (upcast)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (void, unless, when)
-import System.IO (hPutStrLn, stderr)
+import Control.Monad (unless, when)
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
 import Data.Acquire ( Acquire, withAcquire )
 import Foreign.Ptr (Ptr)
