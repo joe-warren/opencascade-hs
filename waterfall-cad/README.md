@@ -1,5 +1,7 @@
 # Waterfall CAD 
 
+![Waterfall CAD](https://raw.githubusercontent.com/joe-warren/opencascade-hs/main/images/logo/waterfall-cad-logo-name.svg)
+
 Waterfall CAD is a declarative CAD/Solid Modeling library.
 
 This uses [opencascade-hs](https://hackage.haskell.org/package/opencascade-hs) as the kernel, but provides a "more functional" API over it.
