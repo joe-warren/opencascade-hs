@@ -16,6 +16,9 @@ and this project adheres to the
     - (Wavefront) OBJ support (`writeOBJ`)
     - Convenience methods `readSolid` and `writeSolid` inferring the format from the file extension
 
+### Changed
+
+- Make error handling for actions in `Waterfall.Text` throw a `WaterfallIOException` on failure
 ## 0.2.1.0
 
 ### Added

@@ -8,6 +8,7 @@ module Waterfall.TwoD.Text
 
 import qualified Waterfall.TwoD.Internal.Shape as Shape
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquire, unsafeFromAcquire)
+import Waterfall.IO (WaterfallIOException (..), WaterfallIOExceptionCause (FileError))
 import qualified OpenCascade.GP.Ax3 as GP.Ax3
 import qualified OpenCascade.Font.BRepFont as BRepFont
 import qualified OpenCascade.Font.BRepTextBuilder as BRepTextBuilder
@@ -16,6 +17,7 @@ import qualified OpenCascade.Graphic3D.HorizontalTextAlignment as HTA
 import Foreign.Ptr 
 import Control.Monad (unless)
 import OpenCascade.Font.FontAspect (FontAspect (..))
+import Control.Exception (throwIO)
 
 newtype Font = Font { rawFont :: Ptr BRepFont.BRepFont }
 
@@ -24,7 +26,7 @@ fontFromPath :: FilePath -> Double -> IO Font
 fontFromPath fontpath size = do
     bRepFont <- fromAcquire $ BRepFont.new
     fontOk <- BRepFont.initFromPathAndSize bRepFont fontpath size
-    unless (fontOk) $ error ("Unable to initialize font from filepath: " <> fontpath)
+    unless (fontOk) $ throwIO (WaterfallIOException FileError fontpath)
     return $ Font bRepFont
 
 -- | Create a font from a system font name, aspect, and size
@@ -32,7 +34,7 @@ fontFromSystem :: String -> FontAspect -> Double -> IO Font
 fontFromSystem name aspect size = do
     bRepFont <- fromAcquire $ BRepFont.new
     fontOk <- BRepFont.initFromNameAspectAndSize bRepFont name aspect size
-    unless (fontOk) $ error ("Unable to initialize system font with name: " <> name <> ", and aspect" <> show aspect)
+    unless (fontOk) $ throwIO $ WaterfallIOException FileError (name <> "::" <> show aspect)
     return $ Font bRepFont
 
 -- | Render text, using the font from the provided filepath, at a given size.
