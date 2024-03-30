@@ -42,6 +42,12 @@ export CPATH=$CPATH:/usr/local/Cellar/opencascade/7.*/include/opencascade/
 
 Because OpenCASCADE is licensed under the LGPL version 2.1, I'm also using that library for this project.
 
+## Get in Touch
+
+If you're having any problems using either of these libraries, please feel free to [open an issue](https://github.com/joe-warren/opencascade-hs/issues).
+
+If you've found the project useful, or interesting, or if you've built anything with it, I'd love to hear from you: there's a [Waterfall-CAD Discord server](https://discord.gg/aHfA4XKpyA).
+
 ## Examples 
 
 [![](images/csg.png)](waterfall-cad-examples/src/CsgExample.hs)
