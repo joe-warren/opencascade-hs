@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.2.2.0
+
 ### Fixed
 
 - Fix `OpenCascade.GProps.fromSystemLocation`

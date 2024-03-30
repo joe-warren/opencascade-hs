@@ -9,6 +9,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.2.2.0
+
 ### Added 
 - New functions in `Waterfall.IO`
     - Support for reading (as well as writing) all file formats
