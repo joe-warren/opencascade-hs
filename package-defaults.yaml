@@ -1,6 +1,6 @@
-_version: &version "0.2.2.0"
-_opencascade-hs-bound: &opencascade-hs-bound "opencascade-hs ^>=0.2.2.0"
-_waterfall-cad-bound: &waterfall-cad-bound "waterfall-cad ^>=0.2.2.0"
+_version: &version "0.2.2.1"
+_opencascade-hs-bound: &opencascade-hs-bound "opencascade-hs ^>=0.2.2.1"
+_waterfall-cad-bound: &waterfall-cad-bound "waterfall-cad ^>=0.2.2.1"
 _ghc_options: &ghc-options
 - -Wall
 - -Werror=compat
