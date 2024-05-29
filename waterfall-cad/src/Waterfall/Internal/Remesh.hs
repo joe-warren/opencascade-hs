@@ -55,6 +55,35 @@ checkNonNull shape = do
         then Nothing
         else Just shape
 
+makeSolidFromShell :: Ptr TopoDS.Shape -> Acquire (Maybe (Ptr TopoDS.Solid))
+makeSolidFromShell shape = do
+    t <- liftIO $ TopoDS.Shape.shapeType shape
+    case t of 
+        ShapeEnum.Shell -> do
+            makeSolid <- BRepBuilderAPI.MakeSolid.new 
+            shapeAsShell <- liftIO $ unsafeDowncast shape
+            liftIO $ BRepBuilderAPI.MakeSolid.add makeSolid shapeAsShell
+            shapeAsSolid <- BRepBuilderAPI.MakeSolid.solid makeSolid
+            return $ Just shapeAsSolid
+        ShapeEnum.Compound -> do
+            makeSolid <- BRepBuilderAPI.MakeSolid.new 
+            explorer <- TopExp.Explorer.new shape ShapeEnum.Shell
+            let actionForEachShell :: Acquire ()
+                actionForEachShell = do
+                    shellAsShape <- liftIO $ TopExp.Explorer.value explorer
+                    shapeAsShell <- liftIO $ unsafeDowncast shellAsShape
+                    liftIO $ BRepBuilderAPI.MakeSolid.add makeSolid shapeAsShell
+            let go = do
+                    isMore <- liftIO $ TopExp.Explorer.more explorer
+                    when isMore $ do 
+                        actionForEachShell
+                        liftIO $ TopExp.Explorer.next explorer
+                        go
+            go
+            shapeAsSolid <- BRepBuilderAPI.MakeSolid.solid makeSolid
+            return $ Just shapeAsSolid
+        _ -> pure Nothing
+
 remesh :: Ptr TopoDS.Shape -> Acquire (Maybe (Ptr TopoDS.Shape))
 remesh s = do
 
@@ -110,18 +139,18 @@ remesh s = do
     liftIO $ BRepBuilderAPI.Sewing.load sewing (upcast compound)
     liftIO . BRepBuilderAPI.Sewing.perform $ sewing
     shape <- BRepBuilderAPI.Sewing.sewedShape sewing
-    makeSolid <- BRepBuilderAPI.MakeSolid.new 
-    shapeAsShell <- liftIO $ unsafeDowncast shape
-    liftIO $ BRepBuilderAPI.MakeSolid.add makeSolid shapeAsShell
-    shapeAsSolid <- BRepBuilderAPI.MakeSolid.solid makeSolid
-    maybeNotNull <- checkNonNull (upcast shapeAsSolid)
-    case maybeNotNull of
-        Nothing -> return Nothing
-        Just _ -> do 
-            orientable <- liftIO $ BRepLib.orientClosedSolid (shapeAsSolid)
-            if orientable 
-                then return . Just . upcast $ shapeAsSolid
-                else return Nothing
+    maybeShapeAsSolid <- makeSolidFromShell shape
+    case maybeShapeAsSolid of
+        Nothing -> pure Nothing
+        Just shapeAsSolid -> do
+            maybeNotNull <- checkNonNull (upcast shapeAsSolid)
+            case maybeNotNull of
+                Nothing -> return Nothing
+                Just _ -> do 
+                    orientable <- liftIO $ BRepLib.orientClosedSolid (shapeAsSolid)
+                    if orientable 
+                        then return . Just . upcast $ shapeAsSolid
+                        else return Nothing
             
 
     

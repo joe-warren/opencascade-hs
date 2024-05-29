@@ -9,6 +9,10 @@ and this project adheres to the
 
 ## Unreleased
 
+### Fixed
+
+- Importing files that contain multiple separate solids should no longer error
+
 ## 0.2.2.0
 
 ### Added 
