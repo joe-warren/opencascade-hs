@@ -32,8 +32,8 @@ extra-libraries:
 - TKBO 
 - TKPrim 
 - TKTopAlgo 
-- TKSTL
-- TKSTEP
+- TKDESTL
+- TKDESTEP
 - TKV3d 
 - TKMesh
 - TKRWMesh
