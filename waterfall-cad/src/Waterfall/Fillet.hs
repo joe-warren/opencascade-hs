@@ -10,7 +10,7 @@ import qualified OpenCascade.BRepFilletAPI.MakeFillet as MakeFillet
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.TopExp.Explorer as Explorer 
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
-import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import qualified OpenCascade.TopTools.ShapeMapHasher as TopTools.ShapeMapHasher
 import Foreign.Ptr (Ptr)
 import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
@@ -24,7 +24,7 @@ addEdgesToMakeFillet radiusFn builder explorer = go [] 0
             isMore <- Explorer.more explorer
             when isMore $ do
                 v <- unsafeDowncast =<< Explorer.value explorer
-                hash <- TopoDS.Shape.hashCode (upcast v) (2^(31 :: Int))
+                hash <- TopTools.ShapeMapHasher.hash (upcast v)
                 if hash `elem` visited
                     then do
                         Explorer.next explorer
