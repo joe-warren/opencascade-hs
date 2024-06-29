@@ -179,7 +179,3 @@ void hs_TopoDS_Shape_EmptyCopy(TopoDS_Shape * shape){
 TopoDS_Shape * hs_TopoDS_Shape_EmptyCopied(TopoDS_Shape * shape){
     return new TopoDS_Shape(shape->EmptyCopied());
 }
-
-int hs_TopoDS_Shape_hashCode(TopoDS_Shape * shape, int maxN){
-    return shape->HashCode(maxN);
-}

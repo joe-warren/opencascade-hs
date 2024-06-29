@@ -95,8 +95,6 @@ bool hs_TopoDS_Shape_IsNotEqual(TopoDS_Shape * a, TopoDS_Shape* b);
 
 void hs_TopoDS_Shape_EmptyCopy(TopoDS_Shape * shape);
 
-int hs_TopoDS_Shape_hashCode(TopoDS_Shape * shape, int maxN);
-
 TopoDS_Shape * hs_TopoDS_Shape_EmptyCopied(TopoDS_Shape * shape);
 
 #ifdef __cplusplus

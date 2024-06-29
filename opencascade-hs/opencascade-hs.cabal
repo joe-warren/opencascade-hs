@@ -103,6 +103,7 @@ extra-source-files:
     cpp/hs_TopoDS_Solid.h
     cpp/hs_TopoDS_Vertex.h
     cpp/hs_TopoDS_Wire.h
+    cpp/hs_TopTools_ShapeMapHasher.h
     cpp/hs_types.h
     cpp/hs_XCAFDoc_DocumentTool.h
     cpp/hs_XCAFDoc_ShapeTool.h
@@ -275,6 +276,7 @@ library
       OpenCascade.TopoDS.Vertex
       OpenCascade.TopoDS.Wire
       OpenCascade.TopTools
+      OpenCascade.TopTools.ShapeMapHasher
       OpenCascade.TopTools.Types
       OpenCascade.XCAFDoc.DocumentTool
       OpenCascade.XCAFDoc.Internal.Destructors
@@ -376,6 +378,7 @@ library
       cpp/hs_TopoDS_Solid.cpp
       cpp/hs_TopoDS_Vertex.cpp
       cpp/hs_TopoDS_Wire.cpp
+      cpp/hs_TopTools_ShapeMapHasher.cpp
       cpp/hs_XCAFDoc_DocumentTool.cpp
       cpp/hs_XCAFDoc_ShapeTool.cpp
       cpp/hs_XSControl_Reader.cpp
