@@ -14,7 +14,9 @@ This uses [opencascade-hs](https://hackage.haskell.org/package/opencascade-hs) a
 
 ## Installing Dependencies
 
-I've only been testing this on Debian and MacOS.
+OpenCASCADE-hs depends on Open Cascade version `7.8.x`. In order to run with an earlier version of Open Cascade, you'll need to use a version prior to `0.3.0.0`.
+
+OpenCASCADE-hs is only tested on Debian and MacOS. 
 
 ### Linux
 
