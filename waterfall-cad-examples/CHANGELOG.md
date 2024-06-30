@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.3.0.0
+
 ### Changed
 
 - The project now depends on (and supports) OpenCascade `7.8.0` or later
