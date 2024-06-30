@@ -26,7 +26,6 @@ extra-libraries:
 - TKMath 
 - TKernel 
 - TKBRep 
-- TKGeomBase 
 - TKOffset 
 - TKFillet 
 - TKBO 

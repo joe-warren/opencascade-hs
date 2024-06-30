@@ -391,7 +391,6 @@ library
       TKMath
       TKernel
       TKBRep
-      TKGeomBase
       TKOffset
       TKFillet
       TKBO
