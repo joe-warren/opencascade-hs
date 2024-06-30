@@ -21,7 +21,7 @@ I've only been testing this on Debian and MacOS.
 As this library depends on OpenCASCADE, I've been developing on Debian with the following packages installed:
 
 ```
-> sudo apt-get install libocct-data-exchange-7.6 libocct-data-exchange-dev libocct-draw-7.6 libocct-draw-dev libocct-foundation-7.6 libocct-foundation-dev libocct-modeling-algorithms-7.6 libocct-modeling-algorithms-dev libocct-modeling-data-7.6 libocct-modeling-data-dev libocct-ocaf-7.6 libocct-ocaf-dev libocct-visualization-7.6 libocct-visualization-dev occt-misc
+> sudo apt-get install libocct-data-exchange-7.8 libocct-data-exchange-dev libocct-draw-7.8 libocct-draw-dev libocct-foundation-7.8 libocct-foundation-dev libocct-modeling-algorithms-7.8 libocct-modeling-algorithms-dev libocct-modeling-data-7.8 libocct-modeling-data-dev libocct-ocaf-7.8 libocct-ocaf-dev libocct-visualization-7.8 libocct-visualization-dev occt-misc
 ```
 
 I think there should be _some_ flexibility as to the exact version of libocct required, and which occt packages are necessary.

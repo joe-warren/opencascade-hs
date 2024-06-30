@@ -41,7 +41,6 @@ module OpenCascade.TopoDS.Shape
 , isNotEqual
 , emptyCopy
 , emptyCopied
-, hashCode
 ) where
 
 import Prelude hiding (reverse)
@@ -333,9 +332,3 @@ foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_EmptyCopied" rawEm
 
 emptyCopied :: Ptr Shape -> Acquire (Ptr Shape)
 emptyCopied s = mkAcquire (rawEmptyCopied s) deleteShape
-
-
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_hashCode" rawHashCode :: Ptr Shape -> CInt -> IO CInt
-
-hashCode :: Ptr Shape -> Int -> IO Int
-hashCode shape upperBound = fromIntegral <$> rawHashCode shape (fromIntegral upperBound) 

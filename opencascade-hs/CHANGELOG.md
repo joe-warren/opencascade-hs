@@ -8,6 +8,18 @@ and this project adheres to the
 
 ## Unreleased
 
+### Changed
+
+- The project now depends on (and supports) OpenCascade `7.8.0` or later
+
+### Added 
+
+- added `OpenCascade.TopTools.ShapeMapHasher` (this replaces `hashCode` in `OpenCascade.TopoDS.Shape`)
+
+### Removed
+
+- removed `OpenCascade.TopoDS.Shape.hashCode` 
+
 ## 0.2.2.1
 
 ## 0.2.2.0
