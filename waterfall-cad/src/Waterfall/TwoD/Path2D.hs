@@ -23,6 +23,7 @@ module Waterfall.TwoD.Path2D
 , bezierRelative2D
 , pathFrom2D
 , pathFromTo2D
+, pathEndpoints2D
 ) where 
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..))
@@ -140,3 +141,7 @@ pathFrom2D = pathFrom
 -- | `pathFromTo`, with the type fixed to `Path2D`
 pathFromTo2D :: [V2 Double -> (V2 Double, Path2D)] -> V2 Double -> (V2 Double, Path2D)
 pathFromTo2D = pathFromTo
+
+-- | `pathEndpoints`, with the type fixed to `Path2D` 
+pathEndpoints2D :: Path2D -> (V2 Double, V2 Double)
+pathEndpoints2D = pathEndpoints

@@ -21,6 +21,7 @@ module Waterfall.Path.Common
 , bezierRelative
 , pathFrom
 , pathFromTo
+, pathEndpoints
 ) where
 import Data.Acquire
 import qualified OpenCascade.TopoDS as TopoDS
@@ -28,7 +29,7 @@ import qualified OpenCascade.GP as GP
 import Foreign.Ptr
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
-import Waterfall.Internal.Finalizers (unsafeFromAcquire)
+import Waterfall.Internal.Finalizers (unsafeFromAcquire, toAcquire)
 import Control.Arrow (second)
 import Data.Foldable (foldl', traverse_)
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
@@ -39,8 +40,12 @@ import OpenCascade.Inheritance (upcast)
 import qualified OpenCascade.NCollection.Array1 as NCollection.Array1
 import qualified OpenCascade.Geom.BezierCurve as BezierCurve
 import Data.Proxy (Proxy (..))
-import Linear (V3 (..), V2 (..))
+import Linear (V3 (..), V2 (..), _xy)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
+import Waterfall.Internal.FromOpenCascade (gpPntToV3)
+import System.IO.Unsafe (unsafePerformIO)
+import Control.Lens ((^.))
+import Waterfall.Internal.Edges (wireEndpoints)
 
 -- | Class used to abstract over constructing `Path` and `Path2D` 
 -- 
@@ -48,7 +53,9 @@ import qualified OpenCascade.GP.Pnt as GP.Pnt
 -- and for @AnyPath (V2 Double) Path2D@
 class AnyPath point path | path -> point where
     fromWire :: Acquire (Ptr TopoDS.Wire) -> path
+    toWire :: path -> Acquire (Ptr TopoDS.Wire)
     pointToGPPnt :: Proxy path -> point -> Acquire (Ptr GP.Pnt)
+    v3ToPoint :: Proxy path -> V3 Double -> point 
 
 edgesToPath :: (AnyPath point path) => Acquire [Ptr TopoDS.Edge] -> path
 edgesToPath es = fromWire $ do
@@ -161,14 +168,29 @@ pathFromTo commands start =
         (end, allPaths) = foldl' go (start, []) commands
      in (end, mconcat allPaths)
 
+-- | Returns the start and end of a `Path`
+pathEndpoints :: forall point path. (AnyPath point path) => path -> (point, point)
+pathEndpoints path = unsafeFromAcquire $ do
+    wire <- toWire path
+    (s, e) <- liftIO $ wireEndpoints wire
+    return (v3ToPoint (Proxy :: Proxy path) s, v3ToPoint (Proxy :: Proxy path) e)
+
 instance AnyPath (V3 Double) Path where
     fromWire :: Acquire (Ptr TopoDS.Wire) -> Path
     fromWire = Path . unsafeFromAcquire
     pointToGPPnt :: Proxy Path -> V3 Double -> Acquire (Ptr GP.Pnt)
     pointToGPPnt _ (V3 x y z) = GP.Pnt.new x y z 
+    toWire :: Path -> Acquire (Ptr TopoDS.Wire)
+    toWire (Path ptr) = toAcquire ptr
+    v3ToPoint :: Proxy Path -> V3 Double -> V3 Double
+    v3ToPoint _ = id
 
 instance AnyPath (V2 Double) Path2D where
     fromWire :: Acquire (Ptr TopoDS.Wire) -> Path2D
     fromWire = Path2D . unsafeFromAcquire
     pointToGPPnt :: Proxy Path2D -> V2 Double -> Acquire (Ptr GP.Pnt)
     pointToGPPnt _ (V2 x y) = GP.Pnt.new x y 0
+    toWire :: Path2D -> Acquire (Ptr TopoDS.Wire)
+    toWire (Path2D ptr) = toAcquire ptr
+    v3ToPoint :: Proxy Path2D -> V3 Double -> V2 Double
+    v3ToPoint _  = (^. _xy)

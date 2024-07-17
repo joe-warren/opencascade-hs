@@ -17,6 +17,7 @@ module Waterfall.Path
 , bezierRelative3D
 , pathFrom3D
 , pathFromTo3D
+, pathEndpoints3D
 ) where
 
 import Waterfall.Internal.Path (Path(..))
@@ -78,5 +79,8 @@ pathFrom3D = pathFrom
 pathFromTo3D :: [V3 Double -> (V3 Double, Path)] -> V3 Double -> (V3 Double, Path)
 pathFromTo3D = pathFromTo
 
+-- | `pathEndpoints`, with the type fixed to `Path` 
+pathEndpoints3D :: Path -> (V3 Double, V3 Double)
+pathEndpoints3D = pathEndpoints
 
 

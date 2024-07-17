@@ -9,6 +9,10 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added
+
+- Add `pathEndpoints`, `pathEndpoints2D` and `pathEndpoints3D`
+
 ## 0.3.0.0
 
 ### Changed
