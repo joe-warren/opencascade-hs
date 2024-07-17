@@ -42,8 +42,6 @@ import qualified OpenCascade.Geom.BezierCurve as BezierCurve
 import Data.Proxy (Proxy (..))
 import Linear (V3 (..), V2 (..), _xy)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
-import Waterfall.Internal.FromOpenCascade (gpPntToV3)
-import System.IO.Unsafe (unsafePerformIO)
 import Control.Lens ((^.))
 import Waterfall.Internal.Edges (wireEndpoints)
 
