@@ -40,7 +40,9 @@ library
       Waterfall.Internal.Path
       Waterfall.Internal.Remesh
       Waterfall.Internal.Solid
+      Waterfall.Internal.ToOpenCascade
       Waterfall.IO
+      Waterfall.Loft
       Waterfall.Offset
       Waterfall.Path
       Waterfall.Path.Common

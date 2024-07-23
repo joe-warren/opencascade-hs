@@ -35,6 +35,7 @@ extra-source-files:
     cpp/hs_BRepBuilderAPI_MakePolygon.h
     cpp/hs_BRepBuilderAPI_MakeShape.h
     cpp/hs_BRepBuilderAPI_MakeSolid.h
+    cpp/hs_BRepBuilderAPI_MakeVertex.h
     cpp/hs_BRepBuilderAPI_MakeWire.h
     cpp/hs_BRepBuilderAPI_Sewing.h
     cpp/hs_BRepBuilderAPI_Transform.h
@@ -44,6 +45,7 @@ extra-source-files:
     cpp/hs_BRepMesh_IncrementalMesh.h
     cpp/hs_BRepOffsetAPI_MakeOffsetShape.h
     cpp/hs_BRepOffsetAPI_MakePipe.h
+    cpp/hs_BRepOffsetAPI_ThruSections.h
     cpp/hs_BRepPrimAPI_MakeBox.h
     cpp/hs_BRepPrimAPI_MakeCone.h
     cpp/hs_BRepPrimAPI_MakeCylinder.h
@@ -134,6 +136,7 @@ library
       OpenCascade.BRepBuilderAPI.MakePolygon
       OpenCascade.BRepBuilderAPI.MakeShape
       OpenCascade.BRepBuilderAPI.MakeSolid
+      OpenCascade.BRepBuilderAPI.MakeVertex
       OpenCascade.BRepBuilderAPI.MakeWire
       OpenCascade.BRepBuilderAPI.Sewing
       OpenCascade.BRepBuilderAPI.Transform
@@ -154,6 +157,7 @@ library
       OpenCascade.BRepOffsetAPI.Internal.Destructors
       OpenCascade.BRepOffsetAPI.MakeOffsetShape
       OpenCascade.BRepOffsetAPI.MakePipe
+      OpenCascade.BRepOffsetAPI.ThruSections
       OpenCascade.BRepOffsetAPI.Types
       OpenCascade.BRepPrimAPI
       OpenCascade.BRepPrimAPI.Internal.Destructors
@@ -310,6 +314,7 @@ library
       cpp/hs_BRepBuilderAPI_MakePolygon.cpp
       cpp/hs_BRepBuilderAPI_MakeShape.cpp
       cpp/hs_BRepBuilderAPI_MakeSolid.cpp
+      cpp/hs_BRepBuilderAPI_MakeVertex.cpp
       cpp/hs_BRepBuilderAPI_MakeWire.cpp
       cpp/hs_BRepBuilderAPI_Sewing.cpp
       cpp/hs_BRepBuilderAPI_Transform.cpp
@@ -319,6 +324,7 @@ library
       cpp/hs_BRepMesh_IncrementalMesh.cpp
       cpp/hs_BRepOffsetAPI_MakeOffsetShape.cpp
       cpp/hs_BRepOffsetAPI_MakePipe.cpp
+      cpp/hs_BRepOffsetAPI_ThruSections.cpp
       cpp/hs_BRepPrimAPI_MakeBox.cpp
       cpp/hs_BRepPrimAPI_MakeCone.cpp
       cpp/hs_BRepPrimAPI_MakeCylinder.cpp

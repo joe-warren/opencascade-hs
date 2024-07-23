@@ -32,6 +32,7 @@ typedef void gp_Trsf2d;
 typedef void gp_XYZ;
 typedef void BRep_Builder;
 typedef void BRepBuilderAPI_Transform;
+typedef void BRepBuilderAPI_MakeVertex;
 typedef void BRepBuilderAPI_MakeWire;
 typedef void BRepBuilderAPI_MakeFace;
 typedef void BRepBuilderAPI_MakeSolid;
