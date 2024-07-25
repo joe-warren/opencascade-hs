@@ -10,7 +10,6 @@ module Waterfall.TwoD.Path2D
 , arcTo
 , arcRelative
 , repeatLooping
-, closeLoop
 -- $ reexports
 , line2D
 , lineTo2D
@@ -24,6 +23,7 @@ module Waterfall.TwoD.Path2D
 , pathFrom2D
 , pathFromTo2D
 , pathEndpoints2D
+, closeLoop2D
 ) where 
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..))
@@ -87,12 +87,6 @@ repeatLooping p = Path2D . unsafeFromAcquire $ do
     let times :: Integer = abs . round $ pi * 2 / a 
     toAcquire . rawPath . mconcat $ [rotate2D (negate (fromIntegral n) * a) p | n <- [0..times]]
 
--- | Given a path, return a new path with the endpoints joined by a straight line.
-closeLoop :: Path2D -> Path2D
-closeLoop p = Path2D . unsafeFromAcquire $ do
-    path <- toAcquire . rawPath $ p
-    (s, e) <- liftIO . Internal.Edges.wireEndpoints $ path
-    toAcquire .rawPath . mconcat $ [p, line (e ^. _xy)  (s ^. _xy)]
 
 -- $reexports
 --
@@ -145,3 +139,7 @@ pathFromTo2D = pathFromTo
 -- | `pathEndpoints`, with the type fixed to `Path2D` 
 pathEndpoints2D :: Path2D -> (V2 Double, V2 Double)
 pathEndpoints2D = pathEndpoints
+
+-- | `closeLoop` with the type fixed to `Path2D`
+closeLoop2D :: Path2D -> Path2D
+closeLoop2D = closeLoop 

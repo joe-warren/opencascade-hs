@@ -22,9 +22,12 @@ module Waterfall.Path.Common
 , pathFrom
 , pathFromTo
 , pathEndpoints
+, closeLoop
+, reversePath
 ) where
 import Data.Acquire
 import qualified OpenCascade.TopoDS as TopoDS
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.GP as GP
 import Foreign.Ptr
 import Waterfall.Internal.Path (Path (..))
@@ -36,14 +39,15 @@ import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import qualified OpenCascade.GC.MakeArcOfCircle as MakeArcOfCircle
-import OpenCascade.Inheritance (upcast)
+import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import qualified OpenCascade.NCollection.Array1 as NCollection.Array1
 import qualified OpenCascade.Geom.BezierCurve as BezierCurve
 import Data.Proxy (Proxy (..))
 import Linear (V3 (..), V2 (..), _xy)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import Control.Lens ((^.))
-import Waterfall.Internal.Edges (wireEndpoints)
+import Waterfall.Internal.Edges (wireEndpoints, reverseWire)
+import Control.Monad ((<=<))
 
 -- | Class used to abstract over constructing `Path` and `Path2D` 
 -- 
@@ -172,6 +176,22 @@ pathEndpoints path = unsafeFromAcquire $ do
     wire <- toWire path
     (s, e) <- liftIO $ wireEndpoints wire
     return (v3ToPoint (Proxy :: Proxy path) s, v3ToPoint (Proxy :: Proxy path) e)
+
+
+-- | Given a path, return a new path with the endpoints joined by a straight line.
+closeLoop :: (AnyPath point path, Monoid path, Eq point) => path -> path
+closeLoop p = 
+    let (s, e) = pathEndpoints p
+     in if s == e 
+            then p
+            else p <> line e s
+
+reversePath :: (AnyPath point path) => path -> path
+reversePath = 
+    fromWire . (
+            reverseWire
+            <=< toWire
+        )
 
 instance AnyPath (V3 Double) Path where
     fromWire :: Acquire (Ptr TopoDS.Wire) -> Path

@@ -85,6 +85,7 @@ extra-source-files:
     cpp/hs_RWMesh_CafReader.h
     cpp/hs_RWObj_CafReader.h
     cpp/hs_RWObj_CafWriter.h
+    cpp/hs_ShapeExtend_WireData.h
     cpp/hs_ShapeFix_Solid.h
     cpp/hs_STEPControl_Reader.h
     cpp/hs_STEPControl_Writer.h
@@ -232,7 +233,10 @@ library
       OpenCascade.RWObj.CafWriter
       OpenCascade.RWObj.Internal.Destructors
       OpenCascade.RWObj.Types
+      OpenCascade.ShapeExtend.Internal.Destructors
       OpenCascade.ShapeExtend.Status
+      OpenCascade.ShapeExtend.Types
+      OpenCascade.ShapeExtend.WireData
       OpenCascade.ShapeFix.Internal.Destructors
       OpenCascade.ShapeFix.Solid
       OpenCascade.ShapeFix.Types
@@ -364,6 +368,7 @@ library
       cpp/hs_RWMesh_CafReader.cpp
       cpp/hs_RWObj_CafReader.cpp
       cpp/hs_RWObj_CafWriter.cpp
+      cpp/hs_ShapeExtend_WireData.cpp
       cpp/hs_ShapeFix_Solid.cpp
       cpp/hs_STEPControl_Reader.cpp
       cpp/hs_STEPControl_Writer.cpp
