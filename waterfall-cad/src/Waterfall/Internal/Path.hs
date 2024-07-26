@@ -12,6 +12,8 @@ import Control.Monad ((<=<))
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
+import qualified OpenCascade.BRepTools.WireExplorer as WireExplorer
+import Control.Monad (when)
 import Foreign.Ptr
 import Data.Semigroup (sconcat)
 
@@ -23,7 +25,17 @@ newtype Path = Path { rawPath :: Ptr TopoDS.Wire }
 joinPaths :: [Path] -> Path
 joinPaths paths = Path . unsafeFromAcquire $ do
     builder <- MakeWire.new
-    traverse_ (liftIO . MakeWire.addWire builder <=< toAcquire . rawPath) paths
+    let addPath p = do 
+            wire <- toAcquire . rawPath $ p 
+            explorer <- WireExplorer.fromWire wire
+            let runToEnd = do
+                    edge <- liftIO $ WireExplorer.current explorer
+                    liftIO $ MakeWire.addEdge builder edge
+                    liftIO $ WireExplorer.next explorer
+                    more <- liftIO $ WireExplorer.more explorer
+                    when more runToEnd
+            runToEnd
+    traverse_ addPath paths
     MakeWire.wire builder
 
 -- | The Semigroup for `Path` attempts to join two paths that share a common endpoint.

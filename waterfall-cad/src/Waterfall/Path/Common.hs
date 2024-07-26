@@ -187,11 +187,7 @@ closeLoop p =
             else p <> line e s
 
 reversePath :: (AnyPath point path) => path -> path
-reversePath = 
-    fromWire . (
-            reverseWire
-            <=< toWire
-        )
+reversePath = fromWire . (reverseWire <=< toWire)
 
 instance AnyPath (V3 Double) Path where
     fromWire :: Acquire (Ptr TopoDS.Wire) -> Path

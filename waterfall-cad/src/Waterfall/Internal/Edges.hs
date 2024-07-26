@@ -81,7 +81,9 @@ reverseWire wire = do
             when more runToEnd
             liftIO $ MakeWire.addEdge makeWire edge'
     runToEnd
-    MakeWire.wire makeWire
+    wire' <- MakeWire.wire makeWire
+    liftIO $ TopoDS.Shape.reverse (upcast wire')
+    return wire'
 
 {--
 reverseWire :: Ptr TopoDS.Wire -> Acquire (Ptr TopoDS.Wire) 
