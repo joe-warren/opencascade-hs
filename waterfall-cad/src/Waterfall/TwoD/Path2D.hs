@@ -24,6 +24,7 @@ module Waterfall.TwoD.Path2D
 , pathFromTo2D
 , pathEndpoints2D
 , closeLoop2D
+, reversePath2D
 ) where 
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..))
@@ -143,3 +144,7 @@ pathEndpoints2D = pathEndpoints
 -- | `closeLoop` with the type fixed to `Path2D`
 closeLoop2D :: Path2D -> Path2D
 closeLoop2D = closeLoop 
+
+-- | `reversePath` with the type fixed to `Path2D`
+reversePath2D :: Path2D -> Path2D
+reversePath2D = reversePath
