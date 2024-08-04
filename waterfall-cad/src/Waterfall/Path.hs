@@ -19,7 +19,7 @@ module Waterfall.Path
 , pathFromTo3D
 , pathEndpoints3D
 , closeLoop3D
-, reversePath3d
+, reversePath3D
 ) where
 
 import Waterfall.Internal.Path (Path(..))
