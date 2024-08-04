@@ -1,8 +1,3 @@
-{-|
-Module: Waterfall.Loft
-
--}
-
 module LoftExample 
 ( loftExample
 ) where
