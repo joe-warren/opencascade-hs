@@ -9,6 +9,11 @@ and this project adheres to the
 
 ## Unreleased
 
+- Add `Waterfall.Loft` containing `loft` and `pointedLoft`
+- Change the `Monoid` instance for `Path` and `Path2D`, so that in the expression `a <> b` a line is added between the end of `a` and the start of `b`, unless these points are coincident.
+- Reverse the order in which Path.pathFrom adds path segments; required by the new Monoid behaviour.
+- Add `Waterfall.Path.Common.reversePath`, reversing the direction of a `Path` or `Path2D`, along with monomorphised versions `reversePath3D` and `reversePath2D`
+
 ## 0.3.0.1
 
 ### Added

@@ -8,6 +8,14 @@ and this project adheres to the
 
 ## Unreleased
 
+- Add `OpenCascade.BRepBuilderAPI.MakeVertex`
+- Add `OpenCascade.BRepBuilderAPI.MakeWire.vertex`
+- Add `OpenCascade.BRepOffsetAPI.ThruSections`
+- Add `OpenCascade.BRep.Tool.pnt`
+- Add `OpenCascade.Geom.Curve` methods `reversedParameter` and `reversed`
+- Add `OpenCascade.ShapeExtend.WireData`
+- Add `Show` instance to `OpenCascade.BRepBuilderAPI.WireError`
+
 ## 0.3.0.1
 
 ## 0.3.0.0
