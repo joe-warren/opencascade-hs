@@ -27,7 +27,6 @@ module Waterfall.Path.Common
 ) where
 import Data.Acquire
 import qualified OpenCascade.TopoDS as TopoDS
-import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.GP as GP
 import Foreign.Ptr
 import Waterfall.Internal.Path (Path (..))
@@ -39,7 +38,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import qualified OpenCascade.GC.MakeArcOfCircle as MakeArcOfCircle
-import OpenCascade.Inheritance (upcast, unsafeDowncast)
+import OpenCascade.Inheritance (upcast)
 import qualified OpenCascade.NCollection.Array1 as NCollection.Array1
 import qualified OpenCascade.Geom.BezierCurve as BezierCurve
 import Data.Proxy (Proxy (..))
@@ -168,7 +167,7 @@ pathFromTo :: (Monoid path) => [point -> (point, path)] -> point -> (point, path
 pathFromTo commands start = 
     let go (pos, paths) cmd = second (:paths) (cmd pos)
         (end, allPaths) = foldl' go (start, []) commands
-     in (end, mconcat allPaths)
+     in (end, mconcat . reverse $ allPaths)
 
 -- | Returns the start and end of a `Path`
 pathEndpoints :: forall point path. (AnyPath point path) => path -> (point, point)

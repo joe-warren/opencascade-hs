@@ -6,6 +6,7 @@ module OpenCascade.BRepBuilderAPI.MakeWire
 , addWire
 , addListOfShape
 , wire
+, vertex
 , isDone
 , error
 ) where
@@ -50,6 +51,13 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeW
 
 wire :: Ptr MakeWire -> Acquire (Ptr TopoDS.Wire)
 wire builder = mkAcquire (rawWire builder) (TopoDS.Destructors.deleteShape . upcast)
+
+-- vertex
+--
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_Vertex" rawVertex :: Ptr MakeWire -> IO (Ptr TopoDS.Vertex)
+
+vertex :: Ptr MakeWire -> Acquire (Ptr TopoDS.Vertex)
+vertex builder = mkAcquire (rawVertex builder) (TopoDS.Destructors.deleteShape . upcast)
 
 -- isDone
 --

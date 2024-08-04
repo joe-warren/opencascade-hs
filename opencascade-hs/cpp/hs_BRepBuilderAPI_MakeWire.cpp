@@ -26,6 +26,10 @@ TopoDS_Wire * hs_BRepBuilderAPI_MakeWire_Wire(BRepBuilderAPI_MakeWire* builder){
     return new TopoDS_Wire(builder->Wire());
 }
 
+TopoDS_Vertex * hs_BRepBuilderAPI_MakeWire_Vertex(BRepBuilderAPI_MakeWire* builder){
+    return new TopoDS_Vertex(builder->Vertex());
+}
+
 bool hs_BRepBuilderAPI_MakeWire_IsDone(BRepBuilderAPI_MakeWire* builder){
     return builder->IsDone();
 }

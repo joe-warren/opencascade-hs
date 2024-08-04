@@ -1,28 +1,28 @@
 module Waterfall.Internal.Edges
 ( edgeEndpoints
 , wireEndpoints
+, allWireEndpoints
 , wireTangent
 , reverseEdge
 , reverseWire
+, intersperseLines
+, joinWires
 ) where
 
 import qualified OpenCascade.TopoDS as TopoDS
-import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BRep.Tool as BRep.Tool
 import qualified OpenCascade.Geom.Curve as Geom.Curve
 import qualified OpenCascade.BRepTools.WireExplorer as WireExplorer
-import qualified OpenCascade.ShapeExtend.WireData as WireData
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import Waterfall.Internal.FromOpenCascade (gpPntToV3, gpVecToV3)
 import Data.Acquire
 import Control.Monad.IO.Class (liftIO)
-import Linear (V3 (..))
+import Linear (V3 (..), distance)
 import Foreign.Ptr
-import OpenCascade.Inheritance (unsafeDowncast, upcast)
-import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Control.Monad (when)
-
+import Waterfall.Internal.ToOpenCascade (v3ToPnt)
+import Data.Foldable (traverse_)
 
 edgeEndpoints :: Ptr TopoDS.Edge -> IO (V3 Double, V3 Double)
 edgeEndpoints edge = (`with` pure) $ do
@@ -32,6 +32,18 @@ edgeEndpoints edge = (`with` pure) $ do
     s <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve p1
     e <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve p2
     return (s, e)
+
+allWireEndpoints :: Ptr TopoDS.Wire -> IO [(V3 Double, V3 Double)]
+allWireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
+    let runToEnd = do
+            edge <- WireExplorer.current explorer
+            points <- edgeEndpoints edge
+            WireExplorer.next explorer
+            more <- WireExplorer.more explorer
+            if more 
+                then (points:) <$> runToEnd
+                else pure [points]
+    runToEnd
 
 wireEndpoints :: Ptr TopoDS.Wire -> IO (V3 Double, V3 Double)
 wireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
@@ -81,18 +93,40 @@ reverseWire wire = do
             when more runToEnd
             liftIO $ MakeWire.addEdge makeWire edge'
     runToEnd
-    wire' <- MakeWire.wire makeWire
-    liftIO $ TopoDS.Shape.reverse (upcast wire')
-    return wire'
+    MakeWire.wire makeWire
 
-{--
-reverseWire :: Ptr TopoDS.Wire -> Acquire (Ptr TopoDS.Wire) 
-reverseWire wire = do
-    wire' <- liftIO . unsafeDowncast =<< TopoDS.Shape.copy (upcast wire)
-    wireData <- WireData.fromWireChainedAndManifold wire' False True
-    liftIO $ WireData.reverse wireData
-    wire'' <- WireData.wire wireData
-    --liftIO $ TopoDS.Shape.complement (upcast wire'')
-    --liftIO $ TopoDS.Shape.reverse (upcast wire'')
-    return wire''
---}
+line' :: V3 Double -> V3 Double -> Acquire (Ptr TopoDS.Wire)
+line' s e = do
+    builder <- MakeWire.new
+    pt1 <- v3ToPnt s
+    pt2 <- v3ToPnt e
+    edge <- MakeEdge.fromPnts pt1 pt2
+    liftIO $ MakeWire.addEdge builder edge
+    MakeWire.wire builder
+    
+intersperseLines :: [Ptr TopoDS.Wire] -> Acquire [Ptr TopoDS.Wire]
+intersperseLines [] = pure []
+intersperseLines [x] = pure [x]
+intersperseLines (a:b:xs) = do
+    (_, ea) <- liftIO $ wireEndpoints a
+    (sb, _) <- liftIO $ wireEndpoints b
+    if distance ea sb < 1e-6
+            then (a :) <$> intersperseLines (b:xs)
+            else (a :) <$> ((:) <$> line' ea sb <*> intersperseLines (b:xs))
+
+joinWires :: [Ptr TopoDS.Wire] -> Acquire (Ptr TopoDS.Wire)
+joinWires wires = do
+    builder <- MakeWire.new
+    let addWire wire = do 
+            explorer <- WireExplorer.fromWire wire
+            let runToEnd = do
+                    edge <- liftIO $ WireExplorer.current explorer
+                    liftIO $ MakeWire.addEdge builder edge
+                    liftIO $ print =<< MakeWire.error builder
+                    liftIO $ WireExplorer.next explorer
+                    more <- liftIO $ WireExplorer.more explorer
+                    when more runToEnd
+            runToEnd
+    traverse_ addWire $ wires
+    MakeWire.wire builder
+

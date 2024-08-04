@@ -11,6 +11,7 @@ import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Foreign.Ptr
 import Data.Semigroup (sconcat)
+import Waterfall.Internal.Edges (intersperseLines, joinWires)
 
 -- | A Path in 2D Space 
 --
@@ -22,13 +23,12 @@ newtype Path2D = Path2D { rawPath :: Ptr TopoDS.Wire }
 
 joinPaths :: [Path2D] -> Path2D
 joinPaths paths = Path2D . unsafeFromAcquire $ do
-    builder <- MakeWire.new
-    traverse_ (liftIO . MakeWire.addWire builder <=< toAcquire . rawPath) paths
-    MakeWire.wire builder
+    wires <- traverse (toAcquire . rawPath) paths
+    joinWires =<< intersperseLines wires
 
--- | The Semigroup for `Path2D` attempts to join two paths that share a common endpoint.
---
--- Attempts to combine paths that do not share a common endpoint currently in an error case that is not currently handled gracefully.
+-- | Joins `Path2D`s, @ a <> b @ connects the end point of @ b @ to the start of @ b @, if these points are not coincident, a line is created between them.
+-- 
+-- Attempts to combine paths in ways that generate a non manifold path will produce an error case that is not currently handled gracefully.
 instance Semigroup Path2D where
     sconcat = joinPaths . toList
     a <> b = joinPaths [a, b] 
