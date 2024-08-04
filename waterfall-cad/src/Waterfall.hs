@@ -35,6 +35,8 @@ module Waterfall
 , module Waterfall.TwoD.Shape
 -- | Sweep a 2D `Shape` along a `Path`, constructing a `Solid`.
 , module Waterfall.Sweep
+-- | Generate a [Loft](https://en.wikipedia.org/wiki/Loft_\(3D\)) between a sequence of `Path`s
+, module Waterfall.Loft
 -- | Construct a `Solid` of revolution from a `Path2D`.
 , module Waterfall.Revolution
 -- | Transforms for data types that exist in Two Dimensional space, like `Shape` and `Path2D`.
@@ -62,6 +64,7 @@ import Waterfall.Path
 import Waterfall.Revolution
 import Waterfall.Solids
 import Waterfall.Sweep
+import Waterfall.Loft
 import Waterfall.Transforms
 import Waterfall.TwoD.Transforms
 import Waterfall.TwoD.Path2D
