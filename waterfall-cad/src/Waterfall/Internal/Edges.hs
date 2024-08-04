@@ -122,7 +122,6 @@ joinWires wires = do
             let runToEnd = do
                     edge <- liftIO $ WireExplorer.current explorer
                     liftIO $ MakeWire.addEdge builder edge
-                    liftIO $ print =<< MakeWire.error builder
                     liftIO $ WireExplorer.next explorer
                     more <- liftIO $ WireExplorer.more explorer
                     when more runToEnd
