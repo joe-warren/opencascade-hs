@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.4.0.0
+
 - Add `OpenCascade.BRepBuilderAPI.MakeVertex`
 - Add `OpenCascade.BRepBuilderAPI.MakeWire.vertex`
 - Add `OpenCascade.BRepOffsetAPI.ThruSections`
