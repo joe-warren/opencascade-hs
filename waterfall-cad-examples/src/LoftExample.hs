@@ -37,7 +37,7 @@ loftExample =
           , let p x z = V3 x 5 z 
               in  Path.bezier (p 0 0) (p 4 0) (p 5 3) (p 5 4)
           , let p x z = V3 x 10 z
-              in Path.bezier (p 1.5 0) (p 4.5 0) (p 5.0 3) (p 5.0 4.2)
+              in Path.bezier (p 1 0) (p 4.5 0) (p 5.25 3) (p 5.25 4.2)
           ]
         mirror = Transforms.mirror (V3 1 0 0 ) . Path.reversePath
         makeSymetric p = mirror p <> p
