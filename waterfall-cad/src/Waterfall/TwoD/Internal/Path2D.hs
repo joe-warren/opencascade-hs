@@ -3,12 +3,9 @@ module Waterfall.TwoD.Internal.Path2D
 , joinPaths
 ) where
 
-import Data.Foldable (traverse_, toList)
+import Data.Foldable (toList)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
-import Control.Monad ((<=<))
-import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.TopoDS as TopoDS
-import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Foreign.Ptr
 import Data.Semigroup (sconcat)
 import Waterfall.Internal.Edges (intersperseLines, joinWires)

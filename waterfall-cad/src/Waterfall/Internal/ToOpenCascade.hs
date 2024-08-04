@@ -4,7 +4,7 @@ module Waterfall.Internal.ToOpenCascade
 ) where
 
 import Linear (V3 (..))
-import Data.Acquire (Acquire, mkAcquire)
+import Data.Acquire (Acquire)
 import Foreign.Ptr (Ptr)
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.GP as GP

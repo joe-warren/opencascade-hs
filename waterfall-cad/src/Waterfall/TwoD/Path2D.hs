@@ -86,7 +86,7 @@ repeatLooping p = Path2D . unsafeFromAcquire $ do
     (s, e) <- liftIO . Internal.Edges.wireEndpoints $ path
     let a = unangle (e ^. _xy) - unangle (s ^. _xy)
     let times :: Integer = abs . round $ pi * 2 / a 
-    toAcquire . rawPath . mconcat $ [rotate2D (negate (fromIntegral n) * a) p | n <- [0..times]]
+    toAcquire . rawPath . mconcat $ [rotate2D (fromIntegral n * a) p | n <- [0..times]]
 
 
 -- $reexports
