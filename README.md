@@ -67,3 +67,5 @@ If you've found the project useful, or interesting, or if you've built anything 
 [![](images/text.png)](waterfall-cad-examples/src/TextExample.hs)
 
 [![](images/bounding_boxes.png)](waterfall-cad-examples/src/BoundingBoxExample.hs)
+
+[![](images/loft.png)](waterfall-cad-examples/src/LoftExample.hs)

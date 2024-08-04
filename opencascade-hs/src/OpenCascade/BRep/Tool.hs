@@ -3,17 +3,20 @@ module OpenCascade.BRep.Tool
 ( curve
 , curveParamFirst
 , curveParamLast
+, pnt
 , triangulation
 ) where
 
 import qualified OpenCascade.Geom as Geom
 import qualified OpenCascade.TopoDS as TopoDS
+import qualified OpenCascade.GP as GP
 
 import qualified OpenCascade.TopLoc.Types as TopLoc
 import qualified OpenCascade.Poly.Types as Poly
 import OpenCascade.Poly.Internal.Destructors (deleteHandleTriangulation)
 import OpenCascade.Handle (Handle)
 import OpenCascade.Geom.Internal.Destructors (deleteHandleCurve)
+import OpenCascade.GP.Internal.Destructors (deletePnt)
 import Foreign.Ptr
 import Foreign.C
 import Data.Coerce
@@ -33,6 +36,11 @@ foreign import capi unsafe "hs_BRep_Tool.h hs_BRep_Tool_curveParamLast" rawCurve
 
 curveParamLast :: Ptr TopoDS.Edge -> IO Double 
 curveParamLast = coerce rawCurveParamLast
+
+foreign import capi unsafe "hs_BRep_Tool.h hs_BRep_Tool_pnt" rawPnt :: Ptr (TopoDS.Vertex) -> IO (Ptr GP.Pnt)
+
+pnt :: Ptr TopoDS.Vertex -> Acquire (Ptr GP.Pnt)
+pnt v = mkAcquire (rawPnt v) deletePnt
 
 foreign import capi unsafe "hs_BRep_Tool.h hs_BRep_Tool_triangulation" rawTriangulation :: Ptr (TopoDS.Face) -> Ptr TopLoc.Location -> IO(Ptr (Handle Poly.Triangulation))
 

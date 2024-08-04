@@ -1,7 +1,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-} 
 {-# LANGUAGE EmptyDataDecls #-}
 module OpenCascade.BRepBuilderAPI.Types 
-( MakeWire
+( MakeVertex
+, MakeWire
 , MakeFace
 , MakeSolid
 , MakeShape
@@ -10,6 +11,7 @@ module OpenCascade.BRepBuilderAPI.Types
 
 import qualified OpenCascade.Inheritance as Inheritance
 
+data MakeVertex
 data MakeWire
 data MakeFace
 data MakeSolid
@@ -18,6 +20,7 @@ data MakeShape
 
 data Sewing
 
+instance Inheritance.SubTypeOf MakeShape MakeVertex
 instance Inheritance.SubTypeOf MakeShape MakeWire
 instance Inheritance.SubTypeOf MakeShape MakeSolid
 instance Inheritance.SubTypeOf MakeShape MakeFace

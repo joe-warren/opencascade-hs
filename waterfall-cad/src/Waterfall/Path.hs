@@ -18,6 +18,8 @@ module Waterfall.Path
 , pathFrom3D
 , pathFromTo3D
 , pathEndpoints3D
+, closeLoop3D
+, reversePath3D
 ) where
 
 import Waterfall.Internal.Path (Path(..))
@@ -83,4 +85,10 @@ pathFromTo3D = pathFromTo
 pathEndpoints3D :: Path -> (V3 Double, V3 Double)
 pathEndpoints3D = pathEndpoints
 
+-- | `closeLoop` with the type fixed to `Path`
+closeLoop3D :: Path -> Path
+closeLoop3D = closeLoop 
 
+-- | `reversePath` with the type fixed to `Path`
+reversePath3D :: Path -> Path
+reversePath3D = reversePath

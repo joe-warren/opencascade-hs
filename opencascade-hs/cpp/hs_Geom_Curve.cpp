@@ -14,3 +14,11 @@ gp_Pnt * hs_Geom_Curve_value(Handle(Geom_Curve) * curve, double u){
 gp_Vec * hs_Geom_Curve_dn(Handle (Geom_Curve) * curve, double u, int n){
     return new gp_Vec((*curve)->DN(u, n));
 }
+
+double hs_Geom_Curve_reversedParameter(Handle (Geom_Curve) * curve, double parameter){
+    return (*curve)->ReversedParameter(parameter);
+}
+
+Handle (Geom_Curve) * hs_Geom_Curve_reversed(Handle (Geom_Curve) * curve){
+    return new opencascade::handle<Geom_Curve>((*curve)->Reversed());
+}

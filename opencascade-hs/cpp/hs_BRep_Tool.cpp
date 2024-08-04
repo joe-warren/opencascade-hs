@@ -17,6 +17,10 @@ double hs_BRep_Tool_curveParamLast(TopoDS_Edge * edge){
     double s, e;
     BRep_Tool::Curve(*edge, s, e);
     return e;
+}
+
+gp_Pnt * hs_BRep_Tool_pnt(TopoDS_Vertex * vertex){
+    return new gp_Pnt(BRep_Tool::Pnt(*vertex));
 } 
 
 Handle(Poly_Triangulation) * hs_BRep_Tool_triangulation(TopoDS_Face * face, TopLoc_Location * loc){

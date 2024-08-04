@@ -3,4 +3,4 @@ module OpenCascade.BRepBuilderAPI.WireError
 ) where
 
 -- order must match the definition of BRepBuilderAPI_WireError
-data WireError = WireDone | EmptyWire | DisconnectedWire | NonManifoldWire deriving (Eq, Enum)
+data WireError = WireDone | EmptyWire | DisconnectedWire | NonManifoldWire deriving (Eq, Enum, Show)

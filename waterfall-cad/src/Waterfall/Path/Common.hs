@@ -22,6 +22,8 @@ module Waterfall.Path.Common
 , pathFrom
 , pathFromTo
 , pathEndpoints
+, closeLoop
+, reversePath
 ) where
 import Data.Acquire
 import qualified OpenCascade.TopoDS as TopoDS
@@ -43,7 +45,8 @@ import Data.Proxy (Proxy (..))
 import Linear (V3 (..), V2 (..), _xy)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import Control.Lens ((^.))
-import Waterfall.Internal.Edges (wireEndpoints)
+import Waterfall.Internal.Edges (wireEndpoints, reverseWire)
+import Control.Monad ((<=<))
 
 -- | Class used to abstract over constructing `Path` and `Path2D` 
 -- 
@@ -164,7 +167,7 @@ pathFromTo :: (Monoid path) => [point -> (point, path)] -> point -> (point, path
 pathFromTo commands start = 
     let go (pos, paths) cmd = second (:paths) (cmd pos)
         (end, allPaths) = foldl' go (start, []) commands
-     in (end, mconcat allPaths)
+     in (end, mconcat . reverse $ allPaths)
 
 -- | Returns the start and end of a `Path`
 pathEndpoints :: forall point path. (AnyPath point path) => path -> (point, point)
@@ -172,6 +175,18 @@ pathEndpoints path = unsafeFromAcquire $ do
     wire <- toWire path
     (s, e) <- liftIO $ wireEndpoints wire
     return (v3ToPoint (Proxy :: Proxy path) s, v3ToPoint (Proxy :: Proxy path) e)
+
+
+-- | Given a path, return a new path with the endpoints joined by a straight line.
+closeLoop :: (AnyPath point path, Monoid path, Eq point) => path -> path
+closeLoop p = 
+    let (s, e) = pathEndpoints p
+     in if s == e 
+            then p
+            else p <> line e s
+
+reversePath :: (AnyPath point path) => path -> path
+reversePath = fromWire . (reverseWire <=< toWire)
 
 instance AnyPath (V3 Double) Path where
     fromWire :: Acquire (Ptr TopoDS.Wire) -> Path

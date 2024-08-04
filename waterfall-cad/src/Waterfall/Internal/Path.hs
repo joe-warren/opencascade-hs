@@ -3,32 +3,37 @@
 module Waterfall.Internal.Path
 ( Path (..)
 , joinPaths
+, allPathEndpoints
 ) where
 
 import Data.List.NonEmpty (NonEmpty ())
-import Data.Foldable (traverse_, toList)
+import Data.Foldable (toList)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire) 
-import Control.Monad ((<=<))
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.TopoDS as TopoDS
-import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Foreign.Ptr
+import Linear (V3 (..))
 import Data.Semigroup (sconcat)
-
+import Waterfall.Internal.Edges (allWireEndpoints, intersperseLines, joinWires)
 -- | A Path in 3D Space 
 --
 -- Under the hood, this is represented by an OpenCascade `TopoDS.Wire`.
 newtype Path = Path { rawPath :: Ptr TopoDS.Wire }
 
+-- | Exposing this because I found it useful for debugging
+allPathEndpoints :: Path -> [(V3 Double, V3 Double)]
+allPathEndpoints (Path raw) = unsafeFromAcquire $ do
+    wire <- toAcquire raw
+    liftIO $ allWireEndpoints wire
+    
 joinPaths :: [Path] -> Path
 joinPaths paths = Path . unsafeFromAcquire $ do
-    builder <- MakeWire.new
-    traverse_ (liftIO . MakeWire.addWire builder <=< toAcquire . rawPath) paths
-    MakeWire.wire builder
+    wires <- traverse (toAcquire . rawPath) paths
+    joinWires =<< intersperseLines wires
 
--- | The Semigroup for `Path` attempts to join two paths that share a common endpoint.
---
--- Attempts to combine paths that do not share a common endpoint currently in an error case that is not currently handled gracefully.
+-- | Joins `Path`s, @ a <> b @ connects the end point of @ b @ to the start of @ b @, if these points are not coincident, a line is created between them.
+-- 
+-- Attempts to combine paths in ways that generate a non manifold path will produce an error case that is not currently handled gracefully.
 instance Semigroup Path where
     sconcat :: NonEmpty Path -> Path
     sconcat = joinPaths . toList
