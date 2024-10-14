@@ -22,6 +22,7 @@ module Waterfall.Path.Common
 , pathFrom
 , pathFromTo
 , pathEndpoints
+, splice
 , closeLoop
 , reversePath
 ) where
@@ -38,13 +39,17 @@ import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import qualified OpenCascade.GC.MakeArcOfCircle as MakeArcOfCircle
-import OpenCascade.Inheritance (upcast)
+import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import qualified OpenCascade.NCollection.Array1 as NCollection.Array1
 import qualified OpenCascade.Geom.BezierCurve as BezierCurve
+import qualified OpenCascade.GP.Trsf as GP.Trsf
+import qualified OpenCascade.GP.Vec as  GP.Vec
+import qualified OpenCascade.BRepBuilderAPI.Transform as BRepBuilderAPI.Transform
 import Data.Proxy (Proxy (..))
 import Linear (V3 (..), V2 (..), _xy)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import Control.Lens ((^.))
+import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Waterfall.Internal.Edges (wireEndpoints, reverseWire)
 import Control.Monad ((<=<))
 
@@ -153,7 +158,7 @@ bezierRelative dControlPoint1 dControlPoint2 dEnd = do
 -- A typical use of `pathFrom` uses a list of functions with the suffix \"To\" or \"Relative\", e.g:
 --
 -- @
---Path.pathFrom zero 
+-- Path.pathFrom zero 
 --    [ Path.bezierRelative (V3 0 0 0.5) (V3 0.5 0.5 0.5) (V3 0.5 0.5 1)
 --    , Path.bezierRelative (V3 0 0 0.5) (V3 (-0.5) (-0.5) 0.5) (V3 (-0.5) (-0.5) 1)
 --    , Path.arcViaRelative (V3 0 1 1) (V3 0 2 0)
@@ -176,6 +181,27 @@ pathEndpoints path = unsafeFromAcquire $ do
     (s, e) <- liftIO $ wireEndpoints wire
     return (v3ToPoint (Proxy :: Proxy path) s, v3ToPoint (Proxy :: Proxy path) e)
 
+-- | Convert a path into a function that can be used as an argument to `pathFrom`
+--
+-- Takes a path, and returns a function which takes a new start point for the path, and returns 
+-- tupled, the path translated onto the new start point, and the new endpoint 
+splice :: forall point path. (AnyPath point path, Num point) => path -> point -> (point, path)
+splice path pnt = 
+    let res = unsafeFromAcquire $ do
+            wire <- toWire path
+            (s, e) <- liftIO $ wireEndpoints wire
+            let s' = v3ToPoint (Proxy :: Proxy path) s
+                e' = v3ToPoint (Proxy :: Proxy path) e
+            gp <- pointToGPPnt (Proxy :: Proxy path) pnt
+            p <- liftIO $ gpPntToV3 gp
+            let (V3 x y z) = p - s
+            trsf <- GP.Trsf.new
+            vec <- GP.Vec.new x y z
+            liftIO $ GP.Trsf.setTranslation trsf vec
+            oldWire <- toWire path
+            newWire <- (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast oldWire) trsf True 
+            return (pnt + e' - s', newWire)
+    in (fst res, fromWire (fmap snd . toAcquire $ res))
 
 -- | Given a path, return a new path with the endpoints joined by a straight line.
 closeLoop :: (AnyPath point path, Monoid path, Eq point) => path -> path
