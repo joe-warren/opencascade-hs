@@ -9,6 +9,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Add `splice`/`splice2D`/`splice3D` functions 
+
 ## 0.4.0.0
 
 - Add `Waterfall.Loft` containing `loft` and `pointedLoft`
