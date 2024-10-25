@@ -1,4 +1,4 @@
-#include <TopoDS_Shape.hxx>
+#include <opencascade/TopoDS_Shape.hxx>
 #include "hs_TopoDS_Shape.h"
 
 TopoDS_Shape * hs_new_TopoDS_Shape(){

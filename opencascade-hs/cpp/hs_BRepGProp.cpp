@@ -1,4 +1,4 @@
-#include <BRepGProp.hxx>
+#include <opencascade/BRepGProp.hxx>
 #include "hs_BRepGProp.h"
 
 void hs_BRepGProp_VolumeProperties(TopoDS_Shape *shape, GProp_GProps *props, bool onlyClosed, bool skipShared, bool useTriangulation ){

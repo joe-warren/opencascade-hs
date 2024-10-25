@@ -1,5 +1,5 @@
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <TopoDS_Edge.hxx>
+#include <opencascade/BRepBuilderAPI_MakeEdge.hxx>
+#include <opencascade/TopoDS_Edge.hxx>
 #include "hs_BRepBuilderAPI_MakeEdge.h"
 
 TopoDS_Edge * hs_BRepBuilderAPI_MakeEdge_fromVertices(TopoDS_Vertex *a, TopoDS_Vertex *b){

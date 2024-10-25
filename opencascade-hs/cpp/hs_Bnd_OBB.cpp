@@ -1,4 +1,4 @@
-#include <Bnd_OBB.hxx>
+#include <opencascade/Bnd_OBB.hxx>
 #include "hs_Bnd_OBB.h"
 
 Bnd_OBB * hs_new_Bnd_OBB() {

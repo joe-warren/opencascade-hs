@@ -15,7 +15,6 @@ extra-source-files:
 
 include-dirs:
 - cpp
-- /usr/include/opencascade
 
 extra-libraries:
 - stdc++

@@ -1,4 +1,4 @@
-#include <Poly_Triangle.hxx>
+#include <opencascade/Poly_Triangle.hxx>
 #include "hs_Poly_Triangle.h"
 
 Poly_Triangle * hs_new_Poly_Triangle_fromIndices(int n1, int n2, int n3){

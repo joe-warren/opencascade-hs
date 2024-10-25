@@ -1,4 +1,4 @@
-#include <TopTools_ShapeMapHasher.hxx>
+#include <opencascade/TopTools_ShapeMapHasher.hxx>
 #include "hs_TopTools_ShapeMapHasher.h"
 
 int hs_TopTools_ShapeMapHasher_hash(TopoDS_Shape * shape){

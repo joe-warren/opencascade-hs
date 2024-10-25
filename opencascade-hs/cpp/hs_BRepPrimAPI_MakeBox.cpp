@@ -1,6 +1,6 @@
-#include <BRepPrimAPI_MakeBox.hxx>
-#include <TopoDS_Solid.hxx>
-#include <TopoDS_Shell.hxx>
+#include <opencascade/BRepPrimAPI_MakeBox.hxx>
+#include <opencascade/TopoDS_Solid.hxx>
+#include <opencascade/TopoDS_Shell.hxx>
 #include "hs_BRepPrimAPI_MakeBox.h"
 
 

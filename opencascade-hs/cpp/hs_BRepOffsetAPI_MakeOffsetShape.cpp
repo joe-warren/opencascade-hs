@@ -1,4 +1,4 @@
-#include <BRepOffsetAPI_MakeOffsetShape.hxx>
+#include <opencascade/BRepOffsetAPI_MakeOffsetShape.hxx>
 #include "hs_BRepOffsetAPI_MakeOffsetShape.h"
 
 BRepOffsetAPI_MakeOffsetShape * hs_new_BRepOffsetAPI_MakeOffsetShape(){

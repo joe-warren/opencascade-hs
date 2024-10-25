@@ -1,4 +1,4 @@
-#include <TopoDS_Builder.hxx>
+#include <opencascade/TopoDS_Builder.hxx>
 #include "hs_TopoDS_Builder.h"
 
 TopoDS_Builder * hs_new_TopoDS_Builder(void){

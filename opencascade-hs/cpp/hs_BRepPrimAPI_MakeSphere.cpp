@@ -1,4 +1,4 @@
-#include <BRepPrimAPI_MakeSphere.hxx>
+#include <opencascade/BRepPrimAPI_MakeSphere.hxx>
 #include "hs_BRepPrimAPI_MakeSphere.h"
 
 

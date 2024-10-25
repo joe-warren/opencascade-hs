@@ -1,4 +1,4 @@
-#include <RWGltf_CafReader.hxx>
+#include <opencascade/RWGltf_CafReader.hxx>
 #include "hs_RWGltf_CafReader.h"
 
 RWGltf_CafReader * hs_new_RWGltf_CafReader(void){

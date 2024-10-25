@@ -1,5 +1,5 @@
-#include <NCollection_Array1.hxx>
-#include <gp_Pnt.hxx>
+#include <opencascade/NCollection_Array1.hxx>
+#include <opencascade/gp_Pnt.hxx>
 #include "hs_NCollection_Array1.h"
 
 ARRAY_1(gp_Pnt) * hs_new_NCollection_Array1_gp_Pnt(int lower, int upper){

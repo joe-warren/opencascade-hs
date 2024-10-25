@@ -1,4 +1,4 @@
-#include <TopoDS_CompSolid.hxx>
+#include <opencascade/TopoDS_CompSolid.hxx>
 #include "hs_TopoDS_CompSolid.h"
 
 TopoDS_CompSolid * hs_new_TopoDS_CompSolid(){

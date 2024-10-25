@@ -1,4 +1,4 @@
-#include <BRepMesh_IncrementalMesh.hxx>
+#include <opencascade/BRepMesh_IncrementalMesh.hxx>
 #include "hs_BRepMesh_IncrementalMesh.h"
 
 

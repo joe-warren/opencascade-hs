@@ -1,5 +1,5 @@
-#include <BRepBuilderAPI_GTransform.hxx>
-#include <TopoDS_Shape.hxx>
+#include <opencascade/BRepBuilderAPI_GTransform.hxx>
+#include <opencascade/TopoDS_Shape.hxx>
 #include "hs_BRepBuilderAPI_GTransform.h"
 
 TopoDS_Shape * hs_BRepBuilderAPI_GTransform_gtransform(TopoDS_Shape * shape, gp_GTrsf * trsf, bool copy){

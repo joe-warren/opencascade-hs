@@ -1,4 +1,4 @@
-#include <GC_MakeArcOfCircle.hxx>
+#include <opencascade/GC_MakeArcOfCircle.hxx>
 #include "hs_GC_MakeArcOfCircle.h"
 
 Handle(Geom_TrimmedCurve) * hs_GC_MakeArcOfCircle_from3Pnts(gp_Pnt * a, gp_Pnt * b, gp_Pnt * c){

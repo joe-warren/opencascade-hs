@@ -1,4 +1,4 @@
-#include <gp_Ax2d.hxx>
+#include <opencascade/gp_Ax2d.hxx>
 #include "hs_gp_Ax2d.h"
 
 gp_Ax2d* hs_new_gp_Ax2d(gp_Pnt2d* location, gp_Dir2d* direction){

@@ -1,4 +1,4 @@
-#include <gp_Pnt.hxx>
+#include <opencascade/gp_Pnt.hxx>
 #include "hs_gp_Pnt.h"
 
 gp_Pnt * hs_new_gp_Pnt(double x, double y, double z) {

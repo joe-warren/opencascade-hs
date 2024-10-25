@@ -1,5 +1,5 @@
-#include <BRepBuilderAPI_MakeWire.hxx>
-#include <TopoDS_Wire.hxx>
+#include <opencascade/BRepBuilderAPI_MakeWire.hxx>
+#include <opencascade/TopoDS_Wire.hxx>
 #include "hs_BRepBuilderAPI_MakeWire.h"
 
 BRepBuilderAPI_MakeWire * hs_new_BRepBuilderAPI_MakeWire(){

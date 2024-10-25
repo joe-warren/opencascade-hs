@@ -1,5 +1,5 @@
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <TopoDS_Face.hxx>
+#include <opencascade/BRepBuilderAPI_MakeFace.hxx>
+#include <opencascade/TopoDS_Face.hxx>
 #include "hs_BRepBuilderAPI_MakeFace.h"
 
 BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace(){

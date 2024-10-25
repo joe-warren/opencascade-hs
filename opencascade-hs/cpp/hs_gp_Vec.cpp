@@ -1,4 +1,4 @@
-#include <gp_Vec.hxx>
+#include <opencascade/gp_Vec.hxx>
 #include "hs_gp_Vec.h"
 
 gp_Vec * hs_new_gp_Vec(double x, double y, double z) {

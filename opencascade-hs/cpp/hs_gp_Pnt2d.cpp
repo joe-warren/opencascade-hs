@@ -1,4 +1,4 @@
-#include <gp_Pnt2d.hxx>
+#include <opencascade/gp_Pnt2d.hxx>
 #include "hs_gp_Pnt2d.h"
 
 gp_Pnt2d * hs_new_gp_Pnt2d(double x, double y) {

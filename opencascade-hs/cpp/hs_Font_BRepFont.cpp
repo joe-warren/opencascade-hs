@@ -1,4 +1,4 @@
-#include <Font_BRepFont.hxx>
+#include <opencascade/Font_BRepFont.hxx>
 #include "hs_Font_BRepFont.h"
 
 

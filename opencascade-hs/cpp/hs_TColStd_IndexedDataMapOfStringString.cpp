@@ -1,4 +1,4 @@
-#include <TColStd_IndexedDataMapOfStringString.hxx>
+#include <opencascade/TColStd_IndexedDataMapOfStringString.hxx>
 #include "hs_TColStd_IndexedDataMapOfStringString.h"
 
 TColStd_IndexedDataMapOfStringString * hs_new_TColStd_IndexedDataMapOfStringString(){

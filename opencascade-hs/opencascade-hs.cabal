@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -302,7 +302,6 @@ library
   cxx-options: --std=c++17 -Wall -Werror -Wno-deprecated
   include-dirs:
       cpp
-      /usr/include/opencascade
   cxx-sources:
       cpp/hs_Bnd_Box.cpp
       cpp/hs_Bnd_OBB.cpp

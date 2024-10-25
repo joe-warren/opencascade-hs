@@ -1,4 +1,4 @@
-#include <BRepPrimAPI_MakePrism.hxx>
+#include <opencascade/BRepPrimAPI_MakePrism.hxx>
 #include "hs_BRepPrimAPI_MakePrism.h"
 
 

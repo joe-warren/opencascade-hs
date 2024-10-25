@@ -1,4 +1,4 @@
-#include <gp_Ax3.hxx>
+#include <opencascade/gp_Ax3.hxx>
 #include "hs_gp_Ax3.h"
 
 

@@ -1,4 +1,4 @@
-#include <StlAPI_Reader.hxx>
+#include <opencascade/StlAPI_Reader.hxx>
 #include "hs_StlAPI_Reader.h"
 
 StlAPI_Reader * hs_new_StlAPI_Reader(){

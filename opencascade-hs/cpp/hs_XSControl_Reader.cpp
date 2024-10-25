@@ -1,4 +1,4 @@
-#include <XSControl_Reader.hxx>
+#include <opencascade/XSControl_Reader.hxx>
 #include "hs_XSControl_Reader.h"
 
 IFSelect_ReturnStatus hs_XSControl_Reader_readFile(XSControl_Reader * reader, char * filename){

@@ -1,4 +1,4 @@
-#include <GProp_GProps.hxx>
+#include <opencascade/GProp_GProps.hxx>
 #include "hs_GProp_GProps.h"
 
 GProp_GProps * hs_new_GProp_GProps(){

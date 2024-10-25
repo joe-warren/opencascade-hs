@@ -1,4 +1,4 @@
-#include <gp_XYZ.hxx>
+#include <opencascade/gp_XYZ.hxx>
 #include "hs_gp_XYZ.h"
 
 gp_XYZ * hs_new_gp_XYZ(){

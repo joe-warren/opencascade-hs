@@ -1,4 +1,4 @@
-#include <BRepOffsetAPI_MakePipe.hxx>
+#include <opencascade/BRepOffsetAPI_MakePipe.hxx>
 #include "hs_BRepOffsetAPI_MakePipe.h"
 
 BRepOffsetAPI_MakePipe * hs_new_BRepOffsetAPI_MakePipe_fromWireAndShape(TopoDS_Wire * wire, TopoDS_Shape * profile){

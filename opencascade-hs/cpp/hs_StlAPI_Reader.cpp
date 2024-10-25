@@ -1,4 +1,4 @@
-#include <StlAPI_Writer.hxx>
+#include <opencascade/StlAPI_Writer.hxx>
 #include "hs_StlAPI_Writer.h"
 
 StlAPI_Writer * hs_new_StlAPI_Writer(){

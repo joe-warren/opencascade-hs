@@ -1,4 +1,4 @@
-#include <RWGltf_CafWriter.hxx>
+#include <opencascade/RWGltf_CafWriter.hxx>
 #include "hs_RWGltf_CafWriter.h"
 
 RWGltf_CafWriter * hs_new_RWGltf_CafWriter(char * theFile, bool isBinary){

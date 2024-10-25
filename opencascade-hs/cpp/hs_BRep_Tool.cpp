@@ -1,5 +1,5 @@
-#include <BRep_Tool.hxx>
-#include <Standard_Handle.hxx>
+#include <opencascade/BRep_Tool.hxx>
+#include <opencascade/Standard_Handle.hxx>
 #include "hs_BRep_Tool.h"
 
 Handle(Geom_Curve) * hs_BRep_Tool_curve(TopoDS_Edge * edge){

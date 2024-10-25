@@ -1,4 +1,4 @@
-#include <gp_Dir.hxx>
+#include <opencascade/gp_Dir.hxx>
 #include "hs_gp_Dir.h"
 
 gp_Dir * hs_new_gp_Dir(double x, double y, double z) {

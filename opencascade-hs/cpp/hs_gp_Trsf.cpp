@@ -1,4 +1,4 @@
-#include <gp_Trsf.hxx>
+#include <opencascade/gp_Trsf.hxx>
 #include "hs_gp_Trsf.h"
 
 gp_Trsf * hs_new_gp_Trsf(){

@@ -1,4 +1,4 @@
-#include <Message_ProgressRange.hxx>
+#include <opencascade/Message_ProgressRange.hxx>
 #include "hs_Message_ProgressRange.h"
 
 Message_ProgressRange * hs_new_Message_ProgressRange(){

@@ -1,4 +1,4 @@
-#include <XCAFDoc_ShapeTool.hxx>
+#include <opencascade/XCAFDoc_ShapeTool.hxx>
 #include "hs_XCAFDoc_ShapeTool.h"
 
 void hs_delete_XCAFDoc_ShapeTool(Handle(XCAFDoc_ShapeTool) * shapeTool){

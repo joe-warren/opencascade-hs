@@ -1,5 +1,5 @@
-#include <BRepFilletAPI_MakeFillet.hxx>
-#include <TopoDS_Shape.hxx>
+#include <opencascade/BRepFilletAPI_MakeFillet.hxx>
+#include <opencascade/TopoDS_Shape.hxx>
 #include "hs_BRepFilletAPI_MakeFillet.h"
 
 BRepFilletAPI_MakeFillet * hs_new_BRepFilletAPI_MakeFillet_fromShape(TopoDS_Shape * shape) {

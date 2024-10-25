@@ -1,4 +1,4 @@
-#include <BRepTools_WireExplorer.hxx>
+#include <opencascade/BRepTools_WireExplorer.hxx>
 #include "hs_BRepTools_WireExplorer.h"
 
 BRepTools_WireExplorer * hs_new_BRepTools_WireExplorer_fromWire(TopoDS_Wire *wire){

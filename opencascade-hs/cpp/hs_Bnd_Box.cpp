@@ -1,4 +1,4 @@
-#include <Bnd_Box.hxx>
+#include <opencascade/Bnd_Box.hxx>
 #include "hs_Bnd_Box.h"
 
 Bnd_Box * hs_new_Bnd_Box(){

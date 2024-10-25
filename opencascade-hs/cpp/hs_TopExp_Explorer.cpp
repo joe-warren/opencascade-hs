@@ -1,4 +1,4 @@
-#include <TopExp_Explorer.hxx>
+#include <opencascade/TopExp_Explorer.hxx>
 #include "hs_TopExp_Explorer.h"
 
 TopExp_Explorer * hs_new_TopExp_Explorer(TopoDS_Shape * shape, TopAbs_ShapeEnum toFind){

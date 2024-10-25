@@ -1,4 +1,4 @@
-#include <BRepPrimAPI_MakeRevol.hxx>
+#include <opencascade/BRepPrimAPI_MakeRevol.hxx>
 #include "hs_BRepPrimAPI_MakeRevol.h"
 
 BRepPrimAPI_MakeRevol * hs_new_BRepPrimAPI_MakeRevol_fromShapeAndAx1(TopoDS_Shape * shape, gp_Ax1 * axis, bool copy){

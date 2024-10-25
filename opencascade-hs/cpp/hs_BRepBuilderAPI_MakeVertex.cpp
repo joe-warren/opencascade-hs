@@ -1,6 +1,6 @@
-#include <BRepBuilderAPI_MakeVertex.hxx>
+#include <opencascade/BRepBuilderAPI_MakeVertex.hxx>
 #include "hs_BRepBuilderAPI_MakeVertex.h"
-#include <TopoDS_Vertex.hxx>
+#include <opencascade/TopoDS_Vertex.hxx>
 
 BRepBuilderAPI_MakeVertex * hs_new_BRepBuilderAPI_MakeVertex_fromPnt(gp_Pnt* pnt){
     return new BRepBuilderAPI_MakeVertex(*pnt);

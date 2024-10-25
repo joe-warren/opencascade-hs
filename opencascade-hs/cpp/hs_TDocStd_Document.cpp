@@ -1,5 +1,5 @@
-#include <TDocStd_Document.hxx>
-#include <XCAFDoc_ShapeTool.hxx>
+#include <opencascade/TDocStd_Document.hxx>
+#include <opencascade/XCAFDoc_ShapeTool.hxx>
 #include "hs_TDocStd_Document.h"
 
 Handle(TDocStd_Document) * hs_new_TDocStd_Document(char * storageFormat){

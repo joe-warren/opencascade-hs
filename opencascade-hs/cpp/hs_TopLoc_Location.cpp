@@ -1,4 +1,4 @@
-#include <TopLoc_Location.hxx>
+#include <opencascade/TopLoc_Location.hxx>
 #include "hs_TopLoc_Location.h"
 
 TopLoc_Location * hs_new_TopLoc_Location(){

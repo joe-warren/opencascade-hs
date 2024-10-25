@@ -1,4 +1,4 @@
-#include <RWObj_CafWriter.hxx>
+#include <opencascade/RWObj_CafWriter.hxx>
 #include "hs_RWObj_CafWriter.h"
 
 RWObj_CafWriter * hs_new_RWObj_CafWriter(char * filename){

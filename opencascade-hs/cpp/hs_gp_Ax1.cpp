@@ -1,4 +1,4 @@
-#include <gp_Ax1.hxx>
+#include <opencascade/gp_Ax1.hxx>
 #include "hs_gp_Ax1.h"
 
 gp_Ax1 * hs_new_gp_Ax1(gp_Pnt * origin, gp_Dir * direction){

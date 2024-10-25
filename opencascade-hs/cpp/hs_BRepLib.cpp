@@ -1,4 +1,4 @@
-#include <BRepLib.hxx>
+#include <opencascade/BRepLib.hxx>
 #include "hs_BRepLib.h"
 
 bool hs_BRepLib_orientClosedSolid(TopoDS_Solid * solid){

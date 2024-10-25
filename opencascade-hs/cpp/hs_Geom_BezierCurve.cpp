@@ -1,7 +1,7 @@
-#include <Geom_BezierCurve.hxx>
-#include <NCollection_Array1.hxx>
-#include <gp_Pnt.hxx>
-#include <Standard_Handle.hxx>
+#include <opencascade/Geom_BezierCurve.hxx>
+#include <opencascade/NCollection_Array1.hxx>
+#include <opencascade/gp_Pnt.hxx>
+#include <opencascade/Standard_Handle.hxx>
 #include "hs_Geom_BezierCurve.h"
 
 Geom_BezierCurve * hs_new_Geom_BezierCurve_fromPnts(ARRAY_1(gp_Pnt) * pnts){

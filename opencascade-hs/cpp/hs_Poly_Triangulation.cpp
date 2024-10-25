@@ -1,4 +1,4 @@
-#include <Poly_Triangulation.hxx>
+#include <opencascade/Poly_Triangulation.hxx>
 #include "hs_Poly_Triangulation.h"
 
 Handle(Poly_Triangulation) * hs_new_Poly_Triangulation(int nbNodes, int nbTriangles, bool hasUVNodes, bool hasNormals){

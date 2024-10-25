@@ -1,4 +1,4 @@
-#include <BRepOffsetAPI_ThruSections.hxx>
+#include <opencascade/BRepOffsetAPI_ThruSections.hxx>
 #include "hs_BRepOffsetAPI_ThruSections.h"
 
 BRepOffsetAPI_ThruSections * hs_new_BRepOffsetAPI_ThruSections(bool isSolid, bool ruled, double pres3d){

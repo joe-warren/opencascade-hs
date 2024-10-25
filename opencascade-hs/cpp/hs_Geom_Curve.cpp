@@ -1,6 +1,6 @@
-#include <Geom_Curve.hxx>
-#include <gp_Pnt.hxx>
-#include <gp_Vec.hxx>
+#include <opencascade/Geom_Curve.hxx>
+#include <opencascade/gp_Pnt.hxx>
+#include <opencascade/gp_Vec.hxx>
 #include "hs_Geom_Curve.h"
 
 void hs_delete_Handle_Geom_Curve(Handle(Geom_Curve) * handle){

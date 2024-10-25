@@ -1,4 +1,4 @@
-#include <Font_BRepTextBuilder.hxx>
+#include <opencascade/Font_BRepTextBuilder.hxx>
 #include "hs_Font_BRepTextBuilder.h"
 
 Font_BRepTextBuilder * hs_new_Font_BRepTextBuilder(){

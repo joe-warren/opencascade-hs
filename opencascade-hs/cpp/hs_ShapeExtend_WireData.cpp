@@ -1,7 +1,7 @@
-#include <ShapeExtend_WireData.hxx>
+#include <opencascade/ShapeExtend_WireData.hxx>
 #include "hs_ShapeExtend_WireData.h"
 
-#include <TopoDS_Wire.hxx>
+#include <opencascade/TopoDS_Wire.hxx>
 
 ShapeExtend_WireData * hs_new_ShapeExtend_WireData_fromWireChainedAndManifold(TopoDS_Wire* wire, bool chained, bool manifoldMode){
     return new ShapeExtend_WireData(*wire, chained, manifoldMode);

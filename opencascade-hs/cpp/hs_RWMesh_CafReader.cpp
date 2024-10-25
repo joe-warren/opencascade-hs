@@ -1,4 +1,4 @@
-#include <RWMesh_CafReader.hxx>
+#include <opencascade/RWMesh_CafReader.hxx>
 #include "hs_RWMesh_CafReader.h"
 
 void hs_RWMesh_CafReader_setDocument(RWMesh_CafReader * reader, Handle(TDocStd_Document) * document){

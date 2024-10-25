@@ -1,4 +1,4 @@
-#include <RWObj_CafReader.hxx>
+#include <opencascade/RWObj_CafReader.hxx>
 #include "hs_RWObj_CafReader.h"
 
 RWObj_CafReader * hs_new_RWObj_CafReader(void){

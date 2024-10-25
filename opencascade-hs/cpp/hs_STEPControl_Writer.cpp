@@ -1,4 +1,4 @@
-#include <STEPControl_Writer.hxx>
+#include <opencascade/STEPControl_Writer.hxx>
 #include "hs_STEPControl_Writer.h"
 
 STEPControl_Writer * hs_new_STEPControl_Writer(){

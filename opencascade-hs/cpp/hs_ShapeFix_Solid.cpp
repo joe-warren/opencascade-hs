@@ -1,6 +1,6 @@
-#include <Message_ProgressRange.hxx>
-#include <ShapeFix_Solid.hxx>
-#include <TopoDS_Solid.hxx>
+#include <opencascade/Message_ProgressRange.hxx>
+#include <opencascade/ShapeFix_Solid.hxx>
+#include <opencascade/TopoDS_Solid.hxx>
 #include "hs_ShapeFix_Solid.h"
 
 ShapeFix_Solid * hs_new_ShapeFix_Solid(){

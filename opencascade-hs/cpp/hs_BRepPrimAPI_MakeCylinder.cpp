@@ -1,4 +1,4 @@
-#include <BRepPrimAPI_MakeCylinder.hxx>
+#include <opencascade/BRepPrimAPI_MakeCylinder.hxx>
 #include "hs_BRepPrimAPI_MakeCylinder.h"
 
 TopoDS_Solid * hs_BRepPrimAPI_MakeCylinder_fromRadiusAndHeight(double r, double h){

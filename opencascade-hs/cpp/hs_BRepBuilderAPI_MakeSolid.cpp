@@ -1,5 +1,5 @@
-#include <BRepBuilderAPI_MakeSolid.hxx>
-#include <TopoDS_Solid.hxx>
+#include <opencascade/BRepBuilderAPI_MakeSolid.hxx>
+#include <opencascade/TopoDS_Solid.hxx>
 #include "hs_BRepBuilderAPI_MakeSolid.h"
 
 BRepBuilderAPI_MakeSolid * hs_new_BRepBuilderAPI_MakeSolid(){

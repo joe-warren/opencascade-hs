@@ -1,11 +1,11 @@
-#include <gp.hxx>
-#include <gp_Pnt.hxx>
-#include <gp_Pnt2d.hxx>
-#include <gp_Dir.hxx>
-#include <gp_Dir2d.hxx>
-#include <gp_Ax1.hxx>
-#include <gp_Ax2.hxx>
-#include <gp_Ax2d.hxx>
+#include <opencascade/gp.hxx>
+#include <opencascade/gp_Pnt.hxx>
+#include <opencascade/gp_Pnt2d.hxx>
+#include <opencascade/gp_Dir.hxx>
+#include <opencascade/gp_Dir2d.hxx>
+#include <opencascade/gp_Ax1.hxx>
+#include <opencascade/gp_Ax2.hxx>
+#include <opencascade/gp_Ax2d.hxx>
 #include "hs_gp.h"
 
 gp_Pnt * hs_gp_Origin(){ 

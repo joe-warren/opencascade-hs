@@ -1,4 +1,4 @@
-#include <STEPControl_Reader.hxx>
+#include <opencascade/STEPControl_Reader.hxx>
 #include "hs_STEPControl_Reader.h"
 
 STEPControl_Reader * hs_new_STEPControl_Reader(void){
