@@ -1,7 +1,7 @@
 packages:
-  ./opencascade-hs/opencascade-hs.cabal
-  ./waterfall-cad/waterfall-cad.cabal
-  ./waterfall-cad-examples/waterfall-cad-examples.cabal
+  ./opencascade-hs
+  ./waterfall-cad
+  ./waterfall-cad-examples
 
 package *
   ghc-options: -haddock
