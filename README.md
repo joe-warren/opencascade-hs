@@ -28,6 +28,14 @@ As this library depends on OpenCASCADE, I've been developing on Debian with the 
 
 I think there should be _some_ flexibility as to the exact version of libocct required, and which occt packages are necessary.
 
+### Nix
+
+For nix there is a flake provided, you can get a shell with Waterfall using:
+
+```
+> nix develop github:ArtemChandragupta/opencascade-hs
+```
+
 ### MacOS
 
 On MacOS, you should be able to install [OpenCASCADE](https://formulae.brew.sh/formula/opencascade) via [homebrew](https://brew.sh/):
