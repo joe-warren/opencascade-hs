@@ -33,7 +33,7 @@ I think there should be _some_ flexibility as to the exact version of libocct re
 For nix there is a flake provided, you can get a shell with Waterfall using:
 
 ```
-> nix develop github:ArtemChandragupta/opencascade-hs
+> nix develop github:joe-warren/opencascade-hs
 ```
 
 ### MacOS
