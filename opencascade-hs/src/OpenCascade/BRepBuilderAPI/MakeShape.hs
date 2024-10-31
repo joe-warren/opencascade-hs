@@ -2,6 +2,7 @@
 module OpenCascade.BRepBuilderAPI.MakeShape
 ( MakeShape
 , shape
+, build
 ) where
 import OpenCascade.BRepBuilderAPI.Types
 import qualified OpenCascade.TopoDS as TopoDS
@@ -13,3 +14,5 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_Make
 
 shape :: Ptr MakeShape -> Acquire (Ptr TopoDS.Shape)
 shape builder = mkAcquire (rawShape builder) (deleteShape)  
+
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_MakeShape_build" build :: Ptr MakeShape -> IO ()

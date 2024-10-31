@@ -18,7 +18,6 @@ void hs_BRepFilletAPI_MakeFillet_addEdgeWithRadius(BRepFilletAPI_MakeFillet * bu
     builder->Add(r, *edge);
 }
 
-
 void hs_BRepFilletAPI_MakeFillet_addEdgeWithTwoRadiuses(BRepFilletAPI_MakeFillet * builder, double r1, double r2, TopoDS_Edge *edge ){
     builder->Add(r1, r2, *edge);
 }
