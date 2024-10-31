@@ -10,6 +10,7 @@ module OpenCascade.BRepFilletAPI.MakeFillet
 , faultyContour
 , nbEdges
 , edge
+, remove
 ) where
 
 import OpenCascade.BRepFilletAPI.Types (MakeFillet)
@@ -61,3 +62,5 @@ foreign import capi unsafe "hs_BRepFilletAPI_MakeFillet.h hs_BRepFilletAPI_MakeF
 
 edge :: Ptr MakeFillet -> Int -> Int -> Acquire (Ptr TopoDS.Edge)
 edge builder contourIndex edgeIndex = mkAcquire (rawEdge builder (fromIntegral contourIndex) (fromIntegral edgeIndex)) (deleteShape . upcast)
+
+foreign import capi unsafe "hs_BRepFilletAPI_MakeFillet.h hs_BRepFilletAPI_MakeFillet_remove" remove :: Ptr MakeFillet -> Ptr TopoDS.Edge -> IO ()

@@ -12,10 +12,11 @@ import qualified OpenCascade.TopExp.Explorer as Explorer
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.TopTools.ShapeMapHasher as TopTools.ShapeMapHasher
 import Foreign.Ptr (Ptr)
-import Control.Monad (when)
+import Control.Monad (when, forM, forM_, join)
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Linear.V3 (V3 (..))
+import Data.Acquire (Acquire)
 
 
 addEdgesToMakeFillet :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Ptr MakeFillet.MakeFillet -> Ptr Explorer.Explorer -> IO ()
@@ -37,6 +38,31 @@ addEdgesToMakeFillet radiusFn builder explorer = go [] 0
                         Explorer.next explorer
                         go (hash:visited) (i + 1) 
 
+
+buildAndMaybeTryRecover ::  Ptr MakeFillet.MakeFillet  -> Acquire ()
+buildAndMaybeTryRecover builder = do
+    liftIO $ MakeShape.build (upcast builder)
+    numBadContours <- liftIO $ MakeFillet.nbFaultyContours builder
+    liftIO $ print numBadContours
+    if numBadContours == 0
+        then return ()
+        else do
+            liftIO $ MakeFillet.reset builder
+            edges <- 
+                forM [1..numBadContours] $ \i -> do
+                    liftIO $ print ("i", i)
+                    contourIndex <- liftIO $ MakeFillet.faultyContour builder i
+                    numEdges <- liftIO $ MakeFillet.nbEdges builder contourIndex
+                    liftIO $ print ("numEdges", numEdges)
+                    forM [1..numEdges] $ \edgeIndex -> do 
+                        liftIO $ print ("edgeIndex", edgeIndex)
+                        MakeFillet.edge builder contourIndex edgeIndex
+            liftIO $ forM_ (join edges) $ \edge -> MakeFillet.remove builder edge
+            --liftIO $ MakeShape.build (upcast builder)
+            buildAndMaybeTryRecover builder
+
+
+
 -- | Add rounds with the given radius to each edge of a solid, conditional on the endpoints of the edge, and the index of the edge.
 -- 
 -- This can be used to selectively round\/fillet a `Solid`.
@@ -53,6 +79,8 @@ roundIndexedConditionalFillet radiusFunction solid = solidFromAcquire $ do
 
     explorer <- Explorer.new s ShapeEnum.Edge
     liftIO $ addEdgesToMakeFillet radiusFunction builder explorer
+
+    buildAndMaybeTryRecover builder
 
     MakeShape.shape (upcast builder)
 
