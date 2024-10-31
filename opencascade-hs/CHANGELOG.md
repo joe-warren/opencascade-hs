@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Add `OpenCascade.BRepFilletAPI.MakeFillet` methods `reset`, `nbFaultyContours`, `faultyContour`, `nbEdges` and `edge`
+
 ## 0.4.0.0
 
 - Add `OpenCascade.BRepBuilderAPI.MakeVertex`
