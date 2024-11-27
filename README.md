@@ -36,10 +36,24 @@ On MacOS, you should be able to install [OpenCASCADE](https://formulae.brew.sh/f
 brew install opencascade
 ```
 
+#### MacOs Intel support:
 You'll also need to configure the path to the OpenCASCADE header files, either via `extra-include-dirs`, or `CPATH`:
 
 ```
 export CPATH=$CPATH:/usr/local/Cellar/opencascade/7.*/include/opencascade/
+```
+
+#### MacOs Apple Silicon support:
+```
+export CPATH=$CPATH:/opt/homebrew/Cellar/opencascade/7.*/include/opencascade/
+```
+
+You can add this to your stack.yaml file:
+```
+extra-include-dirs: 
+- /opt/homebrew/Cellar/opencascade/7.8.1_1/include/opencascade
+extra-lib-dirs: 
+- /opt/homebrew/Cellar/opencascade/7.8.1_1/lib
 ```
 
 ## Licensing
