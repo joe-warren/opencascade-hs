@@ -9,12 +9,40 @@ import qualified Data.Attoparsec.Text as Atto
 import Graphics.Svg.PathParser (pathParser)
 import Graphics.Svg.Types as Svg
 import qualified Data.Text as T
-import Linear (V2 (..), zero)
+import Linear (V2 (..), zero, Metric (norm), normalize, (^*))
 
 data SVGError = SVGParseError String | SVGPathError String
+    deriving (Eq, Ord, Show)
 
 uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 uncurry3 f (a, b, c) = f a b c
+
+uncurry6 :: (a -> b -> c -> d -> e -> f -> g) -> (a, b, c, d, e, f) -> g
+uncurry6 fn (a, b, c, d, e, f) = fn a b c d e f
+
+ellipseToRelative :: Double -> Double -> Double -> Bool -> Bool -> V2 Double -> V2 Double -> (V2 Double, Waterfall.Path2D)
+ellipseToRelative rx ry angleDeg _largeArcFlag _sweepFlag relativeEnd =
+    let angleRads = angleDeg * pi / 180
+        scaleFac = ry / rx
+        transformForward :: Waterfall.Transformable2D a => a -> a
+        transformForward = Waterfall.rotate2D (angleRads) . Waterfall.scale2D (V2 (1/scaleFac) 1)
+        transformBack :: Waterfall.Transformable2D a => a -> a
+        transformBack = Waterfall.scale2D (V2 (scaleFac) 1) . Waterfall.rotate2D (-angleRads)
+        relativeEndTransformed@(V2 retX retY) = transformBack relativeEnd
+        transformedDistance = norm relativeEndTransformed
+        halfTD = transformedDistance * 0.5
+        perp = normalize (V2 (-retY) retX)  
+        radius = max ry halfTD 
+        centerPerpDistance = sqrt (radius * radius - halfTD * halfTD)
+        center = (relativeEndTransformed ^* 0.5) + (perp ^* centerPerpDistance)
+        midPoint = center + (perp ^* radius)
+        
+        in Waterfall.splice . transformForward $ Waterfall.arcVia zero midPoint relativeEndTransformed 
+
+ellipseToAbsolute :: Double -> Double -> Double -> Bool -> Bool -> V2 Double -> V2 Double -> (V2 Double, Waterfall.Path2D)
+ellipseToAbsolute rx ry angleDeg largeArcFlag sweepFlag absoluteEnd start =
+    ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag (absoluteEnd - start) start
+
 
 convertPathCommands :: [Svg.PathCommand] -> Either SVGError [Waterfall.Path2D]
 convertPathCommands cs =
@@ -50,6 +78,8 @@ convertPathCommands cs =
                      in goSegment (f <$> ds) 
                 (Svg.CurveTo Svg.OriginAbsolute points) -> goSegment (uncurry3 Waterfall.bezierTo2D <$> points)
                 (Svg.CurveTo Svg.OriginRelative points) -> goSegment (uncurry3 Waterfall.bezierRelative2D <$> points)
+                (Svg.EllipticalArc Svg.OriginAbsolute points) -> goSegment (uncurry6 ellipseToAbsolute <$> points)
+                (Svg.EllipticalArc Svg.OriginRelative points) -> goSegment (uncurry6 ellipseToRelative <$> points)
                 Svg.EndPath -> 
                     if null segments 
                         then go rest (o, []) paths
@@ -58,7 +88,6 @@ convertPathCommands cs =
                 Svg.SmoothCurveTo _ _ -> Left (SVGPathError "Smooth curves not supported")
                 Svg.QuadraticBezier _ _ -> Left (SVGPathError "Quadratic bezier not supported")
                 Svg.SmoothQuadraticBezierCurveTo _ _ -> Left (SVGPathError "Smooth QuadraticBezier curves not supported")
-                Svg.EllipticalArc _ _ -> Left (SVGPathError "Elliptical Arc not supported")
         go [] pathInProgress@(_o, segments) paths = 
             if null segments 
                 then Right paths

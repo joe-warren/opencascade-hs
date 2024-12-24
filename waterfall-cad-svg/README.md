@@ -2,7 +2,7 @@
 
 ![Waterfall CAD](https://raw.githubusercontent.com/joe-warren/opencascade-hs/main/images/logo/waterfall-cad-logo-name.svg)
 
-This package provides SVG support for Waterfall-CAD
+This package provides SVG support for Waterfall-CAD.
 
 Waterfall CAD is a declarative CAD/Solid Modeling library.
 
