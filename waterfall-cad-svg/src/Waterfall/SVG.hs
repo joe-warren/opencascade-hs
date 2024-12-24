@@ -21,7 +21,7 @@ uncurry6 :: (a -> b -> c -> d -> e -> f -> g) -> (a, b, c, d, e, f) -> g
 uncurry6 fn (a, b, c, d, e, f) = fn a b c d e f
 
 ellipseToRelative :: Double -> Double -> Double -> Bool -> Bool -> V2 Double -> V2 Double -> (V2 Double, Waterfall.Path2D)
-ellipseToRelative rx ry angleDeg _largeArcFlag _sweepFlag relativeEnd =
+ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag relativeEnd =
     let angleRads = angleDeg * pi / 180
         scaleFac = ry / rx
         transformForward :: Waterfall.Transformable2D a => a -> a
@@ -32,10 +32,12 @@ ellipseToRelative rx ry angleDeg _largeArcFlag _sweepFlag relativeEnd =
         transformedDistance = norm relativeEndTransformed
         halfTD = transformedDistance * 0.5
         perp = normalize (V2 (-retY) retX)  
+        p1 = if sweepFlag == largeArcFlag then negate perp else perp
+        p2 = if largeArcFlag then p1 else negate p1
         radius = max ry halfTD 
         centerPerpDistance = sqrt (radius * radius - halfTD * halfTD)
-        center = (relativeEndTransformed ^* 0.5) + (perp ^* centerPerpDistance)
-        midPoint = center + (perp ^* radius)
+        center = (relativeEndTransformed ^* 0.5) + (p1 ^* centerPerpDistance)
+        midPoint = center + (p2 ^* radius)
         
         in Waterfall.splice . transformForward $ Waterfall.arcVia zero midPoint relativeEndTransformed 
 
