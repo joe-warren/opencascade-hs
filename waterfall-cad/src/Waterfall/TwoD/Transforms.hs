@@ -57,17 +57,21 @@ fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do
     BRepBuilderAPI.Transform.transform shape trsf True 
 
     
-fromGTrsfPath :: Acquire (Ptr GP.GTrsf) -> Path2D -> Path2D
+fromGTrsfPath :: Acquire (Maybe (Ptr GP.GTrsf)) -> Path2D -> Path2D
 fromGTrsfPath mkTrsf (Path2D p) = Path2D . unsafeFromAcquire  $ do 
     path <- toAcquire p
-    trsf <- mkTrsf 
-    (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
+    trsfMay <- mkTrsf 
+    case trsfMay of
+        Just trsf -> (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
+        Nothing -> pure path
 
-fromGTrsfShape :: Acquire (Ptr GP.GTrsf) -> Shape -> Shape
+fromGTrsfShape :: Acquire (Maybe (Ptr GP.GTrsf)) -> Shape -> Shape
 fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
     shape <- toAcquire theRawShape 
-    trsf <- mkTrsf 
-    BRepBuilderAPI.GTransform.gtransform shape trsf True 
+    trsfMay <- mkTrsf 
+    case trsfMay of
+        Just trsf -> BRepBuilderAPI.GTransform.gtransform shape trsf True 
+        Nothing -> pure shape
 
 rotateTrsf :: Double -> Acquire (Ptr GP.Trsf)
 rotateTrsf angle = do
@@ -78,15 +82,18 @@ rotateTrsf angle = do
     liftIO $ GP.Trsf.setRotationAboutAxisAngle trsf axis angle
     return trsf
 
-scaleGTrsf :: V2 Double -> Acquire (Ptr GP.GTrsf)
-scaleGTrsf (V2 x y) = do
-    trsf <- GP.GTrsf.new 
-    liftIO $ do
-        GP.GTrsf.setValue trsf 1 1 x
-        GP.GTrsf.setValue trsf 2 2 y
-        GP.GTrsf.setValue trsf 3 3 1
-        GP.GTrsf.setForm trsf
-        return trsf
+scaleGTrsf :: V2 Double -> Acquire (Maybe (Ptr GP.GTrsf))
+scaleGTrsf v@(V2 x y) = 
+    if v == V2 1 1 
+        then pure Nothing
+        else do
+            trsf <- GP.GTrsf.new 
+            liftIO $ do
+                GP.GTrsf.setValue trsf 1 1 x
+                GP.GTrsf.setValue trsf 2 2 y
+                GP.GTrsf.setValue trsf 3 3 1
+                GP.GTrsf.setForm trsf
+                return . Just $ trsf
 
 uScaleTrsf :: Double -> Acquire (Ptr GP.Trsf) 
 uScaleTrsf factor = do

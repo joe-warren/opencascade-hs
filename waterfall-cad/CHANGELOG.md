@@ -9,8 +9,14 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added
+
 - Add `splice`/`splice2D`/`splice3D` functions
 - Add Epsilon constraint to `closeLoop` fixing behaviour when endpoints are _very close_ together 
+
+### Fixed
+
+- fixed behaviour when scaling with a unit vector (no scaling)
 
 ## 0.4.0.0
 
