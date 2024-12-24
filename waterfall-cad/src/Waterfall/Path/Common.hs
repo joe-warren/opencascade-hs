@@ -46,7 +46,7 @@ import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP.Vec as  GP.Vec
 import qualified OpenCascade.BRepBuilderAPI.Transform as BRepBuilderAPI.Transform
 import Data.Proxy (Proxy (..))
-import Linear (V3 (..), V2 (..), _xy)
+import Linear (V3 (..), V2 (..), _xy, Epsilon, nearZero)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import Control.Lens ((^.))
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
@@ -204,10 +204,10 @@ splice path pnt =
     in (fst res, fromWire (fmap snd . toAcquire $ res))
 
 -- | Given a path, return a new path with the endpoints joined by a straight line.
-closeLoop :: (AnyPath point path, Monoid path, Eq point) => path -> path
+closeLoop :: (AnyPath point path, Monoid path, Epsilon point) => path -> path
 closeLoop p = 
     let (s, e) = pathEndpoints p
-     in if s == e 
+     in if nearZero (s - e) 
             then p
             else p <> line e s
 
