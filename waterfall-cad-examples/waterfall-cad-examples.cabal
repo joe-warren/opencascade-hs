@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -37,6 +37,7 @@ library
       PrismExample
       ReadSolidExpressionExample
       RevolutionExample
+      SVG.PathExample
       SweepExample
       TextExample
   other-modules:
@@ -53,6 +54,7 @@ library
     , parsec ==3.1.*
     , parser-combinators >=1.2 && <1.4
     , waterfall-cad >=0.4.0.0 && <0.5
+    , waterfall-cad-svg >=0.4.0.0 && <0.5
   default-language: Haskell2010
 
 executable waterfall-cad-examples
@@ -72,4 +74,5 @@ executable waterfall-cad-examples
     , parser-combinators >=1.2 && <1.4
     , waterfall-cad >=0.4.0.0 && <0.5
     , waterfall-cad-examples
+    , waterfall-cad-svg >=0.4.0.0 && <0.5
   default-language: Haskell2010
