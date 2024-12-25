@@ -41,6 +41,12 @@ ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag relativeEnd =
         
         in Waterfall.splice . transformForward $ Waterfall.arcVia zero midPoint relativeEndTransformed 
 
+quadraticBezierAbsolute :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Waterfall.Path2D)
+quadraticBezierAbsolute p1 p2 p0 = (p2, Waterfall.bezier2D p0 (p0 + ((p1 - p0) ^* (2/3))) (p2 + ((p1 - p2) ^* (2/3))) p2)
+
+quadraticBezierRelative :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Waterfall.Path2D)
+quadraticBezierRelative p1 p2 p0 = quadraticBezierAbsolute (p0 + p1) (p0 + p2) p0
+
 ellipseToAbsolute :: Double -> Double -> Double -> Bool -> Bool -> V2 Double -> V2 Double -> (V2 Double, Waterfall.Path2D)
 ellipseToAbsolute rx ry angleDeg largeArcFlag sweepFlag absoluteEnd start =
     ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag (absoluteEnd - start) start
@@ -82,13 +88,14 @@ convertPathCommands cs =
                 (Svg.CurveTo Svg.OriginRelative points) -> goSegment (uncurry3 Waterfall.bezierRelative2D <$> points)
                 (Svg.EllipticalArc Svg.OriginAbsolute points) -> goSegment (uncurry6 ellipseToAbsolute <$> points)
                 (Svg.EllipticalArc Svg.OriginRelative points) -> goSegment (uncurry6 ellipseToRelative <$> points)
+                Svg.QuadraticBezier Svg.OriginAbsolute points -> goSegment (uncurry quadraticBezierAbsolute <$> points)
+                Svg.QuadraticBezier Svg.OriginRelative points -> goSegment (uncurry quadraticBezierRelative <$> points)
                 Svg.EndPath -> 
                     if null segments 
                         then go rest (o, []) paths
                         else let (_, newPath) = buildPathInProgress pathInProgress
                               in go rest (o, []) (Waterfall.closeLoop newPath : paths)
                 Svg.SmoothCurveTo _ _ -> Left (SVGPathError "Smooth curves not supported")
-                Svg.QuadraticBezier _ _ -> Left (SVGPathError "Quadratic bezier not supported")
                 Svg.SmoothQuadraticBezierCurveTo _ _ -> Left (SVGPathError "Smooth QuadraticBezier curves not supported")
         go [] pathInProgress@(_o, segments) paths = 
             if null segments 
