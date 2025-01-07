@@ -3,23 +3,24 @@ module Waterfall.SVG
 ( SVGError (..)
 , convertPathCommands
 , parsePath
+, convertTransform
+, convertTree
 ) where
 
 import qualified Waterfall
 import qualified Data.Attoparsec.Text as Atto
 import Graphics.Svg.PathParser (pathParser)
-import Graphics.Svg.Types as Svg
+import qualified Graphics.Svg.Types as Svg
 import qualified Data.Text as T
-import Linear (V2 (..), zero, Metric (norm), normalize, (^*))
+import Linear (V3 (..), V2 (..), zero, Metric (norm), normalize, (^*), _x, _y, unit)
+import Control.Lens ((^.), ala)
+import Data.Monoid (Endo (..))
 import Control.Arrow (second)
 import Data.Foldable (foldl')
 import Control.Monad (join)
 
-data SVGError = SVGParseError String | SVGPathError String
-    deriving (Eq, Ord, Show)
-
-uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
-uncurry3 f (a, b, c) = f a b c
+data SVGError = SVGParseError String | SVGPathError String | SvgTransformError String
+        deriving (Eq, Ord, Show)
 
 uncurry6 :: (a -> b -> c -> d -> e -> f -> g) -> (a, b, c, d, e, f) -> g
 uncurry6 fn (a, b, c, d, e, f) = fn a b c d e f
@@ -147,3 +148,41 @@ parsePath s =
         Right r -> convertPathCommands r
         Left msg -> Left (SVGParseError msg)
 
+convertTransform :: Waterfall.Transformable2D a => Svg.Transformation -> Either SVGError (a -> a)
+convertTransform (Svg.TransformMatrix a b c d e f) = Right $ Waterfall.matTransform2D (V2 (V3 a c e) (V3 b d f))
+convertTransform (Svg.Translate x y) = Right $ Waterfall.translate2D (V2 x y)
+convertTransform (Svg.Scale v Nothing) = Right $ Waterfall.uScale2D v
+convertTransform (Svg.Scale x (Just y)) = Right $ Waterfall.scale2D (V2 x y)
+convertTransform (Svg.Rotate angleDeg center) = 
+    let center' = maybe zero (uncurry V2) center 
+        fwd = Waterfall.translate2D (negate center')
+        angleRad = angleDeg * pi / 180
+        back = Waterfall.translate2D center'
+     in Right (back . Waterfall.rotate2D angleRad . fwd)
+convertTransform (Svg.SkewX x) = Right $ Waterfall.matTransform2D (V2 (V3 x 0 0) (V3 0 1 0))
+convertTransform (Svg.SkewY y) = Right $ Waterfall.matTransform2D (V2 (V3 1 0 0) (V3 0 y 0))
+convertTransform Svg.TransformUnknown = Left . SvgTransformError $ "Unknown Transform"
+
+chain :: [a -> a] -> a -> a
+chain = ala Endo foldMap
+
+{--
+convertCircle :: Svg.Circle -> Waterfall.Path2D
+convertCircle circle =
+    let (x, y) = circle ^. Svg.circleCenter
+        center = V2 x y
+    in Waterfall.translate2D center . Waterfall.uScale2D (circle ^. Svg.circleRadius) $
+            Waterfall.pathFrom (unit _x)
+                [ Waterfall.arcViaTo (unit _y) (negate $ unit _x)
+                , Waterfall.arcViaTo (negate $ unit _y) (unit _x)
+                ]
+--}
+
+convertTree :: Svg.Tree -> Either SVGError [Waterfall.Path2D]
+convertTree tree = do
+    transform <- maybe (pure id) (fmap chain . traverse convertTransform) (tree ^. Svg.drawAttr . Svg.drawAttributes . Svg.transform)
+    case tree of
+        Svg.PathTree path -> fmap transform <$> convertPathCommands (path ^. Svg.pathDefinition)
+        Svg.GroupTree group -> fmap transform . mconcat <$> traverse convertTree (group ^. Svg.groupChildren)
+        --Svg.CircleTree circle -> Right . pure . transform . convertCircle $ circle
+        _ -> Right []

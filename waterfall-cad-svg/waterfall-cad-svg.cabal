@@ -35,6 +35,7 @@ library
   build-depends:
       attoparsec
     , base >=4.7 && <5
+    , lens
     , linear
     , svg-tree
     , text

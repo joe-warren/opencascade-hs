@@ -28,6 +28,7 @@ dependencies:
 - attoparsec
 - text
 - linear
+- lens
 
 ghc-options: *ghc-options
 
