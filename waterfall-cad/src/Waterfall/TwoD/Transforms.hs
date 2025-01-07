@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Waterfall.TwoD.Transforms
 ( Transformable2D
+, matTransform2D
 , rotate2D
 , scale2D
 , uScale2D
@@ -11,8 +12,7 @@ module Waterfall.TwoD.Transforms
 
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
-import Linear.V2 (V2 (..))
-import Linear ((*^), normalize, dot)
+import Linear ((*^), normalize, dot, M32, V3 (..), V2 (..), (!*), _xy, _z, unit, M23)
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.GTrsf as GP.GTrsf
@@ -27,9 +27,13 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Acquire
 import Foreign.Ptr
 import Waterfall.TwoD.Internal.Shape (Shape(..))
+import Data.Function ((&))
+import Control.Lens ((.~), (^.))
 
 -- | Typeclass for objects that can be manipulated in 2D space
 class Transformable2D a where
+    -- | Directly transform with a transformation matrix
+    matTransform2D :: M23 Double -> a -> a
     -- | Rotate by an angle (in radians) about the origin
     rotate2D :: Double -> a -> a
     -- | Scale by different amounts along the x and y axes
@@ -55,7 +59,6 @@ fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do
     shape <- toAcquire theRawShape
     trsf <- mkTrsf 
     BRepBuilderAPI.Transform.transform shape trsf True 
-
     
 fromGTrsfPath :: Acquire (Maybe (Ptr GP.GTrsf)) -> Path2D -> Path2D
 fromGTrsfPath mkTrsf (Path2D p) = Path2D . unsafeFromAcquire  $ do 
@@ -72,6 +75,20 @@ fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do
     case trsfMay of
         Just trsf -> BRepBuilderAPI.GTransform.gtransform shape trsf True 
         Nothing -> pure shape
+
+matrixGTrsf :: M23 Double -> Acquire (Maybe (Ptr GP.GTrsf))
+matrixGTrsf (V2 (V3 1 0 0) (V3 0 1 0)) = pure Nothing
+matrixGTrsf (V2 (V3 v11 v12 v13) (V3 v21 v22 v23)) = do
+    trsf <- GP.GTrsf.new
+    liftIO $ do  
+        GP.GTrsf.setValue trsf 1 1 v11
+        GP.GTrsf.setValue trsf 1 2 v12
+        GP.GTrsf.setValue trsf 1 4 v13
+        GP.GTrsf.setValue trsf 2 1 v21
+        GP.GTrsf.setValue trsf 2 2 v22
+        GP.GTrsf.setValue trsf 2 4 v23
+        GP.GTrsf.setForm trsf
+        return . pure $ trsf
 
 rotateTrsf :: Double -> Acquire (Ptr GP.Trsf)
 rotateTrsf angle = do
@@ -120,6 +137,10 @@ mirrorTrsf (V2 x y) = do
     return trsf
 
 instance Transformable2D Path2D where
+    
+    matTransform2D :: M23 Double -> Path2D -> Path2D
+    matTransform2D = fromGTrsfPath . matrixGTrsf 
+
     rotate2D :: Double -> Path2D -> Path2D
     rotate2D = fromTrsfPath . rotateTrsf  
     
@@ -134,10 +155,11 @@ instance Transformable2D Path2D where
 
     mirror2D :: V2 Double -> Path2D -> Path2D
     mirror2D = fromTrsfPath . mirrorTrsf
-    
-
 
 instance Transformable2D Shape where
+    matTransform2D :: M23 Double -> Shape -> Shape
+    matTransform2D = fromGTrsfShape . matrixGTrsf
+
     rotate2D :: Double -> Shape -> Shape
     rotate2D = fromTrsfShape . rotateTrsf  
     
@@ -154,6 +176,9 @@ instance Transformable2D Shape where
     mirror2D = fromTrsfShape . mirrorTrsf
 
 instance Transformable2D (V2 Double) where
+    matTransform2D :: M23 Double -> V2 Double -> V2 Double
+    matTransform2D m v = m !* (unit _z & _xy .~ v)
+
     scale2D :: V2 Double -> V2 Double  -> V2 Double
     scale2D = (*)
 

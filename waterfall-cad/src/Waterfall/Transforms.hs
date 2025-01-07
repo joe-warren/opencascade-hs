@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Waterfall.Transforms
 ( Transformable
+, matTransform
 , scale
 , uScale
 , rotate
@@ -11,7 +12,8 @@ module Waterfall.Transforms
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire) 
 import Linear.V3 (V3 (..))
-import Linear ((*^), normalize, dot )
+import Linear.V4 (V4 (..))
+import Linear (M34, (*^), normalize, dot, (!*), unit, _w, _xyz)
 import qualified Linear.Quaternion as Quaternion
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
@@ -27,9 +29,13 @@ import Data.Acquire
 import Foreign.Ptr
 import Waterfall.Internal.Path (Path(..))
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
+import Data.Function ((&))
+import Control.Lens ((.~))
 
 -- | Typeclass for objects that can be manipulated in 3D space
 class Transformable a where
+    -- | Directly transform with a transformation matrix
+    matTransform :: M34 Double -> a -> a
     -- | Scale by different amounts along the x, y and z axes
     scale :: V3 Double -> a -> a
     -- Uniform Scale
@@ -42,13 +48,11 @@ class Transformable a where
     -- | Mirror in the plane, which passes through the origin, tangent to the specified vector
     mirror :: V3 Double -> a -> a
 
-
 fromTrsfSolid :: Acquire (Ptr GP.Trsf) -> Solid -> Solid
 fromTrsfSolid mkTrsf s = solidFromAcquire $ do 
     solid <- acquireSolid s
     trsf <- mkTrsf 
     BRepBuilderAPI.Transform.transform solid trsf True 
-
 
 fromGTrsfSolid :: Acquire (Maybe (Ptr GP.GTrsf)) -> Solid -> Solid
 fromGTrsfSolid mkTrsf s = solidFromAcquire $ do 
@@ -57,7 +61,6 @@ fromGTrsfSolid mkTrsf s = solidFromAcquire $ do
     case trsfMay of
         Just trsf -> BRepBuilderAPI.GTransform.gtransform solid trsf True 
         Nothing -> pure solid
-
 
 fromTrsfPath :: Acquire (Ptr GP.Trsf) -> Path -> Path
 fromTrsfPath mkTrsf (Path p) = Path . unsafeFromAcquire $ do 
@@ -118,8 +121,31 @@ mirrorTrsf (V3 x y z) = do
         GP.Ax2.setDirection axis dir
         GP.Trsf.setMirrorAboutAx2 trsf axis
     return trsf
+
+matrixGTrsf :: M34 Double -> Acquire (Maybe (Ptr GP.GTrsf))
+matrixGTrsf (V3 (V4 1 0 0 0) (V4 0 1 0 0) (V4 0 0 1 0)) = pure Nothing
+matrixGTrsf (V3 (V4 v11 v12 v13 v14) (V4 v21 v22 v23 v24) (V4 v31 v32 v33 v34)) = do
+    trsf <- GP.GTrsf.new
+    liftIO $ do  
+        GP.GTrsf.setValue trsf 1 1 v11
+        GP.GTrsf.setValue trsf 1 2 v12
+        GP.GTrsf.setValue trsf 1 3 v13
+        GP.GTrsf.setValue trsf 1 4 v14
+        GP.GTrsf.setValue trsf 2 1 v21
+        GP.GTrsf.setValue trsf 2 2 v22
+        GP.GTrsf.setValue trsf 2 3 v23
+        GP.GTrsf.setValue trsf 2 4 v24
+        GP.GTrsf.setValue trsf 3 1 v31
+        GP.GTrsf.setValue trsf 3 2 v32
+        GP.GTrsf.setValue trsf 3 3 v33
+        GP.GTrsf.setValue trsf 3 4 v34
+        GP.GTrsf.setForm trsf
+        return . pure $ trsf
     
 instance Transformable Solid where
+    matTransform :: M34 Double -> Solid -> Solid
+    matTransform = fromGTrsfSolid . matrixGTrsf 
+    
     scale :: V3 Double -> Solid -> Solid
     scale = fromGTrsfSolid . scaleTrsf
 
@@ -136,6 +162,9 @@ instance Transformable Solid where
     mirror = fromTrsfSolid . mirrorTrsf
 
 instance Transformable Path where
+    matTransform :: M34 Double -> Path -> Path
+    matTransform = fromGTrsfPath . matrixGTrsf 
+    
     scale :: V3 Double -> Path -> Path
     scale = fromGTrsfPath . scaleTrsf
 
@@ -151,8 +180,10 @@ instance Transformable Path where
     mirror :: V3 Double -> Path -> Path
     mirror = fromTrsfPath . mirrorTrsf
 
-        
 instance Transformable (V3 Double) where
+    matTransform :: M34 Double -> V3 Double -> V3 Double
+    matTransform m v = m !* (unit _w & _xyz .~ v)
+
     scale :: V3 Double -> V3 Double  -> V3 Double
     scale = (*)
 

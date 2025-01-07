@@ -13,6 +13,7 @@ and this project adheres to the
 
 - Add `splice`/`splice2D`/`splice3D` functions
 - Add Epsilon constraint to `closeLoop` fixing behaviour when endpoints are _very close_ together 
+- Add `matTransform` and `matTransform2D` methods to the `Transformable` and `Transformable2D` typeclasses, respectively
 
 ### Fixed
 
