@@ -12,6 +12,7 @@ import TextExample (textExample)
 import BoundingBoxExample (boundingBoxExample)
 import ReadSolidExpressionExample (readSolidExpressionExample)
 import SVG.PathExample (pathExample)
+import SVG.ReadFileExample (readFileExample)
 import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB, writeOBJ)
 import qualified Waterfall.Solids as Solids
 import qualified Options.Applicative as OA
@@ -63,7 +64,10 @@ exampleOption =
        (OA.option OA.auto (OA.long "depth" <> OA.help "depth to extrude the text to") <|> pure 10.0) 
       ) <|> 
       (OA.flag' (either error pure . pathExample) (OA.long "svg-path" <> OA.help "parse an SVG path string and use it to generate a prism") <*> 
-       (OA.strOption (OA.long "path-string" <> OA.help "the SVG path string")))
+       (OA.strOption (OA.long "path-string" <> OA.help "the SVG path string"))
+      ) <|>  
+      (OA.flag' (readFileExample) (OA.long "svg-read" <> OA.help "read an SVG file and use it to generate a prism") <*> 
+       (OA.strOption (OA.long "svg" <> OA.help "path to the svg")))
 
 main :: IO ()
 main = join (OA.execParser opts)

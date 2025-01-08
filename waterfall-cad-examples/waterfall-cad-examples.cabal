@@ -38,6 +38,7 @@ library
       ReadSolidExpressionExample
       RevolutionExample
       SVG.PathExample
+      SVG.ReadFileExample
       SweepExample
       TextExample
   other-modules:
