@@ -12,7 +12,7 @@ module Waterfall.TwoD.Transforms
 
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
-import Linear ((*^), normalize, dot, M32, V3 (..), V2 (..), (!*), _xy, _z, unit, M23)
+import Linear ((*^), normalize, dot, V3 (..), V2 (..), (!*), _xy, _z, unit, M23)
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.GTrsf as GP.GTrsf
@@ -28,7 +28,7 @@ import Data.Acquire
 import Foreign.Ptr
 import Waterfall.TwoD.Internal.Shape (Shape(..))
 import Data.Function ((&))
-import Control.Lens ((.~), (^.))
+import Control.Lens ((.~))
 
 -- | Typeclass for objects that can be manipulated in 2D space
 class Transformable2D a where

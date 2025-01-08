@@ -2,6 +2,7 @@ module Waterfall.Internal.Edges
 ( edgeEndpoints
 , wireEndpoints
 , allWireEndpoints
+, allWires
 , wireTangent
 , reverseEdge
 , reverseWire
@@ -13,6 +14,9 @@ import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.BRep.Tool as BRep.Tool
 import qualified OpenCascade.Geom.Curve as Geom.Curve
 import qualified OpenCascade.BRepTools.WireExplorer as WireExplorer
+import qualified OpenCascade.TopExp.Explorer as Explorer 
+import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
+import qualified OpenCascade.TopTools.ShapeMapHasher as TopTools.ShapeMapHasher
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import Waterfall.Internal.FromOpenCascade (gpPntToV3, gpVecToV3)
 import Data.Acquire
@@ -23,6 +27,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Control.Monad (when)
 import Waterfall.Internal.ToOpenCascade (v3ToPnt)
 import Data.Foldable (traverse_)
+import OpenCascade.Inheritance (unsafeDowncast)
 
 edgeEndpoints :: Ptr TopoDS.Edge -> IO (V3 Double, V3 Double)
 edgeEndpoints edge = (`with` pure) $ do
@@ -45,6 +50,24 @@ allWireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
                 else pure [points]
     runToEnd
 
+allSubShapes :: ShapeEnum.ShapeEnum -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
+allSubShapes t s = do 
+    explorer <- Explorer.new s t
+    let go visited = do
+            isMore <- liftIO $ Explorer.more explorer
+            if isMore 
+                then do
+                    v <- liftIO $ Explorer.value explorer
+                    hash <- liftIO $ TopTools.ShapeMapHasher.hash v
+                    let add = if hash `elem` visited then id else (v:) 
+                    liftIO $ Explorer.next explorer
+                    add <$> go visited
+                else return []
+    go []
+
+allWires :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Wire]
+allWires s = traverse (liftIO . unsafeDowncast) =<<  allSubShapes ShapeEnum.Wire s 
+    
 wireEndpoints :: Ptr TopoDS.Wire -> IO (V3 Double, V3 Double)
 wireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
     v1 <- WireExplorer.current explorer
