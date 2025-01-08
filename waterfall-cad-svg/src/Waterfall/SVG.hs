@@ -13,13 +13,17 @@ import Graphics.Svg.PathParser (pathParser)
 import qualified Graphics.Svg.Types as Svg
 import qualified Data.Text as T
 import Linear (V3 (..), V2 (..), zero, Metric (norm), normalize, (^*), _x, _y, unit)
-import Control.Lens ((^.), ala)
+import Control.Lens ((^.), ala, each)
 import Data.Monoid (Endo (..))
 import Control.Arrow (second)
 import Data.Foldable (foldl')
 import Control.Monad (join)
+import Data.Function ((&))
 
-data SVGError = SVGParseError String | SVGPathError String | SvgTransformError String
+data SVGErrorKind = SVGParseError | SVGPathError | SVGTransformError | SVGNumberError
+    deriving (Eq, Ord, Show)
+
+data SVGError = SVGError SVGErrorKind String
         deriving (Eq, Ord, Show)
 
 uncurry6 :: (a -> b -> c -> d -> e -> f -> g) -> (a, b, c, d, e, f) -> g
@@ -74,19 +78,19 @@ ellipseToAbsolute rx ry angleDeg largeArcFlag sweepFlag absoluteEnd start =
     ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag (absoluteEnd - start) start
 
 smoothCurveToAbsolute :: (V2 Double, V2 Double) -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-smoothCurveToAbsolute _ Nothing _ = Left (SVGPathError "S command must follow either an S, s, C or c command")
+smoothCurveToAbsolute _ Nothing _ = Left (SVGError SVGPathError "S command must follow either an S, s, C or c command")
 smoothCurveToAbsolute (cp2, cp3) (Just cp1) cp0 = Right (Just (cp3 + cp3 - cp2), Waterfall.bezierTo2D cp1 cp2 cp3 cp0) 
 
 smoothCurveToRelative ::  (V2 Double, V2 Double) -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-smoothCurveToRelative _ Nothing _ = Left (SVGPathError "s command must follow either an S, s, C or c command")
+smoothCurveToRelative _ Nothing _ = Left (SVGError SVGPathError "s command must follow either an S, s, C or c command")
 smoothCurveToRelative (cp2, cp3) cp1 cp0 = smoothCurveToAbsolute (cp0 + cp2, cp0 + cp3) cp1 cp0
 
 smoothQuadraticBezierCurveToAbsolute :: V2 Double -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-smoothQuadraticBezierCurveToAbsolute _ Nothing _ = Left (SVGPathError "T command must follow either an T, t, Q or q command")
+smoothQuadraticBezierCurveToAbsolute _ Nothing _ = Left (SVGError SVGPathError "T command must follow either an T, t, Q or q command")
 smoothQuadraticBezierCurveToAbsolute cp2 (Just cp1) cp0 = Right (Just (cp2 + cp2 - cp1), quadraticBezierAbsolute cp0 cp1 cp2)
 
 smoothQuadraticBezierCurveToRelative :: V2 Double -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-smoothQuadraticBezierCurveToRelative _ Nothing _ = Left (SVGPathError "t command must follow either an T, t, Q or q command")
+smoothQuadraticBezierCurveToRelative _ Nothing _ = Left (SVGError SVGPathError "t command must follow either an T, t, Q or q command")
 smoothQuadraticBezierCurveToRelative cp2 cp1 cp0 = smoothQuadraticBezierCurveToRelative (cp0 + cp2) cp1 cp0
 
 convertPathCommands :: [Svg.PathCommand] -> Either SVGError [Waterfall.Path2D]
@@ -146,7 +150,7 @@ parsePath :: String -> Either SVGError [Waterfall.Path2D]
 parsePath s =
     case Atto.parseOnly (pathParser <* Atto.endOfInput) (T.pack s) of 
         Right r -> convertPathCommands r
-        Left msg -> Left (SVGParseError msg)
+        Left msg -> Left (SVGError SVGParseError msg)
 
 convertTransform :: Waterfall.Transformable2D a => Svg.Transformation -> Either SVGError (a -> a)
 convertTransform (Svg.TransformMatrix a b c d e f) = Right $ Waterfall.matTransform2D (V2 (V3 a c e) (V3 b d f))
@@ -161,28 +165,83 @@ convertTransform (Svg.Rotate angleDeg center) =
      in Right (back . Waterfall.rotate2D angleRad . fwd)
 convertTransform (Svg.SkewX x) = Right $ Waterfall.matTransform2D (V2 (V3 x 0 0) (V3 0 1 0))
 convertTransform (Svg.SkewY y) = Right $ Waterfall.matTransform2D (V2 (V3 1 0 0) (V3 0 y 0))
-convertTransform Svg.TransformUnknown = Left . SvgTransformError $ "Unknown Transform"
+convertTransform Svg.TransformUnknown = Left . (SVGError SVGTransformError) $ "Unknown Transform"
 
 chain :: [a -> a] -> a -> a
 chain = ala Endo foldMap
 
-{--
-convertCircle :: Svg.Circle -> Waterfall.Path2D
-convertCircle circle =
-    let (x, y) = circle ^. Svg.circleCenter
-        center = V2 x y
-    in Waterfall.translate2D center . Waterfall.uScale2D (circle ^. Svg.circleRadius) $
-            Waterfall.pathFrom (unit _x)
-                [ Waterfall.arcViaTo (unit _y) (negate $ unit _x)
-                , Waterfall.arcViaTo (negate $ unit _y) (unit _x)
-                ]
---}
+svgDPI :: Svg.Dpi
+svgDPI = 300
+
+convertNumber :: Svg.Number -> Either SVGError Double
+convertNumber n = 
+    -- toUserUnit should guarantee we either get a Num, Em, or Percent value here
+    -- of which only Num is supported
+    case Svg.toUserUnit svgDPI n of 
+        Svg.Num v -> Right v
+        Svg.Px _ -> Left (SVGError SVGNumberError "Unexpected Px value")
+        Svg.Em _ -> Left (SVGError SVGNumberError "Unsupported Em value")
+        Svg.Percent _ -> Left (SVGError SVGNumberError "Unsupported Percent value")
+        Svg.Pc _ ->  Left (SVGError SVGNumberError "Unexpected Pc value")
+        Svg.Inches _ -> Left (SVGError SVGNumberError "Unexpected Inches value")
+        Svg.Mm _ -> Left (SVGError SVGNumberError "Unexpected Mm value")
+        Svg.Cm _ -> Left (SVGError SVGNumberError "Unexpected Cm value")
+        Svg.Point _ -> Left (SVGError SVGNumberError "Unexpected Point value")
+
+
+convertPoint :: Svg.Point -> Either SVGError (V2 Double)
+convertPoint = fmap (uncurry V2) . each convertNumber 
+
+convertCircle :: Svg.Circle -> Either SVGError [Waterfall.Path2D]
+convertCircle circle = do 
+    center <- convertPoint (circle ^. Svg.circleCenter)
+    radius <- circle ^. Svg.circleRadius & convertNumber
+    return
+        . fmap (Waterfall.translate2D center . Waterfall.uScale2D radius)
+        . Waterfall.shapePaths 
+        $ Waterfall.unitCircle
+
+convertPoints :: [Svg.RPoint] -> [Waterfall.Path2D]
+convertPoints (h:t) = pure $ Waterfall.pathFrom h (Waterfall.lineTo <$> t)
+convertPoints [] = []
+
+convertPolyLine  :: Svg.PolyLine -> [Waterfall.Path2D]
+convertPolyLine polyLine = convertPoints (polyLine ^. Svg.polyLinePoints)
+
+wrap :: [a] -> [a]
+wrap (h:t) = h:t <> [h] 
+wrap [] = []
+
+convertPolygon  :: Svg.Polygon -> [Waterfall.Path2D]
+convertPolygon polygon = convertPoints (polygon ^. Svg.polygonPoints & wrap)
+
+convertLine :: Svg.Line -> Either SVGError Waterfall.Path2D
+convertLine line = 
+    Waterfall.line 
+        <$> convertPoint (line ^. Svg.linePoint1)
+        <*> convertPoint (line ^. Svg.linePoint2)
+        
+convertEllipse :: Svg.Ellipse -> Either SVGError [Waterfall.Path2D]
+convertEllipse ellipse = do 
+    center <- convertPoint (ellipse ^. Svg.ellipseCenter)
+    rX <- ellipse ^. Svg.ellipseXRadius & convertNumber
+    rY <- ellipse ^. Svg.ellipseYRadius & convertNumber
+    return 
+        . fmap (Waterfall.translate2D center . Waterfall.scale2D (V2 rX rY))
+        . Waterfall.shapePaths
+        $ Waterfall.unitCircle
 
 convertTree :: Svg.Tree -> Either SVGError [Waterfall.Path2D]
 convertTree tree = do
     transform <- maybe (pure id) (fmap chain . traverse convertTransform) (tree ^. Svg.drawAttr . Svg.drawAttributes . Svg.transform)
-    case tree of
-        Svg.PathTree path -> fmap transform <$> convertPathCommands (path ^. Svg.pathDefinition)
-        Svg.GroupTree group -> fmap transform . mconcat <$> traverse convertTree (group ^. Svg.groupChildren)
-        --Svg.CircleTree circle -> Right . pure . transform . convertCircle $ circle
+    fmap transform <$> case tree of
+        Svg.PathTree path -> convertPathCommands (path ^. Svg.pathDefinition)
+        Svg.GroupTree group ->  mconcat <$> traverse convertTree (group ^. Svg.groupChildren)
+        Svg.SymbolTree sym ->  mconcat <$> traverse convertTree (sym ^. Svg.groupOfSymbol . Svg.groupChildren)
+        Svg.CircleTree circle -> convertCircle circle
+        Svg.PolyLineTree polyLine -> pure $ convertPolyLine polyLine
+        Svg.PolygonTree polygon -> pure $ convertPolygon polygon
+        Svg.LineTree line -> pure <$> convertLine line
+        Svg.EllipseTree ellipse -> convertEllipse ellipse
+        Svg.RectangleTree _rect -> Left (SVGError SVGPathError "TODO: Still need to implement rectangles")
         _ -> Right []
