@@ -5,22 +5,24 @@ module Waterfall.SVG
 , parsePath
 , convertTransform
 , convertTree
+, convertDocument
 ) where
 
 import qualified Waterfall
 import qualified Data.Attoparsec.Text as Atto
 import Graphics.Svg.PathParser (pathParser)
-import qualified Graphics.Svg.Types as Svg
+import qualified Graphics.Svg as Svg
 import qualified Data.Text as T
-import Linear (V3 (..), V2 (..), zero, Metric (norm), normalize, (^*), _x, _y, unit)
+import Linear (V3 (..), V2 (..), zero, Metric (norm), normalize, (^*), (*^), _x, _y, unit)
 import Control.Lens ((^.), ala, each)
 import Data.Monoid (Endo (..))
 import Control.Arrow (second)
 import Data.Foldable (foldl')
-import Control.Monad (join)
+import Control.Monad (join, (<=<))
+import Data.Maybe (catMaybes)
 import Data.Function ((&))
 
-data SVGErrorKind = SVGParseError | SVGPathError | SVGTransformError | SVGNumberError
+data SVGErrorKind = SVGIOError | SVGParseError | SVGPathError | SVGTransformError | SVGNumberError
     deriving (Eq, Ord, Show)
 
 data SVGError = SVGError SVGErrorKind String
@@ -231,6 +233,50 @@ convertEllipse ellipse = do
         . Waterfall.shapePaths
         $ Waterfall.unitCircle
 
+convertRectangle :: Svg.Rectangle -> Either SVGError [Waterfall.Path2D]
+convertRectangle rect = do
+    upperLeft <- convertPoint (rect ^. Svg.rectUpperLeftCorner)    
+    (rX', rY') <- each convertNumber (rect ^. Svg.rectCornerRadius)
+    w <- convertNumber (rect ^. Svg.rectWidth)
+    h <- convertNumber (rect ^. Svg.rectHeight)
+    let rX = min rX' (w/2)
+    let rY = min rY' (h/2)
+    let w' = w - 2 * rX
+    let h' = h - 2 * rY
+    let quarterCircle = Waterfall.arcVia (unit _y) (normalize (V2 1 1)) (unit _x)
+    let scaleBevel = Waterfall.scale2D (V2 rX rY)
+    if rX == 0 || rY == 0 
+        then Waterfall.unitSquare &
+                Waterfall.scale2D (V2 w h) &
+                Waterfall.translate2D upperLeft &
+                Waterfall.shapePaths & 
+                return
+        else return . pure . Waterfall.pathFrom (V2 rX 0) . catMaybes $
+                [ if w' > 0 then Just (Waterfall.lineRelative (w' *^ unit _x)) else Nothing
+                , quarterCircle 
+                    & scaleBevel 
+                    & Waterfall.splice
+                    & pure
+                , if h' > 0 then Just (Waterfall.lineRelative (h' *^ unit _y)) else Nothing
+                , quarterCircle 
+                    & Waterfall.rotate2D (pi/2)
+                    & scaleBevel 
+                    & Waterfall.splice
+                    & pure
+                , if w' > 0 then Just (Waterfall.lineRelative (negate (w' *^ unit _x))) else Nothing
+                , quarterCircle 
+                    & Waterfall.rotate2D pi
+                    & scaleBevel 
+                    & Waterfall.splice
+                    & pure
+                , if h' > 0 then Just (Waterfall.lineRelative (negate (h' *^ unit _y))) else Nothing
+                , quarterCircle 
+                    & Waterfall.rotate2D (-pi/2)
+                    & scaleBevel 
+                    & Waterfall.splice
+                    & pure
+                ]
+
 convertTree :: Svg.Tree -> Either SVGError [Waterfall.Path2D]
 convertTree tree = do
     transform <- maybe (pure id) (fmap chain . traverse convertTransform) (tree ^. Svg.drawAttr . Svg.drawAttributes . Svg.transform)
@@ -243,5 +289,13 @@ convertTree tree = do
         Svg.PolygonTree polygon -> pure $ convertPolygon polygon
         Svg.LineTree line -> pure <$> convertLine line
         Svg.EllipseTree ellipse -> convertEllipse ellipse
-        Svg.RectangleTree _rect -> Left (SVGError SVGPathError "TODO: Still need to implement rectangles")
+        Svg.RectangleTree rectangle -> convertRectangle rectangle
         _ -> Right []
+
+convertDocument :: Svg.Document -> Either SVGError [Waterfall.Path2D]
+convertDocument doc = fmap mconcat . traverse convertTree $ (doc ^. Svg.elements) 
+
+readSVG ::FilePath -> IO (Either SVGError [Waterfall.Path2D])
+readSVG path = 
+    let error = Left . SVGError SVGIOError $ "Failed to read svg from file: " <> path
+    in ( convertDocument <=< maybe error Right) <$> Svg.loadSvgFile path 
