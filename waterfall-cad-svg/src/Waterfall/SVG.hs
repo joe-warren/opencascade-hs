@@ -6,6 +6,7 @@ module Waterfall.SVG
 , convertTransform
 , convertTree
 , convertDocument
+, readSVG
 ) where
 
 import qualified Waterfall
@@ -243,7 +244,7 @@ convertRectangle rect = do
     let rY = min rY' (h/2)
     let w' = w - 2 * rX
     let h' = h - 2 * rY
-    let quarterCircle = Waterfall.arcVia (unit _y) (normalize (V2 1 1)) (unit _x)
+    let quarterCircle = Waterfall.arcVia (negate $ unit _y) (normalize (V2 1 (-1))) (unit _x)
     let scaleBevel = Waterfall.scale2D (V2 rX rY)
     if rX == 0 || rY == 0 
         then Waterfall.unitSquare &
@@ -297,5 +298,5 @@ convertDocument doc = fmap mconcat . traverse convertTree $ (doc ^. Svg.elements
 
 readSVG ::FilePath -> IO (Either SVGError [Waterfall.Path2D])
 readSVG path = 
-    let error = Left . SVGError SVGIOError $ "Failed to read svg from file: " <> path
-    in ( convertDocument <=< maybe error Right) <$> Svg.loadSvgFile path 
+    let fileReadErr = Left . SVGError SVGIOError $ "Failed to read svg from file: " <> path
+    in ( convertDocument <=< maybe fileReadErr Right) <$> Svg.loadSvgFile path 
