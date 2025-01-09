@@ -99,20 +99,25 @@ smoothQuadraticBezierCurveToRelative cp2 cp1 cp0 = smoothQuadraticBezierCurveToR
 convertPathCommands :: [Svg.PathCommand] -> Either SVGError [Waterfall.Path2D]
 convertPathCommands cs =
     let
-        relativeLocation' _ Svg.OriginAbsolute v = last v
-        relativeLocation' curPos Svg.OriginRelative v = curPos + sum v
+        relativeLocation _ Svg.OriginAbsolute v = v
+        relativeLocation curPos Svg.OriginRelative v = curPos + v
         buildPathInProgress (origin, segments) = 
             pathFromToWithControlPoint segments origin
         withoutControlPoint f _cp o = Right (Nothing, f o)
         go (cmd:rest) pathInProgress@(o, segments) paths = 
             let goSegment ss = go rest (o, segments <> ss) paths  
             in case cmd of
-                (Svg.MoveTo origin v) -> 
-                    if null segments 
-                        then go rest (relativeLocation' o origin v, []) paths
+                (Svg.MoveTo origin (v:vs)) ->
+                    let restPlusImplicitLineTo =
+                            case vs of
+                                [] -> rest
+                                implicitLineTos -> Svg.LineTo origin implicitLineTos : rest
+                    in if null segments
+                        then go restPlusImplicitLineTo (relativeLocation o origin v, []) paths
                         else case buildPathInProgress pathInProgress of
-                            Right (currentPosition, newPath) ->  go rest (relativeLocation' currentPosition origin v, []) (newPath : paths)
+                            Right (currentPosition, newPath) ->  go restPlusImplicitLineTo (relativeLocation currentPosition origin v, []) (newPath : paths)
                             Left err -> Left err
+                (Svg.MoveTo _ []) -> Left (SVGError SVGPathError "Empty MoveTo command")
                 (Svg.LineTo Svg.OriginAbsolute vs) -> goSegment (withoutControlPoint . Waterfall.lineTo2D <$> vs )
                 (Svg.LineTo Svg.OriginRelative vs) -> goSegment (withoutControlPoint . Waterfall.lineRelative2D <$> vs)
                 (Svg.HorizontalTo Svg.OriginAbsolute ds) -> 
