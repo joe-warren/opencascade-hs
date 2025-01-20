@@ -10,6 +10,8 @@ and this project adheres to the
 
 - Add `OpenCascade.BRepFilletAPI.MakeFillet` methods `reset`, `nbFaultyContours`, `faultyContour`, `nbEdges`, `edge` and `remove`
 - Add `OpenCascade.BRepBuilderAPI.MakeShape` method `build`
+- Add `OpenCascade.BRepOffsetAPI.MakePipe` constructor `fromWireShapeTrihedronModeAndForceC1`
+- Add `OpenCascade.GeomFill.Trihedron`
 
 ## 0.4.0.0
 
