@@ -11,6 +11,7 @@ module Waterfall.Transforms
 ) where
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire) 
+import Waterfall.Internal.Path.Common (RawPath(..))
 import Linear.V3 (V3 (..))
 import Linear.V4 (V4 (..))
 import Linear (M34, (*^), normalize, dot, (!*), unit, _w, _xyz)
@@ -62,19 +63,24 @@ fromGTrsfSolid mkTrsf s = solidFromAcquire $ do
         Just trsf -> BRepBuilderAPI.GTransform.gtransform solid trsf True 
         Nothing -> pure solid
 
-fromTrsfPath :: Acquire (Ptr GP.Trsf) -> Path -> Path
-fromTrsfPath mkTrsf (Path p) = Path . unsafeFromAcquire $ do 
+fromTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.Trsf) -> Path -> Path
+fromTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquire $ do 
     path <- toAcquire p
     trsf <- mkTrsf 
     (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast path) trsf True 
+fromTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
+fromTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 
-fromGTrsfPath :: Acquire (Maybe (Ptr GP.GTrsf)) -> Path -> Path
-fromGTrsfPath mkTrsf (Path p) = Path . unsafeFromAcquire $ do 
+fromGTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Maybe (Ptr GP.GTrsf)) -> Path -> Path
+fromGTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquire $ do 
     path <- toAcquire p
     trsfMay <- mkTrsf 
     case trsfMay of
         Just trsf -> (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
         Nothing -> pure path
+fromGTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
+fromGTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
+
 
 scaleTrsf :: V3 Double -> Acquire (Maybe (Ptr GP.GTrsf))
 scaleTrsf v@(V3 x y z ) = 
@@ -163,22 +169,22 @@ instance Transformable Solid where
 
 instance Transformable Path where
     matTransform :: M34 Double -> Path -> Path
-    matTransform = fromGTrsfPath . matrixGTrsf 
+    matTransform m = fromGTrsfPath (matTransform m) (matrixGTrsf m)
     
     scale :: V3 Double -> Path -> Path
-    scale = fromGTrsfPath . scaleTrsf
+    scale s = fromGTrsfPath (scale s) (scaleTrsf s)
 
     uScale :: Double -> Path -> Path
-    uScale = fromTrsfPath . uScaleTrsf
+    uScale s = fromTrsfPath (uScale s) (uScaleTrsf s)
 
     rotate :: V3 Double -> Double -> Path -> Path
-    rotate axis angle = fromTrsfPath (rotateTrsf axis angle)
+    rotate axis angle = fromTrsfPath (rotate axis angle) (rotateTrsf axis angle)
 
     translate :: V3 Double -> Path -> Path
-    translate = fromTrsfPath . translateTrsf
+    translate v = fromTrsfPath (translate v) (translateTrsf v)
     
     mirror :: V3 Double -> Path -> Path
-    mirror = fromTrsfPath . mirrorTrsf
+    mirror v = fromTrsfPath (mirror v) (mirrorTrsf v)
 
 instance Transformable (V3 Double) where
     matTransform :: M34 Double -> V3 Double -> V3 Double

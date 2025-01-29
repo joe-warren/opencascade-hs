@@ -28,7 +28,8 @@ import Data.Acquire
 import Foreign.Ptr
 import Waterfall.TwoD.Internal.Shape (Shape(..))
 import Data.Function ((&))
-import Control.Lens ((.~))
+import Control.Lens ((.~), (%~))
+import Waterfall.Internal.Path.Common (RawPath(..))
 
 -- | Typeclass for objects that can be manipulated in 2D space
 class Transformable2D a where
@@ -48,11 +49,13 @@ class Transformable2D a where
     -- the mirror is in the line / tangent / to the vector, not in the line / parallel / to the vector
     mirror2D :: V2 Double -> a -> a
 
-fromTrsfPath :: Acquire (Ptr GP.Trsf) -> Path2D -> Path2D
-fromTrsfPath mkTrsf (Path2D p) = Path2D . unsafeFromAcquire $ do 
+fromTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Ptr GP.Trsf) -> Path2D -> Path2D
+fromTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquire $ do 
     path <- toAcquire p
     trsf <- mkTrsf 
     (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast path) trsf True 
+fromTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $ (v & _xy %~ f)
+fromTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
 
 fromTrsfShape :: Acquire (Ptr GP.Trsf) -> Shape -> Shape
 fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
@@ -60,13 +63,15 @@ fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do
     trsf <- mkTrsf 
     BRepBuilderAPI.Transform.transform shape trsf True 
     
-fromGTrsfPath :: Acquire (Maybe (Ptr GP.GTrsf)) -> Path2D -> Path2D
-fromGTrsfPath mkTrsf (Path2D p) = Path2D . unsafeFromAcquire  $ do 
+fromGTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Maybe (Ptr GP.GTrsf)) -> Path2D -> Path2D
+fromGTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquire  $ do 
     path <- toAcquire p
     trsfMay <- mkTrsf 
     case trsfMay of
         Just trsf -> (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
         Nothing -> pure path
+fromGTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $ (v & _xy %~ f)
+fromGTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
 
 fromGTrsfShape :: Acquire (Maybe (Ptr GP.GTrsf)) -> Shape -> Shape
 fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
@@ -139,22 +144,22 @@ mirrorTrsf (V2 x y) = do
 instance Transformable2D Path2D where
     
     matTransform2D :: M23 Double -> Path2D -> Path2D
-    matTransform2D = fromGTrsfPath . matrixGTrsf 
+    matTransform2D m = fromGTrsfPath (matTransform2D m) (matrixGTrsf m)
 
     rotate2D :: Double -> Path2D -> Path2D
-    rotate2D = fromTrsfPath . rotateTrsf  
+    rotate2D a = fromTrsfPath (rotate2D a) (rotateTrsf a)
     
     scale2D :: V2 Double -> Path2D -> Path2D
-    scale2D = fromGTrsfPath . scaleGTrsf
+    scale2D s = fromGTrsfPath (scale2D s) (scaleGTrsf s)
 
     uScale2D :: Double -> Path2D -> Path2D
-    uScale2D = fromTrsfPath . uScaleTrsf
+    uScale2D s = fromTrsfPath (uScale2D s) (uScaleTrsf s)
 
     translate2D :: V2 Double -> Path2D -> Path2D
-    translate2D = fromTrsfPath .translateTrsf
+    translate2D v = fromTrsfPath (translate2D v) (translateTrsf v)
 
     mirror2D :: V2 Double -> Path2D -> Path2D
-    mirror2D = fromTrsfPath . mirrorTrsf
+    mirror2D v = fromTrsfPath (mirror2D v) (mirrorTrsf v)
 
 instance Transformable2D Shape where
     matTransform2D :: M23 Double -> Shape -> Shape
