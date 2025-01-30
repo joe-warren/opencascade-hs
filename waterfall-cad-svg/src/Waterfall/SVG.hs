@@ -1,6 +1,10 @@
 {-# LANGUAGE TupleSections #-}
+{-|
+Load [SVG Data](https://developer.mozilla.org/en-US/docs/Web/SVG) into `Waterfall.Path2D`
+-}
 module Waterfall.SVG 
-( SVGError (..)
+( SVGErrorKind (..)
+, SVGError (..)
 , convertPathCommands
 , parsePath
 , convertTransform
@@ -23,9 +27,11 @@ import Control.Monad (join, (<=<))
 import Data.Maybe (catMaybes)
 import Data.Function ((&))
 
+-- | Categories of error that may occur when processing an SVG
 data SVGErrorKind = SVGIOError | SVGParseError | SVGPathError | SVGTransformError | SVGNumberError
     deriving (Eq, Ord, Show)
 
+-- | Type representing an error that occured when processing an SVG
 data SVGError = SVGError SVGErrorKind String
         deriving (Eq, Ord, Show)
 
@@ -51,7 +57,7 @@ ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag relativeEnd =
         relativeEndTransformed@(V2 retX retY) = transformBack relativeEnd
         transformedDistance = norm relativeEndTransformed
         halfTD = transformedDistance * 0.5
-        perp = normalize (V2 (-retY) retX)  
+        perp = normalize (V2 (-retY) retX)
         p1 = if sweepFlag == largeArcFlag then negate perp else perp
         p2 = if largeArcFlag then p1 else negate p1
         radius = max ry halfTD 
@@ -96,6 +102,10 @@ smoothQuadraticBezierCurveToRelative :: V2 Double -> Maybe (V2 Double) -> V2 Dou
 smoothQuadraticBezierCurveToRelative _ Nothing _ = Left (SVGError SVGPathError "t command must follow either an T, t, Q or q command")
 smoothQuadraticBezierCurveToRelative cp2 cp1 cp0 = smoothQuadraticBezierCurveToRelative (cp0 + cp2) cp1 cp0
 
+-- | Generate `Waterfall.Path2D`s from a parsed list of `Svg.PathCommand`s.
+-- 
+-- Consective `Svg.PathCommands` will be merged into the same `Waterfall.Path2D` 
+-- unless either a move command ('m', 'M') or a close path command ('z', 'Z') is encountered.
 convertPathCommands :: [Svg.PathCommand] -> Either SVGError [Waterfall.Path2D]
 convertPathCommands cs =
     let
@@ -152,14 +162,20 @@ convertPathCommands cs =
             if null segments 
                 then Right paths
                 else (:paths) . snd <$> buildPathInProgress pathInProgress
-    in go cs (zero, []) []
+    in reverse <$> go cs (zero, []) []
 
+-- | Parse [SVG Path data](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths) 
+-- and convert it into a `Path2D`
 parsePath :: String -> Either SVGError [Waterfall.Path2D]
 parsePath s =
     case Atto.parseOnly (pathParser <* Atto.endOfInput) (T.pack s) of 
         Right r -> convertPathCommands r
         Left msg -> Left (SVGError SVGParseError msg)
 
+-- | Parse a `Svg.Transformation` into a function that can be applied to 
+-- any Waterfall type with a `Waterfall.Transformable2D` instance
+-- 
+-- This should handle every case except for `TransformUnknown`
 convertTransform :: Waterfall.Transformable2D a => Svg.Transformation -> Either SVGError (a -> a)
 convertTransform (Svg.TransformMatrix a b c d e f) = Right $ Waterfall.matTransform2D (V2 (V3 a c e) (V3 b d f))
 convertTransform (Svg.Translate x y) = Right $ Waterfall.translate2D (V2 x y)
@@ -283,6 +299,9 @@ convertRectangle rect = do
                     & pure
                 ]
 
+-- | Recursively convert an `Svg.Tree` into a list of `Waterfall.Path2D`s
+--
+-- Text elements are not supported
 convertTree :: Svg.Tree -> Either SVGError [Waterfall.Path2D]
 convertTree tree = do
     transform <- maybe (pure id) (fmap chain . traverse convertTransform) (tree ^. Svg.drawAttr . Svg.drawAttributes . Svg.transform)
@@ -298,10 +317,12 @@ convertTree tree = do
         Svg.RectangleTree rectangle -> convertRectangle rectangle
         _ -> Right []
 
+-- | Convert an `Svg.Document into a list of `Path2Ds`
 convertDocument :: Svg.Document -> Either SVGError [Waterfall.Path2D]
 convertDocument doc = fmap mconcat . traverse convertTree $ (doc ^. Svg.elements) 
 
-readSVG ::FilePath -> IO (Either SVGError [Waterfall.Path2D])
+-- | Load an SVG file into a `Waterfall.Path2D`
+readSVG :: FilePath -> IO (Either SVGError [Waterfall.Path2D])
 readSVG path = 
     let fileReadErr = Left . SVGError SVGIOError $ "Failed to read svg from file: " <> path
     in ( convertDocument <=< maybe fileReadErr Right) <$> Svg.loadSvgFile path 
