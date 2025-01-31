@@ -3,11 +3,12 @@ module Waterfall.Internal.Edges
 , wireEndpoints
 , allWireEndpoints
 , allWires
-, wireTangent
+, wireTangentStart
 , reverseEdge
 , reverseWire
 , intersperseLines
 , joinWires
+, splitWires
 ) where
 
 import qualified OpenCascade.TopoDS as TopoDS
@@ -21,7 +22,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import Waterfall.Internal.FromOpenCascade (gpPntToV3, gpVecToV3)
 import Data.Acquire
 import Control.Monad.IO.Class (liftIO)
-import Linear (V3 (..), distance)
+import Linear (V3 (..), distance, normalize, nearZero)
 import Foreign.Ptr
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Control.Monad (when)
@@ -83,16 +84,22 @@ wireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
     e <- runToEnd
     return (s, e)
 
-edgeTangent :: Ptr TopoDS.Edge -> IO (V3 Double)
-edgeTangent e = (`with` pure) $ do
+edgeTangentStart :: Ptr TopoDS.Edge -> IO (V3 Double)
+edgeTangentStart e = (`with` pure) $ do
     curve <- BRep.Tool.curve e
     p1 <- liftIO . BRep.Tool.curveParamFirst $ e
     liftIO . gpVecToV3 =<< Geom.Curve.dn curve p1 1
 
-wireTangent :: Ptr TopoDS.Wire -> IO (V3 Double)
-wireTangent wire = with (WireExplorer.fromWire wire) $ \explorer -> do
+edgeTangentEnd :: Ptr TopoDS.Edge -> IO (V3 Double)
+edgeTangentEnd e = (`with` pure) $ do
+    curve <- BRep.Tool.curve e
+    p1 <- liftIO . BRep.Tool.curveParamLast $ e
+    liftIO . gpVecToV3 =<< Geom.Curve.dn curve p1 1
+
+wireTangentStart :: Ptr TopoDS.Wire -> IO (V3 Double)
+wireTangentStart wire = with (WireExplorer.fromWire wire) $ \explorer -> do
     v1 <- WireExplorer.current explorer
-    edgeTangent v1
+    edgeTangentStart v1
 
 reverseEdge :: Ptr TopoDS.Edge -> Acquire (Ptr TopoDS.Edge)
 reverseEdge e = do
@@ -151,4 +158,30 @@ joinWires wires = do
             runToEnd
     traverse_ addWire $ wires
     MakeWire.wire builder
+
+splitWires :: Ptr TopoDS.Wire -> Acquire [Ptr TopoDS.Wire]
+splitWires wire = do
+    explorer <- WireExplorer.fromWire wire
+    let makeSegment = do
+            builder <- MakeWire.new
+            let addOneWire lastDelta = do
+                    edge <- liftIO $ WireExplorer.current explorer
+                    s' <- normalize <$> edgeTangentStart edge
+                    e' <- normalize <$> edgeTangentEnd edge
+                    let startIsTangent = maybe True (nearZero . (s' -)) lastDelta
+                    when startIsTangent $ do
+                            liftIO $ MakeWire.addEdge builder edge
+                            liftIO $ WireExplorer.next explorer
+                            more <- liftIO $ WireExplorer.more explorer
+                            when more (addOneWire (Just e'))
+            liftIO $ addOneWire Nothing
+            thisWire <- MakeWire.wire builder
+            more <- liftIO $ WireExplorer.more explorer
+            rest <- if more
+                then makeSegment 
+                else return []
+            return $ thisWire : rest 
+    makeSegment
+
+    
 

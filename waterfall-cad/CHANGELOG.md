@@ -12,6 +12,7 @@ and this project adheres to the
 ### Added
 
 - Add `splice`/`splice2D`/`splice3D` functions
+- Add `splitPath`/`splitPath3D`/`splitPath2D` functions
 - Add Epsilon constraint to `closeLoop` fixing behaviour when endpoints are _very close_ together 
 - Add `matTransform` and `matTransform2D` methods to the `Transformable` and `Transformable2D` typeclasses, respectively
 - Add `shapePaths` to `Waterfall.TwoD.Shape`

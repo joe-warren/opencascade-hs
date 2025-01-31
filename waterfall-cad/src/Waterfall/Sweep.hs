@@ -5,7 +5,7 @@ module Waterfall.Sweep
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.Internal.Path.Common (RawPath (..))
-import Waterfall.Internal.Edges (wireTangent, wireEndpoints)
+import Waterfall.Internal.Edges (wireTangentStart, wireEndpoints)
 import Waterfall.Internal.Finalizers (toAcquire)
 import Waterfall.Transforms (rotate, translate)
 import Waterfall.TwoD.Internal.Shape (Shape (..))
@@ -38,7 +38,7 @@ sweep :: Path -> Shape -> Solid
 sweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = solidFromAcquire $ do
     path <- toAcquire theRawPath
     shape <- toAcquire theRawShape
-    tangent <- liftIO $ wireTangent path
+    tangent <- liftIO $ wireTangentStart path
     (start,_)  <- liftIO $ wireEndpoints path
     adjustedFace <- positionFace start =<< rotateFace tangent shape
     builder <- MakePipe.fromWireAndShape path adjustedFace

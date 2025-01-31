@@ -25,6 +25,7 @@ module Waterfall.Path.Common
 , splice
 , closeLoop
 , reversePath
+, splitPath
 ) where
 import Data.Acquire
 import qualified OpenCascade.TopoDS as TopoDS
@@ -33,9 +34,9 @@ import Foreign.Ptr
 import Waterfall.Internal.Path.Common (RawPath (..))
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
-import Waterfall.Internal.Finalizers (unsafeFromAcquire, toAcquire)
+import Waterfall.Internal.Finalizers (unsafeFromAcquire, toAcquire, unsafeFromAcquireT)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
-import Waterfall.Internal.Edges (wireEndpoints, reverseWire)
+import Waterfall.Internal.Edges (wireEndpoints, reverseWire, splitWires)
 import Control.Arrow (second)
 import Data.Foldable (foldl')
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
@@ -242,6 +243,13 @@ reversePath p =
     case deconstructPath p of
         ComplexRawPath r -> fromWire . reverseWire $ r
         _ -> p
+
+-- | Break a path appart at any "non smooth" point
+splitPath :: (AnyPath point path) => path -> [path]
+splitPath p = 
+    case deconstructPath p of 
+        ComplexRawPath r -> fmap (reconstructPath . ComplexRawPath) . unsafeFromAcquireT . splitWires $ r
+        _ -> [p]
 
 instance AnyPath (V3 Double) Path where
     reconstructPath :: RawPath -> Path
