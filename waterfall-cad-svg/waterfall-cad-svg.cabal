@@ -25,7 +25,6 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
       Waterfall.SVG
   other-modules:
       Paths_waterfall_cad_svg
