@@ -12,6 +12,8 @@ and this project adheres to the
 - Add `OpenCascade.BRepBuilderAPI.MakeShape` method `build`
 - Add `OpenCascade.BRepOffsetAPI.MakePipe` constructor `fromWireShapeTrihedronModeAndForceC1`
 - Add `OpenCascade.GeomFill.Trihedron`
+- Add `OpenCascade.BRepAdaptor.Curve`
+- Add `OpenCascade.GeomAbs.CurveType`
 
 ## 0.4.0.0
 

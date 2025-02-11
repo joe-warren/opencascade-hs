@@ -88,6 +88,8 @@ typedef void ShapeExtend_WireData;
 typedef int ShapeExtend_Status;
 typedef void Poly_Triangulation;
 typedef void Poly_Triangle;
+typedef void BRepAdaptor_Curve;
+typedef int GeomAbs_CurveType;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus

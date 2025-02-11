@@ -1,4 +1,5 @@
 #include <Geom_Curve.hxx>
+#include <GeomAbs_CurveType.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 #include "hs_Geom_Curve.h"

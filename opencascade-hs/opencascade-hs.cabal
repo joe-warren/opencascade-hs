@@ -24,6 +24,7 @@ extra-source-files:
     cpp/hs_Bnd_Box.h
     cpp/hs_Bnd_OBB.h
     cpp/hs_BRep_Tool.h
+    cpp/hs_BRepAdaptor_Curve.h
     cpp/hs_BRepAlgoAPI_Common.h
     cpp/hs_BRepAlgoAPI_Cut.h
     cpp/hs_BRepAlgoAPI_Fuse.h
@@ -123,6 +124,10 @@ library
       OpenCascade.Bnd.OBB
       OpenCascade.Bnd.Types
       OpenCascade.BRep.Tool
+      OpenCascade.BRepAdaptor
+      OpenCascade.BRepAdaptor.Curve
+      OpenCascade.BRepAdaptor.Internal.Destructors
+      OpenCascade.BRepAdaptor.Types
       OpenCascade.BRepAlgoAPI.Common
       OpenCascade.BRepAlgoAPI.Cut
       OpenCascade.BRepAlgoAPI.Fuse
@@ -185,6 +190,7 @@ library
       OpenCascade.Geom.Curve
       OpenCascade.Geom.Internal.Destructors
       OpenCascade.Geom.Types
+      OpenCascade.GeomAbs.CurveType
       OpenCascade.GeomAbs.JoinType
       OpenCascade.GeomFill
       OpenCascade.GeomFill.Trihedron
@@ -309,6 +315,7 @@ library
       cpp/hs_Bnd_Box.cpp
       cpp/hs_Bnd_OBB.cpp
       cpp/hs_BRep_Tool.cpp
+      cpp/hs_BRepAdaptor_Curve.cpp
       cpp/hs_BRepAlgoAPI_Common.cpp
       cpp/hs_BRepAlgoAPI_Cut.cpp
       cpp/hs_BRepAlgoAPI_Fuse.cpp
