@@ -11,6 +11,7 @@ module Waterfall.SVG
 , convertTree
 , convertDocument
 , readSVG
+, path2DToPathCommands
 ) where
 
 import qualified Waterfall
@@ -18,7 +19,7 @@ import qualified Data.Attoparsec.Text as Atto
 import Graphics.Svg.PathParser (pathParser)
 import qualified Graphics.Svg as Svg
 import qualified Data.Text as T
-import Linear (V3 (..), V2 (..), zero, Metric (norm), normalize, (^*), (*^), _x, _y, unit)
+import Linear (V3 (..), V2 (..), zero, Metric (norm), normalize, (^*), (*^), _x, _y, _xy, unit)
 import Control.Lens ((^.), ala, each)
 import Data.Monoid (Endo (..))
 import Control.Arrow (second)
@@ -26,6 +27,16 @@ import Data.Foldable (foldl')
 import Control.Monad (join, (<=<))
 import Data.Maybe (catMaybes)
 import Data.Function ((&))
+import Foreign.Ptr (Ptr)
+import Control.Monad.IO.Class (liftIO)
+import Waterfall.TwoD.Internal.Path2D (Path2D (..))
+import qualified Waterfall.Internal.Path.Common as Internal.Path.Common
+import qualified Waterfall.Internal.Edges as Internal.Edges
+import qualified Waterfall.Internal.Finalizers as Internal.Finalizers
+import qualified OpenCascade.TopoDS as TopoDS
+import qualified OpenCascade.BRepAdaptor.Curve as BRepAdaptor.Curve
+import qualified OpenCascade.GeomAbs.CurveType as GeomAbs.CurveType
+
 
 -- | Categories of error that may occur when processing an SVG
 data SVGErrorKind = SVGIOError | SVGParseError | SVGPathError | SVGTransformError | SVGNumberError
@@ -326,3 +337,40 @@ readSVG :: FilePath -> IO (Either SVGError [Waterfall.Path2D])
 readSVG path = 
     let fileReadErr = Left . SVGError SVGIOError $ "Failed to read svg from file: " <> path
     in ( convertDocument <=< maybe fileReadErr Right) <$> Svg.loadSvgFile path 
+
+
+----- 
+
+lineToPathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
+lineToPathCommand edge = do
+    (s, e) <- Internal.Edges.edgeEndpoints edge
+    return 
+        [ Svg.MoveTo Svg.OriginAbsolute . pure $ s ^. _xy
+        , Svg.LineTo Svg.OriginAbsolute . pure $ e ^. _xy
+        ]
+
+
+discretizedEdgePathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
+discretizedEdgePathCommand edge = do
+    s <- Internal.Edges.edgeValue edge 0 
+    ps <- traverse (Internal.Edges.edgeValue edge . (/10) .  fromIntegral) [1..10]
+    return 
+        [ Svg.MoveTo Svg.OriginAbsolute . pure $ s ^. _xy
+        , Svg.LineTo Svg.OriginAbsolute $ (^. _xy) <$> ps
+        ]
+        
+edgeToPathCommand :: Ptr TopoDS.Edge -> [Svg.PathCommand]
+edgeToPathCommand edge = Internal.Finalizers.unsafeFromAcquire $ do
+    adaptor <- BRepAdaptor.Curve.fromEdge edge
+    curveType <- liftIO $ BRepAdaptor.Curve.curveType adaptor
+    case curveType of 
+        GeomAbs.CurveType.Line -> liftIO $ lineToPathCommand edge
+        _ -> liftIO $ discretizedEdgePathCommand edge
+
+path2DToPathCommands :: Waterfall.Path2D -> [Svg.PathCommand]
+path2DToPathCommands (Path2D theRawPath) = case theRawPath of  
+    Internal.Path.Common.EmptyRawPath -> []
+    Internal.Path.Common.SinglePointRawPath _ -> []
+    Internal.Path.Common.ComplexRawPath wire -> 
+        Internal.Finalizers.unsafeFromAcquireT $
+            foldMap edgeToPathCommand <$> Internal.Edges.wireEdges wire

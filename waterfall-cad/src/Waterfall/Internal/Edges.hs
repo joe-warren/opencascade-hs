@@ -1,8 +1,10 @@
 module Waterfall.Internal.Edges
 ( edgeEndpoints
+, edgeValue
 , wireEndpoints
 , allWireEndpoints
 , allWires
+, wireEdges
 , wireTangentStart
 , reverseEdge
 , reverseWire
@@ -12,6 +14,7 @@ module Waterfall.Internal.Edges
 ) where
 
 import qualified OpenCascade.TopoDS as TopoDS
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BRep.Tool as BRep.Tool
 import qualified OpenCascade.Geom.Curve as Geom.Curve
 import qualified OpenCascade.BRepTools.WireExplorer as WireExplorer
@@ -28,7 +31,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Control.Monad (when)
 import Waterfall.Internal.ToOpenCascade (v3ToPnt)
 import Data.Foldable (traverse_)
-import OpenCascade.Inheritance (unsafeDowncast)
+import OpenCascade.Inheritance (upcast, unsafeDowncast)
 
 edgeEndpoints :: Ptr TopoDS.Edge -> IO (V3 Double, V3 Double)
 edgeEndpoints edge = (`with` pure) $ do
@@ -38,6 +41,14 @@ edgeEndpoints edge = (`with` pure) $ do
     s <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve p1
     e <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve p2
     return (s, e)
+
+edgeValue :: Ptr TopoDS.Edge -> Double -> IO (V3 Double)
+edgeValue edge v = (`with` pure) $ do
+    curve <- BRep.Tool.curve edge
+    p1 <- liftIO . BRep.Tool.curveParamFirst $ edge
+    p2 <- liftIO . BRep.Tool.curveParamLast $ edge
+    let p' = v * p1 + (1-v) * p2
+    (liftIO . gpPntToV3) =<< Geom.Curve.value curve p'
 
 allWireEndpoints :: Ptr TopoDS.Wire -> IO [(V3 Double, V3 Double)]
 allWireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
@@ -110,6 +121,19 @@ reverseEdge e = do
     lastP' <- liftIO $ Geom.Curve.reversedParameter curve lastP
     curve' <- Geom.Curve.reversed curve
     MakeEdge.fromCurveAndParameters curve' lastP' firstP' 
+
+wireEdges :: Ptr TopoDS.Wire -> Acquire [Ptr TopoDS.Edge]
+wireEdges wire = do
+    explorer <- WireExplorer.fromWire wire
+    let runToEnd = do
+            edge <- liftIO $ WireExplorer.current explorer
+            edge' <- (liftIO . unsafeDowncast) =<< TopoDS.Shape.copy (upcast edge)
+            liftIO $ WireExplorer.next explorer
+            more <- liftIO $ WireExplorer.more explorer
+            if more 
+                then (edge' :) <$> runToEnd
+                else pure [edge']
+    runToEnd
 
 reverseWire :: Ptr TopoDS.Wire -> Acquire (Ptr TopoDS.Wire) 
 reverseWire wire = do
