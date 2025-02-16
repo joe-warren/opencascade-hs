@@ -14,6 +14,7 @@ and this project adheres to the
 - Add `OpenCascade.GeomFill.Trihedron`
 - Add `OpenCascade.BRepAdaptor.Curve`
 - Add `OpenCascade.GeomAbs.CurveType`
+- Add `OpenCascade.GeomConvert.BSplineCurveToBezierCurve`
 
 ## 0.4.0.0
 
