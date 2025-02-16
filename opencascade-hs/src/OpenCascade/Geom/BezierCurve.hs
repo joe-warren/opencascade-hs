@@ -2,11 +2,15 @@
 module OpenCascade.Geom.BezierCurve 
 ( fromPnts
 , toHandle
+, nbPoles
+, pole
 ) where
 import Foreign.Ptr
+import Foreign.C (CInt (..))
 import Data.Acquire
 import OpenCascade.Geom.Types (BezierCurve)
 import OpenCascade.Geom.Internal.Destructors (deleteBezierCurve, deleteHandleBezierCurve)
+import OpenCascade.GP.Internal.Destructors (deletePnt)
 import OpenCascade.GP (Pnt)
 import OpenCascade.NCollection (Array1)
 import OpenCascade.Handle (Handle)
@@ -20,5 +24,15 @@ foreign import capi unsafe "hs_Geom_BezierCurve.h hs_Geom_BezierCurve_toHandle" 
 toHandle :: Ptr BezierCurve -> Acquire (Ptr (Handle BezierCurve))
 toHandle curve = mkAcquire (rawToHandle curve) deleteHandleBezierCurve
 
+
+foreign import capi unsafe "hs_Geom_BezierCurve.h hs_Geom_BezierCurve_nbPoles" rawNbPoles :: Ptr (Handle BezierCurve) -> IO (CInt)
+
+nbPoles :: Ptr (Handle (BezierCurve)) -> IO Int 
+nbPoles h = fromIntegral <$> rawNbPoles h
+
+foreign import capi unsafe "hs_Geom_BezierCurve.h hs_Geom_BezierCurve_pole" rawPole :: Ptr (Handle BezierCurve) -> CInt -> IO (Ptr Pnt)
+
+pole :: Ptr (Handle BezierCurve) -> Int -> Acquire (Ptr Pnt)
+pole h n = mkAcquire (rawPole h (fromIntegral n)) deletePnt
 
 

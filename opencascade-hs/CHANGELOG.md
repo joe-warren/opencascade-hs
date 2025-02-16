@@ -15,6 +15,7 @@ and this project adheres to the
 - Add `OpenCascade.BRepAdaptor.Curve`
 - Add `OpenCascade.GeomAbs.CurveType`
 - Add `OpenCascade.GeomConvert.BSplineCurveToBezierCurve`
+- Add `OpenCascade.Geom.BezierCurve` methods `pole` and `nbPoles`
 
 ## 0.4.0.0
 

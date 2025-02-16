@@ -12,6 +12,14 @@ Handle(Geom_BezierCurve) * hs_Geom_BezierCurve_toHandle(Geom_BezierCurve * curve
     return new Handle(Geom_BezierCurve)(new Geom_BezierCurve(*curve));
 }
 
+int hs_Geom_BezierCurve_nbPoles(Handle(Geom_BezierCurve)* h){
+    return (*h)->NbPoles();
+}
+
+gp_Pnt * hs_Geom_BezierCurve_pole(Handle(Geom_BezierCurve)* h, int index){
+    return new gp_Pnt((*h)->Pole(index));
+}
+
 void hs_delete_Handle_Geom_BezierCurve(Handle(Geom_BezierCurve)* h){
     delete h;
 }
