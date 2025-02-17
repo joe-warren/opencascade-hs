@@ -37,6 +37,7 @@ library
     , lens
     , linear
     , opencascade-hs >=0.4.0.0 && <0.5
+    , resourcet
     , svg-tree
     , text
     , waterfall-cad >=0.4.0.0 && <0.5

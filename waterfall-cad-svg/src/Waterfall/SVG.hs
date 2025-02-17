@@ -30,12 +30,15 @@ import Data.Function ((&))
 import Foreign.Ptr (Ptr)
 import Control.Monad.IO.Class (liftIO)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
+import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import qualified Waterfall.Internal.Path.Common as Internal.Path.Common
 import qualified Waterfall.Internal.Edges as Internal.Edges
 import qualified Waterfall.Internal.Finalizers as Internal.Finalizers
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.BRepAdaptor.Curve as BRepAdaptor.Curve
 import qualified OpenCascade.GeomAbs.CurveType as GeomAbs.CurveType
+import qualified OpenCascade.Geom.BezierCurve as Geom.BezierCurve
+import Data.Acquire (Acquire)
 
 
 -- | Categories of error that may occur when processing an SVG
@@ -349,11 +352,34 @@ lineToPathCommand edge = do
         , Svg.LineTo Svg.OriginAbsolute . pure $ e ^. _xy
         ]
 
+bezierToPathCommand :: Ptr TopoDS.Edge -> Ptr BRepAdaptor.Curve.Curve -> Acquire [Svg.PathCommand]
+bezierToPathCommand edge curve = do 
+    bezier <- BRepAdaptor.Curve.bezier curve
+    isRational <- liftIO $ Geom.BezierCurve.isRational bezier
+    nbPoles <- liftIO $ Geom.BezierCurve.nbPoles bezier
+    if nbPoles > 4 || isRational
+        then liftIO $ discretizedEdgePathCommand edge
+        else do 
+            poles <- traverse ((liftIO . gpPntToV3) <=< Geom.BezierCurve.pole bezier) [1..nbPoles]
+            case poles of 
+                [s, e] -> return
+                        [ Svg.MoveTo Svg.OriginAbsolute . pure $ s ^. _xy
+                        , Svg.LineTo Svg.OriginAbsolute . pure $ e ^. _xy
+                        ]
+                [s, cp, e] -> return
+                        [ Svg.MoveTo Svg.OriginAbsolute . pure $ s ^. _xy
+                        , Svg.QuadraticBezier Svg.OriginAbsolute . pure $ (cp ^. _xy, e ^. _xy)
+                        ]
+                [s, cp1, cp2, e] -> return
+                        [ Svg.MoveTo Svg.OriginAbsolute . pure $ s ^. _xy
+                        , Svg.CurveTo Svg.OriginAbsolute . pure $ (cp1 ^. _xy, cp2 ^. _xy, e ^. _xy)
+                        ]
+                _ -> liftIO $ discretizedEdgePathCommand edge
 
 discretizedEdgePathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
 discretizedEdgePathCommand edge = do
     s <- Internal.Edges.edgeValue edge 0 
-    ps <- traverse (Internal.Edges.edgeValue edge . (/10) .  fromIntegral) [1..10]
+    ps <- traverse (Internal.Edges.edgeValue edge . (/10) .  fromIntegral) [1..(10::Integer)]
     return 
         [ Svg.MoveTo Svg.OriginAbsolute . pure $ s ^. _xy
         , Svg.LineTo Svg.OriginAbsolute $ (^. _xy) <$> ps
@@ -365,6 +391,7 @@ edgeToPathCommand edge = Internal.Finalizers.unsafeFromAcquire $ do
     curveType <- liftIO $ BRepAdaptor.Curve.curveType adaptor
     case curveType of 
         GeomAbs.CurveType.Line -> liftIO $ lineToPathCommand edge
+        GeomAbs.CurveType.BezierCurve -> bezierToPathCommand edge adaptor
         _ -> liftIO $ discretizedEdgePathCommand edge
 
 path2DToPathCommands :: Waterfall.Path2D -> [Svg.PathCommand]

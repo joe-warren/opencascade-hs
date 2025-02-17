@@ -52,6 +52,7 @@ typedef void BRepOffsetAPI_MakeThickSolid;
 typedef void Geom2d_Ellipse;
 typedef void Geom_Curve;
 typedef void Geom_BezierCurve;
+typedef void Geom_BSplineCurve;
 typedef int GeomFill_Trihedron; 
 typedef void BRepOffsetAPI_ThruSections;
 typedef void BRepMesh_IncrementalMesh;

@@ -20,6 +20,10 @@ gp_Pnt * hs_Geom_BezierCurve_pole(Handle(Geom_BezierCurve)* h, int index){
     return new gp_Pnt((*h)->Pole(index));
 }
 
+bool hs_Geom_BezierCurve_isRational(Handle(Geom_BezierCurve) *h) {
+    return (*h)->IsRational();
+}
+
 void hs_delete_Handle_Geom_BezierCurve(Handle(Geom_BezierCurve)* h){
     delete h;
 }

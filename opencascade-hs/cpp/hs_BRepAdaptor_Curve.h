@@ -13,6 +13,10 @@ void hs_delete_BRepAdaptor_Curve(BRepAdaptor_Curve * curve);
 
 GeomAbs_CurveType hs_BRepAdaptor_Curve_curveType(BRepAdaptor_Curve* curve);
 
+Handle(Geom_BezierCurve) * hs_BRepAdaptor_Curve_bezier(BRepAdaptor_Curve * curve);
+
+Handle(Geom_BSplineCurve) * hs_BRepAdaptor_Curve_bspline(BRepAdaptor_Curve * curve);
+
 #ifdef __cplusplus
 }
 #endif

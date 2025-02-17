@@ -15,6 +15,8 @@ int hs_Geom_BezierCurve_nbPoles(Handle(Geom_BezierCurve)* h);
 
 gp_Pnt * hs_Geom_BezierCurve_pole(Handle(Geom_BezierCurve)* h, int index);
 
+bool hs_Geom_BezierCurve_isRational(Handle(Geom_BezierCurve) *h);
+
 void hs_delete_Handle_Geom_BezierCurve(Handle(Geom_BezierCurve)* h);
 
 void hs_delete_Geom_BezierCurve(Geom_BezierCurve * curve);
