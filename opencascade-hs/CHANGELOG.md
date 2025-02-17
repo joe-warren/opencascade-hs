@@ -14,7 +14,9 @@ and this project adheres to the
 - Add `OpenCascade.GeomFill.Trihedron`
 - Add `OpenCascade.BRepAdaptor.Curve`
 - Add `OpenCascade.GeomAbs.CurveType`
+- Add `OpenCascade.GeomAbs.Shape`
 - Add `OpenCascade.GeomConvert.BSplineCurveToBezierCurve`
+- Add `OpenCascade.GeomConvert.ApproxCurve`
 - Add `OpenCascade.Geom.BSplineCurve`
 - Add `OpenCascade.Geom.BezierCurve` methods `pole`, `nbPoles` and `isRational`
 

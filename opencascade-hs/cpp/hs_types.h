@@ -92,6 +92,8 @@ typedef void Poly_Triangle;
 typedef void BRepAdaptor_Curve;
 typedef int GeomAbs_CurveType;
 typedef void GeomConvert_BSplineCurveToBezierCurve;
+typedef void GeomConvert_ApproxCurve;
+typedef int GeomAbs_Shape;
 
 #define Handle(X) void
 #define ARRAY_1(X) void

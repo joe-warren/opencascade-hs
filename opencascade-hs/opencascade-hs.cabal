@@ -62,6 +62,7 @@ extra-source-files:
     cpp/hs_Geom_BSplineCurve.h
     cpp/hs_Geom_Curve.h
     cpp/hs_Geom_TrimmedCurve.h
+    cpp/hs_GeomConvert_ApproxCurve.h
     cpp/hs_GeomConvert_BSplineCurveToBezierCurve.h
     cpp/hs_gp.h
     cpp/hs_gp_Ax1.h
@@ -195,6 +196,8 @@ library
       OpenCascade.Geom.Types
       OpenCascade.GeomAbs.CurveType
       OpenCascade.GeomAbs.JoinType
+      OpenCascade.GeomAbs.Shape
+      OpenCascade.GeomConvert.ApproxCurve
       OpenCascade.GeomConvert.BSplineCurveToBezierCurve
       OpenCascade.GeomConvert.Internal.Destructors
       OpenCascade.GeomConvert.Types
@@ -359,6 +362,7 @@ library
       cpp/hs_Geom_BSplineCurve.cpp
       cpp/hs_Geom_Curve.cpp
       cpp/hs_Geom_TrimmedCurve.cpp
+      cpp/hs_GeomConvert_ApproxCurve.cpp
       cpp/hs_GeomConvert_BSplineCurveToBezierCurve.cpp
       cpp/hs_gp.cpp
       cpp/hs_gp_Ax1.cpp
