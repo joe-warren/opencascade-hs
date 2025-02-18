@@ -17,6 +17,8 @@ Handle(Geom_BezierCurve) * hs_BRepAdaptor_Curve_bezier(BRepAdaptor_Curve * curve
 
 Handle(Geom_BSplineCurve) * hs_BRepAdaptor_Curve_bspline(BRepAdaptor_Curve * curve);
 
+GeomAdaptor_Curve * hs_BRepAdaptor_Curve_curve(BRepAdaptor_Curve * curve);
+
 #ifdef __cplusplus
 }
 #endif

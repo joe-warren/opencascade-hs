@@ -43,9 +43,9 @@ import qualified OpenCascade.Geom.BSplineCurve as Geom.BSplineCurve
 import qualified OpenCascade.GeomAbs.Shape as GeomAbs.Shape
 import qualified OpenCascade.GeomConvert.BSplineCurveToBezierCurve as GeomConvert.BSplineCurveToBezierCurve
 import qualified OpenCascade.GeomConvert.ApproxCurve as GeomConvert.ApproxCurve
-import OpenCascade.Inheritance (upcast)
 import OpenCascade.Handle (Handle)
 import Data.Acquire (Acquire)
+import qualified OpenCascade.GeomAdaptor.Curve as GeomAdaptor.Curve
 
 
 -- | Categories of error that may occur when processing an SVG
@@ -387,26 +387,32 @@ bezierToPathCommand edge curve = do
     bezier <- BRepAdaptor.Curve.bezier curve
     bezierCurveToPathCommand edge bezier
 
+convertBSpline :: Ptr TopoDS.Edge -> Ptr (Handle Geom.BSplineCurve) -> Acquire [Svg.PathCommand]
+convertBSpline edge someBSpline = do
+    converter <- GeomConvert.BSplineCurveToBezierCurve.fromHandle someBSpline
+    nbArcs <- liftIO $ GeomConvert.BSplineCurveToBezierCurve.nbArcs converter
+    mconcat <$> traverse (bezierCurveToPathCommand edge <=< GeomConvert.BSplineCurveToBezierCurve.arc converter) [1..nbArcs]
+
+approximateCurveToPathCommand :: Ptr TopoDS.Edge -> Ptr BRepAdaptor.Curve.Curve -> Acquire [Svg.PathCommand]
+approximateCurveToPathCommand edge curve = do
+    curve' <- GeomAdaptor.Curve.curve =<< BRepAdaptor.Curve.curve curve
+    approximator <- GeomConvert.ApproxCurve.fromCurveToleranceOrderSegmentsAndDegree curve' 0.05 GeomAbs.Shape.C0 50 3
+    done <- liftIO $ GeomConvert.ApproxCurve.isDone approximator
+    if done 
+        then do
+            newCurve <- GeomConvert.ApproxCurve.curve approximator
+            convertBSpline edge newCurve
+        else 
+            liftIO $ discretizedEdgePathCommand edge
+
 bsplineToPathCommand :: Ptr TopoDS.Edge -> Ptr BRepAdaptor.Curve.Curve -> Acquire [Svg.PathCommand]
 bsplineToPathCommand edge curve = do 
     bspline <- BRepAdaptor.Curve.bspline curve
     isRational <- liftIO $ Geom.BSplineCurve.isRational bspline
     nbPoles <- liftIO $ Geom.BSplineCurve.nbPoles bspline
-    let convertBSpline someBSpline = do
-            converter <- GeomConvert.BSplineCurveToBezierCurve.fromHandle someBSpline
-            nbArcs <- liftIO $ GeomConvert.BSplineCurveToBezierCurve.nbArcs converter
-            mconcat <$> traverse (bezierCurveToPathCommand edge <=< GeomConvert.BSplineCurveToBezierCurve.arc converter) [1..nbArcs]
     if nbPoles > 4 || isRational
-        then do
-            approximator <- GeomConvert.ApproxCurve.fromCurveToleranceOrderSegmentsAndDegree (upcast bspline) 0.05 GeomAbs.Shape.C0 50 3
-            done <- liftIO $ GeomConvert.ApproxCurve.isDone approximator
-            if done 
-                then do
-                    newCurve <- GeomConvert.ApproxCurve.curve approximator
-                    convertBSpline newCurve
-                else 
-                    liftIO $ discretizedEdgePathCommand edge
-        else convertBSpline bspline
+        then approximateCurveToPathCommand edge curve
+        else convertBSpline edge bspline
 
 discretizedEdgePathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
 discretizedEdgePathCommand edge = do
@@ -425,7 +431,7 @@ edgeToPathCommand edge = Internal.Finalizers.unsafeFromAcquire $ do
         GeomAbs.CurveType.Line -> liftIO $ lineToPathCommand edge
         GeomAbs.CurveType.BezierCurve -> bezierToPathCommand edge adaptor
         GeomAbs.CurveType.BSplineCurve -> bsplineToPathCommand edge adaptor
-        _ -> liftIO $ discretizedEdgePathCommand edge
+        _ -> approximateCurveToPathCommand edge adaptor
 
 path2DToPathCommands :: Waterfall.Path2D -> [Svg.PathCommand]
 path2DToPathCommands (Path2D theRawPath) = case theRawPath of  

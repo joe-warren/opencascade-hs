@@ -21,3 +21,7 @@ Handle(Geom_BezierCurve) * hs_BRepAdaptor_Curve_bezier(BRepAdaptor_Curve * curve
 Handle(Geom_BSplineCurve) * hs_BRepAdaptor_Curve_bspline(BRepAdaptor_Curve * curve){
     return new opencascade::handle(curve->BSpline());
 }
+
+GeomAdaptor_Curve * hs_BRepAdaptor_Curve_curve(BRepAdaptor_Curve * curve){
+    return new GeomAdaptor_Curve(curve->Curve());
+}

@@ -5,6 +5,7 @@ module OpenCascade.BRepAdaptor.Curve
 , curveType
 , bezier
 , bspline
+, curve
 ) where
  
 import OpenCascade.BRepAdaptor.Types (Curve)
@@ -17,6 +18,8 @@ import Foreign.Ptr (Ptr)
 import Foreign.C (CInt (..))
 import Data.Acquire (Acquire, mkAcquire)
 import OpenCascade.Handle (Handle)
+import qualified OpenCascade.GeomAdaptor.Types as GeomAdaptor
+import qualified OpenCascade.GeomAdaptor.Internal.Destructors as GeomAdaptor.Destructors
 
 foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_new_BRepAdaptor_Curve_fromEdge" rawFromEdge :: Ptr TopoDS.Edge -> IO (Ptr Curve)
 
@@ -32,9 +35,15 @@ curveType c = toEnum . fromIntegral <$> rawCurveType c
 foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_bezier" rawBezier :: Ptr Curve -> IO (Ptr (Handle (Geom.BezierCurve)))
 
 bezier :: Ptr Curve -> Acquire (Ptr (Handle Geom.BezierCurve))
-bezier curve = mkAcquire (rawBezier curve) deleteHandleBezierCurve
+bezier theCurve = mkAcquire (rawBezier theCurve) deleteHandleBezierCurve
 
 foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_bspline" rawBSpline :: Ptr Curve -> IO (Ptr (Handle (Geom.BSplineCurve)))
 
 bspline :: Ptr Curve -> Acquire (Ptr (Handle Geom.BSplineCurve))
-bspline curve = mkAcquire (rawBSpline curve) deleteHandleBSplineCurve
+bspline theCurve = mkAcquire (rawBSpline theCurve) deleteHandleBSplineCurve
+
+
+foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_curve" rawCurve :: Ptr Curve -> IO (Ptr GeomAdaptor.Curve)
+
+curve :: Ptr Curve -> Acquire (Ptr GeomAdaptor.Curve)
+curve theCurve = mkAcquire (rawCurve theCurve) GeomAdaptor.Destructors.deleteCurve
