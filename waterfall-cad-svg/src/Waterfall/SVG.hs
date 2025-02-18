@@ -40,7 +40,10 @@ import qualified OpenCascade.Geom as Geom
 import qualified OpenCascade.GeomAbs.CurveType as GeomAbs.CurveType
 import qualified OpenCascade.Geom.BezierCurve as Geom.BezierCurve
 import qualified OpenCascade.Geom.BSplineCurve as Geom.BSplineCurve
+import qualified OpenCascade.GeomAbs.Shape as GeomAbs.Shape
 import qualified OpenCascade.GeomConvert.BSplineCurveToBezierCurve as GeomConvert.BSplineCurveToBezierCurve
+import qualified OpenCascade.GeomConvert.ApproxCurve as GeomConvert.ApproxCurve
+import OpenCascade.Inheritance (upcast)
 import OpenCascade.Handle (Handle)
 import Data.Acquire (Acquire)
 
@@ -389,12 +392,21 @@ bsplineToPathCommand edge curve = do
     bspline <- BRepAdaptor.Curve.bspline curve
     isRational <- liftIO $ Geom.BSplineCurve.isRational bspline
     nbPoles <- liftIO $ Geom.BSplineCurve.nbPoles bspline
-    if nbPoles > 4 || isRational
-        then liftIO $ discretizedEdgePathCommand edge
-        else do 
-            converter <- GeomConvert.BSplineCurveToBezierCurve.fromHandle bspline
+    let convertBSpline someBSpline = do
+            converter <- GeomConvert.BSplineCurveToBezierCurve.fromHandle someBSpline
             nbArcs <- liftIO $ GeomConvert.BSplineCurveToBezierCurve.nbArcs converter
             mconcat <$> traverse (bezierCurveToPathCommand edge <=< GeomConvert.BSplineCurveToBezierCurve.arc converter) [1..nbArcs]
+    if nbPoles > 4 || isRational
+        then do
+            approximator <- GeomConvert.ApproxCurve.fromCurveToleranceOrderSegmentsAndDegree (upcast bspline) 0.05 GeomAbs.Shape.C0 50 3
+            done <- liftIO $ GeomConvert.ApproxCurve.isDone approximator
+            if done 
+                then do
+                    newCurve <- GeomConvert.ApproxCurve.curve approximator
+                    convertBSpline newCurve
+                else 
+                    liftIO $ discretizedEdgePathCommand edge
+        else convertBSpline bspline
 
 discretizedEdgePathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
 discretizedEdgePathCommand edge = do
