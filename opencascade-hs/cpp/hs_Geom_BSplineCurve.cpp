@@ -15,3 +15,15 @@ void hs_delete_Handle_Geom_BSplineCurve(Handle(Geom_BSplineCurve)* h){
 void hs_delete_Geom_BSplineCurve(Geom_BSplineCurve * curve){
     delete curve;
 }
+
+int hs_Geom_BSplineCurve_nbPoles(Handle(Geom_BSplineCurve)* h){
+    return (*h)->NbPoles();
+}
+
+gp_Pnt * hs_Geom_BSplineCurve_pole(Handle(Geom_BSplineCurve)* h, int index){
+    return new gp_Pnt((*h)->Pole(index));
+}
+
+bool hs_Geom_BSplineCurve_isRational(Handle(Geom_BSplineCurve) *h) {
+    return (*h)->IsRational();
+}
