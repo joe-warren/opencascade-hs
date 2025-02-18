@@ -19,7 +19,8 @@ and this project adheres to the
 - Add `OpenCascade.GeomConvert.ApproxCurve`
 - Add `OpenCascade.Geom.BSplineCurve`
 - Add `OpenCascade.Geom.BezierCurve` methods `pole`, `nbPoles` and `isRational`
-- Add `OpenCascade.GeomAdaptor.Curve` 
+- Add `OpenCascade.GeomAdaptor.Curve`
+- Add `OpenCascade.ShapeConstruct.Curve`
 
 ## 0.4.0.0
 

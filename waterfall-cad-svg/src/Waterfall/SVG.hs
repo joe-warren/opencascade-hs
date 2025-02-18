@@ -43,7 +43,9 @@ import qualified OpenCascade.Geom.BSplineCurve as Geom.BSplineCurve
 import qualified OpenCascade.GeomAbs.Shape as GeomAbs.Shape
 import qualified OpenCascade.GeomConvert.BSplineCurveToBezierCurve as GeomConvert.BSplineCurveToBezierCurve
 import qualified OpenCascade.GeomConvert.ApproxCurve as GeomConvert.ApproxCurve
+import qualified OpenCascade.ShapeConstruct.Curve as ShapeConstruct.Curve
 import OpenCascade.Handle (Handle)
+import OpenCascade.Inheritance (upcast)
 import Data.Acquire (Acquire)
 import qualified OpenCascade.GeomAdaptor.Curve as GeomAdaptor.Curve
 
@@ -395,7 +397,11 @@ convertBSpline edge someBSpline = do
 
 approximateCurveToPathCommand :: Ptr TopoDS.Edge -> Ptr BRepAdaptor.Curve.Curve -> Acquire [Svg.PathCommand]
 approximateCurveToPathCommand edge curve = do
-    curve' <- GeomAdaptor.Curve.curve =<< BRepAdaptor.Curve.curve curve
+    scc <- ShapeConstruct.Curve.new
+    firstParam <- liftIO $ BRepAdaptor.Curve.firstParameter curve
+    lastParam <- liftIO $ BRepAdaptor.Curve.lastParameter curve
+    let convertToBSpline curve' = ShapeConstruct.Curve.convertToBSpline scc curve' firstParam lastParam 1e-6
+    curve' <- fmap upcast . convertToBSpline =<< GeomAdaptor.Curve.curve =<< BRepAdaptor.Curve.curve curve
     approximator <- GeomConvert.ApproxCurve.fromCurveToleranceOrderSegmentsAndDegree curve' 0.05 GeomAbs.Shape.C0 50 3
     done <- liftIO $ GeomConvert.ApproxCurve.isDone approximator
     if done 

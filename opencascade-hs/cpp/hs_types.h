@@ -95,6 +95,7 @@ typedef void GeomConvert_BSplineCurveToBezierCurve;
 typedef void GeomConvert_ApproxCurve;
 typedef int GeomAbs_Shape;
 typedef void GeomAdaptor_Curve;
+typedef void ShapeConstruct_Curve;
 
 #define Handle(X) void
 #define ARRAY_1(X) void

@@ -19,6 +19,10 @@ Handle(Geom_BSplineCurve) * hs_BRepAdaptor_Curve_bspline(BRepAdaptor_Curve * cur
 
 GeomAdaptor_Curve * hs_BRepAdaptor_Curve_curve(BRepAdaptor_Curve * curve);
 
+double hs_BRepAdaptor_Curve_firstParameter(BRepAdaptor_Curve *curve);
+
+double hs_BRepAdaptor_Curve_lastParameter(BRepAdaptor_Curve *curve);
+
 #ifdef __cplusplus
 }
 #endif
