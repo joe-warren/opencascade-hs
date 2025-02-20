@@ -22,6 +22,7 @@ and this project adheres to the
 - Add `OpenCascade.GeomAdaptor.Curve`
 - Add `OpenCascade.ShapeConstruct.Curve`
 - Add `OpenCascade.HLRAlgo.Projector`
+- Add `OpenCascade.HLRBRep.Algo`
 
 ## 0.4.0.0
 

@@ -82,6 +82,7 @@ extra-source-files:
     cpp/hs_gp_XYZ.h
     cpp/hs_GProp_GProps.h
     cpp/hs_HLRAlgo_Projector.h
+    cpp/hs_HLRBRep_Algo.h
     cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
     cpp/hs_Poly_Triangle.h
@@ -235,6 +236,9 @@ library
       OpenCascade.HLRAlgo.Internal.Destructors
       OpenCascade.HLRAlgo.Projector
       OpenCascade.HLRAlgo.Types
+      OpenCascade.HLRBRep.Algo
+      OpenCascade.HLRBRep.Internal.Destructors
+      OpenCascade.HLRBRep.Types
       OpenCascade.IFSelect.ReturnStatus
       OpenCascade.Inheritance
       OpenCascade.Internal.Bool
@@ -394,6 +398,7 @@ library
       cpp/hs_gp_XYZ.cpp
       cpp/hs_GProp_GProps.cpp
       cpp/hs_HLRAlgo_Projector.cpp
+      cpp/hs_HLRBRep_Algo.cpp
       cpp/hs_Message_ProgressRange.cpp
       cpp/hs_NCollection_Array1.cpp
       cpp/hs_Poly_Triangle.cpp
