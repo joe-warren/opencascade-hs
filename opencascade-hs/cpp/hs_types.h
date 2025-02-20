@@ -96,6 +96,7 @@ typedef void GeomConvert_ApproxCurve;
 typedef int GeomAbs_Shape;
 typedef void GeomAdaptor_Curve;
 typedef void ShapeConstruct_Curve;
+typedef void HLRAlgo_Projector;
 
 #define Handle(X) void
 #define ARRAY_1(X) void

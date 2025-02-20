@@ -21,6 +21,7 @@ and this project adheres to the
 - Add `OpenCascade.Geom.BezierCurve` methods `pole`, `nbPoles` and `isRational`
 - Add `OpenCascade.GeomAdaptor.Curve`
 - Add `OpenCascade.ShapeConstruct.Curve`
+- Add `OpenCascade.HLRAlgo.Projector`
 
 ## 0.4.0.0
 

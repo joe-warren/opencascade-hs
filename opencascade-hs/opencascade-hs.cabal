@@ -81,6 +81,7 @@ extra-source-files:
     cpp/hs_gp_Vec2d.h
     cpp/hs_gp_XYZ.h
     cpp/hs_GProp_GProps.h
+    cpp/hs_HLRAlgo_Projector.h
     cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
     cpp/hs_Poly_Triangle.h
@@ -231,6 +232,9 @@ library
       OpenCascade.Graphic3D.HorizontalTextAlignment
       OpenCascade.Graphic3D.VerticalTextAlignment
       OpenCascade.Handle
+      OpenCascade.HLRAlgo.Internal.Destructors
+      OpenCascade.HLRAlgo.Projector
+      OpenCascade.HLRAlgo.Types
       OpenCascade.IFSelect.ReturnStatus
       OpenCascade.Inheritance
       OpenCascade.Internal.Bool
@@ -389,6 +393,7 @@ library
       cpp/hs_gp_Vec2d.cpp
       cpp/hs_gp_XYZ.cpp
       cpp/hs_GProp_GProps.cpp
+      cpp/hs_HLRAlgo_Projector.cpp
       cpp/hs_Message_ProgressRange.cpp
       cpp/hs_NCollection_Array1.cpp
       cpp/hs_Poly_Triangle.cpp
