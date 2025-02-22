@@ -98,6 +98,8 @@ typedef void GeomAdaptor_Curve;
 typedef void ShapeConstruct_Curve;
 typedef void HLRAlgo_Projector;
 typedef void HLRBRep_Algo;
+typedef void HLRBRep_HLRToShape;
+typedef int HLRBRep_TypeOfResultingEdge;
 
 #define Handle(X) void
 #define ARRAY_1(X) void

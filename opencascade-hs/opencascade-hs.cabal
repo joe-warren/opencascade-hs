@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -83,6 +83,7 @@ extra-source-files:
     cpp/hs_GProp_GProps.h
     cpp/hs_HLRAlgo_Projector.h
     cpp/hs_HLRBRep_Algo.h
+    cpp/hs_HLRBRep_HLRToShape.h
     cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
     cpp/hs_Poly_Triangle.h
@@ -237,7 +238,9 @@ library
       OpenCascade.HLRAlgo.Projector
       OpenCascade.HLRAlgo.Types
       OpenCascade.HLRBRep.Algo
+      OpenCascade.HLRBRep.HLRToShape
       OpenCascade.HLRBRep.Internal.Destructors
+      OpenCascade.HLRBRep.TypeOfResultingEdge
       OpenCascade.HLRBRep.Types
       OpenCascade.IFSelect.ReturnStatus
       OpenCascade.Inheritance
@@ -399,6 +402,7 @@ library
       cpp/hs_GProp_GProps.cpp
       cpp/hs_HLRAlgo_Projector.cpp
       cpp/hs_HLRBRep_Algo.cpp
+      cpp/hs_HLRBRep_HLRToShape.cpp
       cpp/hs_Message_ProgressRange.cpp
       cpp/hs_NCollection_Array1.cpp
       cpp/hs_Poly_Triangle.cpp

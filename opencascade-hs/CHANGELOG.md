@@ -23,6 +23,8 @@ and this project adheres to the
 - Add `OpenCascade.ShapeConstruct.Curve`
 - Add `OpenCascade.HLRAlgo.Projector`
 - Add `OpenCascade.HLRBRep.Algo`
+- Add `OpenCascade.HLRBRep.HLRToShape`
+- Add `OpenCascade.HLRBRep.TypeOfResultingEdge`
 
 ## 0.4.0.0
 
