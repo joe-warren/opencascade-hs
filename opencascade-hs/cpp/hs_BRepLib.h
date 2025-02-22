@@ -9,6 +9,8 @@ extern "C" {
 
 bool hs_BRepLib_orientClosedSolid(TopoDS_Solid * solid);
 
+bool hs_BRepLib_buildCurve3d(TopoDS_Edge* edge, double tolerance, GeomAbs_Shape continuity, int maxDegree, int maxSegment);
+
 #ifdef __cplusplus
 }
 #endif

@@ -25,6 +25,7 @@ and this project adheres to the
 - Add `OpenCascade.HLRBRep.Algo`
 - Add `OpenCascade.HLRBRep.HLRToShape`
 - Add `OpenCascade.HLRBRep.TypeOfResultingEdge`
+- Add `OpenCascade.BRepLib` method `buildCurve3d`
 
 ## 0.4.0.0
 
