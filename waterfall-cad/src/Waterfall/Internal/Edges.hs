@@ -4,13 +4,16 @@ module Waterfall.Internal.Edges
 , wireEndpoints
 , allWireEndpoints
 , allWires
+, allEdges
 , wireEdges
 , wireTangentStart
+, buildEdgeCurve3D
 , reverseEdge
 , reverseWire
 , intersperseLines
 , joinWires
 , splitWires
+, edgeToWire
 ) where
 
 import qualified OpenCascade.TopoDS as TopoDS
@@ -22,6 +25,8 @@ import qualified OpenCascade.TopExp.Explorer as Explorer
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.TopTools.ShapeMapHasher as TopTools.ShapeMapHasher
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
+import qualified OpenCascade.BRepLib as BRepLib
+import OpenCascade.GeomAbs.Shape as GeomAbs.Shape
 import Waterfall.Internal.FromOpenCascade (gpPntToV3, gpVecToV3)
 import Data.Acquire
 import Control.Monad.IO.Class (liftIO)
@@ -77,8 +82,32 @@ allSubShapes t s = do
                 else return []
     go []
 
+    
+allSubShapesWithCopy :: ShapeEnum.ShapeEnum -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
+allSubShapesWithCopy t s = do 
+    explorer <- Explorer.new s t
+    let go visited = do
+            isMore <- liftIO $ Explorer.more explorer
+            if isMore 
+                then do
+                    v <- liftIO $ Explorer.value explorer
+                    hash <- liftIO $ TopTools.ShapeMapHasher.hash v
+                    add <- if hash `elem` visited 
+                        then pure id 
+                        else do
+                            v' <- TopoDS.Shape.copy v
+                            return (v':) 
+                    liftIO $ Explorer.next explorer
+                    add <$> go visited
+                else return []
+    go []
+
+
+allEdges :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Edge]
+allEdges s = traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Edge s 
+
 allWires :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Wire]
-allWires s = traverse (liftIO . unsafeDowncast) =<<  allSubShapes ShapeEnum.Wire s 
+allWires s = traverse (liftIO . unsafeDowncast) =<< allSubShapes ShapeEnum.Wire s 
     
 wireEndpoints :: Ptr TopoDS.Wire -> IO (V3 Double, V3 Double)
 wireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
@@ -183,6 +212,13 @@ joinWires wires = do
     traverse_ addWire $ wires
     MakeWire.wire builder
 
+    
+edgeToWire :: Ptr TopoDS.Edge -> Acquire (Ptr TopoDS.Wire)
+edgeToWire edge = do
+    builder <- MakeWire.new
+    liftIO $ MakeWire.addEdge builder edge
+    MakeWire.wire builder
+
 splitWires :: Ptr TopoDS.Wire -> Acquire [Ptr TopoDS.Wire]
 splitWires wire = do
     explorer <- WireExplorer.fromWire wire
@@ -207,5 +243,9 @@ splitWires wire = do
             return $ thisWire : rest 
     makeSegment
 
-    
+buildEdgeCurve3D :: Ptr TopoDS.Edge -> Acquire (Ptr TopoDS.Edge)
+buildEdgeCurve3D edge = do 
+    edge' <- (liftIO . unsafeDowncast) =<< TopoDS.Shape.copy (upcast edge)
+    _ <- liftIO $ BRepLib.buildCurve3d edge' 1e-5 GeomAbs.Shape.C1 14 0
+    return edge'
 

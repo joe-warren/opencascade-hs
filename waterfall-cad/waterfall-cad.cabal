@@ -33,6 +33,7 @@ library
       Waterfall.Booleans.Operators
       Waterfall.BoundingBox.AxisAligned
       Waterfall.BoundingBox.Oriented
+      Waterfall.Diagram
       Waterfall.Fillet
       Waterfall.Internal.Edges
       Waterfall.Internal.Finalizers
