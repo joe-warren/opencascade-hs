@@ -316,7 +316,7 @@ convertTree tree = do
         Svg.RectangleTree rectangle -> convertRectangle rectangle
         _ -> Right []
 
--- | Convert an `Svg.Document into a list of `Path2Ds`
+-- | Convert an `Svg.Document` into a list of `Path2Ds`
 convertDocument :: Svg.Document -> Either SVGError [Waterfall.Path2D]
 convertDocument doc = fmap mconcat . traverse convertTree $ (doc ^. Svg.elements) 
 
