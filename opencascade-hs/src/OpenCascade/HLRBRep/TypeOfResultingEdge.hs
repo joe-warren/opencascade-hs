@@ -9,4 +9,4 @@ data TypeOfResultingEdge
     | Rg1Line
     | RgNLine
     | Sharp
-    deriving (Eq, Enum, Show)
+    deriving (Eq, Ord, Enum, Show)

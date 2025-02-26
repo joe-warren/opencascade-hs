@@ -27,19 +27,13 @@ import Waterfall.Internal.Path.Common (RawPath (..))
 data LineType = 
     OutLine
     | SharpLine
-    | IsoLine
-    | Rg1Line
-    | RgNLine
-    | OtherLine
+    | RawLine HLRBRep.TypeOfResultingEdge
     deriving (Eq, Ord, Show)
 
 lineTypeToOpenCascade :: LineType -> HLRBRep.TypeOfResultingEdge
-lineTypeToOpenCascade IsoLine = HLRBRep.IsoLine
 lineTypeToOpenCascade OutLine = HLRBRep.OutLine
 lineTypeToOpenCascade SharpLine = HLRBRep.Sharp
-lineTypeToOpenCascade Rg1Line = HLRBRep.Rg1Line
-lineTypeToOpenCascade RgNLine = HLRBRep.RgNLine
-lineTypeToOpenCascade OtherLine = HLRBRep.Undefined
+lineTypeToOpenCascade (RawLine lt) = lt
 
 data Visibility = Visible | Hidden deriving (Eq, Ord, Show)
 
