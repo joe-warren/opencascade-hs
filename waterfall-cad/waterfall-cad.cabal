@@ -35,6 +35,7 @@ library
       Waterfall.BoundingBox.Oriented
       Waterfall.Diagram
       Waterfall.Fillet
+      Waterfall.Internal.Diagram
       Waterfall.Internal.Edges
       Waterfall.Internal.Finalizers
       Waterfall.Internal.FromOpenCascade
