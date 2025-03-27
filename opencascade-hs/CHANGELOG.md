@@ -26,6 +26,7 @@ and this project adheres to the
 - Add `OpenCascade.HLRBRep.HLRToShape`
 - Add `OpenCascade.HLRBRep.TypeOfResultingEdge`
 - Add `OpenCascade.BRepLib` method `buildCurve3d`
+- Add `OpenCascade.Geom.Curve` methods `firstParameter` and `lastParameter`
 
 ## 0.4.0.0
 

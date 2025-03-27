@@ -1,6 +1,8 @@
 {-# LANGUAGE CApiFFI #-}
 module OpenCascade.Geom.Curve 
 ( value
+, firstParameter
+, lastParameter
 , dn
 , reversedParameter
 , reversed
@@ -20,6 +22,17 @@ foreign import capi unsafe "hs_Geom_Curve.h hs_Geom_Curve_value" rawValue :: Ptr
 value :: Ptr (Handle Curve) -> Double -> Acquire (Ptr Pnt)
 value curve u = mkAcquire (rawValue curve (coerce u)) deletePnt
 
+foreign import capi unsafe "hs_Geom_Curve.h hs_Geom_Curve_firstParameter" rawFirstParameter :: Ptr (Handle Curve)-> IO (CDouble)
+
+firstParameter :: Ptr (Handle Curve) -> IO Double
+firstParameter = coerce rawFirstParameter
+
+foreign import capi unsafe "hs_Geom_Curve.h hs_Geom_Curve_lastParameter" rawLastParameter :: Ptr (Handle Curve)-> IO (CDouble)
+
+lastParameter :: Ptr (Handle Curve) -> IO Double
+lastParameter = coerce rawLastParameter
+
+
 foreign import capi unsafe "hs_Geom_Curve.h hs_Geom_Curve_dn" rawDN :: Ptr (Handle Curve) -> CDouble -> CInt -> IO (Ptr Vec)
 
 dn :: Ptr (Handle Curve) -> Double -> Int -> Acquire (Ptr Vec)
@@ -29,7 +42,6 @@ foreign import capi unsafe "hs_Geom_Curve.h hs_Geom_Curve_reversedParameter" raw
 
 reversedParameter :: Ptr (Handle Curve) -> Double -> IO Double
 reversedParameter = coerce rawReversedParameter
-
 
 foreign import capi unsafe "hs_Geom_Curve.h hs_Geom_Curve_reversed" rawReversed :: Ptr (Handle Curve) -> IO (Ptr (Handle Curve))
 

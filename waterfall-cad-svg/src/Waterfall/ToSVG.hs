@@ -21,6 +21,7 @@ import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.BRepAdaptor.Curve as BRepAdaptor.Curve
 import qualified OpenCascade.Geom as Geom
 import qualified OpenCascade.GeomAbs.CurveType as GeomAbs.CurveType
+import qualified OpenCascade.Geom.Curve as Geom.Curve
 import qualified OpenCascade.Geom.BezierCurve as Geom.BezierCurve
 import qualified OpenCascade.Geom.BSplineCurve as Geom.BSplineCurve
 import qualified OpenCascade.GeomAbs.Shape as GeomAbs.Shape
@@ -70,25 +71,35 @@ bezierToPathCommand edge curve = do
 
 convertBSpline :: Ptr TopoDS.Edge -> Ptr (Handle Geom.BSplineCurve) -> Acquire [Svg.PathCommand]
 convertBSpline edge someBSpline = do
-    converter <- GeomConvert.BSplineCurveToBezierCurve.fromHandle someBSpline
+    firstParameter <- liftIO $ Geom.Curve.firstParameter (upcast someBSpline)
+    lastParameter <- liftIO $ Geom.Curve.lastParameter (upcast someBSpline)
+    converter <- GeomConvert.BSplineCurveToBezierCurve.fromHandleParametersAndTolerance someBSpline firstParameter lastParameter 1e-6
     nbArcs <- liftIO $ GeomConvert.BSplineCurveToBezierCurve.nbArcs converter
     mconcat <$> traverse (bezierCurveToPathCommand edge <=< GeomConvert.BSplineCurveToBezierCurve.arc converter) [1..nbArcs]
 
 approximateCurveToPathCommand :: Ptr TopoDS.Edge -> Ptr BRepAdaptor.Curve.Curve -> Acquire [Svg.PathCommand]
 approximateCurveToPathCommand edge curve = do
     scc <- ShapeConstruct.Curve.new
-    firstParam <- liftIO $ BRepAdaptor.Curve.firstParameter curve
-    lastParam <- liftIO $ BRepAdaptor.Curve.lastParameter curve
-    let convertToBSpline curve' = ShapeConstruct.Curve.convertToBSpline scc curve' firstParam lastParam 1e-6
-    curve' <- fmap upcast . convertToBSpline =<< GeomAdaptor.Curve.curve =<< BRepAdaptor.Curve.curve curve
-    approximator <- GeomConvert.ApproxCurve.fromCurveToleranceOrderSegmentsAndDegree curve' 0.05 GeomAbs.Shape.C0 50 3
-    done <- liftIO $ GeomConvert.ApproxCurve.isDone approximator
-    if done 
-        then do
-            newCurve <- GeomConvert.ApproxCurve.curve approximator
-            convertBSpline edge newCurve
-        else 
-            liftIO $ discretizedEdgePathCommand edge
+    let convertToBSpline c = do
+            gac <- BRepAdaptor.Curve.curve c
+            gc <- GeomAdaptor.Curve.curve gac
+            firstParam <- liftIO $ GeomAdaptor.Curve.firstParameter gac
+            lastParam <- liftIO $ GeomAdaptor.Curve.lastParameter gac
+            ShapeConstruct.Curve.convertToBSpline scc gc firstParam lastParam 1e-6
+    curve' <- convertToBSpline curve
+    nbPoles <- liftIO $ Geom.BSplineCurve.nbPoles curve'
+    isRational <- liftIO $ Geom.BSplineCurve.isRational curve'
+    if not (nbPoles > 4 || isRational)
+        then convertBSpline edge curve'
+        else do
+            approximator <- GeomConvert.ApproxCurve.fromCurveToleranceOrderSegmentsAndDegree (upcast curve') 1e-3 GeomAbs.Shape.C1 50 3
+            done <- liftIO $ GeomConvert.ApproxCurve.isDone approximator
+            if done
+                then do
+                    newCurve <- GeomConvert.ApproxCurve.curve approximator
+                    convertBSpline edge newCurve
+                else 
+                    liftIO $ discretizedEdgePathCommand edge
 
 bsplineToPathCommand :: Ptr TopoDS.Edge -> Ptr BRepAdaptor.Curve.Curve -> Acquire [Svg.PathCommand]
 bsplineToPathCommand edge curve = do 
@@ -114,8 +125,8 @@ edgeToPathCommand edge = Internal.Finalizers.unsafeFromAcquire $ do
     curveType <- liftIO $ BRepAdaptor.Curve.curveType adaptor
     case curveType of 
         GeomAbs.CurveType.Line -> liftIO $ lineToPathCommand edge
-        GeomAbs.CurveType.BezierCurve -> bezierToPathCommand edge adaptor
-        GeomAbs.CurveType.BSplineCurve -> bsplineToPathCommand edge adaptor
+        --GeomAbs.CurveType.BezierCurve -> bezierToPathCommand edge adaptor
+        --GeomAbs.CurveType.BSplineCurve -> bsplineToPathCommand edge adaptor
         _ -> approximateCurveToPathCommand edge adaptor
 
 path2DToPathCommands :: Waterfall.Path2D -> [Svg.PathCommand]

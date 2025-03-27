@@ -11,6 +11,10 @@ GeomAdaptor_Curve * hs_new_GeomAdaptor_Curve_fromHandle(Handle(Geom_Curve) *curv
 
 void hs_delete_GeomAdaptor_Curve(GeomAdaptor_Curve * adaptor);
 
+double hs_GeomAdaptor_Curve_firstParameter(GeomAdaptor_Curve * adaptor);
+
+double hs_GeomAdaptor_Curve_lastParameter(GeomAdaptor_Curve * adaptor);
+
 Handle(Geom_Curve)* hs_GeomAdaptor_Curve_curve(GeomAdaptor_Curve * adaptor);
 
 #ifdef __cplusplus

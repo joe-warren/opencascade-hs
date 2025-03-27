@@ -9,6 +9,12 @@ extern "C" {
 
 GeomConvert_BSplineCurveToBezierCurve * hs_new_GeomConvert_BSplineCurveToBezierCurve_fromHandle (Handle(Geom_BSplineCurve) *basisCurve);
 
+GeomConvert_BSplineCurveToBezierCurve * hs_new_GeomConvert_BSplineCurveToBezierCurve_fromHandleParametersAndTolerance (
+    Handle(Geom_BSplineCurve) *basisCurve,
+    double firstParameter, 
+    double secondParameter,
+    double tolerance );
+
 void hs_delete_GeomConvert_BSplineCurveToBezierCurve(GeomConvert_BSplineCurveToBezierCurve* ptr);
 
 int hs_GeomConvert_BSplineCurveToBezierCurve_nbArcs(GeomConvert_BSplineCurveToBezierCurve* ptr);
