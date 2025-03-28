@@ -32,7 +32,6 @@ foreign import capi unsafe "hs_Geom_Curve.h hs_Geom_Curve_lastParameter" rawLast
 lastParameter :: Ptr (Handle Curve) -> IO Double
 lastParameter = coerce rawLastParameter
 
-
 foreign import capi unsafe "hs_Geom_Curve.h hs_Geom_Curve_dn" rawDN :: Ptr (Handle Curve) -> CDouble -> CInt -> IO (Ptr Vec)
 
 dn :: Ptr (Handle Curve) -> Double -> Int -> Acquire (Ptr Vec)

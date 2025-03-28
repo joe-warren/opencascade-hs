@@ -4,9 +4,10 @@ module OpenCascade.Geom.BSplineCurve
 , nbPoles
 , pole
 , isRational
+, segment
 ) where
 import Foreign.Ptr
-import Foreign.C (CInt (..), CBool (..))
+import Foreign.C (CInt (..), CBool (..), CDouble (..))
 import Data.Acquire
 import OpenCascade.Geom.Types (BSplineCurve)
 import OpenCascade.Geom.Internal.Destructors (deleteHandleBSplineCurve)
@@ -14,6 +15,7 @@ import OpenCascade.Handle (Handle)
 import OpenCascade.Internal.Bool (cBoolToBool)
 import OpenCascade.GP (Pnt)
 import OpenCascade.GP.Internal.Destructors (deletePnt)
+import Data.Coerce (coerce)
 
 foreign import capi unsafe "hs_Geom_BSplineCurve.h hs_Geom_BSplineCurve_toHandle" rawToHandle :: Ptr BSplineCurve -> IO (Ptr (Handle BSplineCurve))
 
@@ -34,4 +36,9 @@ foreign import capi unsafe "hs_Geom_BSplineCurve.h hs_Geom_BSplineCurve_isRation
 
 isRational :: Ptr (Handle (BSplineCurve)) -> IO Bool
 isRational h = cBoolToBool <$> rawIsRational h
+
+foreign import capi unsafe "hs_Geom_BSplineCurve.h hs_Geom_BSplineCurve_segment" rawSegment :: Ptr (Handle BSplineCurve) -> CDouble -> CDouble -> CDouble -> IO ()
+
+segment :: Ptr (Handle BSplineCurve) -> Double -> Double -> Double -> IO ()
+segment = coerce rawSegment
 

@@ -5,10 +5,12 @@ module OpenCascade.Geom.BezierCurve
 , nbPoles
 , pole
 , isRational
+, segment
 ) where
 import Foreign.Ptr
-import Foreign.C (CInt (..), CBool (..))
+import Foreign.C (CInt (..), CBool (..), CDouble (..))
 import Data.Acquire
+import Data.Coerce (coerce)
 import OpenCascade.Geom.Types (BezierCurve)
 import OpenCascade.Geom.Internal.Destructors (deleteBezierCurve, deleteHandleBezierCurve)
 import OpenCascade.GP.Internal.Destructors (deletePnt)
@@ -16,6 +18,8 @@ import OpenCascade.GP (Pnt)
 import OpenCascade.NCollection (Array1)
 import OpenCascade.Handle (Handle)
 import OpenCascade.Internal.Bool (cBoolToBool)
+
+
 foreign import capi unsafe "hs_Geom_BezierCurve.h hs_new_Geom_BezierCurve_fromPnts" rawFromPnts :: Ptr (Array1 Pnt) -> IO(Ptr BezierCurve)
 
 fromPnts :: Ptr (Array1 Pnt) -> Acquire (Ptr BezierCurve)
@@ -41,3 +45,8 @@ foreign import capi unsafe "hs_Geom_BezierCurve.h hs_Geom_BezierCurve_isRational
 
 isRational :: Ptr (Handle (BezierCurve)) -> IO Bool
 isRational h = cBoolToBool <$> rawIsRational h
+
+foreign import capi unsafe "hs_Geom_BezierCurve.h hs_Geom_BezierCurve_segment" rawSegment :: Ptr (Handle BezierCurve) -> CDouble -> CDouble -> IO ()
+
+segment :: Ptr (Handle BezierCurve) -> Double -> Double -> IO ()
+segment = coerce rawSegment

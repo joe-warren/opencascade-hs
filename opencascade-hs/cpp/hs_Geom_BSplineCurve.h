@@ -20,6 +20,8 @@ gp_Pnt * hs_Geom_BSplineCurve_pole(Handle(Geom_BSplineCurve)* h, int index);
 
 bool hs_Geom_BSplineCurve_isRational(Handle(Geom_BSplineCurve) *h);
 
+void hs_Geom_BSplineCurve_segment(Handle(Geom_BSplineCurve) *h, double u1, double u2, double confusion);
+
 
 #ifdef __cplusplus
 }
