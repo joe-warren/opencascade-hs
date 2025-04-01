@@ -164,8 +164,8 @@ diagramToSvg diagram =
                 group children = Svg.GroupTree $ Svg.Group mempty children Nothing Svg.defaultSvg
             in document . group $
                     [ pathOf lineType visibility ["edge", ltClass, vClass]
-                        | (lineType, ltClass) <- [(Waterfall.SharpLine, "sharp"), (Waterfall.OutLine, "outline")]
-                        , (visibility, vClass) <- [(Waterfall.Hidden, "hidden"), (Waterfall.Visible, "visible")]
+                        | (visibility, vClass) <- [(Waterfall.Hidden, "hidden"), (Waterfall.Visible, "visible")]
+                        , (lineType, ltClass) <- [(Waterfall.SharpLine, "sharp"), (Waterfall.OutLine, "outline")]
                     ]
 
 writeDiagramSVG :: FilePath -> Waterfall.Diagram -> IO ()
