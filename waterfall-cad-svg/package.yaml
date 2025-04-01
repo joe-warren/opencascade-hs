@@ -31,6 +31,7 @@ dependencies:
 - linear
 - lens
 - resourcet
+- JuicyPixels
 
 ghc-options: *ghc-options
 

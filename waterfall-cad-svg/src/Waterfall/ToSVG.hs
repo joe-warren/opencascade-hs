@@ -1,14 +1,18 @@
+{-# Language OverloadedStrings #-}
 {-|
 Convert Waterfall data into [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG)
 -}
 module Waterfall.ToSVG
 ( path2DToPathCommands
+, diagramToSvg
+, writeDiagramSVG
 ) where
 
 import qualified Waterfall
 import qualified Graphics.Svg as Svg
-import Linear (_xy)
-import Control.Lens ((^.))
+import qualified Graphics.Svg.CssTypes as Svg.Css
+import Linear (_xy, _x, _y)
+import Control.Lens ((^.), (&), (.~))
 import Foreign.Ptr (Ptr)
 import Control.Monad ((<=<)) 
 import Control.Monad.IO.Class (liftIO)
@@ -31,6 +35,7 @@ import qualified OpenCascade.BRep.Tool as BRep.Tool
 import OpenCascade.Handle (Handle)
 import OpenCascade.Inheritance (upcast)
 import Data.Acquire (Acquire)
+import Codec.Picture.Types (PixelRGBA8 (..))
 
 lineToPathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
 lineToPathCommand edge = do
@@ -129,3 +134,39 @@ path2DToPathCommands (Path2D theRawPath) = case theRawPath of
     Internal.Path.Common.ComplexRawPath wire -> 
         Internal.Finalizers.unsafeFromAcquireT $
             foldMap edgeToPathCommand <$> Internal.Edges.wireEdges wire
+
+diagramToSvg :: Waterfall.Diagram -> Svg.Document
+diagramToSvg diagram = 
+    case Waterfall.diagramBoundingBox diagram of 
+        Nothing -> Svg.Document Nothing Nothing Nothing [] mempty mempty mempty mempty
+        Just (lo, hi) -> 
+            let w = Just . Svg.Num $ (hi - lo) ^. _x + 4
+                h = Just . Svg.Num $ (hi - lo) ^. _y + 4
+                d' = Waterfall.translate2D (2 + negate lo) diagram
+                paths lt visibility =
+                    path2DToPathCommands =<<
+                        Waterfall.diagramLines lt visibility d'
+                styles = 
+                    [ Svg.Css.CssRule 
+                        [[Svg.Css.AllOf [Svg.Css.OfClass "edge"]]]
+                        [Svg.Css.CssDeclaration "fill" [[Svg.Css.CssIdent "None"]]]
+                    , Svg.Css.CssRule
+                        [[Svg.Css.AllOf [Svg.Css.OfClass "edge", Svg.Css.OfClass "visible"]]]
+                        [Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor $ PixelRGBA8 0 0 0 255]]]
+                    , Svg.Css.CssRule
+                        [[Svg.Css.AllOf [Svg.Css.OfClass "edge", Svg.Css.OfClass "hidden"]]]
+                        [Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor $ PixelRGBA8 200 200 255 255]]]
+                    ]
+                document e = Svg.Document Nothing w h [e] mempty mempty styles mempty
+                drawAttrs classes = mempty 
+                    & Svg.attrClass .~ classes
+                pathOf lt visibility classes = Svg.PathTree $ Svg.Path (drawAttrs classes) (paths lt visibility)
+                group children = Svg.GroupTree $ Svg.Group mempty children Nothing Svg.defaultSvg
+            in document . group $
+                    [ pathOf lineType visibility ["edge", ltClass, vClass]
+                        | (lineType, ltClass) <- [(Waterfall.SharpLine, "sharp"), (Waterfall.OutLine, "outline")]
+                        , (visibility, vClass) <- [(Waterfall.Hidden, "hidden"), (Waterfall.Visible, "visible")]
+                    ]
+
+writeDiagramSVG :: FilePath -> Waterfall.Diagram -> IO ()
+writeDiagramSVG path = Svg.saveXmlFile path . (Svg.documentLocation .~ path) . diagramToSvg

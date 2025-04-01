@@ -34,7 +34,8 @@ library
       src
   ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration
   build-depends:
-      attoparsec
+      JuicyPixels
+    , attoparsec
     , base >=4.7 && <5
     , lens
     , linear
