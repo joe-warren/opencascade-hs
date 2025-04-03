@@ -78,6 +78,6 @@ If you've found the project useful, or interesting, or if you've built anything 
 
 [![](images/text.svg)](waterfall-cad-examples/src/TextExample.hs)
 
-[![](images/bounding_boxes.svg)](waterfall-cad-examples/src/BoundingBoxExample.hs)
+[![](images/bounding-boxes.svg)](waterfall-cad-examples/src/BoundingBoxExample.hs)
 
 [![](images/loft.svg)](waterfall-cad-examples/src/LoftExample.hs)
