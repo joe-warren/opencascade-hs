@@ -74,8 +74,6 @@ If you've found the project useful, or interesting, or if you've built anything 
 
 [![](images/gear.svg)](waterfall-cad-examples/src/GearExample.hs)
 
-
-
 [![](images/offset.svg)](waterfall-cad-examples/src/OffsetExample.hs)
 
 [![](images/text.svg)](waterfall-cad-examples/src/TextExample.hs)
