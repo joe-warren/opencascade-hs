@@ -14,6 +14,7 @@ import ReadSolidExpressionExample (readSolidExpressionExample)
 import SVG.PathExample (pathExample)
 import SVG.ReadFileExample (readFileExample)
 import Waterfall.SVG (writeDiagramSVG)
+import DarkModeSVG (writeDarkModeSVG)
 import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB, writeOBJ)
 import qualified Waterfall.Diagram as Diagram
 import qualified Waterfall.Solids as Solids
@@ -39,11 +40,13 @@ outputOption =
         objOption = (flip writeOBJ) <$> OA.strOption (OA.long "obj" <> OA.metavar "OBJ file to write results to")
         writeSVG path = writeDiagramSVG path . normalizeSize . Diagram.solidDiagram (V3 2 3 1)
         svgOption = writeSVG <$> OA.strOption (OA.long "svg" <> OA.metavar "SVG file to write results to")
+        writeDarkMode path = writeDarkModeSVG path . normalizeSize . Diagram.solidDiagram (V3 2 3 1)
+        darkModeOption = writeDarkMode <$> OA.strOption (OA.long "dark-mode-svg" <> OA.metavar "SVG file to write results to (with the style modified to support dark mode)")
         meshOptionsNoResolution = stlOption <|> gltfOption <|> glbOption <|> objOption
         meshOptions = meshOptionsNoResolution <*>
             (OA.option OA.auto (OA.long "resolution" <> OA.help "linear tolerance for mesh file formats") <|> pure 0.001)
         stepOption = writeSTEP <$> OA.strOption (OA.long "step" <> OA.metavar "Stl file to write results to")
-     in meshOptions <|> stepOption <|> svgOption
+     in meshOptions <|> stepOption <|> svgOption <|> darkModeOption
 
 exampleOption :: OA.Parser (IO Solids.Solid)
 exampleOption = 
