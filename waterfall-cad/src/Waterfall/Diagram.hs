@@ -3,7 +3,7 @@ module Waterfall.Diagram
 ( Diagram
 , LineType (..)
 , Visibility (..)
-, diagram
+, solidDiagram
 , diagramLines
 , diagramBoundingBox
 ) where
@@ -49,8 +49,8 @@ lineTypeToOpenCascade (RawLine lt) = lt
 
 data Visibility = Visible | Hidden deriving (Eq, Ord, Show)
 
-diagram :: V3 Double -> Solid -> Diagram
-diagram projectionDirection solid = Diagram . RawDiagram . unsafeFromAcquire $ do
+solidDiagram :: V3 Double -> Solid -> Diagram
+solidDiagram projectionDirection solid = Diagram . RawDiagram . unsafeFromAcquire $ do
     s' <- acquireSolid solid
     algo <- HLRBRep.Algo.new
     liftIO $ HLRBRep.Algo.add algo s'

@@ -13,11 +13,23 @@ import BoundingBoxExample (boundingBoxExample)
 import ReadSolidExpressionExample (readSolidExpressionExample)
 import SVG.PathExample (pathExample)
 import SVG.ReadFileExample (readFileExample)
+import Waterfall.SVG (writeDiagramSVG)
 import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB, writeOBJ)
+import qualified Waterfall.Diagram as Diagram
 import qualified Waterfall.Solids as Solids
+import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
 import qualified Options.Applicative as OA
-import Control.Applicative ((<|>), liftA2)
+import Linear (V2 (..), V3 (..))
+import Control.Applicative ((<|>))
 import Control.Monad (join)
+
+normalizeSize :: Diagram.Diagram -> Diagram.Diagram
+normalizeSize d = 
+    case Diagram.diagramBoundingBox d of 
+        Just (lo, hi) -> 
+            let (V2 w _) = hi - lo
+            in TwoD.Transforms.uScale2D (800 / w) d
+        Nothing -> d
 
 outputOption :: OA.Parser (Solids.Solid -> IO ()) 
 outputOption =
@@ -25,11 +37,13 @@ outputOption =
         gltfOption = (flip writeGLTF) <$> OA.strOption (OA.long "gltf" <> OA.metavar "GLTF file to write results to")
         glbOption = (flip writeGLB) <$> OA.strOption (OA.long "glb" <> OA.metavar "GLB file to write results to")
         objOption = (flip writeOBJ) <$> OA.strOption (OA.long "obj" <> OA.metavar "OBJ file to write results to")
+        writeSVG path = writeDiagramSVG path . normalizeSize . Diagram.solidDiagram (V3 2 3 1)
+        svgOption = writeSVG <$> OA.strOption (OA.long "svg" <> OA.metavar "SVG file to write results to")
         meshOptionsNoResolution = stlOption <|> gltfOption <|> glbOption <|> objOption
         meshOptions = meshOptionsNoResolution <*>
             (OA.option OA.auto (OA.long "resolution" <> OA.help "linear tolerance for mesh file formats") <|> pure 0.001)
         stepOption = writeSTEP <$> OA.strOption (OA.long "step" <> OA.metavar "Stl file to write results to")
-     in meshOptions <|> stepOption
+     in meshOptions <|> stepOption <|> svgOption
 
 exampleOption :: OA.Parser (IO Solids.Solid)
 exampleOption = 
