@@ -1,8 +1,8 @@
 {-# Language OverloadedStrings #-}
 {-|
-Convert Waterfall data into [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG)
+Convert "Waterfall" data into [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG)
 -}
-module Waterfall.ToSVG
+module Waterfall.SVG.ToSVG
 ( path2DToPathCommands
 , diagramToSvg
 , writeDiagramSVG
@@ -127,6 +127,7 @@ edgeToPathCommand edge = Internal.Finalizers.unsafeFromAcquire $ do
         -- GeomAbs.CurveType.BSplineCurve -> There's some argument for special casing this, but we don't need to
         _ -> approximateCurveToPathCommand edge
 
+-- | Convert a `Waterfall.Path2D` into a list of `Svg.PathCommands`
 path2DToPathCommands :: Waterfall.Path2D -> [Svg.PathCommand]
 path2DToPathCommands (Path2D theRawPath) = case theRawPath of  
     Internal.Path.Common.EmptyRawPath -> []
@@ -135,6 +136,9 @@ path2DToPathCommands (Path2D theRawPath) = case theRawPath of
         Internal.Finalizers.unsafeFromAcquireT $
             foldMap edgeToPathCommand <$> Internal.Edges.wireEdges wire
 
+-- | Convert a `Waterfall.Diagram` into an SVG document
+-- 
+-- The diagram paths have the classes "edge", "visible"/"hidden" and "sharp"/"outline"
 diagramToSvg :: Waterfall.Diagram -> Svg.Document
 diagramToSvg diagram = 
     case Waterfall.diagramBoundingBox diagram of 
@@ -167,6 +171,7 @@ diagramToSvg diagram =
                         | (visibility, vClass) <- [(Waterfall.Hidden, "hidden"), (Waterfall.Visible, "visible")]
                         , (lineType, ltClass) <- [(Waterfall.SharpLine, "sharp"), (Waterfall.OutLine, "outline")]
                     ]
-
+                    
+-- | Write a `Waterfall.Diagram`, to an SVG file at the specified location 
 writeDiagramSVG :: FilePath -> Waterfall.Diagram -> IO ()
-writeDiagramSVG path = Svg.saveXmlFile path . (Svg.documentLocation .~ path) . diagramToSvg
+writeDiagramSVG path = Svg.saveXmlFile path . diagramToSvg

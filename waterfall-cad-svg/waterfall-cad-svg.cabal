@@ -25,9 +25,9 @@ source-repository head
 
 library
   exposed-modules:
-      Waterfall.FromSVG
       Waterfall.SVG
-      Waterfall.ToSVG
+      Waterfall.SVG.FromSVG
+      Waterfall.SVG.ToSVG
   other-modules:
       Paths_waterfall_cad_svg
   hs-source-dirs:

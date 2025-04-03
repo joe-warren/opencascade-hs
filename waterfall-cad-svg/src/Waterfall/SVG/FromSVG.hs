@@ -1,7 +1,7 @@
 {-|
 Load [SVG Data](https://developer.mozilla.org/en-US/docs/Web/SVG) into `Waterfall.Path2D`
 -}
-module Waterfall.FromSVG
+module Waterfall.SVG.FromSVG
 ( SVGErrorKind (..)
 , SVGError (..)
 , convertPathCommands

@@ -4,6 +4,7 @@ module Waterfall.Diagram
 , LineType (..)
 , Visibility (..)
 , solidDiagram
+, pathDiagram
 , diagramLines
 , diagramBoundingBox
 ) where
@@ -33,11 +34,20 @@ import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import OpenCascade.Inheritance (upcast)
 import Control.Monad (forM_)
 
+-- | "Diagram" of a "Waterfall" part
+--
+-- This is similar to a collection of `Path2D`
+-- indexed by `LineType` and `Visibility`
 newtype Diagram = Diagram { rawDiagram :: RawDiagram }
     deriving (Semigroup, Monoid, Transformable2D) via RawDiagram
 
+-- | Categorize the lines in a diagram
 data LineType = 
-    OutLine
+    -- | Represents lines at the edge of objects, the "silhouette" 
+    -- 
+    -- Does not include those parts of the silhouette that are also sharp
+    OutLine 
+    -- | Sharp edges, parts of an object with C0 Continuity
     | SharpLine
     | RawLine HLRBRep.TypeOfResultingEdge
     deriving (Eq, Ord, Show)
@@ -47,8 +57,12 @@ lineTypeToOpenCascade OutLine = HLRBRep.OutLine
 lineTypeToOpenCascade SharpLine = HLRBRep.Sharp
 lineTypeToOpenCascade (RawLine lt) = lt
 
+-- | Whether an edge is visible in a given projection, or not
 data Visibility = Visible | Hidden deriving (Eq, Ord, Show)
 
+-- | Produce a diagram of a `Solid`
+-- 
+-- Uses an orthographic projection, viewed from the provided direction
 solidDiagram :: V3 Double -> Solid -> Diagram
 solidDiagram projectionDirection solid = Diagram . RawDiagram . unsafeFromAcquire $ do
     s' <- acquireSolid solid
@@ -69,12 +83,28 @@ solidDiagram projectionDirection solid = Diagram . RawDiagram . unsafeFromAcquir
         rawEdges <- allEdges compoundOfEdges
         traverse buildEdgeCurve3D rawEdges
 
+-- | Produce a `Diagram` from a `Path2D`
+-- 
+-- @ diagramLines lt v . pathDiagram lt v = pure @
+pathDiagram :: LineType -> Visibility -> Path2D -> Diagram
+pathDiagram lt v (Path2D rawpath) =
+    Diagram . RawDiagram $ \lt' v' _ -> 
+        if lineTypeToOpenCascade lt == lt' && (v == Visible) == v' 
+            then case rawpath of 
+                    (ComplexRawPath wire) -> allEdges (upcast wire)
+                    _ -> pure []
+            else pure []
+
+-- | Access the lines in a `Diagram` as `Path2D`
 diagramLines :: LineType -> Visibility -> Diagram -> [Path2D]
 diagramLines lt v d = unsafeFromAcquireT $ do 
     edges <- runDiagram (rawDiagram d) (lineTypeToOpenCascade lt) (v == Visible) False 
     wires <- traverse edgeToWire edges
     return $ (Path2D . ComplexRawPath) <$> wires
 
+-- | Compute the Axis Aligned Bounding Box of a `Diagram`
+-- 
+-- Returns Nothing if the `Diagram` does not contain lines that are `OutLine` or `Sharp`
 diagramBoundingBox :: Diagram -> Maybe (V2 Double, V2 Double)
 diagramBoundingBox d = unsafeFromAcquire $ do
     outline <- runDiagram (rawDiagram d) HLRBRep.OutLine True False
