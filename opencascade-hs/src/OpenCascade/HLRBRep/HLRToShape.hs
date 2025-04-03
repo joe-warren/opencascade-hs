@@ -1,7 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
 module OpenCascade.HLRBRep.HLRToShape
 ( HLRToShape
-, fromHandleAlgo
+, fromAlgo
 , compoundOfEdges
 ) where
 
@@ -18,8 +18,8 @@ import OpenCascade.Internal.Bool (boolToCBool)
 
 foreign import capi unsafe "hs_HLRBRep_HLRToShape.h hs_new_HLRBRep_HLRToShape_fromHandleAlgo" rawFromHandleAlgo :: Ptr (Handle Algo) -> IO (Ptr HLRToShape)
 
-fromHandleAlgo :: Ptr (Handle Algo) -> Acquire (Ptr HLRToShape)
-fromHandleAlgo algo = mkAcquire (rawFromHandleAlgo algo) deleteHLRToShape
+fromAlgo :: Ptr (Handle Algo) -> Acquire (Ptr HLRToShape)
+fromAlgo algo = mkAcquire (rawFromHandleAlgo algo) deleteHLRToShape
 
 foreign import capi unsafe "hs_HLRBRep_HLRToShape.h hs_HLRBRep_HLRToShape_compoundOfEdges" rawCompoundOfEdges :: Ptr HLRToShape -> CInt -> CBool -> CBool -> IO (Ptr TopoDS.Shape)
 

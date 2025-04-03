@@ -62,8 +62,7 @@ solidDiagram projectionDirection solid = Diagram . RawDiagram . unsafeFromAcquir
         HLRBRep.Algo.update algo
         HLRBRep.Algo.hide algo
 
-    handleAlgo <- HLRBRep.Algo.toHandle algo
-    extractor <- HLRBRep.HLRToShape.fromHandleAlgo handleAlgo
+    extractor <- HLRBRep.HLRToShape.fromAlgo algo
 
     return $ \lt v is3D -> do
         compoundOfEdges <- HLRBRep.HLRToShape.compoundOfEdges extractor lt v is3D

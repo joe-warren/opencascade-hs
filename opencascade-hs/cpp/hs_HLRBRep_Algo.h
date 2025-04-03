@@ -7,21 +7,17 @@
 extern "C" {
 #endif
 
-HLRBRep_Algo * hs_new_HLRBRep_Algo();
+Handle(HLRBRep_Algo) * hs_new_HLRBRep_Algo();
 
-void hs_delete_HLRBRep_Algo(HLRBRep_Algo * algo);
+void hs_delete_HLRBRep_Algo(Handle(HLRBRep_Algo) * algo);
 
-Handle(HLRBRep_Algo) * hs_HLRBRep_Algo_toHandle(HLRBRep_Algo *algo);
+void hs_HLRBRep_Algo_projector(Handle(HLRBRep_Algo) * algo, HLRAlgo_Projector * projector);
 
-void hs_delete_Handle_HLRBRep_Algo(Handle(HLRBRep_Algo) *handleAlgo);
+void hs_HLRBRep_Algo_update(Handle(HLRBRep_Algo) * algo);
 
-void hs_HLRBRep_Algo_projector(HLRBRep_Algo * algo, HLRAlgo_Projector * projector);
+void hs_HLRBRep_Algo_hide(Handle(HLRBRep_Algo) * algo);
 
-void hs_HLRBRep_Algo_update(HLRBRep_Algo * algo);
-
-void hs_HLRBRep_Algo_hide(HLRBRep_Algo * algo);
-
-void hs_HLRBRep_Algo_add(HLRBRep_Algo * algo, TopoDS_Shape * shape);
+void hs_HLRBRep_Algo_add(Handle(HLRBRep_Algo) * algo, TopoDS_Shape * shape);
 
 #ifdef __cplusplus
 }
