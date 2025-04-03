@@ -36,7 +36,7 @@ styles = [r|
 }
 |]
 
-writeDarkModeSVG ::FilePath -> Waterfall.Diagram -> IO ()
+writeDarkModeSVG :: FilePath -> Waterfall.Diagram -> IO ()
 writeDarkModeSVG path diagram =
     let svgAsXML = 
             diagram 

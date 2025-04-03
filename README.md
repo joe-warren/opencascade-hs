@@ -68,13 +68,13 @@ If you've found the project useful, or interesting, or if you've built anything 
 
 ## Examples 
 
-[![](images/csg.svg)](waterfall-cad-examples/src/CsgExample.hs)
+[![](images/revolution.svg)](waterfall-cad-examples/src/RevolutionExample.hs)
+&nbsp;[![](images/csg.svg)](waterfall-cad-examples/src/CsgExample.hs)
+&nbsp;&nbsp;[![](images/sweep.svg)](waterfall-cad-examples/src/SweepExample.hs)
 
 [![](images/gear.svg)](waterfall-cad-examples/src/GearExample.hs)
 
-[![](images/revolution.svg)](waterfall-cad-examples/src/RevolutionExample.hs)
 
-[![](images/sweep.svg)](waterfall-cad-examples/src/SweepExample.hs)
 
 [![](images/offset.svg)](waterfall-cad-examples/src/OffsetExample.hs)
 
