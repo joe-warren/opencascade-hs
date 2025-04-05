@@ -1,5 +1,5 @@
 module BoundingBoxExample
-(boundingBoxExample
+( boundingBoxExample
 ) where
 
 import Data.Function ((&))

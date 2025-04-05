@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -30,6 +30,7 @@ library
   exposed-modules:
       BoundingBoxExample
       CsgExample
+      DarkModeSVG
       FilletExample
       GearExample
       LoftExample
@@ -37,6 +38,8 @@ library
       PrismExample
       ReadSolidExpressionExample
       RevolutionExample
+      SVG.PathExample
+      SVG.ReadFileExample
       SweepExample
       TextExample
   other-modules:
@@ -52,7 +55,11 @@ library
     , optparse-applicative >=0.17 && <0.19
     , parsec ==3.1.*
     , parser-combinators >=1.2 && <1.4
+    , raw-strings-qq
+    , svg-tree
     , waterfall-cad >=0.4.0.0 && <0.5
+    , waterfall-cad-svg >=0.4.0.0 && <0.5
+    , xml ==1.*
   default-language: Haskell2010
 
 executable waterfall-cad-examples
@@ -70,6 +77,10 @@ executable waterfall-cad-examples
     , optparse-applicative >=0.17 && <0.19
     , parsec ==3.1.*
     , parser-combinators >=1.2 && <1.4
+    , raw-strings-qq
+    , svg-tree
     , waterfall-cad >=0.4.0.0 && <0.5
     , waterfall-cad-examples
+    , waterfall-cad-svg >=0.4.0.0 && <0.5
+    , xml ==1.*
   default-language: Haskell2010

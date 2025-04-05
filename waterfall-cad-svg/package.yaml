@@ -1,0 +1,39 @@
+name:                waterfall-cad-svg
+_version:            !include "../package-defaults.yaml"
+version:             *version
+github:              "joe-warren/opencascade-hs"
+license:             LGPL-2.1
+license-file:        LICENSE
+author:              "Joe Warren"
+maintainer:          "josephmarkwarren@gmail.com"
+copyright:           "2025 Joe Warren"
+
+extra-source-files:
+- README.md
+- CHANGELOG.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/waterfall-cad-svg#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- *waterfall-cad-bound
+- *opencascade-hs-bound
+- svg-tree
+- attoparsec
+- text
+- linear
+- lens
+- resourcet
+- JuicyPixels
+
+ghc-options: *ghc-options
+
+library:
+  source-dirs: src

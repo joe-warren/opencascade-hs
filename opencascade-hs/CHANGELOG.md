@@ -10,6 +10,23 @@ and this project adheres to the
 
 - Add `OpenCascade.BRepFilletAPI.MakeFillet` methods `reset`, `nbFaultyContours`, `faultyContour`, `nbEdges`, `edge` and `remove`
 - Add `OpenCascade.BRepBuilderAPI.MakeShape` method `build`
+- Add `OpenCascade.BRepOffsetAPI.MakePipe` constructor `fromWireShapeTrihedronModeAndForceC1`
+- Add `OpenCascade.GeomFill.Trihedron`
+- Add `OpenCascade.BRepAdaptor.Curve`
+- Add `OpenCascade.GeomAbs.CurveType`
+- Add `OpenCascade.GeomAbs.Shape`
+- Add `OpenCascade.GeomConvert.BSplineCurveToBezierCurve`
+- Add `OpenCascade.GeomConvert.ApproxCurve`
+- Add `OpenCascade.Geom.BSplineCurve`
+- Add `OpenCascade.Geom.BezierCurve` methods `pole`, `nbPoles` and `isRational`
+- Add `OpenCascade.GeomAdaptor.Curve`
+- Add `OpenCascade.ShapeConstruct.Curve`
+- Add `OpenCascade.HLRAlgo.Projector`
+- Add `OpenCascade.HLRBRep.Algo`
+- Add `OpenCascade.HLRBRep.HLRToShape`
+- Add `OpenCascade.HLRBRep.TypeOfResultingEdge`
+- Add `OpenCascade.BRepLib` method `buildCurve3d`
+- Add `OpenCascade.Geom.Curve` methods `firstParameter` and `lastParameter`
 
 ## 0.4.0.0
 

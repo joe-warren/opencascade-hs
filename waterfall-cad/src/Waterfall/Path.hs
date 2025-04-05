@@ -21,6 +21,7 @@ module Waterfall.Path
 , closeLoop3D
 , reversePath3D
 , splice3D
+, splitPath3D
 ) where
 
 import Waterfall.Internal.Path (Path(..))
@@ -83,7 +84,7 @@ pathFromTo3D :: [V3 Double -> (V3 Double, Path)] -> V3 Double -> (V3 Double, Pat
 pathFromTo3D = pathFromTo
 
 -- | `pathEndpoints`, with the type fixed to `Path` 
-pathEndpoints3D :: Path -> (V3 Double, V3 Double)
+pathEndpoints3D :: Path -> Maybe (V3 Double, V3 Double)
 pathEndpoints3D = pathEndpoints
 
 -- | `closeLoop` with the type fixed to `Path`
@@ -97,3 +98,7 @@ reversePath3D = reversePath
 -- | `splice` with the type fixed to `Path`
 splice3D :: Path -> V3 Double -> (V3 Double, Path)
 splice3D = splice
+
+-- | `splitPath` with the type fixed to `Path`
+splitPath3D :: Path -> [Path]
+splitPath3D = splitPath

@@ -9,6 +9,12 @@ extern "C" {
 
 BRepOffsetAPI_MakePipe * hs_new_BRepOffsetAPI_MakePipe_fromWireAndShape(TopoDS_Wire * wire, TopoDS_Shape * profile);
 
+BRepOffsetAPI_MakePipe * hs_new_BRepOffsetAPI_MakePipe_fromWireShapeTrihedronModeAndForceC1(
+    TopoDS_Wire * wire,
+    TopoDS_Shape * profile,
+    GeomFill_Trihedron mode, 
+    bool forceApproxC1 );
+
 void hs_delete_BRepOffsetAPI_MakePipe(BRepOffsetAPI_MakePipe * builder);
 
 #ifdef __cplusplus

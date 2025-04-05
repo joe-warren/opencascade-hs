@@ -68,18 +68,16 @@ If you've found the project useful, or interesting, or if you've built anything 
 
 ## Examples 
 
-[![](images/csg.png)](waterfall-cad-examples/src/CsgExample.hs)
+[![](images/revolution.svg)](waterfall-cad-examples/src/RevolutionExample.hs)
+&nbsp;[![](images/csg.svg)](waterfall-cad-examples/src/CsgExample.hs)
+&nbsp;&nbsp;[![](images/sweep.svg)](waterfall-cad-examples/src/SweepExample.hs)
 
-[![](images/gear.png)](waterfall-cad-examples/src/GearExample.hs)
+[![](images/gear.svg)](waterfall-cad-examples/src/GearExample.hs)
 
-[![](images/revolution.png)](waterfall-cad-examples/src/RevolutionExample.hs)
+[![](images/offset.svg)](waterfall-cad-examples/src/OffsetExample.hs)
 
-[![](images/sweep.png)](waterfall-cad-examples/src/SweepExample.hs)
+[![](images/text.svg)](waterfall-cad-examples/src/TextExample.hs)
 
-[![](images/offset.png)](waterfall-cad-examples/src/OffsetExample.hs)
+[![](images/bounding-boxes.svg)](waterfall-cad-examples/src/BoundingBoxExample.hs)
 
-[![](images/text.png)](waterfall-cad-examples/src/TextExample.hs)
-
-[![](images/bounding_boxes.png)](waterfall-cad-examples/src/BoundingBoxExample.hs)
-
-[![](images/loft.png)](waterfall-cad-examples/src/LoftExample.hs)
+[![](images/loft.svg)](waterfall-cad-examples/src/LoftExample.hs)

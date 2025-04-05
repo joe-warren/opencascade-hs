@@ -10,6 +10,10 @@ void hs_delete_Handle_Geom_Curve(Handle(Geom_Curve) * handle);
 
 gp_Pnt * hs_Geom_Curve_value(Handle(Geom_Curve) * curve, double u);
 
+double hs_Geom_Curve_firstParameter(Handle(Geom_Curve) * curve);
+
+double hs_Geom_Curve_lastParameter(Handle(Geom_Curve) * curve);
+
 gp_Vec * hs_Geom_Curve_dn(Handle (Geom_Curve) * curve, double u, int n);
 
 double hs_Geom_Curve_reversedParameter(Handle (Geom_Curve) * curve, double parameter);

@@ -9,7 +9,23 @@ and this project adheres to the
 
 ## Unreleased
 
-- Add `splice`/`splice2D`/`splice3D` functions 
+### Added
+
+- Add `splice`/`splice2D`/`splice3D` functions
+- Add `splitPath`/`splitPath3D`/`splitPath2D` functions
+- Add Epsilon constraint to `closeLoop` fixing behaviour when endpoints are _very close_ together 
+- Add `matTransform` and `matTransform2D` methods to the `Transformable` and `Transformable2D` typeclasses, respectively
+- Add `shapePaths` to `Waterfall.TwoD.Shape`
+
+### Changed
+
+- Most functions in `Waterfall.Path.Common` now have an `Epsilon` constraint
+- `pathEndpoints`/`pathEndpoints3D`/`pathEndpoints2D` now returns a `Maybe` (in case of an empty path)
+
+### Fixed
+
+- fixed behaviour when scaling with a unit vector (no scaling)
+- fixed `Path`/`Path2D` representation, so that the `Monoid` instance `mempty` value no longer generates crashes
 
 ## 0.4.0.0
 

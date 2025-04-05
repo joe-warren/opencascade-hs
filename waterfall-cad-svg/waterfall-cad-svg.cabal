@@ -1,0 +1,47 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           waterfall-cad-svg
+version:        0.4.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/waterfall-cad-svg#readme>
+homepage:       https://github.com/joe-warren/opencascade-hs#readme
+bug-reports:    https://github.com/joe-warren/opencascade-hs/issues
+author:         Joe Warren
+maintainer:     josephmarkwarren@gmail.com
+copyright:      2023 Joe Warren
+license:        LGPL-2.1
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/joe-warren/opencascade-hs
+
+library
+  exposed-modules:
+      Waterfall.SVG
+      Waterfall.SVG.FromSVG
+      Waterfall.SVG.ToSVG
+  other-modules:
+      Paths_waterfall_cad_svg
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration
+  build-depends:
+      JuicyPixels
+    , attoparsec
+    , base >=4.7 && <5
+    , lens
+    , linear
+    , opencascade-hs >=0.4.0.0 && <0.5
+    , resourcet
+    , svg-tree
+    , text
+    , waterfall-cad >=0.4.0.0 && <0.5
+  default-language: Haskell2010

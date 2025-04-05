@@ -16,6 +16,7 @@ import Linear (V3 (..))
 import Waterfall.Internal.Path (Path, rawPath)
 import Waterfall.Internal.Solid (Solid (..), solidFromAcquire)
 import Waterfall.Internal.ToOpenCascade (v3ToVertex)
+import Waterfall.Internal.Path.Common (rawPathWire)
 import qualified OpenCascade.BRepOffsetAPI.ThruSections as ThruSections
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import OpenCascade.Inheritance (upcast)
@@ -35,7 +36,7 @@ pointedLoft precision start paths end =
     solidFromAcquire $ do
         thruSections <- ThruSections.new True False precision
         forM_ start ((liftIO . ThruSections.addVertex thruSections) <=< v3ToVertex)
-        forM_ paths (liftIO . ThruSections.addWire thruSections . rawPath)
+        forM_ paths (traverse (liftIO . ThruSections.addWire thruSections) . rawPathWire . rawPath)
         forM_ end ((liftIO . ThruSections.addVertex thruSections) <=< v3ToVertex)
         MakeShape.shape (upcast thruSections)
 

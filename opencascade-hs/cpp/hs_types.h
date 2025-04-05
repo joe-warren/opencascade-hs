@@ -52,6 +52,8 @@ typedef void BRepOffsetAPI_MakeThickSolid;
 typedef void Geom2d_Ellipse;
 typedef void Geom_Curve;
 typedef void Geom_BezierCurve;
+typedef void Geom_BSplineCurve;
+typedef int GeomFill_Trihedron; 
 typedef void BRepOffsetAPI_ThruSections;
 typedef void BRepMesh_IncrementalMesh;
 typedef void StlAPI_Writer;
@@ -87,6 +89,18 @@ typedef void ShapeExtend_WireData;
 typedef int ShapeExtend_Status;
 typedef void Poly_Triangulation;
 typedef void Poly_Triangle;
+typedef void BRepAdaptor_Curve;
+typedef int GeomAbs_CurveType;
+typedef void GeomConvert_BSplineCurveToBezierCurve;
+typedef void GeomConvert_ApproxCurve;
+typedef int GeomAbs_Shape;
+typedef void GeomAdaptor_Curve;
+typedef void ShapeConstruct_Curve;
+typedef void HLRAlgo_Projector;
+typedef void HLRBRep_Algo;
+typedef void HLRBRep_HLRToShape;
+typedef int HLRBRep_TypeOfResultingEdge;
+
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus

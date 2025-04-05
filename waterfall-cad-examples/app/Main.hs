@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module Main (main) where
 
 import CsgExample (csgExample)
@@ -11,11 +12,27 @@ import LoftExample (loftExample)
 import TextExample (textExample)
 import BoundingBoxExample (boundingBoxExample)
 import ReadSolidExpressionExample (readSolidExpressionExample)
+import SVG.PathExample (pathExample)
+import SVG.ReadFileExample (readFileExample)
+import Waterfall.SVG (writeDiagramSVG)
+import DarkModeSVG (writeDarkModeSVG)
 import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB, writeOBJ)
+import qualified Waterfall.Diagram as Diagram
 import qualified Waterfall.Solids as Solids
+import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
 import qualified Options.Applicative as OA
-import Control.Applicative ((<|>), liftA2)
+import Linear (V2 (..), V3 (..), _x, _y)
+import Control.Lens ((^.))
+import Control.Applicative ((<|>))
 import Control.Monad (join)
+
+normalizeSize :: (V2 Double -> Double, Double) -> Diagram.Diagram -> Diagram.Diagram
+normalizeSize (getter, target) d = 
+    case Diagram.diagramBoundingBox d of 
+        Just (lo, hi) -> 
+            let s = getter (hi - lo)
+            in TwoD.Transforms.uScale2D (target / s) d
+        Nothing -> d
 
 outputOption :: OA.Parser (Solids.Solid -> IO ()) 
 outputOption =
@@ -23,11 +40,28 @@ outputOption =
         gltfOption = (flip writeGLTF) <$> OA.strOption (OA.long "gltf" <> OA.metavar "GLTF file to write results to")
         glbOption = (flip writeGLB) <$> OA.strOption (OA.long "glb" <> OA.metavar "GLB file to write results to")
         objOption = (flip writeOBJ) <$> OA.strOption (OA.long "obj" <> OA.metavar "OBJ file to write results to")
+        svgWriterOptions :: OA.Parser (Diagram.Diagram -> IO ())
+        svgWriterOptions = 
+            (writeDiagramSVG <$> OA.strOption (OA.long "svg" <> OA.metavar "SVG file to write results to")) 
+             <|> (writeDarkModeSVG <$> OA.strOption (OA.long "dark-mode-svg" <> OA.metavar "SVG file to write results to (with the style modified to support dark mode)"))
+        imageSizeOptions = 
+            (((^. _x),) <$> OA.option OA.auto (OA.long "width" <> OA.help "image target width"))
+            <|> (((^. _y),) <$> OA.option OA.auto (OA.long "height" <> OA.help "image target height"))
+            <|> pure ((^. _x), 800)
+        viewDirectionOption = 
+            (OA.option OA.auto (OA.long "view-direction" <> OA.help "image view direction"))
+            <|> pure (V3 2 3 1)
+        svgOptions = 
+            (\writer size direction solid -> writer . normalizeSize size . Diagram.solidDiagram direction $ solid) 
+                <$> svgWriterOptions
+                <*> imageSizeOptions
+                <*> viewDirectionOption
+
         meshOptionsNoResolution = stlOption <|> gltfOption <|> glbOption <|> objOption
         meshOptions = meshOptionsNoResolution <*>
             (OA.option OA.auto (OA.long "resolution" <> OA.help "linear tolerance for mesh file formats") <|> pure 0.001)
         stepOption = writeSTEP <$> OA.strOption (OA.long "step" <> OA.metavar "Stl file to write results to")
-     in meshOptions <|> stepOption
+     in meshOptions <|> stepOption <|> svgOptions
 
 exampleOption :: OA.Parser (IO Solids.Solid)
 exampleOption = 
@@ -60,7 +94,12 @@ exampleOption =
        (OA.option OA.auto (OA.long "size" <> OA.help "font size") <|> pure 12.0) <*>
        (OA.strOption (OA.long "content" <> OA.help "text to render") <|> pure "Waterfall CAD") <*>
        (OA.option OA.auto (OA.long "depth" <> OA.help "depth to extrude the text to") <|> pure 10.0) 
-      )
+      ) <|> 
+      (OA.flag' (either error pure . pathExample) (OA.long "svg-path" <> OA.help "parse an SVG path string and use it to generate a prism") <*> 
+       (OA.strOption (OA.long "path-string" <> OA.help "the SVG path string"))
+      ) <|>  
+      (OA.flag' (readFileExample) (OA.long "svg-read" <> OA.help "read an SVG file and use it to generate a prism") <*> 
+       (OA.strOption (OA.long "svg" <> OA.help "path to the svg")))
 
 main :: IO ()
 main = join (OA.execParser opts)

@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -24,6 +24,7 @@ extra-source-files:
     cpp/hs_Bnd_Box.h
     cpp/hs_Bnd_OBB.h
     cpp/hs_BRep_Tool.h
+    cpp/hs_BRepAdaptor_Curve.h
     cpp/hs_BRepAlgoAPI_Common.h
     cpp/hs_BRepAlgoAPI_Cut.h
     cpp/hs_BRepAlgoAPI_Fuse.h
@@ -58,8 +59,12 @@ extra-source-files:
     cpp/hs_GC_MakeArcOfCircle.h
     cpp/hs_GC_MakeSegment.h
     cpp/hs_Geom_BezierCurve.h
+    cpp/hs_Geom_BSplineCurve.h
     cpp/hs_Geom_Curve.h
     cpp/hs_Geom_TrimmedCurve.h
+    cpp/hs_GeomAdaptor_Curve.h
+    cpp/hs_GeomConvert_ApproxCurve.h
+    cpp/hs_GeomConvert_BSplineCurveToBezierCurve.h
     cpp/hs_gp.h
     cpp/hs_gp_Ax1.h
     cpp/hs_gp_Ax2.h
@@ -76,6 +81,9 @@ extra-source-files:
     cpp/hs_gp_Vec2d.h
     cpp/hs_gp_XYZ.h
     cpp/hs_GProp_GProps.h
+    cpp/hs_HLRAlgo_Projector.h
+    cpp/hs_HLRBRep_Algo.h
+    cpp/hs_HLRBRep_HLRToShape.h
     cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
     cpp/hs_Poly_Triangle.h
@@ -85,6 +93,7 @@ extra-source-files:
     cpp/hs_RWMesh_CafReader.h
     cpp/hs_RWObj_CafReader.h
     cpp/hs_RWObj_CafWriter.h
+    cpp/hs_ShapeConstruct_Curve.h
     cpp/hs_ShapeExtend_WireData.h
     cpp/hs_ShapeFix_Solid.h
     cpp/hs_STEPControl_Reader.h
@@ -123,6 +132,10 @@ library
       OpenCascade.Bnd.OBB
       OpenCascade.Bnd.Types
       OpenCascade.BRep.Tool
+      OpenCascade.BRepAdaptor
+      OpenCascade.BRepAdaptor.Curve
+      OpenCascade.BRepAdaptor.Internal.Destructors
+      OpenCascade.BRepAdaptor.Types
       OpenCascade.BRepAlgoAPI.Common
       OpenCascade.BRepAlgoAPI.Cut
       OpenCascade.BRepAlgoAPI.Fuse
@@ -182,10 +195,22 @@ library
       OpenCascade.GC.MakeSegment
       OpenCascade.Geom
       OpenCascade.Geom.BezierCurve
+      OpenCascade.Geom.BSplineCurve
       OpenCascade.Geom.Curve
       OpenCascade.Geom.Internal.Destructors
       OpenCascade.Geom.Types
+      OpenCascade.GeomAbs.CurveType
       OpenCascade.GeomAbs.JoinType
+      OpenCascade.GeomAbs.Shape
+      OpenCascade.GeomAdaptor.Curve
+      OpenCascade.GeomAdaptor.Internal.Destructors
+      OpenCascade.GeomAdaptor.Types
+      OpenCascade.GeomConvert.ApproxCurve
+      OpenCascade.GeomConvert.BSplineCurveToBezierCurve
+      OpenCascade.GeomConvert.Internal.Destructors
+      OpenCascade.GeomConvert.Types
+      OpenCascade.GeomFill
+      OpenCascade.GeomFill.Trihedron
       OpenCascade.GP
       OpenCascade.GP.Ax1
       OpenCascade.GP.Ax2
@@ -209,6 +234,14 @@ library
       OpenCascade.Graphic3D.HorizontalTextAlignment
       OpenCascade.Graphic3D.VerticalTextAlignment
       OpenCascade.Handle
+      OpenCascade.HLRAlgo.Internal.Destructors
+      OpenCascade.HLRAlgo.Projector
+      OpenCascade.HLRAlgo.Types
+      OpenCascade.HLRBRep.Algo
+      OpenCascade.HLRBRep.HLRToShape
+      OpenCascade.HLRBRep.Internal.Destructors
+      OpenCascade.HLRBRep.TypeOfResultingEdge
+      OpenCascade.HLRBRep.Types
       OpenCascade.IFSelect.ReturnStatus
       OpenCascade.Inheritance
       OpenCascade.Internal.Bool
@@ -233,6 +266,9 @@ library
       OpenCascade.RWObj.CafWriter
       OpenCascade.RWObj.Internal.Destructors
       OpenCascade.RWObj.Types
+      OpenCascade.ShapeConstruct.Curve
+      OpenCascade.ShapeConstruct.Internal.Destructors
+      OpenCascade.ShapeConstruct.Types
       OpenCascade.ShapeExtend.Internal.Destructors
       OpenCascade.ShapeExtend.Status
       OpenCascade.ShapeExtend.Types
@@ -307,6 +343,7 @@ library
       cpp/hs_Bnd_Box.cpp
       cpp/hs_Bnd_OBB.cpp
       cpp/hs_BRep_Tool.cpp
+      cpp/hs_BRepAdaptor_Curve.cpp
       cpp/hs_BRepAlgoAPI_Common.cpp
       cpp/hs_BRepAlgoAPI_Cut.cpp
       cpp/hs_BRepAlgoAPI_Fuse.cpp
@@ -341,8 +378,12 @@ library
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
       cpp/hs_Geom_BezierCurve.cpp
+      cpp/hs_Geom_BSplineCurve.cpp
       cpp/hs_Geom_Curve.cpp
       cpp/hs_Geom_TrimmedCurve.cpp
+      cpp/hs_GeomAdaptor_Curve.cpp
+      cpp/hs_GeomConvert_ApproxCurve.cpp
+      cpp/hs_GeomConvert_BSplineCurveToBezierCurve.cpp
       cpp/hs_gp.cpp
       cpp/hs_gp_Ax1.cpp
       cpp/hs_gp_Ax2.cpp
@@ -359,6 +400,9 @@ library
       cpp/hs_gp_Vec2d.cpp
       cpp/hs_gp_XYZ.cpp
       cpp/hs_GProp_GProps.cpp
+      cpp/hs_HLRAlgo_Projector.cpp
+      cpp/hs_HLRBRep_Algo.cpp
+      cpp/hs_HLRBRep_HLRToShape.cpp
       cpp/hs_Message_ProgressRange.cpp
       cpp/hs_NCollection_Array1.cpp
       cpp/hs_Poly_Triangle.cpp
@@ -368,6 +412,7 @@ library
       cpp/hs_RWMesh_CafReader.cpp
       cpp/hs_RWObj_CafReader.cpp
       cpp/hs_RWObj_CafWriter.cpp
+      cpp/hs_ShapeConstruct_Curve.cpp
       cpp/hs_ShapeExtend_WireData.cpp
       cpp/hs_ShapeFix_Solid.cpp
       cpp/hs_STEPControl_Reader.cpp
@@ -399,6 +444,7 @@ library
       TKStd
       TKG3d
       TKG2d
+      TKHLR
       TKMath
       TKernel
       TKBRep

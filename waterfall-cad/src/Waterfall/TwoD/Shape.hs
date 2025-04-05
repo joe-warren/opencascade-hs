@@ -1,6 +1,7 @@
 module Waterfall.TwoD.Shape
 ( Shape
 , fromPath
+, shapePaths
 , unitCircle
 , unitSquare
 , centeredSquare
@@ -10,16 +11,32 @@ import Waterfall.TwoD.Internal.Shape (Shape (..))
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.TwoD.Transforms (translate2D)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
+import Waterfall.Internal.Edges (allWires)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import OpenCascade.Inheritance (upcast)
 import Linear (unit, _x, _y, zero, V2 (..))
 import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo)
+import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
 
 -- | Construct a 2D Shape from a closed path 
 fromPath :: Path2D -> Shape
-fromPath (Path2D r)= Shape . unsafeFromAcquire  $ do
+fromPath (Path2D (ComplexRawPath r)) = Shape . unsafeFromAcquire  $ do
     p <- toAcquire r
     upcast <$> (MakeFace.face =<< MakeFace.fromWire p False)
+fromPath _ = Shape . unsafeFromAcquire $
+    upcast <$> (MakeFace.face =<< MakeFace.new)
+
+-- | Get the paths back from a 2D shape
+-- 
+-- Ideally:
+--
+-- @
+-- shapePaths . fromPath ≡ pure
+-- @
+shapePaths :: Shape -> [Path2D] 
+shapePaths (Shape r) = fmap (Path2D . ComplexRawPath) . unsafeFromAcquire $ do
+    s <- toAcquire r 
+    allWires s 
 
 -- | Circle with radius 1, centered on the origin
 unitCircle :: Shape

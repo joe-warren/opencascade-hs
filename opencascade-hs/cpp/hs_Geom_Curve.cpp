@@ -1,4 +1,5 @@
 #include <Geom_Curve.hxx>
+#include <GeomAbs_CurveType.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 #include "hs_Geom_Curve.h"
@@ -9,6 +10,14 @@ void hs_delete_Handle_Geom_Curve(Handle(Geom_Curve) * handle){
 
 gp_Pnt * hs_Geom_Curve_value(Handle(Geom_Curve) * curve, double u){
     return new gp_Pnt((*curve)->Value(u));
+}
+
+double hs_Geom_Curve_firstParameter(Handle(Geom_Curve) * curve){
+    return (*curve)->FirstParameter();
+}
+
+double hs_Geom_Curve_lastParameter(Handle(Geom_Curve) * curve){
+    return (*curve)->LastParameter();
 }
 
 gp_Vec * hs_Geom_Curve_dn(Handle (Geom_Curve) * curve, double u, int n){
