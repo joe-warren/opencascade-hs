@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           waterfall-cad-examples
-version:        0.4.0.0
+version:        0.5.0.0
 synopsis:       Examples for Waterfall CAD, a Declarative CAD/Solid Modeling Library
 description:    Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
 category:       Graphics
@@ -51,14 +51,14 @@ library
       base >=4.7 && <5
     , lens ==5.*
     , linear >=1.21 && <2
-    , opencascade-hs >=0.4.0.0 && <0.5
+    , opencascade-hs >=0.5.0.0 && <0.6
     , optparse-applicative >=0.17 && <0.19
     , parsec ==3.1.*
     , parser-combinators >=1.2 && <1.4
     , raw-strings-qq
     , svg-tree
-    , waterfall-cad >=0.4.0.0 && <0.5
-    , waterfall-cad-svg >=0.4.0.0 && <0.5
+    , waterfall-cad >=0.5.0.0 && <0.6
+    , waterfall-cad-svg >=0.5.0.0 && <0.6
     , xml ==1.*
   default-language: Haskell2010
 
@@ -73,14 +73,14 @@ executable waterfall-cad-examples
       base >=4.7 && <5
     , lens ==5.*
     , linear >=1.21 && <2
-    , opencascade-hs >=0.4.0.0 && <0.5
+    , opencascade-hs >=0.5.0.0 && <0.6
     , optparse-applicative >=0.17 && <0.19
     , parsec ==3.1.*
     , parser-combinators >=1.2 && <1.4
     , raw-strings-qq
     , svg-tree
-    , waterfall-cad >=0.4.0.0 && <0.5
+    , waterfall-cad >=0.5.0.0 && <0.6
     , waterfall-cad-examples
-    , waterfall-cad-svg >=0.4.0.0 && <0.5
+    , waterfall-cad-svg >=0.5.0.0 && <0.6
     , xml ==1.*
   default-language: Haskell2010

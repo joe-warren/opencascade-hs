@@ -12,6 +12,14 @@ Waterfall CAD is a declarative CAD/Solid Modeling library.
 
 This uses [opencascade-hs](https://hackage.haskell.org/package/opencascade-hs) as the kernel, but provides a "more functional" API over it.
 
+### Waterfall CAD SVG
+
+Waterfall CAD SVG adds support for converting Waterfall objects to/from SVG.
+
+It uses the library [svg-tree](https://hackage.haskell.org/package/svg-tree).
+
+It's packaged as a separate library to Waterfall-CAD.
+
 ## Installing Dependencies
 
 OpenCASCADE-hs depends on Open Cascade version `7.8.x`. In order to run with an earlier version of Open Cascade, you'll need to use a version prior to `0.3.0.0`.
