@@ -11,7 +11,7 @@ homepage:       https://github.com/joe-warren/opencascade-hs#readme
 bug-reports:    https://github.com/joe-warren/opencascade-hs/issues
 author:         Joe Warren
 maintainer:     josephmarkwarren@gmail.com
-copyright:      2023 Joe Warren
+copyright:      2025 Joe Warren
 license:        LGPL-2.1
 license-file:   LICENSE
 build-type:     Simple
