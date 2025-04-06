@@ -25,6 +25,8 @@ and this project adheres to the
     - `offsetWithTolerance` is available if this is required
 - `pointedLoft` and `loft` now no longer takes a precision argument
     - `pointedLoftWithPrecision` is available if this is required
+- Rename `fromPath` to `makeShape` as I think this will result in more readable code
+
 ### Fixed
 
 - fixed behaviour when scaling with a unit vector (no scaling)

@@ -13,5 +13,5 @@ readFileExample :: FilePath -> IO Solids.Solid
 readFileExample filepath =
     let expandVertically = Transforms.translate (V3 0 0 (-0.5)) . Transforms.scale (V3 1 1 2)
         xor a b = (a `Booleans.difference` expandVertically b) <> (b `Booleans.difference` expandVertically a)
-        solidify = foldr xor Solids.nowhere . fmap (Solids.prism 1 . Shape.fromPath)
+        solidify = foldr xor Solids.nowhere . fmap (Solids.prism 1 . Shape.makeShape)
     in either (error . show) solidify <$> Waterfall.SVG.readSVG filepath

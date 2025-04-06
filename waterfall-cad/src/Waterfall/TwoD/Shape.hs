@@ -1,6 +1,6 @@
 module Waterfall.TwoD.Shape
 ( Shape
-, fromPath
+, makeShape
 , shapePaths
 , unitCircle
 , unitSquare
@@ -19,11 +19,11 @@ import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
 
 -- | Construct a 2D Shape from a closed path 
-fromPath :: Path2D -> Shape
-fromPath (Path2D (ComplexRawPath r)) = Shape . unsafeFromAcquire  $ do
+makeShape :: Path2D -> Shape
+makeShape (Path2D (ComplexRawPath r)) = Shape . unsafeFromAcquire  $ do
     p <- toAcquire r
     upcast <$> (MakeFace.face =<< MakeFace.fromWire p False)
-fromPath _ = Shape . unsafeFromAcquire $
+makeShape _ = Shape . unsafeFromAcquire $
     upcast <$> (MakeFace.face =<< MakeFace.new)
 
 -- | Get the paths back from a 2D shape
@@ -40,7 +40,7 @@ shapePaths (Shape r) = fmap (Path2D . ComplexRawPath) . unsafeFromAcquire $ do
 
 -- | Circle with radius 1, centered on the origin
 unitCircle :: Shape
-unitCircle = fromPath $ pathFrom (unit _x)
+unitCircle = makeShape $ pathFrom (unit _x)
                 [ arcViaTo (unit _y) (negate $ unit _x)
                 , arcViaTo (negate $ unit _y) (unit _x)
                 ]
@@ -48,7 +48,7 @@ unitCircle = fromPath $ pathFrom (unit _x)
 -- | Square with side length of 1, one vertex on the origin, another on \( (1, 1) \)
 unitSquare :: Shape
 unitSquare =
-    fromPath $ pathFrom zero
+    makeShape $ pathFrom zero
         [ lineTo (unit _x)
         , lineTo (V2 1 1)
         , lineTo (unit _y)

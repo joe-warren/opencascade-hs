@@ -8,7 +8,7 @@ import qualified Waterfall.TwoD.Path2D as Path2D
 import Linear (V2 (..))
 
 prismExample :: Solids.Solid
-prismExample = Solids.prism 1 . Shape.fromPath $
+prismExample = Solids.prism 1 . Shape.makeShape $
     Path2D.pathFrom (V2 (-1) (-1)) 
         [ Path2D.arcViaTo (V2 (-1.5) 0) (V2 (-1) 1)
         , Path2D.lineTo (V2 1 1)
