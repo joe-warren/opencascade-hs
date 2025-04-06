@@ -77,8 +77,9 @@ If you've found the project useful, or interesting, or if you've built anything 
 ## Examples 
 
 [![](images/revolution.svg)](waterfall-cad-examples/src/RevolutionExample.hs)
-&nbsp;[![](images/csg.svg)](waterfall-cad-examples/src/CsgExample.hs)
-&nbsp;&nbsp;[![](images/sweep.svg)](waterfall-cad-examples/src/SweepExample.hs)
+[![](images/csg.svg)](waterfall-cad-examples/src/CsgExample.hs)
+&ThinSpace;[![](images/sweep.svg)](waterfall-cad-examples/src/SweepExample.hs)
+&ThinSpace;[![](images/bounding-boxes.svg)](waterfall-cad-examples/src/BoundingBoxExample.hs)
 
 [![](images/gear.svg)](waterfall-cad-examples/src/GearExample.hs)
 
@@ -86,6 +87,5 @@ If you've found the project useful, or interesting, or if you've built anything 
 
 [![](images/text.svg)](waterfall-cad-examples/src/TextExample.hs)
 
-[![](images/bounding-boxes.svg)](waterfall-cad-examples/src/BoundingBoxExample.hs)
 
 [![](images/loft.svg)](waterfall-cad-examples/src/LoftExample.hs)
