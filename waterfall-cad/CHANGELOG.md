@@ -21,6 +21,11 @@ and this project adheres to the
 
 - Most functions in `Waterfall.Path.Common` now have an `Epsilon` constraint
 - `pathEndpoints`/`pathEndpoints3D`/`pathEndpoints2D` now returns a `Maybe` (in case of an empty path)
+- `offset` now no longer takes a tolerance
+    - `offsetWithTolerance` is available if this is required
+- `pointedLoft` and `loft` now no longer takes a precision argument
+    - `pointedLoftWithPrecision` is available if this is required
+- Rename `fromPath` to `makeShape` as I think this will result in more readable code
 
 ### Fixed
 

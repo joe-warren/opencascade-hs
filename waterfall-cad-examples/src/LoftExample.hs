@@ -21,8 +21,7 @@ import qualified Waterfall.Path.Common as Path
 -- This example demonstrates the `Loft` module, by generating a boat, with the profile of the boat specified by a series of bezier curves.
 loftExample :: Solids.Solid
 loftExample = 
-    let precision = 1e-6
-        paths = 
+    let paths = 
           [ let p x z = V3 x 0 z 
               -- the curve at the rear of the boat is tilted _slightly_ back
               in Transforms.rotate (V3 1 0 0) 0.2 $
@@ -39,7 +38,6 @@ loftExample =
         symetricPaths = makeSymetric <$> paths
         body = 
           Loft.pointedLoft 
-            precision 
             Nothing
             (Path.closeLoop <$>  symetricPaths)
             (Just (V3 0 20 5))

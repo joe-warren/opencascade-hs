@@ -144,4 +144,4 @@ gearExample thickness moduleLength nGears pressureAngle =
     let segment = genGearToothData moduleLength nGears pressureAngle
         path = Path2D.repeatLooping segment
         --path = mconcat [rotate2D (-fromIntegral n * pi * 2 / fromIntegral nGears) segment | n <- [0..nGears]]
-    in Solids.prism thickness . Shape.fromPath $ path
+    in Solids.prism thickness . Shape.makeShape $ path

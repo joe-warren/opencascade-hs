@@ -9,5 +9,5 @@ import Data.Bifunctor (Bifunctor(bimap))
 
 pathExample :: String -> Either String Solids.Solid
 pathExample pathStr =
-    let solidify = mconcat . fmap (Solids.prism 1 . Shape.fromPath)
+    let solidify = mconcat . fmap (Solids.prism 1 . Shape.makeShape)
     in bimap show solidify $ Waterfall.SVG.parsePath pathStr
