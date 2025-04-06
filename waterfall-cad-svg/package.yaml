@@ -8,30 +8,26 @@ author:              "Joe Warren"
 maintainer:          "josephmarkwarren@gmail.com"
 copyright:           "2025 Joe Warren"
 
+synopsis:            Declarative CAD/Solid Modeling Library, SVG Support 
+category:            Graphics
+description:         Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
+
 extra-source-files:
+- LICENSE
 - README.md
 - CHANGELOG.md
-
-# Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
-
-# To avoid duplicated efforts in documentation and dealing with the
-# complications of embedding Haddock markup inside cabal files, it is
-# common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/waterfall-cad-svg#readme>
 
 dependencies:
 - base >= 4.7 && < 5
 - *waterfall-cad-bound
 - *opencascade-hs-bound
-- svg-tree
-- attoparsec
-- text
-- linear
-- lens
-- resourcet
-- JuicyPixels
+- svg-tree >= 0.6 && < 1.0
+- attoparsec >= 0.14 && < 1.0
+- text >= 1.2 && < 3.0
+- linear >= 1.0 && < 2.0 
+- lens > 5 && < 6
+- resourcet >= 1.2 && < 1.4
+- JuicyPixels >= 3 && < 4
 
 ghc-options: *ghc-options
 

@@ -5,7 +5,6 @@ module ReadSolidExpressionExample
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.Booleans as Booleans
 import qualified Waterfall.IO
-import Control.Applicative (liftA2)
 import Text.Parsec
 import Control.Monad.Combinators.Expr
 

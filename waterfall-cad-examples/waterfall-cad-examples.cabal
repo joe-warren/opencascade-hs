@@ -55,8 +55,8 @@ library
     , optparse-applicative >=0.17 && <0.19
     , parsec ==3.1.*
     , parser-combinators >=1.2 && <1.4
-    , raw-strings-qq
-    , svg-tree
+    , raw-strings-qq >=1.1 && <2
+    , svg-tree >=0.6 && <1.0
     , waterfall-cad >=0.5.0.0 && <0.6
     , waterfall-cad-svg >=0.5.0.0 && <0.6
     , xml ==1.*
@@ -77,8 +77,8 @@ executable waterfall-cad-examples
     , optparse-applicative >=0.17 && <0.19
     , parsec ==3.1.*
     , parser-combinators >=1.2 && <1.4
-    , raw-strings-qq
-    , svg-tree
+    , raw-strings-qq >=1.1 && <2
+    , svg-tree >=0.6 && <1.0
     , waterfall-cad >=0.5.0.0 && <0.6
     , waterfall-cad-examples
     , waterfall-cad-svg >=0.5.0.0 && <0.6

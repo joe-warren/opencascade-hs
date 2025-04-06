@@ -109,12 +109,12 @@ diagramBoundingBox :: Diagram -> Maybe (V2 Double, V2 Double)
 diagramBoundingBox d = unsafeFromAcquire $ do
     outline <- runDiagram (rawDiagram d) HLRBRep.OutLine True False
     sharpLine <- runDiagram (rawDiagram d) HLRBRep.Sharp True False
-    let lines = outline <> sharpLine
-    if null lines
+    let allLines = outline <> sharpLine
+    if null allLines
         then pure Nothing
         else do
             theBox <- Bnd.Box.new
-            forM_ lines $ \s -> (liftIO $ BRepBndLib.addOptimal (upcast s) theBox True False)
+            forM_ allLines $ \s -> (liftIO $ BRepBndLib.addOptimal (upcast s) theBox True False)
             p1 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMin theBox
             p2 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax theBox
             return $ Just (p1 ^. _xy, p2 ^. _xy)
