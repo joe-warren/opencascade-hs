@@ -46,17 +46,17 @@ combineShellsToSolid s = do
 -- * The algorithm may fail if the shape S contains vertices where more than 3 edges converge.
 -- * Since 3d-offset algorithm involves intersection of surfaces, it is under limitations of surface intersection algorithm.
 -- * A result cannot be generated if the underlying geometry of S is BSpline with continuity C0.
-offset :: Double    -- ^ Amount to offset by, positive values expand, negative values contract
-    -> Double       -- ^ Tolerance, this can be relatively small
+offset :: 
+    Double       -- ^ Tolerance, this can be relatively small
+    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
     -> Solid        -- ^ the `Solid` to offset 
     -> Solid
-offset value tolerance solid
+offset tolerance value solid
     | nearZero value = solid
     | otherwise = 
   solidFromAcquire $ do
     builder <- MakeOffsetShape.new
     s <- acquireSolid solid 
-    --liftIO $ MakeOffsetShape.performBySimple builder s value
     liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False 
     shell <- MakeShape.shape (upcast builder)
     combineShellsToSolid shell

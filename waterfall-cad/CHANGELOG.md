@@ -21,6 +21,7 @@ and this project adheres to the
 
 - Most functions in `Waterfall.Path.Common` now have an `Epsilon` constraint
 - `pathEndpoints`/`pathEndpoints3D`/`pathEndpoints2D` now returns a `Maybe` (in case of an empty path)
+- `offset` now has the tolerance as the first argument
 
 ### Fixed
 
