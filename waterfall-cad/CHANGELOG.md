@@ -21,8 +21,10 @@ and this project adheres to the
 
 - Most functions in `Waterfall.Path.Common` now have an `Epsilon` constraint
 - `pathEndpoints`/`pathEndpoints3D`/`pathEndpoints2D` now returns a `Maybe` (in case of an empty path)
-- `offset` now has the tolerance as the first argument
-
+- `offset` now no longer takes a tolerance
+    - `offsetWithTolerance` is available if this is required
+- `pointedLoft` and `loft` now no longer takes a precision argument
+    - `pointedLoftWithPrecision` is available if this is required
 ### Fixed
 
 - fixed behaviour when scaling with a unit vector (no scaling)

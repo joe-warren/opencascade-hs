@@ -1,5 +1,6 @@
 module Waterfall.Offset 
 ( offset
+, offsetWithTolerance
 ) where 
 
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
@@ -32,6 +33,22 @@ combineShellsToSolid s = do
     go
     upcast <$> MakeSolid.solid makeSolid
 
+-- | like `offset`, but allows setting the tolerance parameter used by the algorithm 
+offsetWithTolerance :: 
+    Double       -- ^ Tolerance, this can be relatively small
+    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid        -- ^ the `Solid` to offset 
+    -> Solid
+offsetWithTolerance tolerance value solid
+    | nearZero value = solid
+    | otherwise = 
+  solidFromAcquire $ do
+    builder <- MakeOffsetShape.new
+    s <- acquireSolid solid 
+    liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False 
+    shell <- MakeShape.shape (upcast builder)
+    combineShellsToSolid shell
+
 -- | Expand or contract a `Solid` by a certain amount.
 -- 
 -- This is based on @MakeOffsetShape@ from the underlying OpenCascade library.
@@ -47,16 +64,7 @@ combineShellsToSolid s = do
 -- * Since 3d-offset algorithm involves intersection of surfaces, it is under limitations of surface intersection algorithm.
 -- * A result cannot be generated if the underlying geometry of S is BSpline with continuity C0.
 offset :: 
-    Double       -- ^ Tolerance, this can be relatively small
-    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
+    Double    -- ^ Amount to offset by, positive values expand, negative values contract
     -> Solid        -- ^ the `Solid` to offset 
     -> Solid
-offset tolerance value solid
-    | nearZero value = solid
-    | otherwise = 
-  solidFromAcquire $ do
-    builder <- MakeOffsetShape.new
-    s <- acquireSolid solid 
-    liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False 
-    shell <- MakeShape.shape (upcast builder)
-    combineShellsToSolid shell
+offset = offsetWithTolerance 1e-6 
