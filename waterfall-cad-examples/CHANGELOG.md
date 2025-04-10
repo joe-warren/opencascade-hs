@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.5.0.0
+
+- Add SVG.PathExample and SVG.ReadFileExample
+- Add SVG output
 
 ## 0.4.0.0
 

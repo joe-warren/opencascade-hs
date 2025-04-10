@@ -9,6 +9,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.5.0.0
+
 ### Added
 
 - Add `splice`/`splice2D`/`splice3D` functions
