@@ -109,10 +109,11 @@ discretizedEdgePathCommand edge = do
 
 edgeToPathCommand :: Maybe (V2 Double) -> Ptr TopoDS.Edge -> (Maybe (V2 Double), [Svg.PathCommand])
 edgeToPathCommand curPos edge = Internal.Finalizers.unsafeFromAcquire $ do
-    startPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 1
-    endPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 0
+    startPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 0
+    endPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 1
+    let hasntMoved = nearZero . (startPos -) <$> curPos
     let addMoveCommand = 
-            case nearZero . (startPos -) <$> curPos of 
+            case hasntMoved of 
                 Just True -> id
                 _ -> ((Svg.MoveTo Svg.OriginAbsolute . pure $ startPos) :)
     adaptor <- BRepAdaptor.Curve.fromEdge edge
@@ -132,7 +133,10 @@ path2DToPathCommands (Path2D theRawPath) = case theRawPath of
     Internal.Path.Common.SinglePointRawPath _ -> []
     Internal.Path.Common.ComplexRawPath wire -> 
         Internal.Finalizers.unsafeFromAcquireT $
-            mconcat . fmap snd . scanr (flip (edgeToPathCommand . fst)) (Nothing, []) <$> Internal.Edges.wireEdges wire
+            mconcat 
+                . fmap snd
+                . scanr (flip (edgeToPathCommand . fst)) (Nothing, []) 
+                <$> Internal.Edges.wireEdges wire
 
 -- | Convert a `Waterfall.Diagram` into an SVG document
 -- 

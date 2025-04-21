@@ -52,7 +52,7 @@ edgeValue edge v = (`with` pure) $ do
     curve <- BRep.Tool.curve edge
     p1 <- liftIO . BRep.Tool.curveParamFirst $ edge
     p2 <- liftIO . BRep.Tool.curveParamLast $ edge
-    let p' = v * p1 + (1-v) * p2
+    let p' = (1-v) * p1 + v * p2
     (liftIO . gpPntToV3) =<< Geom.Curve.value curve p'
 
 allWireEndpoints :: Ptr TopoDS.Wire -> IO [(V3 Double, V3 Double)]
