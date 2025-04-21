@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.5.0.1
+
 ### Changed
 
 - Svg Path segments that originate from the same edge should no longer contain breaks

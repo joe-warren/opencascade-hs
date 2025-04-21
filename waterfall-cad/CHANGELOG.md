@@ -9,6 +9,12 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.5.0.1
+
+### Fixed
+
+- direction of internal `edgeValue` function, used by waterfall-cad-svg package
+
 ## 0.5.0.0
 
 ### Added

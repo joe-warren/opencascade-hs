@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.5.0.1
+
 ## 0.5.0.0
 
 - Add `OpenCascade.BRepFilletAPI.MakeFillet` methods `reset`, `nbFaultyContours`, `faultyContour`, `nbEdges`, `edge` and `remove`
