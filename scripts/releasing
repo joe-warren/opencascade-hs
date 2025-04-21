@@ -1,0 +1,14 @@
+## update package-defaults.yaml and */CHANGELOG.md
+rm -rf dist/* docs/*
+stack build
+stack sdist --tar-dir dist
+stack upload dist/*.tar.gz --candidate
+stack haddock --haddock-for-hackage
+stack upload -d opencascade-hs waterfall-cad waterfall-cad-svg waterfall-cad-examples --candidate
+
+# Check package candidate uploads here
+
+stack upload dist/*.tar.gz
+stack upload -d opencascade-hs waterfall-cad waterfall-cad-svg waterfall-cad-examples 
+
+# delete candidates here
