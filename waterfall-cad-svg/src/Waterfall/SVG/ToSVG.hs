@@ -11,7 +11,7 @@ module Waterfall.SVG.ToSVG
 import qualified Waterfall
 import qualified Graphics.Svg as Svg
 import qualified Graphics.Svg.CssTypes as Svg.Css
-import Linear (_xy, _x, _y)
+import Linear (_xy, _x, _y, V2 (..), nearZero)
 import Control.Lens ((^.), (&), (.~))
 import Foreign.Ptr (Ptr)
 import Control.Monad ((<=<)) 
@@ -39,10 +39,9 @@ import Codec.Picture.Types (PixelRGBA8 (..))
 
 lineToPathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
 lineToPathCommand edge = do
-    (s, e) <- Internal.Edges.edgeEndpoints edge
+    (_s, e) <- Internal.Edges.edgeEndpoints edge
     return 
-        [ Svg.MoveTo Svg.OriginAbsolute . pure $ s ^. _xy
-        , Svg.LineTo Svg.OriginAbsolute . pure $ e ^. _xy
+        [ Svg.LineTo Svg.OriginAbsolute . pure $ e ^. _xy
         ]
 
 bezierCurveToPathCommand :: Ptr TopoDS.Edge -> Ptr (Handle Geom.BezierCurve) -> Acquire [Svg.PathCommand]
@@ -54,18 +53,12 @@ bezierCurveToPathCommand edge bezier = do
         else do 
             poles <- traverse ((liftIO . gpPntToV3) <=< Geom.BezierCurve.pole bezier) [1..nbPoles]
             case poles of 
-                [s, e] -> return
-                        [ Svg.MoveTo Svg.OriginAbsolute . pure $ s ^. _xy
-                        , Svg.LineTo Svg.OriginAbsolute . pure $ e ^. _xy
-                        ]
-                [s, cp, e] -> return
-                        [ Svg.MoveTo Svg.OriginAbsolute . pure $ s ^. _xy
-                        , Svg.QuadraticBezier Svg.OriginAbsolute . pure $ (cp ^. _xy, e ^. _xy)
-                        ]
-                [s, cp1, cp2, e] -> return
-                        [ Svg.MoveTo Svg.OriginAbsolute . pure $ s ^. _xy
-                        , Svg.CurveTo Svg.OriginAbsolute . pure $ (cp1 ^. _xy, cp2 ^. _xy, e ^. _xy)
-                        ]
+                [_s, e] -> return . pure .
+                        Svg.LineTo Svg.OriginAbsolute . pure $ e ^. _xy
+                [_s, cp, e] -> return . pure .
+                        Svg.QuadraticBezier Svg.OriginAbsolute . pure $ (cp ^. _xy, e ^. _xy)
+                [_s, cp1, cp2, e] -> return . pure .
+                        Svg.CurveTo Svg.OriginAbsolute . pure $ (cp1 ^. _xy, cp2 ^. _xy, e ^. _xy)
                 _ -> liftIO $ discretizedEdgePathCommand edge
 
 bezierToPathCommand :: Ptr TopoDS.Edge -> Ptr BRepAdaptor.Curve.Curve -> Acquire [Svg.PathCommand]
@@ -110,22 +103,27 @@ preciseBSplineToPathCommand edge curve = do
     
 discretizedEdgePathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
 discretizedEdgePathCommand edge = do
-    s <- Internal.Edges.edgeValue edge 0 
     ps <- traverse (Internal.Edges.edgeValue edge . (/10) .  fromIntegral) [1..(10::Integer)]
-    return 
-        [ Svg.MoveTo Svg.OriginAbsolute . pure $ s ^. _xy
-        , Svg.LineTo Svg.OriginAbsolute $ (^. _xy) <$> ps
-        ]
+    return . pure .
+        Svg.LineTo Svg.OriginAbsolute $ (^. _xy) <$> ps
 
-edgeToPathCommand :: Ptr TopoDS.Edge -> [Svg.PathCommand]
-edgeToPathCommand edge = Internal.Finalizers.unsafeFromAcquire $ do
+edgeToPathCommand :: Maybe (V2 Double) -> Ptr TopoDS.Edge -> (Maybe (V2 Double), [Svg.PathCommand])
+edgeToPathCommand curPos edge = Internal.Finalizers.unsafeFromAcquire $ do
+    startPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 1
+    endPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 0
+    let addMoveCommand = 
+            case nearZero . (startPos -) <$> curPos of 
+                Just True -> id
+                _ -> ((Svg.MoveTo Svg.OriginAbsolute . pure $ startPos) :)
     adaptor <- BRepAdaptor.Curve.fromEdge edge
     curveType <- liftIO $ BRepAdaptor.Curve.curveType adaptor
-    case curveType of 
-        GeomAbs.CurveType.Line -> liftIO $ lineToPathCommand edge
-        GeomAbs.CurveType.BezierCurve -> bezierToPathCommand edge adaptor
-        -- GeomAbs.CurveType.BSplineCurve -> There's some argument for special casing this, but we don't need to
-        _ -> approximateCurveToPathCommand edge
+    thisSegment <-
+        case curveType of 
+            GeomAbs.CurveType.Line -> liftIO $ lineToPathCommand edge
+            GeomAbs.CurveType.BezierCurve -> bezierToPathCommand edge adaptor
+            -- GeomAbs.CurveType.BSplineCurve -> There's some argument for special casing this, but we don't need to
+            _ -> approximateCurveToPathCommand edge
+    return (Just endPos, addMoveCommand thisSegment)
 
 -- | Convert a `Waterfall.Path2D` into a list of `Svg.PathCommands`
 path2DToPathCommands :: Waterfall.Path2D -> [Svg.PathCommand]
@@ -134,7 +132,7 @@ path2DToPathCommands (Path2D theRawPath) = case theRawPath of
     Internal.Path.Common.SinglePointRawPath _ -> []
     Internal.Path.Common.ComplexRawPath wire -> 
         Internal.Finalizers.unsafeFromAcquireT $
-            foldMap edgeToPathCommand <$> Internal.Edges.wireEdges wire
+            mconcat . fmap snd . scanr (flip (edgeToPathCommand . fst)) (Nothing, []) <$> Internal.Edges.wireEdges wire
 
 -- | Convert a `Waterfall.Diagram` into an SVG document
 -- 
