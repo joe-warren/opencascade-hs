@@ -59,9 +59,18 @@ export CPATH=$CPATH:/opt/homebrew/Cellar/opencascade/7.*/include/opencascade/
 You can add this to your stack.yaml file:
 ```
 extra-include-dirs: 
-- /opt/homebrew/Cellar/opencascade/7.8.1_1/include/opencascade
+- /opt/homebrew/Cellar/opencascade/7.9.0/include/opencascade
 extra-lib-dirs: 
-- /opt/homebrew/Cellar/opencascade/7.8.1_1/lib
+- /opt/homebrew/Cellar/opencascade/7.9.0/lib 
+```
+
+Or add the following to your cabal.project file:
+```
+packages: .
+
+package opencascade-hs
+  extra-lib-dirs: /opt/homebrew/Cellar/opencascade/7.9.0/lib
+  extra-include-dirs: /opt/homebrew/Cellar/opencascade/7.9.0/include/opencascade
 ```
 
 ## Licensing
