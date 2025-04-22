@@ -22,7 +22,7 @@ It's packaged as a separate library to Waterfall-CAD.
 
 ## Installing Dependencies
 
-OpenCASCADE-hs depends on Open Cascade version `7.8.x`. In order to run with an earlier version of Open Cascade, you'll need to use a version prior to `0.3.0.0`.
+OpenCASCADE-hs depends on Open Cascade version `>= 7.8.x`. In order to run with an earlier version of Open Cascade, you'll need to use a version prior to `0.3.0.0`.
 
 OpenCASCADE-hs is only tested on Debian and MacOS. 
 
