@@ -53,7 +53,7 @@ module Waterfall
 -- | Generate 2D `Diagram`s from 3D `Shape`s
 , module Waterfall.Diagram
 -- | Lensy combinators
-, module Waterfall.Lenses
+, module Waterfall.Lens
 ) where
 
 import Waterfall.Booleans
@@ -75,4 +75,4 @@ import Waterfall.TwoD.Transforms
 import Waterfall.TwoD.Path2D
 import Waterfall.TwoD.Shape
 import Waterfall.TwoD.Text
-import Waterfall.Lenses
+import Waterfall.Lens
