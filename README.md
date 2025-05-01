@@ -56,8 +56,8 @@ export CPATH=$CPATH:$HOMEBREW_PREFIX/Cellar/opencascade/7.*/include/opencascade/
 In addition to configuring the path to the OpenCASCADE header files, you'll also need to add the libraries to the link and runtime library search paths, either via `extra-lib-dirs` or `LIBRARY_PATH`+`DYDLD_FALLBACK_LIBRARY_PATH`:
 ```
 export CPATH=$CPATH:$HOMEBREW_PREFIX/Cellar/opencascade/7.*/include/opencascade/
-export LIBRARY_PATH=$LIBRARY_PATH:`echo /opt/homebrew/Cellar/opencascade/7.*/lib`
-export DYDLD_FALLBACK_LIBRARY_PATH=$DYDLD_FALLBACK_LIBRARY_PATH:`echo /opt/homebrew/Cellar/opencascade/7.*/lib`:/opt/homebrew/lib
+export LIBRARY_PATH=$LIBRARY_PATH:`echo $HOMEBREW_PREFIX/Cellar/opencascade/7.*/lib`
+export DYDLD_FALLBACK_LIBRARY_PATH=$DYDLD_FALLBACK_LIBRARY_PATH:`echo $HOMEBREW_PREFIX/Cellar/opencascade/7.*/lib`:/opt/homebrew/lib
 ```
 
 ## Licensing
