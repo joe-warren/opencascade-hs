@@ -48,29 +48,16 @@ brew install opencascade
 You'll also need to configure the path to the OpenCASCADE header files, either via `extra-include-dirs`, or `CPATH`:
 
 ```
-export CPATH=$CPATH:/usr/local/Cellar/opencascade/7.*/include/opencascade/
+export CPATH=$CPATH:$HOMEBREW_PREFIX/Cellar/opencascade/7.*/include/opencascade/
 ```
 
 #### MacOs Apple Silicon support:
-```
-export CPATH=$CPATH:/opt/homebrew/Cellar/opencascade/7.*/include/opencascade/
-```
 
-You can add this to your stack.yaml file:
+In addition to configuring the path to the OpenCASCADE header files, you'll also need to add the libraries to the link and runtime library search paths, either via `extra-lib-dirs` or `LIBRARY_PATH`+`DYDLD_FALLBACK_LIBRARY_PATH`:
 ```
-extra-include-dirs: 
-- /opt/homebrew/Cellar/opencascade/7.9.0/include/opencascade
-extra-lib-dirs: 
-- /opt/homebrew/Cellar/opencascade/7.9.0/lib 
-```
-
-Or add the following to your cabal.project file:
-```
-packages: .
-
-package opencascade-hs
-  extra-lib-dirs: /opt/homebrew/Cellar/opencascade/7.9.0/lib
-  extra-include-dirs: /opt/homebrew/Cellar/opencascade/7.9.0/include/opencascade
+export CPATH=$CPATH:$HOMEBREW_PREFIX/Cellar/opencascade/7.*/include/opencascade/
+export LIBRARY_PATH=$LIBRARY_PATH:`echo /opt/homebrew/Cellar/opencascade/7.*/lib`
+export DYDLD_FALLBACK_LIBRARY_PATH=$DYDLD_FALLBACK_LIBRARY_PATH:`echo /opt/homebrew/Cellar/opencascade/7.*/lib`:/opt/homebrew/lib
 ```
 
 ## Licensing
