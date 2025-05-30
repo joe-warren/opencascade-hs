@@ -23,6 +23,7 @@ extra-source-files:
     CHANGELOG.md
     cpp/hs_Bnd_Box.h
     cpp/hs_Bnd_OBB.h
+    cpp/hs_BOPAlgo_Builder.h
     cpp/hs_BRep_Tool.h
     cpp/hs_BRepAdaptor_Curve.h
     cpp/hs_BRepAlgoAPI_Common.h
@@ -131,6 +132,9 @@ library
       OpenCascade.Bnd.Internal.Destructors
       OpenCascade.Bnd.OBB
       OpenCascade.Bnd.Types
+      OpenCascade.BOPAlgo.Builder
+      OpenCascade.BOPAlgo.Internal.Destructors
+      OpenCascade.BOPAlgo.Types
       OpenCascade.BRep.Tool
       OpenCascade.BRepAdaptor
       OpenCascade.BRepAdaptor.Curve
@@ -342,6 +346,7 @@ library
   cxx-sources:
       cpp/hs_Bnd_Box.cpp
       cpp/hs_Bnd_OBB.cpp
+      cpp/hs_BOPAlgo_Builder.cpp
       cpp/hs_BRep_Tool.cpp
       cpp/hs_BRepAdaptor_Curve.cpp
       cpp/hs_BRepAlgoAPI_Common.cpp

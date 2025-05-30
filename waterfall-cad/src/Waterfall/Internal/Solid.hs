@@ -7,6 +7,7 @@ module Waterfall.Internal.Solid
 , union
 , difference
 , intersection
+, unions
 , nowhere
 , complement
 , debug
@@ -22,8 +23,11 @@ import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
 import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
+import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import OpenCascade.Inheritance (upcast)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
+import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
+import Data.Foldable (traverse_)
 
 -- | The Boundary Representation of a solid object.
 --
@@ -42,6 +46,7 @@ acquireSolid (Solid ptr) = toAcquire ptr
 
 solidFromAcquire :: Acquire (Ptr TopoDS.Shape.Shape) -> Solid
 solidFromAcquire = Solid . unsafeFromAcquire
+
 
 -- | print debug information about a Solid when it's evaluated 
 -- exposes the properties of the underlying OpenCacade.TopoDS.Shape
@@ -105,6 +110,22 @@ toBoolean f (Solid ptrA) (Solid ptrB) = Solid . unsafeFromAcquire $ do
 union :: Solid -> Solid -> Solid
 union = toBoolean Fuse.fuse
 
+
+-- | take the sum of a list of solids 
+-- 
+-- May be more performant than chaining multiple union commands
+unions :: [Solid] -> Solid
+unions [] = nowhere
+unions solids = Solid . unsafeFromAcquire $ do
+    ptrs <- traverse (toAcquire . rawSolid) solids
+    builder <- BOPAlgo.Builder.new
+    liftIO $ traverse_ (BOPAlgo.addArgument builder) ptrs
+    liftIO $ BOPAlgo.setRunParallel builder True
+    BOPAlgo.Builder.shape builder
+
+
+
+
 -- | Take the difference of two solids
 -- 
 -- The region occupied by the first, but not the second.
@@ -127,6 +148,7 @@ instance Semigroup Solid where
 
 instance Monoid Solid where
     mempty = nowhere
+    mconcat = unions
 
 instance Lattice Solid where 
     (/\) = intersection
