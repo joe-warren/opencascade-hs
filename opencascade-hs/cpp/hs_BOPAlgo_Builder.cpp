@@ -21,3 +21,7 @@ void hs_BOPAlgo_Builder_SetRunParallel(BOPAlgo_Builder * builder, bool runParall
     builder->SetRunParallel(runParallel);
 }
 
+void hs_BOPAlgo_Builder_Perform(BOPAlgo_Builder * builder){
+    builder->Perform();
+}
+

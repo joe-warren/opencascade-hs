@@ -5,6 +5,7 @@ module OpenCascade.BOPAlgo.Builder
 , addArgument
 , setRunParallel
 , shape
+, perform
 ) where
 
 import OpenCascade.BOPAlgo.Types
@@ -32,4 +33,7 @@ foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_Shape" rawSh
 
 shape :: Ptr Builder -> Acquire (Ptr TopoDS.Shape)
 shape builder = mkAcquire (rawShape builder) deleteShape  
+
+
+foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_Perform" perform :: Ptr Builder -> IO ()
 

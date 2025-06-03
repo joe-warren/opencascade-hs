@@ -119,8 +119,10 @@ unions [] = nowhere
 unions solids = Solid . unsafeFromAcquire $ do
     ptrs <- traverse (toAcquire . rawSolid) solids
     builder <- BOPAlgo.Builder.new
-    liftIO $ traverse_ (BOPAlgo.addArgument builder) ptrs
-    liftIO $ BOPAlgo.setRunParallel builder True
+    liftIO $ do
+        traverse_ (BOPAlgo.addArgument builder) ptrs
+        BOPAlgo.setRunParallel builder True
+        BOPAlgo.Builder.perform builder
     BOPAlgo.Builder.shape builder
 
 

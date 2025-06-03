@@ -17,6 +17,8 @@ TopoDS_Shape * hs_BOPAlgo_Builder_Shape(BOPAlgo_Builder * builder);
 
 void hs_BOPAlgo_Builder_SetRunParallel(BOPAlgo_Builder * builder, bool runParallel);
 
+void hs_BOPAlgo_Builder_Perform(BOPAlgo_Builder * builder);
+
 #ifdef __cplusplus
 }
 #endif
