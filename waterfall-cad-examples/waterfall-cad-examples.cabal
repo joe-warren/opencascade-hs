@@ -62,6 +62,30 @@ library
     , xml ==1.*
   default-language: Haskell2010
 
+executable waterfall-cad-bench
+  main-is: Main.hs
+  other-modules:
+      Paths_waterfall_cad_examples
+  hs-source-dirs:
+      bench
+  ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , criterion
+    , lens ==5.*
+    , linear >=1.21 && <2
+    , opencascade-hs >=0.5.0.1 && <0.6
+    , optparse-applicative >=0.17 && <0.19
+    , parsec ==3.1.*
+    , parser-combinators >=1.2 && <1.4
+    , raw-strings-qq >=1.1 && <2
+    , svg-tree >=0.6 && <1.0
+    , waterfall-cad >=0.5.0.1 && <0.6
+    , waterfall-cad-examples
+    , waterfall-cad-svg >=0.5.0.1 && <0.6
+    , xml ==1.*
+  default-language: Haskell2010
+
 executable waterfall-cad-examples
   main-is: Main.hs
   other-modules:

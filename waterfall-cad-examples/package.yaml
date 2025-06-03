@@ -43,6 +43,18 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+  waterfall-cad-bench:
+    main:                Main.hs
+    dependencies: 
+      - waterfall-cad-examples
+      - criterion
+    source-dirs:         bench
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
+
 
 library:
   source-dirs: src
