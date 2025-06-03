@@ -8,9 +8,15 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added
+
+- Add `OpenCascade.BOPAlgo.Builder` 
+
 ## 0.5.0.1
 
 ## 0.5.0.0
+
+### Added
 
 - Add `OpenCascade.BRepFilletAPI.MakeFillet` methods `reset`, `nbFaultyContours`, `faultyContour`, `nbEdges`, `edge` and `remove`
 - Add `OpenCascade.BRepBuilderAPI.MakeShape` method `build`
@@ -33,6 +39,8 @@ and this project adheres to the
 - Add `OpenCascade.Geom.Curve` methods `firstParameter` and `lastParameter`
 
 ## 0.4.0.0
+
+### Added
 
 - Add `OpenCascade.BRepBuilderAPI.MakeVertex`
 - Add `OpenCascade.BRepBuilderAPI.MakeWire.vertex`
