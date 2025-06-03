@@ -7,6 +7,7 @@ module Waterfall.Booleans
 , intersection
 , complement
 , unions
+, intersections
 ) where
 
-import Waterfall.Internal.Solid(union, unions, difference, intersection, complement)
+import Waterfall.Internal.Solid(union, unions, difference, intersection, intersections, complement)

@@ -10,6 +10,10 @@ void hs_delete_BOPAlgo_BOP(BOPAlgo_BOP * bop){
     delete bop;
 }
 
+void hs_BOPAlgo_BOP_AddTool(BOPAlgo_BOP *bop, TopoDS_Shape * tool){
+    bop->AddTool(*tool);
+}
+
 void hs_BOPAlgo_BOP_SetOperation(BOPAlgo_BOP *bop, BOPAlgo_Operation operation){
     bop->SetOperation(operation);
 }

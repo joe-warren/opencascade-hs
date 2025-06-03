@@ -8,6 +8,7 @@ module Waterfall.Internal.Solid
 , difference
 , intersection
 , unions
+, intersections
 , nowhere
 , complement
 , debug
@@ -113,21 +114,27 @@ union :: Solid -> Solid -> Solid
 union = toBoolean Fuse.fuse
 
 
--- | take the sum of a list of solids 
--- 
--- May be more performant than chaining multiple union commands
-unions :: [Solid] -> Solid
-unions [] = nowhere
-unions solids = Solid . unsafeFromAcquire $ do
+toBooleans :: BOPAlgo.Operation.Operation -> [Solid] -> Solid
+toBooleans _ [] = nowhere
+toBooleans _ [x] = x
+toBooleans op (h:solids) = Solid . unsafeFromAcquire $ do
+    firstPtr <- toAcquire . rawSolid $ h
     ptrs <- traverse (toAcquire . rawSolid) solids
     bop <- BOPAlgo.BOP.new
     let builder = upcast bop
     liftIO $ do
-        BOPAlgo.BOP.setOperation bop BOPAlgo.Operation.Fuse
-        traverse_ (BOPAlgo.addArgument builder) ptrs
+        BOPAlgo.BOP.setOperation bop op
+        BOPAlgo.Builder.addArgument builder firstPtr
+        traverse_ (BOPAlgo.BOP.addTool bop) ptrs
         BOPAlgo.setRunParallel builder True
         BOPAlgo.Builder.perform builder
     BOPAlgo.Builder.shape builder
+
+-- | Take the sum of a list of solids 
+-- 
+-- May be more performant than chaining multiple union commands
+unions :: [Solid] -> Solid
+unions = toBooleans BOPAlgo.Operation.Fuse
 
 -- | Take the difference of two solids
 -- 
@@ -140,6 +147,13 @@ difference = toBoolean Cut.cut
 -- The region occupied by both of them.
 intersection :: Solid -> Solid -> Solid
 intersection = toBoolean Common.common
+
+
+-- | Take the intersection of a list of solids 
+-- 
+-- May be more performant than chaining multiple union commands
+intersections :: [Solid] -> Solid
+intersections = toBooleans BOPAlgo.Operation.Common
 
 -- | While `Solid` could form a Semigroup via either `union` or `intersection`.
 -- the default Semigroup is from `union`.

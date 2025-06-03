@@ -2,12 +2,14 @@
 module OpenCascade.BOPAlgo.BOP 
 ( BOP
 , new
+, addTool
 , setOperation
 ) where
 
 import OpenCascade.BOPAlgo.Types
 import OpenCascade.BOPAlgo.Internal.Destructors (deleteBOP)
 import OpenCascade.BOPAlgo.Operation (Operation)
+import qualified OpenCascade.TopoDS.Types as TopoDS
 
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire, mkAcquire)
@@ -19,6 +21,7 @@ foreign import capi unsafe "hs_BOPAlgo_BOP.h hs_new_BOPAlgo_BOP" rawNew :: IO (P
 new :: Acquire (Ptr BOP)
 new = mkAcquire rawNew deleteBOP
 
+foreign import capi unsafe "hs_BOPAlgo_BOP.h hs_BOPAlgo_BOP_AddTool" addTool :: Ptr BOP -> Ptr TopoDS.Shape -> IO ()
 
 foreign import capi unsafe "hs_BOPAlgo_BOP.h hs_BOPAlgo_BOP_SetOperation" rawSetOperation :: Ptr BOP -> CInt -> IO ()
 
