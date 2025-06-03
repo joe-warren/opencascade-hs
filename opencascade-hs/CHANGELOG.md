@@ -10,7 +10,9 @@ and this project adheres to the
 
 ### Added
 
-- Add `OpenCascade.BOPAlgo.Builder` 
+- Add `OpenCascade.BOPAlgo.Builder`
+- Add `OpenCascade.BOPAlgo.BOP`
+- Add `OpenCascade.BOPAlgo.Operation`
 
 ## 0.5.0.1
 

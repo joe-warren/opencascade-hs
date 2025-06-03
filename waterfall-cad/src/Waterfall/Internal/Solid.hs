@@ -23,6 +23,8 @@ import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
 import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
+import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
+import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import OpenCascade.Inheritance (upcast)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
@@ -118,15 +120,14 @@ unions :: [Solid] -> Solid
 unions [] = nowhere
 unions solids = Solid . unsafeFromAcquire $ do
     ptrs <- traverse (toAcquire . rawSolid) solids
-    builder <- BOPAlgo.Builder.new
+    bop <- BOPAlgo.BOP.new
+    let builder = upcast bop
     liftIO $ do
+        BOPAlgo.BOP.setOperation bop BOPAlgo.Operation.Fuse
         traverse_ (BOPAlgo.addArgument builder) ptrs
         BOPAlgo.setRunParallel builder True
         BOPAlgo.Builder.perform builder
     BOPAlgo.Builder.shape builder
-
-
-
 
 -- | Take the difference of two solids
 -- 

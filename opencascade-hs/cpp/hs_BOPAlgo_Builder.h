@@ -1,5 +1,5 @@
-#ifndef HS_BREPALGO_BUILDER_H
-#define HS_BREPALGO_BUILDER_H
+#ifndef HS_BOPALGO_BUILDER_H
+#define HS_BOPALGO_BUILDER_H
 
 #include "hs_types.h"
 
@@ -23,4 +23,4 @@ void hs_BOPAlgo_Builder_Perform(BOPAlgo_Builder * builder);
 }
 #endif
 
-#endif // HS_BREPALGO_BUILDER_H
+#endif // HS_BOPALGO_BUILDER_H
