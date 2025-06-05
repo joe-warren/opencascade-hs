@@ -132,7 +132,7 @@ toBooleans op (h:solids) = Solid . unsafeFromAcquire $ do
 
 -- | Take the sum of a list of solids 
 -- 
--- May be more performant than chaining multiple union commands
+-- May be more performant than chaining multiple applications of `union`
 unions :: [Solid] -> Solid
 unions = toBooleans BOPAlgo.Operation.Fuse
 
@@ -151,7 +151,7 @@ intersection = toBoolean Common.common
 
 -- | Take the intersection of a list of solids 
 -- 
--- May be more performant than chaining multiple union commands
+-- May be more performant than chaining multiple applications of `intersection`
 intersections :: [Solid] -> Solid
 intersections = toBooleans BOPAlgo.Operation.Common
 
