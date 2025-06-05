@@ -7,6 +7,8 @@ module Waterfall.Internal.Solid
 , union
 , difference
 , intersection
+, unions
+, intersections
 , nowhere
 , complement
 , debug
@@ -22,8 +24,13 @@ import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
 import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
+import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
+import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
+import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import OpenCascade.Inheritance (upcast)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
+import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
+import Data.Foldable (traverse_)
 
 -- | The Boundary Representation of a solid object.
 --
@@ -42,6 +49,7 @@ acquireSolid (Solid ptr) = toAcquire ptr
 
 solidFromAcquire :: Acquire (Ptr TopoDS.Shape.Shape) -> Solid
 solidFromAcquire = Solid . unsafeFromAcquire
+
 
 -- | print debug information about a Solid when it's evaluated 
 -- exposes the properties of the underlying OpenCacade.TopoDS.Shape
@@ -105,6 +113,29 @@ toBoolean f (Solid ptrA) (Solid ptrB) = Solid . unsafeFromAcquire $ do
 union :: Solid -> Solid -> Solid
 union = toBoolean Fuse.fuse
 
+
+toBooleans :: BOPAlgo.Operation.Operation -> [Solid] -> Solid
+toBooleans _ [] = nowhere
+toBooleans _ [x] = x
+toBooleans op (h:solids) = Solid . unsafeFromAcquire $ do
+    firstPtr <- toAcquire . rawSolid $ h
+    ptrs <- traverse (toAcquire . rawSolid) solids
+    bop <- BOPAlgo.BOP.new
+    let builder = upcast bop
+    liftIO $ do
+        BOPAlgo.BOP.setOperation bop op
+        BOPAlgo.Builder.addArgument builder firstPtr
+        traverse_ (BOPAlgo.BOP.addTool bop) ptrs
+        BOPAlgo.setRunParallel builder True
+        BOPAlgo.Builder.perform builder
+    BOPAlgo.Builder.shape builder
+
+-- | Take the sum of a list of solids 
+-- 
+-- May be more performant than chaining multiple applications of `union`
+unions :: [Solid] -> Solid
+unions = toBooleans BOPAlgo.Operation.Fuse
+
 -- | Take the difference of two solids
 -- 
 -- The region occupied by the first, but not the second.
@@ -117,6 +148,13 @@ difference = toBoolean Cut.cut
 intersection :: Solid -> Solid -> Solid
 intersection = toBoolean Common.common
 
+
+-- | Take the intersection of a list of solids 
+-- 
+-- May be more performant than chaining multiple applications of `intersection`
+intersections :: [Solid] -> Solid
+intersections = toBooleans BOPAlgo.Operation.Common
+
 -- | While `Solid` could form a Semigroup via either `union` or `intersection`.
 -- the default Semigroup is from `union`.
 --
@@ -127,6 +165,7 @@ instance Semigroup Solid where
 
 instance Monoid Solid where
     mempty = nowhere
+    mconcat = unions
 
 instance Lattice Solid where 
     (/\) = intersection

@@ -1,4 +1,3 @@
-
 #ifndef HS_BREPALGOAPI_FUSE_H
 #define HS_BREPALGOAPI_FUSE_H
 
