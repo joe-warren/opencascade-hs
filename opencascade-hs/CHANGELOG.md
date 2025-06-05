@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.5.1.0
+
 ### Added
 
 - Add `OpenCascade.BOPAlgo.Builder`

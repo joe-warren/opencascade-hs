@@ -9,9 +9,11 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.5.1.0
+
 ### Added
 
-- Added `unions`, and specialized mconcat for `Solid` to improve performance
+- Added `unions`, `intersections`, and specialized mconcat for `Solid` to improve performance
 
 ## 0.5.0.1
 
