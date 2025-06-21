@@ -20,10 +20,12 @@ You can see images of these examples in the [main readme](https://github.com/joe
 
 ## Imports 
 
-This library is recommended to used by importing the root `Waterfall` module, qualified, which includes the entire public API, e.g:
+This library is recommended to used by importing the root `Waterfall` module, qualified, which includes the entire public API.
+You'll also almost certainly need to import [`Linear`](https://hackage.haskell.org/package/linear), in my experience this is best imported unqualified, e.g:
 
 ```haskell
 import qualified Waterfall
+import Linear
 ```
 
 It should also be possible to import the library unqualified, or to import the individual modules.
