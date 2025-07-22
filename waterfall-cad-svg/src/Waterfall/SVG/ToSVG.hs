@@ -140,7 +140,7 @@ path2DToPathCommands (Path2D theRawPath) = case theRawPath of
 
 -- | Convert a `Waterfall.Diagram` into an SVG document
 -- 
--- The diagram paths have the classes "edge", "visible"/"hidden" and "sharp"/"outline"
+-- The diagram paths have the classes "edge", "visible"\/"hidden" and "sharp"\/"outline"
 diagramToSvg :: Waterfall.Diagram -> Svg.Document
 diagramToSvg diagram = 
     case Waterfall.diagramBoundingBox diagram of 
