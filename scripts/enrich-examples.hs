@@ -28,6 +28,8 @@ modifyImage (XML.Elem e) =
                 [ XML.Attr (XML.unqual "src") src
                 , XML.Attr (XML.unqual "camera-controls") ""
                 , XML.Attr (XML.unqual "touch-action") "pan-y"
+                , XML.Attr (XML.unqual "style") "width: 100%; height: 600px;"
+                
                 ]
 modifyImage x = x
 
