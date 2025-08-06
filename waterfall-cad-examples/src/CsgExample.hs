@@ -1,3 +1,6 @@
+{-|
+<<models/csg.glb>>
+-}
 module CsgExample
 ( csgExample
 ) where 
