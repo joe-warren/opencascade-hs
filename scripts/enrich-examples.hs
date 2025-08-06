@@ -2,6 +2,7 @@
 {- stack script --resolver lts-23.16
     --package xml
     --package bytestring
+    --package filemanip
 -}
 
 import qualified Text.XML.Light as XML
@@ -9,7 +10,8 @@ import qualified Text.XML.Light.Cursor as C
 import qualified Data.ByteString as BS
 import Control.Arrow (first)
 import Data.List (isSuffixOf)
-import Control.Monad (when)
+import Control.Monad (when, void)
+import System.FilePath.Find (find, (~~?), (==?), extension, filePath, fileName)
 
 isMatchingImage :: C.Cursor -> Bool
 isMatchingImage c = 
@@ -24,12 +26,14 @@ isMatchingImage c =
 modifyImage :: XML.Content -> XML.Content
 modifyImage (XML.Elem e) = 
     let src = maybe "" id $ XML.findAttrBy ((== "src") . XML.qName) e
-        in XML.Elem $ XML.node (XML.unqual "model-viewer") 
-                [ XML.Attr (XML.unqual "src") src
-                , XML.Attr (XML.unqual "camera-controls") ""
-                , XML.Attr (XML.unqual "touch-action") "pan-y"
-                , XML.Attr (XML.unqual "style") "width: 100%; height: 600px;"
-                
+        in XML.Elem . XML.node (XML.unqual "model-viewer") . fmap (uncurry XML.Attr . first XML.unqual) $
+                [ ("src", src)
+                , ("camera-controls", "")
+                , ("touch-action", "pan-y")
+                , ("auto-rotate", "")
+                , ("rotation-per-second", "45deg")
+                , ("shadow-intensity", "1")
+                , ("style", "width: 100%; height: 600px; border: 1px dashed #5E5184;")
                 ]
 modifyImage x = x
 
@@ -70,8 +74,12 @@ processFile path = do
         config = 
             XML.useShortEmptyTags ((/= "script") . XML.qName)
                 $ XML.defaultConfigPP
+    print (path, modified)
     when modified $ writeFile path (XML.ppcTopElement config doc')
 
+-- (filePath ~~? "waterfall-cad-examples-*-docs")
 main :: IO ()
-main = do 
-    processFile "waterfall-cad-examples-0.5.0.1-docs/CsgExample.html"
+main = do
+    void $ traverse processFile 
+        =<< foldMap (find (pure True) (extension ==? ".html"))
+        =<< find (fileName ==? ".") (fileName ~~? "waterfall-cad-examples-*-docs") "."

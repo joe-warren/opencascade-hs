@@ -1,3 +1,6 @@
+{-|
+<<models/offset.glb>>
+-}
 module OffsetExample 
 ( offsetExample 
 ) where

@@ -1,3 +1,6 @@
+{-|
+<<models/loft.glb>>
+-}
 module LoftExample 
 ( loftExample
 ) where

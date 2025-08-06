@@ -1,3 +1,6 @@
+{-|
+<<models/revolution.glb>>
+-}
 module RevolutionExample 
 ( revolutionExample 
 ) where
