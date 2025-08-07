@@ -17,3 +17,5 @@ stack exec waterfall-cad-examples --  --offset --glb waterfall-cad-examples/mode
 stack exec waterfall-cad-examples --  --text --content "Waterfall CAD" --glb waterfall-cad-examples/models/text.glb --font ~/.fonts/GothamRounded-Bold.otf
 stack exec waterfall-cad-examples --  --bound --glb waterfall-cad-examples/models/bounding-boxes.glb
 stack exec waterfall-cad-examples --  --loft --glb waterfall-cad-examples/models/loft.glb
+stack exec waterfall-cad-examples --  --fillet --glb waterfall-cad-examples/models/fillet.glb
+stack exec waterfall-cad-examples --  --prism --glb waterfall-cad-examples/models/prism.glb

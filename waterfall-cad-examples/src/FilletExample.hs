@@ -1,3 +1,6 @@
+{-|
+<<models/fillet.glb>>
+-}
 module FilletExample (
     filletExample
 ) where
