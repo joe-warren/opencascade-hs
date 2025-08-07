@@ -33,7 +33,9 @@ modifyImage (XML.Elem e) =
                 , ("auto-rotate", "")
                 , ("rotation-per-second", "45deg")
                 , ("shadow-intensity", "1")
-                , ("style", "width: 100%; height: 600px; border: 1px dashed #5E5184;")
+                , ("orientation", "0 270deg 0")
+                , ("environment-image", "models/studio_small_03_1k.hdr")
+                , ("style", "width: 100%; height: 600px; border: 1px dashed #5E5184; background-color: #f2f2f2;")
                 ]
 modifyImage x = x
 
