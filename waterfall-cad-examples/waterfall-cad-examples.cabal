@@ -1,4 +1,4 @@
-cabal-version: 1.18
+cabal-version: 1.12
 
 -- This file has been generated from package.yaml by hpack version 0.37.0.
 --
@@ -21,29 +21,6 @@ extra-source-files:
     LICENSE
     README.md
     CHANGELOG.md
-    models/bounding-boxes.glb
-    models/csg.glb
-    models/fillet.glb
-    models/gear.glb
-    models/loft.glb
-    models/offset.glb
-    models/prism.glb
-    models/revolution.glb
-    models/sweep.glb
-    models/text.glb
-    models/studio_small_03_1k.hdr
-extra-doc-files:
-    models/bounding-boxes.glb
-    models/csg.glb
-    models/fillet.glb
-    models/gear.glb
-    models/loft.glb
-    models/offset.glb
-    models/prism.glb
-    models/revolution.glb
-    models/sweep.glb
-    models/text.glb
-    models/studio_small_03_1k.hdr
 
 source-repository head
   type: git

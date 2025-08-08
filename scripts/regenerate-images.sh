@@ -9,13 +9,13 @@ stack exec waterfall-cad-examples --  --text --content "Waterfall CAD" --dark-mo
 stack exec waterfall-cad-examples --  --bound --dark-mode-svg images/bounding-boxes.svg --height 200
 stack exec waterfall-cad-examples --  --loft --dark-mode-svg images/loft.svg
 
-stack exec waterfall-cad-examples --  --csg --glb waterfall-cad-examples/models/csg.glb
-stack exec waterfall-cad-examples --  --gear --glb waterfall-cad-examples/models/gear.glb
-stack exec waterfall-cad-examples --  --revolution --glb waterfall-cad-examples/models/revolution.glb
-stack exec waterfall-cad-examples --  --sweep --glb waterfall-cad-examples/models/sweep.glb --resolution 0.01
-stack exec waterfall-cad-examples --  --offset --glb waterfall-cad-examples/models/offset.glb
-stack exec waterfall-cad-examples --  --text --content "Waterfall CAD" --glb waterfall-cad-examples/models/text.glb --font ~/.fonts/GothamRounded-Bold.otf --resolution 0.01
-stack exec waterfall-cad-examples --  --bound --glb waterfall-cad-examples/models/bounding-boxes.glb
-stack exec waterfall-cad-examples --  --loft --glb waterfall-cad-examples/models/loft.glb
-stack exec waterfall-cad-examples --  --fillet --glb waterfall-cad-examples/models/fillet.glb
-stack exec waterfall-cad-examples --  --prism --glb waterfall-cad-examples/models/prism.glb
+stack exec waterfall-cad-examples --  --csg --glb images/models/csg.glb
+stack exec waterfall-cad-examples --  --gear --glb images/models/gear.glb
+stack exec waterfall-cad-examples --  --revolution --glb images/models/revolution.glb
+stack exec waterfall-cad-examples --  --sweep --glb images/models/sweep.glb --resolution 0.01
+stack exec waterfall-cad-examples --  --offset --glb images/models/offset.glb
+stack exec waterfall-cad-examples --  --text --content "Waterfall CAD" --glb images/models/text.glb --font ~/.fonts/GothamRounded-Bold.otf --resolution 0.01
+stack exec waterfall-cad-examples --  --bound --glb images/models/bounding-boxes.glb
+stack exec waterfall-cad-examples --  --loft --glb images/models/loft.glb
+stack exec waterfall-cad-examples --  --fillet --glb images/models/fillet.glb
+stack exec waterfall-cad-examples --  --prism --glb images/models/prism.glb
