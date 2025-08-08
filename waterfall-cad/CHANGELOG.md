@@ -9,6 +9,12 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.5.1.1
+
+### Added 
+
+- Added `unitPolygon`
+
 ## 0.5.1.0
 
 ### Added

@@ -5,17 +5,18 @@ module Waterfall.TwoD.Shape
 , unitCircle
 , unitSquare
 , centeredSquare
+, unitPolygon
 ) where
 
 import Waterfall.TwoD.Internal.Shape (Shape (..))
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
-import Waterfall.TwoD.Transforms (translate2D)
+import Waterfall.TwoD.Transforms (translate2D, rotate2D)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Waterfall.Internal.Edges (allWires)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import OpenCascade.Inheritance (upcast)
 import Linear (unit, _x, _y, zero, V2 (..))
-import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo)
+import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo, line)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
 
 -- | Construct a 2D Shape from a closed path 
@@ -58,3 +59,19 @@ unitSquare =
 -- | Square with side length of 1, centered on the origin
 centeredSquare :: Shape
 centeredSquare = translate2D (V2 (-0.5) (-0.5)) unitSquare
+
+-- | \(n\) sided Polygon, centered on the origin
+-- 
+-- Ill-defined when n <= 2
+unitPolygon :: Integer -> Shape
+unitPolygon n = 
+    let n' = fromIntegral n
+        points = [
+            rotate2D (2 * pi * fromIntegral i / n') (unit _x)
+            | i <- [0..n]
+            ]
+        paths = mconcat [
+            line a b
+            | (a, b) <- zip points (tail points)
+            ]
+        in makeShape paths

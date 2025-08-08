@@ -1,3 +1,6 @@
+{-|
+<<models/text.glb>>
+-}
 module TextExample (
     textExample
 ) where

@@ -1,3 +1,6 @@
+{-|
+<<models/bounding-boxes.glb>>
+-}
 module BoundingBoxExample
 ( boundingBoxExample
 ) where

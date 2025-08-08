@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.5.1.1
+
+- Add 3D models to Haddocks
+
 ## 0.5.0.0
 
 - Add SVG.PathExample and SVG.ReadFileExample

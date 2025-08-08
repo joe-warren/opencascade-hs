@@ -1,3 +1,6 @@
+{-|
+<<models/prism.glb>>
+-}
 module PrismExample
 ( prismExample
 ) where 

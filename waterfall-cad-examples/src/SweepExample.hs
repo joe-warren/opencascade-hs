@@ -1,3 +1,6 @@
+{-|
+<<models/sweep.glb>>
+-}
 module SweepExample 
 ( sweepExample 
 ) where
