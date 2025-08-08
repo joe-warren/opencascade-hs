@@ -1,11 +1,11 @@
 ## update package-defaults.yaml and */CHANGELOG.md
-rm -rf dist/* docs/*
+rm -rf dist/* docs/* waterfall-cad-examples-*-docs
 stack build
 stack sdist --tar-dir dist
 stack upload dist/*.tar.gz --candidate
 stack haddock --haddock-for-hackage
 tar xvf ./waterfall-cad-examples/.stack-work/dist/*/ghc-*/waterfall-cad-examples-*-docs.tar.gz
-./scripts/enrich-examples
+./scripts/enrich-examples.hs
 tar --format=ustar -czf ./waterfall-cad-examples/.stack-work/dist/*/ghc-*/waterfall-cad-examples-*-docs.tar.gz waterfall-cad-examples-*-docs
 stack upload -d opencascade-hs waterfall-cad waterfall-cad-svg waterfall-cad-examples --candidate
 
