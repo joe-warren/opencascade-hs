@@ -1,7 +1,5 @@
 {-|
-Example demonstrating 2D boolean operations on shapes.
-
-This shows how to combine 2D shapes using union, intersection, and difference operations.
+<<models/2d-booleans.glb>>
 -}
 module TwoDBooleansExample 
 ( twoDBooleansExample

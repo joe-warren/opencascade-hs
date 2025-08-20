@@ -83,5 +83,6 @@ If you've found the project useful, or interesting, or if you've built anything 
 
 [![](images/text.svg)](waterfall-cad-examples/src/TextExample.hs)
 
+[![](images/2d-booleans.svg)](waterfall-cad-examples/src/TwoDBooleansExample.hs)
 
 [![](images/loft.svg)](waterfall-cad-examples/src/LoftExample.hs)
