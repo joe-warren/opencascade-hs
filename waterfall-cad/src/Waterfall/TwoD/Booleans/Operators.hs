@@ -4,8 +4,7 @@ module Waterfall.TwoD.Booleans.Operators
 , (~-~)   -- difference
 ) where
 
-import Waterfall.TwoD.Booleans
-import Waterfall.TwoD.Internal.Shape (Shape)
+import Waterfall.TwoD.Internal.Shape (Shape, union2D, intersection2D, difference2D)
 
 -- | Infix version of `intersection2D`
 (~/\~) :: Shape -> Shape -> Shape
