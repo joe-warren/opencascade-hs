@@ -12,6 +12,7 @@ import LoftExample (loftExample)
 import TextExample (textExample)
 import BoundingBoxExample (boundingBoxExample)
 import ReadSolidExpressionExample (readSolidExpressionExample)
+import TwoDBooleansExample (twoDBooleansExample)
 import SVG.PathExample (pathExample)
 import SVG.ReadFileExample (readFileExample)
 import Waterfall.SVG (writeDiagramSVG)
@@ -74,6 +75,7 @@ exampleOption =
       OA.flag' offsetExample (OA.long "offset" <> OA.help "demonstrates offsetting the surface of a shape" ) <|>
       OA.flag' loftExample (OA.long "loft" <> OA.help "generating a boat, defined as a loft of a series of paths" ) <|>
       OA.flag' boundingBoxExample (OA.long "bound" <> OA.help "demonstrates calculating the oriented bounding box, and axis aligned bounding box, of a shape" ) <|>
+      OA.flag' twoDBooleansExample (OA.long "2d-booleans" <> OA.help "demonstrates 2D boolean operations (union, intersection, difference) on shapes" ) <|>
       (OA.flag' gearExample (OA.long "gear" <> OA.help "generate an involute gear") <*>
        (OA.option OA.auto (OA.long "thickness" <> OA.help "gear depth") <|> pure 1.0) <*>
        (OA.option OA.auto (OA.long "module" <> OA.help "gear module") <|> pure 5.0) <*>

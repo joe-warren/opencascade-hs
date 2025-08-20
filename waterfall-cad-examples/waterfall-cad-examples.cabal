@@ -42,6 +42,7 @@ library
       SVG.ReadFileExample
       SweepExample
       TextExample
+      TwoDBooleansExample
   other-modules:
       Paths_waterfall_cad_examples
   hs-source-dirs:

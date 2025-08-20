@@ -6,11 +6,20 @@ module Waterfall.TwoD.Shape
 , unitSquare
 , centeredSquare
 , unitPolygon
+-- * Boolean operations
+, union2D
+, difference2D
+, intersection2D
+, unions2D
+, intersections2D
+, complement2D
+, nowhere2D
 ) where
 
 import Waterfall.TwoD.Internal.Shape (Shape (..))
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.TwoD.Transforms (translate2D, rotate2D)
+import Waterfall.TwoD.Booleans (union2D, difference2D, intersection2D, unions2D, intersections2D, complement2D, nowhere2D)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Waterfall.Internal.Edges (allWires)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
@@ -18,6 +27,7 @@ import OpenCascade.Inheritance (upcast)
 import Linear (unit, _x, _y, zero, V2 (..))
 import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo, line)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
+import Algebra.Lattice
 
 -- | Construct a 2D Shape from a closed path 
 makeShape :: Path2D -> Shape
@@ -75,3 +85,21 @@ unitPolygon n =
             | (a, b) <- zip points (tail points)
             ]
         in makeShape paths
+
+-- | Semigroup instance for Shape uses union as the operation
+instance Semigroup Shape where
+    (<>) = union2D
+
+-- | Monoid instance for Shape with empty shape as identity
+instance Monoid Shape where
+    mempty = nowhere2D
+    mconcat = unions2D
+
+-- | Lattice instance for Shape
+instance Lattice Shape where 
+    (/\) = intersection2D
+    (\/) = union2D
+
+-- | BoundedJoinSemiLattice instance for Shape
+instance BoundedJoinSemiLattice Shape where
+    bottom = nowhere2D
