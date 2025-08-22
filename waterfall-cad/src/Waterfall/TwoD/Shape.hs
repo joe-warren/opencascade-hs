@@ -12,11 +12,10 @@ module Waterfall.TwoD.Shape
 , intersection2D
 , unions2D
 , intersections2D
-, complement2D
 , emptyShape
 ) where
 
-import Waterfall.TwoD.Internal.Shape (Shape (..), union2D, difference2D, intersection2D, unions2D, intersections2D, complement2D, emptyShape)
+import Waterfall.TwoD.Internal.Shape (Shape (..), union2D, difference2D, intersection2D, unions2D, intersections2D, emptyShape)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.TwoD.Transforms (translate2D, rotate2D)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)

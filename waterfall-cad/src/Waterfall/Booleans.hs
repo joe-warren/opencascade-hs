@@ -8,13 +8,13 @@ module Waterfall.Booleans
 ( union3D
 , difference3D
 , intersection3D
-, complement3D
+, complement
 , unions3D
 , intersections3D
 , Boolean(..)
 ) where
 
-import Waterfall.Internal.Solid(union3D, unions3D, difference3D, intersection3D, intersections3D, complement3D)
+import Waterfall.Internal.Solid(union3D, unions3D, difference3D, intersection3D, intersections3D, complement)
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.TwoD.Internal.Shape as Shape
 import Waterfall.TwoD.Internal.Shape (union2D, difference2D, intersection2D, unions2D, intersections2D)
@@ -37,6 +37,8 @@ class Boolean a where
     intersection :: a -> a -> a
     
     -- | The empty object (identity for union, annihilator for intersection)
+    --
+    -- Represents a region of space containing no volume or area.
     --
     -- For union: @empty `union` x = x `union` empty = x@
     -- For intersection: @empty `intersection` x = x `intersection` empty = empty@

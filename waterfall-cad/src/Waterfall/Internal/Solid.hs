@@ -10,7 +10,7 @@ module Waterfall.Internal.Solid
 , unions3D
 , intersections3D
 , emptySolid
-, complement3D
+, complement
 , debug
 ) where
 
@@ -80,7 +80,7 @@ debug (Solid ptr) =
 {--
 -- TODO: this does not work, need to fix
 everywhere :: Solid
-everywhere = complement3D $ emptySolid
+everywhere = complement $ emptySolid
 --}
 
 -- | Invert a Solid, equivalent to `not` in boolean algebra.
@@ -88,13 +88,13 @@ everywhere = complement3D $ emptySolid
 -- The complement of a solid represents the solid with the same surface,
 -- but where the opposite side of that surface is the \"inside\" of the solid.
 --
--- Be warned that @complement3D emptySolid@ does not appear to work correctly.
-complement3D :: Solid -> Solid
-complement3D (Solid ptr) = Solid . unsafeFromAcquire $ TopoDS.Shape.complemented =<< toAcquire ptr
+-- Be warned that @complement emptySolid@ does not appear to work correctly.
+complement :: Solid -> Solid
+complement (Solid ptr) = Solid . unsafeFromAcquire $ TopoDS.Shape.complemented =<< toAcquire ptr
 
 -- | An empty solid
 --
--- Be warned that @complement3D emptySolid@ does not appear to work correctly.
+-- Be warned that @complement emptySolid@ does not appear to work correctly.
 emptySolid :: Solid 
 emptySolid =  Solid . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
 
@@ -185,6 +185,6 @@ instance BoundedMeetSemiLattice Solid where
 -- every boolean algebra is a Heyting algebra with
 --  a → b defined as ¬a ∨ b
 instance Heyting Solid where
-    neg = complement3D
+    neg = complement
     a ==> b = neg a \/ b
 --}

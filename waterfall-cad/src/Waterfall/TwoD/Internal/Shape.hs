@@ -9,7 +9,6 @@ module Waterfall.TwoD.Internal.Shape
 , unions2D
 , intersections2D
 , emptyShape
-, complement2D
 ) where
 
 import qualified OpenCascade.TopoDS as TopoDS
@@ -96,13 +95,6 @@ unions2D = toBooleans2D BOPAlgo.Operation.Fuse
 -- May be more performant than chaining multiple applications of `intersection2D`
 intersections2D :: [Shape] -> Shape
 intersections2D = toBooleans2D BOPAlgo.Operation.Common
-
--- | Invert a 2D shape (complement)
--- The complement of a shape represents the shape with the same boundary,
--- but where the opposite side is the "inside" of the shape
-complement2D :: Shape -> Shape
-complement2D (Shape ptr) = Shape . unsafeFromAcquire $ 
-    TopoDS.Shape.complemented =<< toAcquire ptr
 
 -- | An empty 2D shape
 emptyShape :: Shape
