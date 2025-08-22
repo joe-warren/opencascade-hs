@@ -14,6 +14,7 @@ module Waterfall
 , module Waterfall.Transforms
 -- | `Solid`'s can be combined together with 
 -- [Constructive Solid Geometry](https://en.wikipedia.org/wiki/Constructive_solid_geometry).
+-- This module also provides the 'Boolean' typeclass for unified operations.
 , module Waterfall.Booleans
 , module Waterfall.Booleans.Operators
 -- | 2D `Shape`'s can also be combined with CSG operations.

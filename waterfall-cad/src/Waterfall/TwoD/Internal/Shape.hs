@@ -8,7 +8,7 @@ module Waterfall.TwoD.Internal.Shape
 , intersection2D
 , unions2D
 , intersections2D
-, nowhere2D
+, emptyShape
 , complement2D
 ) where
 
@@ -72,7 +72,7 @@ intersection2D = toBoolean2D Common.common
 
 -- | Helper function for multi-shape boolean operations
 toBooleans2D :: BOPAlgo.Operation.Operation -> [Shape] -> Shape
-toBooleans2D _ [] = nowhere2D
+toBooleans2D _ [] = emptyShape
 toBooleans2D _ [x] = x
 toBooleans2D op (h:shapes) = Shape . unsafeFromAcquire $ do
     firstPtr <- toAcquire . rawShape $ h
@@ -105,8 +105,8 @@ complement2D (Shape ptr) = Shape . unsafeFromAcquire $
     TopoDS.Shape.complemented =<< toAcquire ptr
 
 -- | An empty 2D shape
-nowhere2D :: Shape
-nowhere2D = Shape . unsafeFromAcquire $ 
+emptyShape :: Shape
+emptyShape = Shape . unsafeFromAcquire $ 
     upcast <$> (MakeFace.face =<< MakeFace.new)
 
 -- defining the boolean CSG operators here, rather than in Waterfall.TwoD.Booleans 
@@ -118,7 +118,7 @@ instance Semigroup Shape where
 
 -- | Monoid instance for Shape with empty shape as identity
 instance Monoid Shape where
-    mempty = nowhere2D
+    mempty = emptyShape
     mconcat = unions2D
 
 -- | Lattice instance for Shape
@@ -128,4 +128,4 @@ instance Lattice Shape where
 
 -- | BoundedJoinSemiLattice instance for Shape
 instance BoundedJoinSemiLattice Shape where
-    bottom = nowhere2D
+    bottom = emptyShape

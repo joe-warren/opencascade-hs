@@ -8,7 +8,7 @@ module Waterfall.TwoD.Booleans
 , unions2D
 , intersections2D
 , complement2D
-, nowhere2D
+, emptyShape
 ) where
 
-import Waterfall.TwoD.Internal.Shape (union2D, unions2D, difference2D, intersection2D, intersections2D, complement2D, nowhere2D)
+import Waterfall.TwoD.Internal.Shape (union2D, unions2D, difference2D, intersection2D, intersections2D, complement2D, emptyShape)

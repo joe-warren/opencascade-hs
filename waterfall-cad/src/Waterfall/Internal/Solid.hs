@@ -4,13 +4,13 @@ module Waterfall.Internal.Solid
 ( Solid (..)
 , acquireSolid
 , solidFromAcquire
-, union
-, difference
-, intersection
-, unions
-, intersections
-, nowhere
-, complement
+, union3D
+, difference3D
+, intersection3D
+, unions3D
+, intersections3D
+, emptySolid
+, complement3D
 , debug
 ) where
 
@@ -80,7 +80,7 @@ debug (Solid ptr) =
 {--
 -- TODO: this does not work, need to fix
 everywhere :: Solid
-everywhere = complement $ nowhere
+everywhere = complement3D $ emptySolid
 --}
 
 -- | Invert a Solid, equivalent to `not` in boolean algebra.
@@ -88,15 +88,15 @@ everywhere = complement $ nowhere
 -- The complement of a solid represents the solid with the same surface,
 -- but where the opposite side of that surface is the \"inside\" of the solid.
 --
--- Be warned that @complement nowhere@ does not appear to work correctly.
-complement :: Solid -> Solid
-complement (Solid ptr) = Solid . unsafeFromAcquire $ TopoDS.Shape.complemented =<< toAcquire ptr
+-- Be warned that @complement3D emptySolid@ does not appear to work correctly.
+complement3D :: Solid -> Solid
+complement3D (Solid ptr) = Solid . unsafeFromAcquire $ TopoDS.Shape.complemented =<< toAcquire ptr
 
 -- | An empty solid
 --
--- Be warned that @complement nowhere@ does not appear to work correctly.
-nowhere :: Solid 
-nowhere =  Solid . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
+-- Be warned that @complement3D emptySolid@ does not appear to work correctly.
+emptySolid :: Solid 
+emptySolid =  Solid . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
 
 -- defining the boolean CSG operators here, rather than in Waterfall.Booleans 
 -- means that we can use them in typeclass instances without resorting to orphans
@@ -110,12 +110,12 @@ toBoolean f (Solid ptrA) (Solid ptrB) = Solid . unsafeFromAcquire $ do
 -- | Take the sum of two solids
 --
 -- The region occupied by either one of them.
-union :: Solid -> Solid -> Solid
-union = toBoolean Fuse.fuse
+union3D :: Solid -> Solid -> Solid
+union3D = toBoolean Fuse.fuse
 
 
 toBooleans :: BOPAlgo.Operation.Operation -> [Solid] -> Solid
-toBooleans _ [] = nowhere
+toBooleans _ [] = emptySolid
 toBooleans _ [x] = x
 toBooleans op (h:solids) = Solid . unsafeFromAcquire $ do
     firstPtr <- toAcquire . rawSolid $ h
@@ -132,47 +132,48 @@ toBooleans op (h:solids) = Solid . unsafeFromAcquire $ do
 
 -- | Take the sum of a list of solids 
 -- 
--- May be more performant than chaining multiple applications of `union`
-unions :: [Solid] -> Solid
-unions = toBooleans BOPAlgo.Operation.Fuse
+-- May be more performant than chaining multiple applications of `union3D`
+unions3D :: [Solid] -> Solid
+unions3D = toBooleans BOPAlgo.Operation.Fuse
 
 -- | Take the difference of two solids
 -- 
 -- The region occupied by the first, but not the second.
-difference :: Solid -> Solid -> Solid
-difference = toBoolean Cut.cut
+difference3D :: Solid -> Solid -> Solid
+difference3D = toBoolean Cut.cut
 
 -- | Take the intersection of two solids 
 --
 -- The region occupied by both of them.
-intersection :: Solid -> Solid -> Solid
-intersection = toBoolean Common.common
+intersection3D :: Solid -> Solid -> Solid
+intersection3D = toBoolean Common.common
 
 
 -- | Take the intersection of a list of solids 
 -- 
--- May be more performant than chaining multiple applications of `intersection`
-intersections :: [Solid] -> Solid
-intersections = toBooleans BOPAlgo.Operation.Common
+-- May be more performant than chaining multiple applications of `intersection3D`
+intersections3D :: [Solid] -> Solid
+intersections3D = toBooleans BOPAlgo.Operation.Common
 
--- | While `Solid` could form a Semigroup via either `union` or `intersection`.
--- the default Semigroup is from `union`.
+-- | While `Solid` could form a Semigroup via either `union3D` or `intersection3D`.
+-- the default Semigroup is from `union3D`.
 --
--- The Semigroup from `intersection` can be obtained using `Meet` from the lattices package.
+-- The Semigroup from `intersection3D` can be obtained using `Meet` from the lattices package.
 instance Semigroup Solid where
     (<>) :: Solid -> Solid -> Solid
-    (<>) = union
+    (<>) = union3D
 
 instance Monoid Solid where
-    mempty = nowhere
-    mconcat = unions
+    mempty = emptySolid
+    mconcat = unions3D
 
 instance Lattice Solid where 
-    (/\) = intersection
-    (\/) = union
+    (/\) = intersection3D
+    (\/) = union3D
 
 instance BoundedJoinSemiLattice Solid where
-    bottom = nowhere
+    bottom = emptySolid
+
 {--
 -- TODO: because everywhere doesn't work correctly
 -- using the BoundedMeetSemiLattice instance
@@ -184,6 +185,6 @@ instance BoundedMeetSemiLattice Solid where
 -- every boolean algebra is a Heyting algebra with
 --  a → b defined as ¬a ∨ b
 instance Heyting Solid where
-    neg = complement
+    neg = complement3D
     a ==> b = neg a \/ b
 --}
