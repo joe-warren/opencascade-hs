@@ -1,8 +1,5 @@
 {-|
-[Constructive Solid Geometry \(CSG\)](https://en.wikipedia.org/wiki/Constructive_solid_geometry) operations on `Solid`.
-
-This module also provides the 'Boolean' typeclass for unified boolean operations
-that work on both 2D shapes and 3D solids.
+[Constructive Solid Geometry \(CSG\)](https://en.wikipedia.org/wiki/Constructive_solid_geometry) operations on `Solid`, and `Shape`.
 -}
 module Waterfall.Booleans
 ( union3D
@@ -19,7 +16,7 @@ import qualified Waterfall.Solids as Solids
 import qualified Waterfall.TwoD.Internal.Shape as Shape
 import Waterfall.TwoD.Internal.Shape (union2D, difference2D, intersection2D, unions2D, intersections2D)
 
--- | Typeclass for boolean operations on geometric objects.
+-- | Boolean Algebras, with an "empty" value.
 class Boolean a where
     -- | Take the union of two objects
     -- 

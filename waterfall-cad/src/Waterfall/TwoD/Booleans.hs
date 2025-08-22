@@ -1,5 +1,5 @@
 {-|
-[Constructive Solid Geometry \(CSG\)](https://en.wikipedia.org/wiki/Constructive_solid_geometry) operations on 2D `Shape`.
+[Boolean Operations](https://en.wikipedia.org/wiki/Boolean_operations_on_polygons) operations on `Shape`.
 -}
 module Waterfall.TwoD.Booleans
 ( union2D

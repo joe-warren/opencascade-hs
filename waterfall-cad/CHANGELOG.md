@@ -11,7 +11,7 @@ and this project adheres to the
 
 ### Added
 
-- Added `Boolean` typeclass providing unified interface for boolean operations on both 2D and 3D objects
+- Added `Boolean` typeclass providing boolean operations on both 2D and 3D objects
   - `union`, `intersection`, `difference`, `unions`, `intersections` and operators `(~/\~)`, `(~\/~)`, `(~-~)` are now polymorphic
 - Added 2D boolean operations: `union2D`, `difference2D`, `intersection2D`, `unions2D`, `intersections2D`
 - Added `emptyShape` for 2D shapes
