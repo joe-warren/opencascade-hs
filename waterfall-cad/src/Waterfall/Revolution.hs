@@ -31,4 +31,4 @@ revolution (Path2D (ComplexRawPath theRawPath)) =
         solidBuilder <- MakeSolid.new
         liftIO $ MakeSolid.add solidBuilder =<< unsafeDowncast shell
         MakeShape.shape (upcast solidBuilder)
-revolution _ = Solids.nowhere
+revolution _ = Solids.emptySolid

@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added
+
+- Added `TwoDBooleansExample` demonstrating 2D boolean operations
+
 ## 0.5.1.1
 
 - Add 3D models to Haddocks

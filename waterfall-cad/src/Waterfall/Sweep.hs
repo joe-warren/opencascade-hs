@@ -43,4 +43,4 @@ sweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = solidFromAcquire 
     adjustedFace <- positionFace start =<< rotateFace tangent shape
     builder <- MakePipe.fromWireAndShape path adjustedFace
     MakeShape.shape (upcast builder)
-sweep _ _ = Solids.nowhere
+sweep _ _ = Solids.emptySolid

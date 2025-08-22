@@ -53,6 +53,7 @@ library
       Waterfall.Solids
       Waterfall.Sweep
       Waterfall.Transforms
+      Waterfall.TwoD.Booleans
       Waterfall.TwoD.Internal.Path2D
       Waterfall.TwoD.Internal.Shape
       Waterfall.TwoD.Path2D

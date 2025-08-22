@@ -16,6 +16,8 @@ module Waterfall
 -- [Constructive Solid Geometry](https://en.wikipedia.org/wiki/Constructive_solid_geometry).
 , module Waterfall.Booleans
 , module Waterfall.Booleans.Operators
+-- | 2D `Shape`'s can also be combined with CSG operations.
+, module Waterfall.TwoD.Booleans
 -- | Once you've generated a `Solid`, 
 -- the functions in `Waterfall.IO` can be used to save it.
 -- 
@@ -56,6 +58,7 @@ module Waterfall
 
 import Waterfall.Booleans
 import Waterfall.Booleans.Operators
+import Waterfall.TwoD.Booleans
 import Waterfall.BoundingBox.AxisAligned
 import Waterfall.BoundingBox.Oriented
 import Waterfall.Diagram
