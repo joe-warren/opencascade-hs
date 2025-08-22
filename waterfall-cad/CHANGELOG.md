@@ -9,6 +9,20 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added
+
+- Added `Boolean` typeclass providing unified interface for boolean operations on both 2D and 3D objects
+  - `union`, `intersection`, `difference`, `unions`, `intersections` and operators `(~/\~)`, `(~\/~)`, `(~-~)` are now polymorphic
+- Added 2D boolean operations: `union2D`, `difference2D`, `intersection2D`, `unions2D`, `intersections2D`
+- Added `emptyShape` for 2D shapes
+- Added `Waterfall.TwoD.Booleans` module
+
+### Changed
+
+- Renamed `union` to `union3D`, `difference` to `difference3D`, `intersection` to `intersection3D` for 3D operations
+- Renamed `unions` to `unions3D`, `intersections` to `intersections3D` for 3D batch operations  
+- Renamed `nowhere3D` to `emptySolid`
+
 ## 0.5.1.1
 
 ### Added 
