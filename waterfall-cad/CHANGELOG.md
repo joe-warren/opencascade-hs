@@ -16,6 +16,7 @@ and this project adheres to the
 - Added 2D boolean operations: `union2D`, `difference2D`, `intersection2D`, `unions2D`, `intersections2D`
 - Added `emptyShape` for 2D shapes
 - Added `Waterfall.TwoD.Booleans` module
+- Added `chamfer`, `conditionalChamfer` and `indexedConditionalChamfer` to `Waterfall.Fillet`
 
 ### Changed
 

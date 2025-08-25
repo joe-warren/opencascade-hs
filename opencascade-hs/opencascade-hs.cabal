@@ -42,6 +42,7 @@ extra-source-files:
     cpp/hs_BRepBuilderAPI_MakeWire.h
     cpp/hs_BRepBuilderAPI_Sewing.h
     cpp/hs_BRepBuilderAPI_Transform.h
+    cpp/hs_BRepFilletAPI_MakeChamfer.h
     cpp/hs_BRepFilletAPI_MakeFillet.h
     cpp/hs_BRepGProp.h
     cpp/hs_BRepLib.h
@@ -165,6 +166,7 @@ library
       OpenCascade.BRepBuilderAPI.WireError
       OpenCascade.BRepFilletAPI
       OpenCascade.BRepFilletAPI.Internal.Destructors
+      OpenCascade.BRepFilletAPI.MakeChamfer
       OpenCascade.BRepFilletAPI.MakeFillet
       OpenCascade.BRepFilletAPI.Types
       OpenCascade.BRepGProp
@@ -368,6 +370,7 @@ library
       cpp/hs_BRepBuilderAPI_MakeWire.cpp
       cpp/hs_BRepBuilderAPI_Sewing.cpp
       cpp/hs_BRepBuilderAPI_Transform.cpp
+      cpp/hs_BRepFilletAPI_MakeChamfer.cpp
       cpp/hs_BRepFilletAPI_MakeFillet.cpp
       cpp/hs_BRepGProp.cpp
       cpp/hs_BRepLib.cpp
