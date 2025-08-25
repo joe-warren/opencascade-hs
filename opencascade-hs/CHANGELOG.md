@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Add `OpenCascade.BRepFiletAPI_MakeChamfer`
+
 ## 0.5.1.1
 
 ## 0.5.1.0

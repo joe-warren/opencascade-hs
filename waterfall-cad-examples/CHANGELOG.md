@@ -11,6 +11,7 @@ and this project adheres to the
 ### Added
 
 - Added `TwoDBooleansExample` demonstrating 2D boolean operations
+- Added Chamfers to `FilletExample`
 
 ## 0.5.1.1
 
