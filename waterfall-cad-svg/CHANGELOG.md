@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.6.0.0
+
 ## 0.5.1.1
 
 ## 0.5.1.0

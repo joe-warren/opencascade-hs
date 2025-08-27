@@ -9,6 +9,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.6.0.0
+
 ### Added
 
 - Added `Boolean` typeclass providing boolean operations on both 2D and 3D objects

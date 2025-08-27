@@ -1,4 +1,5 @@
 ## update package-defaults.yaml and */CHANGELOG.md
+## remember to rebuild and add the cabal files
 rm -rf dist/* docs/* waterfall-cad-examples-*-docs
 stack build
 stack sdist --tar-dir dist
