@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Adjusted `CsgExample` to use `centeredCylinder`, and removed use of `Booleans.Operators` 
+
 ## 0.6.0.0
 
 ### Added
