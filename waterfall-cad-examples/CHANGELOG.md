@@ -9,6 +9,7 @@ and this project adheres to the
 ## Unreleased
 
 - Adjusted `CsgExample` to use `centeredCylinder`, and removed use of `Booleans.Operators` 
+- Use `whenNearlyEqual` in `FilletExample`
 
 ## 0.6.0.0
 

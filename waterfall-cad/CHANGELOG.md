@@ -9,6 +9,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Added `whenNearlyEqual` to `Waterfall.Fillet` to make writing conditional Fillets easier
+
 ## 0.6.0.0
 
 ### Added

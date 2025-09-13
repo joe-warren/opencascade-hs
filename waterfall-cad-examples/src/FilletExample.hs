@@ -14,9 +14,10 @@ import Waterfall.Fillet
     , chamfer
     , conditionalChamfer
     , indexedConditionalChamfer
+    , whenNearlyEqual
     )
 import Control.Lens ((^.))
-import Linear (V3 (..), _z)
+import Linear (V3 (..), _xy)
 import Control.Monad (guard)
 
 filletExample :: Solid
@@ -36,14 +37,14 @@ filletExample =
          -- round every edge
         [[ roundFillet 0.1 centeredCube
             -- round horizontal edges 
-         , roundConditionalFillet (\(s, e) -> if s ^. _z == e ^._z then Nothing else Just 0.1) centeredCube
+         , roundConditionalFillet (whenNearlyEqual _xy 0.1) centeredCube
          -- round edges with odd indices by a variable radius depending on the edge index
          , roundIndexedConditionalFillet (\i _ -> (fromIntegral i * 0.04) <$ guard (odd i)) centeredCube
         ], 
         -- chamfer every edge
         [ chamfer 0.1 centeredCube
          -- chamfer horizontal edges 
-         , conditionalChamfer (\(s, e) -> if s ^. _z == e ^._z then Nothing else Just 0.1) centeredCube
+         , conditionalChamfer (whenNearlyEqual _xy 0.1) centeredCube
          -- chamfer edges with odd indices by a variable amount depending on the edge index
          , indexedConditionalChamfer (\i _ -> (fromIntegral i * 0.04) <$ guard (odd i)) centeredCube
         ]]

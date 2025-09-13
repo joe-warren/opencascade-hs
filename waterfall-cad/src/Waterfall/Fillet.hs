@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 module Waterfall.Fillet
 ( roundFillet
 , roundConditionalFillet
@@ -5,6 +6,7 @@ module Waterfall.Fillet
 , chamfer
 , conditionalChamfer
 , indexedConditionalChamfer
+, whenNearlyEqual
 ) where
 
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
@@ -21,7 +23,8 @@ import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Linear.V3 (V3 (..))
-
+import Linear.Epsilon 
+import Control.Lens (Lens', (^.))
 addEdges :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> (Double -> Ptr TopoDS.Edge -> IO ()) -> Ptr Explorer.Explorer -> IO ()
 addEdges radiusFn action explorer = go [] 0
     where go visited i = do
@@ -104,3 +107,18 @@ conditionalChamfer f = indexedConditionalChamfer (const f)
 chamfer :: Double -> Solid -> Solid
 chamfer d = conditionalChamfer (const . pure $ d)
 
+-- | Returns a value when the target of a lens on a two points are close to one another.
+-- 
+-- This can be used in combination with `roundConditionalFillet`/`conditionalChamfer`.
+--
+-- Selecting only horizontal edges:
+--
+-- > roundConditionalFillet (whenNearlyEqual _z 2)
+--
+-- Selecting only vertical edges:
+--
+-- > roundConditionalFillet (whenNearlyEqual _xy 2)
+whenNearlyEqual :: Epsilon a => Lens' point a -> r -> (point, point) -> Maybe r
+whenNearlyEqual l res (s, e)
+    | nearZero ((s ^. l) - (e ^. l))  = Just res
+    | otherwise = Nothing                         
