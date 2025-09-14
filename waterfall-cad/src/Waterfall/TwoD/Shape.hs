@@ -71,14 +71,16 @@ centeredSquare = translate2D (V2 (-0.5) (-0.5)) unitSquare
 -- 
 -- Ill-defined when n <= 2
 unitPolygon :: Integer -> Shape
-unitPolygon n = 
-    let n' = fromIntegral n
-        points = [
-            rotate2D (2 * pi * fromIntegral i / n') (unit _x)
-            | i <- [0..n]
-            ]
-        paths = mconcat [
-            line a b
-            | (a, b) <- zip points (tail points)
-            ]
+unitPolygon n 
+    | n <= 2 = error "Polygon with <= 2 points is ill defined"
+    | otherwise = 
+        let n' = fromIntegral n
+            points = [
+                rotate2D (2 * pi * fromIntegral i / n') (unit _x)
+                | i <- [0..n]
+                ]
+            paths = mconcat [
+                line a b
+                | (a, b) <- zip points (drop 1 points)
+                ]
         in makeShape paths
