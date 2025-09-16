@@ -16,6 +16,7 @@ module Waterfall.Lens
 , _axisAlignedBoundingBoxMax
 , _axisAlignedBoundingBoxCenter
 , _masked
+, place
 ) where
 
 import Control.Lens
@@ -84,7 +85,6 @@ _axisAlignedBoundingBox f s =
 _axisAlignedBoundingBoxMin :: Traversal' Solids.Solid (V3 Double)
 _axisAlignedBoundingBoxMin = toTranslationLensMay (fmap fst . axisAlignedBoundingBox)
 
-
 _axisAlignedBoundingBoxMax :: Traversal' Solids.Solid (V3 Double)
 _axisAlignedBoundingBoxMax = toTranslationLensMay (fmap snd . axisAlignedBoundingBox)
 
@@ -105,3 +105,6 @@ _masked mask f s =
     let target = s `Booleans.intersection` mask
         outside = s `Booleans.difference` mask
     in (<> outside) <$> f target
+
+place :: Monoid s => Getter s p -> Setter' s p -> s -> s -> s
+place l1 l2 s1 s2 = s1 <> (s2 & l2 .~ (s1 ^. l1))
