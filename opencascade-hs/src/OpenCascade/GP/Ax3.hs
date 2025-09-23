@@ -1,4 +1,3 @@
-{-# LANGUAGE  CApiFFI #-}
 module OpenCascade.GP.Ax3 
 ( Ax3
 , new
@@ -39,154 +38,255 @@ module OpenCascade.GP.Ax3
 , translatedRelative
 ) where
 
-
 import OpenCascade.GP.Types
+import OpenCascade.GP.Internal.Context
 import OpenCascade.GP.Internal.Destructors
-import Foreign.Ptr
-import Foreign.C.Types
 import OpenCascade.Internal.Bool (cBoolToBool)
-import Data.Acquire 
-import Data.Coerce (coerce)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
+import Foreign.Ptr
+import Data.Acquire
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_new_gp_Ax3" rawNew :: IO (Ptr Ax3)
+C.context (C.cppCtx <> gpContext)
+
+C.include "<gp_Ax3.hxx>"
+C.include "<gp_Pnt.hxx>"
+C.include "<gp_Dir.hxx>"
+C.include "<gp_Ax1.hxx>"
+C.include "<gp_Ax2.hxx>"
+C.include "<gp_Trsf.hxx>"
+C.include "<gp_Vec.hxx>"
 
 new :: Acquire (Ptr Ax3)
-new = mkAcquire rawNew deleteAx3
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_new_gp_Ax3_fromAx2" rawFromAx2 :: Ptr Ax2 -> IO (Ptr Ax3)
+new = mkAcquire createAx3 deleteAx3
+  where
+    createAx3 = [C.throwBlock| gp_Ax3* {
+      return new gp_Ax3();
+    } |]
 
 fromAx2 :: Ptr Ax2 -> Acquire (Ptr Ax3)
-fromAx2 ax = mkAcquire (rawFromAx2 ax) deleteAx3
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_new_gp_Ax3_fromPntDirAndDir" rawFromPntDirAndDir :: Ptr Pnt -> Ptr Dir -> Ptr Dir -> IO (Ptr Ax3)
+fromAx2 ax = mkAcquire createFromAx2 deleteAx3
+  where
+    createFromAx2 = [C.throwBlock| gp_Ax3* {
+      return new gp_Ax3(*$(gp_Ax2* ax));
+    } |]
 
 fromPntDirAndDir :: Ptr Pnt -> Ptr Dir -> Ptr Dir -> Acquire (Ptr Ax3)
-fromPntDirAndDir pnt u v = mkAcquire (rawFromPntDirAndDir pnt u v) deleteAx3 
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_new_gp_Ax3_fromPntAndDir" rawFromPntAndDir :: Ptr Pnt -> Ptr Dir -> IO (Ptr Ax3)
+fromPntDirAndDir pnt u v = mkAcquire createFromPntDirAndDir deleteAx3
+  where
+    createFromPntDirAndDir = [C.throwBlock| gp_Ax3* {
+      return new gp_Ax3(*$(gp_Pnt* pnt), *$(gp_Dir* u), *$(gp_Dir* v));
+    } |] 
 
 fromPntAndDir :: Ptr Pnt -> Ptr Dir -> Acquire (Ptr Ax3)
-fromPntAndDir pnt dir = mkAcquire (rawFromPntAndDir pnt dir) deleteAx3 
+fromPntAndDir pnt dir = mkAcquire createFromPntAndDir deleteAx3
+  where
+    createFromPntAndDir = [C.throwBlock| gp_Ax3* {
+      return new gp_Ax3(*$(gp_Pnt* pnt), *$(gp_Dir* dir));
+    } |] 
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_xReverse" xReverse :: Ptr Ax3 -> IO ()
+xReverse :: Ptr Ax3 -> IO ()
+xReverse ax3 = [C.throwBlock| void {
+  $(gp_Ax3* ax3)->XReverse();
+} |]
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_yReverse" yReverse :: Ptr Ax3 -> IO ()
+yReverse :: Ptr Ax3 -> IO ()
+yReverse ax3 = [C.throwBlock| void {
+  $(gp_Ax3* ax3)->YReverse();
+} |]
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_zReverse" zReverse :: Ptr Ax3 -> IO ()
+zReverse :: Ptr Ax3 -> IO ()
+zReverse ax3 = [C.throwBlock| void {
+  $(gp_Ax3* ax3)->ZReverse();
+} |]
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setAxis" setAxis :: Ptr Ax3 -> Ptr Ax1 -> IO ()
+setAxis :: Ptr Ax3 -> Ptr Ax1 -> IO ()
+setAxis ax3 axis = [C.throwBlock| void {
+  $(gp_Ax3* ax3)->SetAxis(*$(gp_Ax1* axis));
+} |]
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setDirection" setDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+setDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+setDirection ax3 dir = [C.throwBlock| void {
+  $(gp_Ax3* ax3)->SetDirection(*$(gp_Dir* dir));
+} |]
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setLocation" setLocation :: Ptr Ax3 -> Ptr Pnt -> IO ()
+setLocation :: Ptr Ax3 -> Ptr Pnt -> IO ()
+setLocation ax3 pnt = [C.throwBlock| void {
+  $(gp_Ax3* ax3)->SetLocation(*$(gp_Pnt* pnt));
+} |]
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setXDirection" setXDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+setXDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+setXDirection ax3 dir = [C.throwBlock| void {
+  $(gp_Ax3* ax3)->SetXDirection(*$(gp_Dir* dir));
+} |]
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setYDirection" setYDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+setYDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+setYDirection ax3 dir = [C.throwBlock| void {
+  $(gp_Ax3* ax3)->SetYDirection(*$(gp_Dir* dir));
+} |]
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_angle" rawAngle :: Ptr Ax3 -> Ptr Ax3 -> IO CDouble 
-
-angle :: Ptr Ax3 -> Ptr Ax3 -> IO Double 
-angle = coerce rawAngle
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_axis" rawAxis :: Ptr Ax3  -> IO (Ptr Ax1)
+angle :: Ptr Ax3 -> Ptr Ax3 -> IO Double
+angle a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Ax3* a)->Angle(*$(gp_Ax3* b));
+  } |]
+  return (realToFrac result)
 
 axis :: Ptr Ax3 -> Acquire (Ptr Ax1)
-axis this = mkAcquire (rawAxis this) deleteAx1
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_ax2" rawAx2 :: Ptr Ax3  -> IO (Ptr Ax2)
+axis this = mkAcquire createAxis deleteAx1
+  where
+    createAxis = [C.throwBlock| gp_Ax1* {
+      return new gp_Ax1($(gp_Ax3* this)->Axis());
+    } |]
 
 ax2 :: Ptr Ax3 -> Acquire (Ptr Ax2)
-ax2 this = mkAcquire (rawAx2 this) deleteAx2
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_direction" rawDirection :: Ptr Ax3  -> IO (Ptr Dir)
+ax2 this = mkAcquire createAx2 deleteAx2
+  where
+    createAx2 = [C.throwBlock| gp_Ax2* {
+      return new gp_Ax2($(gp_Ax3* this)->Ax2());
+    } |]
 
 direction :: Ptr Ax3 -> Acquire (Ptr Dir)
-direction this = mkAcquire (rawDirection this) deleteDir
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_location" rawLocation :: Ptr Ax3 -> IO (Ptr Pnt)
+direction this = mkAcquire createDirection deleteDir
+  where
+    createDirection = [C.throwBlock| gp_Dir* {
+      return new gp_Dir($(gp_Ax3* this)->Direction());
+    } |]
 
 location :: Ptr Ax3 -> Acquire (Ptr Pnt)
-location this = mkAcquire (rawLocation this) deletePnt
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_xDirection" rawXDirection :: Ptr Ax3  -> IO (Ptr Dir)
+location this = mkAcquire createLocation deletePnt
+  where
+    createLocation = [C.throwBlock| gp_Pnt* {
+      return new gp_Pnt($(gp_Ax3* this)->Location());
+    } |]
 
 xDirection :: Ptr Ax3 -> Acquire (Ptr Dir)
-xDirection this = mkAcquire (rawXDirection this) deleteDir
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_yDirection" rawYDirection :: Ptr Ax3  -> IO (Ptr Dir)
+xDirection this = mkAcquire createXDirection deleteDir
+  where
+    createXDirection = [C.throwBlock| gp_Dir* {
+      return new gp_Dir($(gp_Ax3* this)->XDirection());
+    } |]
 
 yDirection :: Ptr Ax3 -> Acquire (Ptr Dir)
-yDirection this = mkAcquire (rawYDirection this) deleteDir
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_direct" rawDirect :: Ptr Ax3  -> IO CBool
+yDirection this = mkAcquire createYDirection deleteDir
+  where
+    createYDirection = [C.throwBlock| gp_Dir* {
+      return new gp_Dir($(gp_Ax3* this)->YDirection());
+    } |]
 
 direct :: Ptr Ax3 -> IO Bool
-direct = fmap cBoolToBool . rawDirect
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_isCoplanar" rawIsCoplanar :: Ptr Ax3 -> Ptr Ax3 -> CDouble -> CDouble -> IO CBool
+direct this = do
+  result <- [C.throwBlock| bool {
+    return $(gp_Ax3* this)->Direct();
+  } |]
+  return (cBoolToBool result)
 
 isCoplanar :: Ptr Ax3 -> Ptr Ax3 -> Double -> Double -> IO Bool
-isCoplanar a b linearTol angularTol =  cBoolToBool <$> rawIsCoplanar a b (coerce linearTol) (coerce angularTol)
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_isCoplanarAx1" rawIsCoplanarAx1 :: Ptr Ax3 -> Ptr Ax1 -> CDouble -> CDouble -> IO CBool
+isCoplanar a b linearTol angularTol = do
+  let cLinearTol = realToFrac linearTol
+      cAngularTol = realToFrac angularTol
+  result <- [C.throwBlock| bool {
+    return $(gp_Ax3* a)->IsCoplanar(*$(gp_Ax3* b), $(double cLinearTol), $(double cAngularTol));
+  } |]
+  return (cBoolToBool result)
 
 isCoplanarAx1 :: Ptr Ax3 -> Ptr Ax1 -> Double -> Double -> IO Bool
-isCoplanarAx1 a b linearTol angularTol =  cBoolToBool <$> rawIsCoplanarAx1 a b (coerce linearTol) (coerce angularTol)
+isCoplanarAx1 a b linearTol angularTol = do
+  let cLinearTol = realToFrac linearTol
+      cAngularTol = realToFrac angularTol
+  result <- [C.throwBlock| bool {
+    return $(gp_Ax3* a)->IsCoplanar(*$(gp_Ax1* b), $(double cLinearTol), $(double cAngularTol));
+  } |]
+  return (cBoolToBool result)
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_mirror" mirror:: Ptr Ax3 -> Ptr Ax1 -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_mirrored" rawMirrored:: Ptr Ax3 -> Ptr Ax1 -> IO (Ptr Ax3)
+mirror:: Ptr Ax3 -> Ptr Ax1 -> IO ()
+mirror theAx3 mirrorAxis = [C.throwBlock| void {
+  $(gp_Ax3* theAx3)->Mirror(*$(gp_Ax1* mirrorAxis));
+} |]
 
 mirrored :: Ptr Ax3 -> Ptr Ax1 -> Acquire (Ptr Ax3)
-mirrored ax mirrorAxis = mkAcquire (rawMirrored ax mirrorAxis) deleteAx3
+mirrored ax mirrorAxis = mkAcquire createMirrored deleteAx3
+  where
+    createMirrored = [C.throwBlock| gp_Ax3* {
+      return new gp_Ax3($(gp_Ax3* ax)->Mirrored(*$(gp_Ax1* mirrorAxis)));
+    } |]
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_mirror_Ax2" mirrorAx2:: Ptr Ax3 -> Ptr Ax2 -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_mirrored_Ax2" rawMirroredAx2 :: Ptr Ax3 -> Ptr Ax2 -> IO (Ptr Ax3)
+mirrorAx2:: Ptr Ax3 -> Ptr Ax2 -> IO ()
+mirrorAx2 theAx3 mirrorAxis = [C.throwBlock| void {
+  $(gp_Ax3* theAx3)->Mirror(*$(gp_Ax2* mirrorAxis));
+} |]
 
 mirroredAx2 :: Ptr Ax3 -> Ptr Ax2 -> Acquire (Ptr Ax3)
-mirroredAx2 ax mirrorAxis = mkAcquire (rawMirroredAx2 ax mirrorAxis) deleteAx3
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_rotate" rawRotate :: Ptr Ax3 -> Ptr Ax1 -> CDouble  -> IO ()
+mirroredAx2 ax mirrorAxis = mkAcquire createMirrored deleteAx3
+  where
+    createMirrored = [C.throwBlock| gp_Ax3* {
+      return new gp_Ax3($(gp_Ax3* ax)->Mirrored(*$(gp_Ax2* mirrorAxis)));
+    } |]
 
 rotate :: Ptr Ax3 -> Ptr Ax1 -> Double -> IO ()
-rotate = coerce rawRotate
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_rotated" rawRotated :: Ptr Ax3 -> Ptr Ax1  -> CDouble -> IO (Ptr Ax3)
+rotate theAx3 axisOfRotation angle = 
+  let cAngle = realToFrac angle
+  in [C.throwBlock| void {
+    $(gp_Ax3* theAx3)->Rotate(*$(gp_Ax1* axisOfRotation), $(double cAngle));
+  } |]
 
 rotated :: Ptr Ax3 -> Ptr Ax1 -> Double -> Acquire (Ptr Ax3)
-rotated ax axisOfRotation angleOfRotation = mkAcquire (rawRotated ax axisOfRotation (coerce angleOfRotation)) deleteAx3
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_scale" rawScale :: Ptr Ax3 -> Ptr Pnt -> CDouble  -> IO ()
+rotated ax axisOfRotation angleOfRotation = 
+  let cAngle = realToFrac angleOfRotation
+      createRotated = [C.throwBlock| gp_Ax3* {
+        return new gp_Ax3($(gp_Ax3* ax)->Rotated(*$(gp_Ax1* axisOfRotation), $(double cAngle)));
+      } |]
+  in mkAcquire createRotated deleteAx3
 
 scale :: Ptr Ax3 -> Ptr Pnt -> Double -> IO ()
-scale = coerce rawScale
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_scaled" rawScaled :: Ptr Ax3 -> Ptr Pnt  -> CDouble -> IO (Ptr Ax3)
+scale theAx3 origin factor = 
+  let cFactor = realToFrac factor
+  in [C.throwBlock| void {
+    $(gp_Ax3* theAx3)->Scale(*$(gp_Pnt* origin), $(double cFactor));
+  } |]
 
 scaled :: Ptr Ax3 -> Ptr Pnt -> Double -> Acquire (Ptr Ax3)
-scaled ax origin factor = mkAcquire (rawScaled ax origin (coerce factor)) deleteAx3
+scaled ax origin factor = 
+  let cFactor = realToFrac factor
+      createScaled = [C.throwBlock| gp_Ax3* {
+        return new gp_Ax3($(gp_Ax3* ax)->Scaled(*$(gp_Pnt* origin), $(double cFactor)));
+      } |]
+  in mkAcquire createScaled deleteAx3
 
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_transform" transform:: Ptr Ax3 -> Ptr Trsf -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_transformed" rawTransformed :: Ptr Ax3 -> Ptr Trsf -> IO (Ptr Ax3)
+transform:: Ptr Ax3 -> Ptr Trsf -> IO ()
+transform theAx3 trsf = [C.throwBlock| void {
+  $(gp_Ax3* theAx3)->Transform(*$(gp_Trsf* trsf));
+} |]
 
 transformed :: Ptr Ax3 -> Ptr Trsf -> Acquire (Ptr Ax3)
-transformed ax trsf = mkAcquire (rawTransformed ax trsf) deleteAx3
+transformed ax trsf = mkAcquire createTransformed deleteAx3
+  where
+    createTransformed = [C.throwBlock| gp_Ax3* {
+      return new gp_Ax3($(gp_Ax3* ax)->Transformed(*$(gp_Trsf* trsf)));
+    } |]
 
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_translate" translate :: Ptr Ax3 -> Ptr Vec -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_translated" rawTranslated :: Ptr Ax3 -> Ptr Vec -> IO (Ptr Ax3)
+translate :: Ptr Ax3 -> Ptr Vec -> IO ()
+translate theAx3 vec = [C.throwBlock| void {
+  $(gp_Ax3* theAx3)->Translate(*$(gp_Vec* vec));
+} |]
 
 translated :: Ptr Ax3 -> Ptr Vec -> Acquire (Ptr Ax3)
-translated ax vec = mkAcquire (rawTranslated ax vec) deleteAx3
+translated ax vec = mkAcquire createTranslated deleteAx3
+  where
+    createTranslated = [C.throwBlock| gp_Ax3* {
+      return new gp_Ax3($(gp_Ax3* ax)->Translated(*$(gp_Vec* vec)));
+    } |]
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_translateRelative" translateRelative :: Ptr Ax3 -> Ptr Pnt -> Ptr Pnt -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_translatedRelative" rawTranslatedRelative :: Ptr Ax3 -> Ptr Pnt -> Ptr Pnt -> IO (Ptr Ax3)
+translateRelative :: Ptr Ax3 -> Ptr Pnt -> Ptr Pnt -> IO ()
+translateRelative theAx3 from to = [C.throwBlock| void {
+  $(gp_Ax3* theAx3)->Translate(*$(gp_Pnt* from), *$(gp_Pnt* to));
+} |]
 
 translatedRelative :: Ptr Ax3 -> Ptr Pnt -> Ptr Pnt -> Acquire (Ptr Ax3)
-translatedRelative ax from to = mkAcquire (rawTranslatedRelative ax from to) deleteAx3
+translatedRelative ax from to = mkAcquire createTranslatedRelative deleteAx3
+  where
+    createTranslatedRelative = [C.throwBlock| gp_Ax3* {
+      return new gp_Ax3($(gp_Ax3* ax)->Translated(*$(gp_Pnt* from), *$(gp_Pnt* to)));
+    } |]

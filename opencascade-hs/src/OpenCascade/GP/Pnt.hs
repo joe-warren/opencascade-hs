@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.GP.Pnt 
 ( Pnt
 , new
@@ -31,148 +30,223 @@ module OpenCascade.GP.Pnt
 ) where
 
 import OpenCascade.GP.Types
+import OpenCascade.GP.Internal.Context
 import OpenCascade.GP.Internal.Destructors
-import Foreign.C
+import OpenCascade.Internal.Bool (cBoolToBool)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
-import Data.Coerce (coerce)
-import Data.Acquire 
+import Data.Acquire
+
+C.context (C.cppCtx <> gpContext)
+
+C.include "<gp_Pnt.hxx>"
 
 -- new
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_new_gp_Pnt" rawNew :: CDouble -> CDouble -> CDouble -> IO (Ptr Pnt)
-
 new :: Double -> Double -> Double -> Acquire (Ptr Pnt)
-new x y z = mkAcquire (rawNew (CDouble x) (CDouble y) (CDouble z)) deletePnt
+new x y z = 
+  let cx = realToFrac x
+      cy = realToFrac y
+      cz = realToFrac z
+      createPnt = [C.throwBlock| gp_Pnt* {
+        return new gp_Pnt($(double cx), $(double cy), $(double cz));
+      } |]
+  in mkAcquire createPnt deletePnt
 
 -- getters
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_X" rawX :: Ptr Pnt -> IO (CDouble)
-
 getX :: Ptr Pnt -> IO Double
-getX = coerce rawX
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Y" rawY :: Ptr Pnt -> IO (CDouble)
+getX pnt = do
+  result <- [C.throwBlock| double {
+    return $(gp_Pnt* pnt)->X();
+  } |]
+  return (realToFrac result)
 
 getY :: Ptr Pnt -> IO Double
-getY = coerce rawY
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Z" rawZ :: Ptr Pnt -> IO (CDouble)
+getY pnt = do
+  result <- [C.throwBlock| double {
+    return $(gp_Pnt* pnt)->Y();
+  } |]
+  return (realToFrac result)
 
 getZ :: Ptr Pnt -> IO Double
-getZ = coerce rawZ
+getZ pnt = do
+  result <- [C.throwBlock| double {
+    return $(gp_Pnt* pnt)->Z();
+  } |]
+  return (realToFrac result)
 
 -- setters
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_SetX" rawSetX :: Ptr Pnt -> CDouble -> IO ()
-
 setX :: Ptr Pnt -> Double -> IO ()
-setX = coerce rawSetX
-
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_SetY" rawSetY :: Ptr Pnt -> CDouble -> IO ()
+setX pnt x = 
+  let cx = realToFrac x
+  in [C.throwBlock| void {
+    $(gp_Pnt* pnt)->SetX($(double cx));
+  } |]
 
 setY :: Ptr Pnt -> Double -> IO ()
-setY = coerce rawSetY
-
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_SetZ" rawSetZ :: Ptr Pnt -> CDouble -> IO ()
+setY pnt y = 
+  let cy = realToFrac y
+  in [C.throwBlock| void {
+    $(gp_Pnt* pnt)->SetY($(double cy));
+  } |]
 
 setZ :: Ptr Pnt -> Double -> IO ()
-setZ = coerce rawSetZ
-
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Distance" rawDistance :: Ptr Pnt -> Ptr Pnt -> IO CDouble
+setZ pnt z = 
+  let cz = realToFrac z
+  in [C.throwBlock| void {
+    $(gp_Pnt* pnt)->SetZ($(double cz));
+  } |]
 
 
 -- distance and quadrance
 
 distance :: Ptr Pnt -> Ptr Pnt -> IO Double
-distance = coerce rawDistance
-
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_SquareDistance" rawSquareDistance :: Ptr Pnt -> Ptr Pnt -> IO CDouble
+distance a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Pnt* a)->Distance(*$(gp_Pnt* b));
+  } |]
+  return (realToFrac result)
 
 squareDistance :: Ptr Pnt -> Ptr Pnt -> IO Double
-squareDistance = coerce rawSquareDistance
+squareDistance a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Pnt* a)->SquareDistance(*$(gp_Pnt* b));
+  } |]
+  return (realToFrac result)
 
 -- baryCenter
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_BaryCenter" rawBaryCenter :: Ptr Pnt -> CDouble -> Ptr Pnt -> CDouble -> IO ()
-
 baryCenter :: Ptr Pnt -> Double -> Ptr Pnt -> Double -> IO ()
-baryCenter = coerce rawBaryCenter
+baryCenter a alpha b beta = 
+  let cAlpha = realToFrac alpha
+      cBeta = realToFrac beta
+  in [C.throwBlock| void {
+    $(gp_Pnt* a)->BaryCenter($(double cAlpha), *$(gp_Pnt* b), $(double cBeta));
+  } |]
 
 -- isEqual
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_IsEqual" rawIsEqual :: Ptr Pnt -> Ptr Pnt -> CDouble -> IO CBool
-
 isEqual :: Ptr Pnt -> Ptr Pnt -> Double -> IO Bool
-isEqual a b tolerance = (/= 0) <$> rawIsEqual a b (CDouble tolerance)
+isEqual a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Pnt* a)->IsEqual(*$(gp_Pnt* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- mirror/mirrored
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Mirror" mirror :: Ptr Pnt -> Ptr Pnt -> IO ()
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Mirrored" rawMirrored :: Ptr Pnt -> Ptr Pnt -> IO (Ptr Pnt)
+mirror :: Ptr Pnt -> Ptr Pnt -> IO ()
+mirror thePnt theAxis = [C.throwBlock| void {
+  $(gp_Pnt* thePnt)->Mirror(*$(gp_Pnt* theAxis));
+} |]
 
 mirrored :: Ptr Pnt -> Ptr Pnt -> Acquire (Ptr Pnt)
-mirrored point axis = mkAcquire (rawMirrored point axis) deletePnt
+mirrored point axis = mkAcquire createMirrored deletePnt
+  where
+    createMirrored = [C.throwBlock| gp_Pnt* {
+      return new gp_Pnt($(gp_Pnt* point)->Mirrored(*$(gp_Pnt* axis)));
+    } |]
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_MirrorAboutAx1" mirrorAboutAx1 :: Ptr Pnt -> Ptr Ax1 -> IO ()
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_MirroredAboutAx1" rawMirroredAboutAx1 :: Ptr Pnt -> Ptr Ax1 -> IO (Ptr Pnt)
+mirrorAboutAx1 :: Ptr Pnt -> Ptr Ax1 -> IO ()
+mirrorAboutAx1 thePnt theAxis = [C.throwBlock| void {
+  $(gp_Pnt* thePnt)->Mirror(*$(gp_Ax1* theAxis));
+} |]
 
 mirroredAboutAx1 :: Ptr Pnt -> Ptr Ax1 -> Acquire (Ptr Pnt)
-mirroredAboutAx1 point axis = mkAcquire (rawMirroredAboutAx1 point axis) deletePnt
+mirroredAboutAx1 point axis = mkAcquire createMirrored deletePnt
+  where
+    createMirrored = [C.throwBlock| gp_Pnt* {
+      return new gp_Pnt($(gp_Pnt* point)->Mirrored(*$(gp_Ax1* axis)));
+    } |]
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_MirrorAboutAx2" mirrorAboutAx2 :: Ptr Pnt -> Ptr Ax2 -> IO ()
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_MirroredAboutAx2" rawMirroredAboutAx2 :: Ptr Pnt -> Ptr Ax2 -> IO (Ptr Pnt)
+mirrorAboutAx2 :: Ptr Pnt -> Ptr Ax2 -> IO ()
+mirrorAboutAx2 thePnt theAxis = [C.throwBlock| void {
+  $(gp_Pnt* thePnt)->Mirror(*$(gp_Ax2* theAxis));
+} |]
 
 mirroredAboutAx2 :: Ptr Pnt -> Ptr Ax2 -> Acquire (Ptr Pnt)
-mirroredAboutAx2 point axis = mkAcquire (rawMirroredAboutAx2 point axis) deletePnt
+mirroredAboutAx2 point axis = mkAcquire createMirrored deletePnt
+  where
+    createMirrored = [C.throwBlock| gp_Pnt* {
+      return new gp_Pnt($(gp_Pnt* point)->Mirrored(*$(gp_Ax2* axis)));
+    } |]
 
 -- rotate/rotated
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Rotate" rotate :: Ptr Pnt -> Ptr Ax1 -> CDouble-> IO ()
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Rotated" rawRotated :: Ptr Pnt -> Ptr Ax1 -> CDouble -> IO (Ptr Pnt)
+rotate :: Ptr Pnt -> Ptr Ax1 -> Double -> IO ()
+rotate thePnt theAxis amount = 
+  let cAmount = realToFrac amount
+  in [C.throwBlock| void {
+    $(gp_Pnt* thePnt)->Rotate(*$(gp_Ax1* theAxis), $(double cAmount));
+  } |]
 
 rotated :: Ptr Pnt -> Ptr Ax1 -> Double -> Acquire (Ptr Pnt)
-rotated point axis amount = mkAcquire (rawRotated point axis (CDouble amount)) deletePnt
+rotated point axis amount = 
+  let cAmount = realToFrac amount
+      createRotated = [C.throwBlock| gp_Pnt* {
+        return new gp_Pnt($(gp_Pnt* point)->Rotated(*$(gp_Ax1* axis), $(double cAmount)));
+      } |]
+  in mkAcquire createRotated deletePnt
 
 -- scale/scaled
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Scale" scale :: Ptr Pnt -> Ptr Pnt -> CDouble-> IO ()
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Scaled" rawScaled :: Ptr Pnt -> Ptr Pnt -> CDouble -> IO (Ptr Pnt)
+scale :: Ptr Pnt -> Ptr Pnt -> Double -> IO ()
+scale thePnt origin amount = 
+  let cAmount = realToFrac amount
+  in [C.throwBlock| void {
+    $(gp_Pnt* thePnt)->Scale(*$(gp_Pnt* origin), $(double cAmount));
+  } |]
 
 scaled :: Ptr Pnt -> Ptr Pnt -> Double -> Acquire (Ptr Pnt)
-scaled point origin amount = mkAcquire (rawScaled point origin (CDouble amount)) deletePnt
+scaled point origin amount = 
+  let cAmount = realToFrac amount
+      createScaled = [C.throwBlock| gp_Pnt* {
+        return new gp_Pnt($(gp_Pnt* point)->Scaled(*$(gp_Pnt* origin), $(double cAmount)));
+      } |]
+  in mkAcquire createScaled deletePnt
 
 -- transform/transformed
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Transform" transform :: Ptr Pnt -> Ptr Trsf -> IO ()
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Transformed" rawTransformed :: Ptr Pnt -> Ptr Trsf -> IO (Ptr Pnt)
+transform :: Ptr Pnt -> Ptr Trsf -> IO ()
+transform thePnt trsf = [C.throwBlock| void {
+  $(gp_Pnt* thePnt)->Transform(*$(gp_Trsf* trsf));
+} |]
 
 transformed :: Ptr Pnt -> Ptr Trsf -> Acquire (Ptr Pnt)
-transformed point trsf = mkAcquire (rawTransformed point trsf) deletePnt
+transformed point trsf = mkAcquire createTransformed deletePnt
+  where
+    createTransformed = [C.throwBlock| gp_Pnt* {
+      return new gp_Pnt($(gp_Pnt* point)->Transformed(*$(gp_Trsf* trsf)));
+    } |]
 
 -- translate/translated
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Translate" translate :: Ptr Pnt -> Ptr Vec -> IO ()
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_Translated" rawTranslated :: Ptr Pnt -> Ptr Vec -> IO (Ptr Pnt)
+translate :: Ptr Pnt -> Ptr Vec -> IO ()
+translate thePnt vec = [C.throwBlock| void {
+  $(gp_Pnt* thePnt)->Translate(*$(gp_Vec* vec));
+} |]
 
 translated :: Ptr Pnt -> Ptr Vec -> Acquire (Ptr Pnt)
-translated point vec = mkAcquire (rawTranslated point vec) deletePnt
+translated point vec = mkAcquire createTranslated deletePnt
+  where
+    createTranslated = [C.throwBlock| gp_Pnt* {
+      return new gp_Pnt($(gp_Pnt* point)->Translated(*$(gp_Vec* vec)));
+    } |]
 
 -- translateRelative/translatedRelative
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_TranslateRelative" translateRelative :: Ptr Pnt -> Ptr Pnt -> Ptr Pnt -> IO ()
-
-foreign import capi unsafe "hs_gp_Pnt.h hs_gp_Pnt_TranslatedRelative" rawTranslatedRelative :: Ptr Pnt -> Ptr Pnt -> Ptr Pnt -> IO (Ptr Pnt)
+translateRelative :: Ptr Pnt -> Ptr Pnt -> Ptr Pnt -> IO ()
+translateRelative thePnt from to = [C.throwBlock| void {
+  $(gp_Pnt* thePnt)->Translate(*$(gp_Pnt* from), *$(gp_Pnt* to));
+} |]
 
 translatedRelative :: Ptr Pnt -> Ptr Pnt -> Ptr Pnt -> Acquire (Ptr Pnt)
-translatedRelative point from to = mkAcquire (rawTranslatedRelative point from to) deletePnt
+translatedRelative point from to = mkAcquire createTranslatedRelative deletePnt
+  where
+    createTranslatedRelative = [C.throwBlock| gp_Pnt* {
+      return new gp_Pnt($(gp_Pnt* point)->Translated(*$(gp_Pnt* from), *$(gp_Pnt* to)));
+    } |]

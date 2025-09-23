@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.GP.Dir 
 ( Dir
 , new
@@ -34,185 +33,272 @@ module OpenCascade.GP.Dir
 , transformed
 ) where
 
-
 import Prelude hiding (reverse)
 import OpenCascade.GP.Types
+import OpenCascade.GP.Internal.Context
 import OpenCascade.GP.Internal.Destructors
-import Foreign.C
+import OpenCascade.Internal.Bool (cBoolToBool)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
-import Data.Coerce (coerce)
-import Data.Acquire 
+import Data.Acquire
+
+C.context (C.cppCtx <> gpContext)
+
+C.include "<gp_Dir.hxx>"
+C.include "<gp_Vec.hxx>"
+C.include "<gp_Ax1.hxx>"
+C.include "<gp_Ax2.hxx>"
+C.include "<gp_Trsf.hxx>" 
 
 -- new
 
-foreign import capi unsafe "hs_gp_Dir.h hs_new_gp_Dir" rawNew :: CDouble -> CDouble -> CDouble -> IO (Ptr Dir)
-
 new :: Double -> Double -> Double -> Acquire (Ptr Dir)
-new x y z = mkAcquire (rawNew (CDouble x) (CDouble y) (CDouble z)) deleteDir
+new x y z = 
+  let cx = realToFrac x
+      cy = realToFrac y
+      cz = realToFrac z
+      createDir = [C.throwBlock| gp_Dir* {
+        return new gp_Dir($(double cx), $(double cy), $(double cz));
+      } |]
+  in mkAcquire createDir deleteDir
 
 -- getters
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_X" rawX :: Ptr Dir -> IO (CDouble)
-
 getX :: Ptr Dir -> IO Double
-getX = coerce rawX
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Y" rawY :: Ptr Dir -> IO (CDouble)
+getX dir = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir* dir)->X();
+  } |]
+  return (realToFrac result)
 
 getY :: Ptr Dir -> IO Double
-getY = coerce rawY
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Z" rawZ :: Ptr Dir -> IO (CDouble)
+getY dir = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir* dir)->Y();
+  } |]
+  return (realToFrac result)
 
 getZ :: Ptr Dir -> IO Double
-getZ = coerce rawZ
+getZ dir = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir* dir)->Z();
+  } |]
+  return (realToFrac result)
 
 -- setters
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_SetX" rawSetX :: Ptr Dir -> CDouble -> IO ()
-
 setX :: Ptr Dir -> Double -> IO ()
-setX = coerce rawSetX
-
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_SetY" rawSetY :: Ptr Dir -> CDouble -> IO ()
+setX dir x = 
+  let cx = realToFrac x
+  in [C.throwBlock| void {
+    $(gp_Dir* dir)->SetX($(double cx));
+  } |]
 
 setY :: Ptr Dir -> Double -> IO ()
-setY = coerce rawSetY
-
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_SetZ" rawSetZ :: Ptr Dir -> CDouble -> IO ()
+setY dir y = 
+  let cy = realToFrac y
+  in [C.throwBlock| void {
+    $(gp_Dir* dir)->SetY($(double cy));
+  } |]
 
 setZ :: Ptr Dir -> Double -> IO ()
-setZ = coerce rawSetZ
+setZ dir z = 
+  let cz = realToFrac z
+  in [C.throwBlock| void {
+    $(gp_Dir* dir)->SetZ($(double cz));
+  } |]
 
 -- tests
 
 -- isEqual
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_IsEqual" rawIsEqual :: Ptr Dir -> Ptr Dir -> CDouble -> IO CBool
-
 isEqual :: Ptr Dir -> Ptr Dir -> Double -> IO Bool
-isEqual a b tolerance = (/= 0) <$> rawIsEqual a b (CDouble tolerance)
+isEqual a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Dir* a)->IsEqual(*$(gp_Dir* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- isNormal
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_IsNormal" rawIsNormal :: Ptr Dir -> Ptr Dir -> CDouble -> IO CBool
-
 isNormal :: Ptr Dir -> Ptr Dir -> Double -> IO Bool
-isNormal a b tolerance = (/= 0) <$> rawIsNormal a b (CDouble tolerance)
+isNormal a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Dir* a)->IsNormal(*$(gp_Dir* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 
 -- isOpposite
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_IsOpposite" rawIsOpposite :: Ptr Dir -> Ptr Dir -> CDouble -> IO CBool
-
 isOpposite :: Ptr Dir -> Ptr Dir -> Double -> IO Bool
-isOpposite a b tolerance = (/= 0) <$> rawIsOpposite a b (CDouble tolerance)
+isOpposite a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Dir* a)->IsOpposite(*$(gp_Dir* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- isParallel
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_IsParallel" rawIsParallel :: Ptr Dir -> Ptr Dir -> CDouble -> IO CBool
-
 isParallel :: Ptr Dir -> Ptr Dir -> Double -> IO Bool
-isParallel a b tolerance = (/= 0) <$> rawIsParallel a b (CDouble tolerance)
+isParallel a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Dir* a)->IsParallel(*$(gp_Dir* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- angle
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Angle" rawAngle :: Ptr Dir -> Ptr Dir -> IO CDouble
-
 angle :: Ptr Dir -> Ptr Dir -> IO Double
-angle = coerce rawAngle
+angle a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir* a)->Angle(*$(gp_Dir* b));
+  } |]
+  return (realToFrac result)
 
 -- angleWithRef
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_AngleWithRef" rawAngleWithRef :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO CDouble
-
 angleWithRef :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO Double
-angleWithRef = coerce rawAngleWithRef
+angleWithRef a b ref = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir* a)->AngleWithRef(*$(gp_Dir* b), *$(gp_Dir* ref));
+  } |]
+  return (realToFrac result)
 
 -- cross/crossed
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Cross" cross :: Ptr Dir -> Ptr Dir -> IO ()
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Crossed" rawCrossed :: Ptr Dir -> Ptr Dir -> IO (Ptr Dir)
+cross :: Ptr Dir -> Ptr Dir -> IO ()
+cross theDir other = [C.throwBlock| void {
+  $(gp_Dir* theDir)->Cross(*$(gp_Dir* other));
+} |]
 
 crossed :: Ptr Dir -> Ptr Dir -> Acquire (Ptr Dir)
-crossed a b = mkAcquire (rawCrossed a b) deleteDir
+crossed a b = mkAcquire createCrossed deleteDir
+  where
+    createCrossed = [C.throwBlock| gp_Dir* {
+      return new gp_Dir($(gp_Dir* a)->Crossed(*$(gp_Dir* b)));
+    } |]
 
 
 -- crossCross/crossCrossed
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_CrossCross" crossCross :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO ()
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_CrossCrossed" rawCrossCrossed :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO (Ptr Dir)
+crossCross :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO ()
+crossCross theDir v1 v2 = [C.throwBlock| void {
+  $(gp_Dir* theDir)->CrossCross(*$(gp_Dir* v1), *$(gp_Dir* v2));
+} |]
 
 crossCrossed :: Ptr Dir -> Ptr Dir -> Ptr Dir -> Acquire (Ptr Dir)
-crossCrossed a b c = mkAcquire (rawCrossCrossed a b c) deleteDir
+crossCrossed a b c = mkAcquire createCrossCrossed deleteDir
+  where
+    createCrossCrossed = [C.throwBlock| gp_Dir* {
+      return new gp_Dir($(gp_Dir* a)->CrossCrossed(*$(gp_Dir* b), *$(gp_Dir* c)));
+    } |]
 
 
 -- dot
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Dot" rawDot :: Ptr Dir -> Ptr Dir -> IO CDouble
-
 dot :: Ptr Dir -> Ptr Dir -> IO Double
-dot = coerce rawDot
+dot a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir* a)->Dot(*$(gp_Dir* b));
+  } |]
+  return (realToFrac result)
 
 
 -- dotCross
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_DotCross" rawDotCross :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO CDouble
-
 dotCross :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO Double
-dotCross = coerce rawDotCross
+dotCross a b c = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir* a)->DotCross(*$(gp_Dir* b), *$(gp_Dir* c));
+  } |]
+  return (realToFrac result)
 
 
 -- reverse/reversed
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Reverse" reverse :: Ptr Dir -> IO ()
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Reversed" rawReversed :: Ptr Dir -> IO (Ptr Dir)
+reverse :: Ptr Dir -> IO ()
+reverse dir = [C.throwBlock| void {
+  $(gp_Dir* dir)->Reverse();
+} |]
 
 reversed :: Ptr Dir -> Acquire (Ptr Dir)
-reversed axis = mkAcquire (rawReversed axis) deleteDir
+reversed axis = mkAcquire createReversed deleteDir
+  where
+    createReversed = [C.throwBlock| gp_Dir* {
+      return new gp_Dir($(gp_Dir* axis)->Reversed());
+    } |]
 
 -- mirror/mirrored
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Mirror" mirror :: Ptr Dir -> Ptr Dir -> IO ()
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Mirrored" rawMirrored :: Ptr Dir -> Ptr Dir -> IO (Ptr Dir)
+mirror :: Ptr Dir -> Ptr Dir -> IO ()
+mirror theDir mirrorDir = [C.throwBlock| void {
+  $(gp_Dir* theDir)->Mirror(*$(gp_Dir* mirrorDir));
+} |]
 
 mirrored :: Ptr Dir -> Ptr Dir -> Acquire (Ptr Dir)
-mirrored point axis = mkAcquire (rawMirrored point axis) deleteDir
+mirrored point axis = mkAcquire createMirrored deleteDir
+  where
+    createMirrored = [C.throwBlock| gp_Dir* {
+      return new gp_Dir($(gp_Dir* point)->Mirrored(*$(gp_Dir* axis)));
+    } |]
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_MirrorAboutAx1" mirrorAboutAx1 :: Ptr Dir -> Ptr Ax1 -> IO ()
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_MirroredAboutAx1" rawMirroredAboutAx1 :: Ptr Dir -> Ptr Ax1 -> IO (Ptr Dir)
+mirrorAboutAx1 :: Ptr Dir -> Ptr Ax1 -> IO ()
+mirrorAboutAx1 theDir mirrorAxis = [C.throwBlock| void {
+  $(gp_Dir* theDir)->Mirror(*$(gp_Ax1* mirrorAxis));
+} |]
 
 mirroredAboutAx1 :: Ptr Dir -> Ptr Ax1 -> Acquire (Ptr Dir)
-mirroredAboutAx1 point axis = mkAcquire (rawMirroredAboutAx1 point axis) deleteDir
+mirroredAboutAx1 point axis = mkAcquire createMirrored deleteDir
+  where
+    createMirrored = [C.throwBlock| gp_Dir* {
+      return new gp_Dir($(gp_Dir* point)->Mirrored(*$(gp_Ax1* axis)));
+    } |]
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_MirrorAboutAx2" mirrorAboutAx2 :: Ptr Dir -> Ptr Ax2 -> IO ()
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_MirroredAboutAx2" rawMirroredAboutAx2 :: Ptr Dir -> Ptr Ax2 -> IO (Ptr Dir)
+mirrorAboutAx2 :: Ptr Dir -> Ptr Ax2 -> IO ()
+mirrorAboutAx2 theDir mirrorAxis = [C.throwBlock| void {
+  $(gp_Dir* theDir)->Mirror(*$(gp_Ax2* mirrorAxis));
+} |]
 
 mirroredAboutAx2 :: Ptr Dir -> Ptr Ax2 -> Acquire (Ptr Dir)
-mirroredAboutAx2 point axis = mkAcquire (rawMirroredAboutAx2 point axis) deleteDir
+mirroredAboutAx2 point axis = mkAcquire createMirrored deleteDir
+  where
+    createMirrored = [C.throwBlock| gp_Dir* {
+      return new gp_Dir($(gp_Dir* point)->Mirrored(*$(gp_Ax2* axis)));
+    } |]
 
 -- rotate/rotated
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Rotate" rotate :: Ptr Dir -> Ptr Ax1 -> CDouble-> IO ()
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Rotated" rawRotated :: Ptr Dir -> Ptr Ax1 -> CDouble -> IO (Ptr Dir)
+rotate :: Ptr Dir -> Ptr Ax1 -> Double -> IO ()
+rotate theDir axis amount = 
+  let cAmount = realToFrac amount
+  in [C.throwBlock| void {
+    $(gp_Dir* theDir)->Rotate(*$(gp_Ax1* axis), $(double cAmount));
+  } |]
 
 rotated :: Ptr Dir -> Ptr Ax1 -> Double -> Acquire (Ptr Dir)
-rotated point axis amount = mkAcquire (rawRotated point axis (CDouble amount)) deleteDir
+rotated point axis amount = 
+  let cAmount = realToFrac amount
+      createRotated = [C.throwBlock| gp_Dir* {
+        return new gp_Dir($(gp_Dir* point)->Rotated(*$(gp_Ax1* axis), $(double cAmount)));
+      } |]
+  in mkAcquire createRotated deleteDir
 
 -- transform/transformed
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Transform" transform :: Ptr Dir -> Ptr Trsf -> IO ()
-
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Transformed" rawTransformed :: Ptr Dir -> Ptr Trsf -> IO (Ptr Dir)
+transform :: Ptr Dir -> Ptr Trsf -> IO ()
+transform theDir trsf = [C.throwBlock| void {
+  $(gp_Dir* theDir)->Transform(*$(gp_Trsf* trsf));
+} |]
 
 transformed :: Ptr Dir -> Ptr Trsf -> Acquire (Ptr Dir)
-transformed point trsf = mkAcquire (rawTransformed point trsf) deleteDir
+transformed point trsf = mkAcquire createTransformed deleteDir
+  where
+    createTransformed = [C.throwBlock| gp_Dir* {
+      return new gp_Dir($(gp_Dir* point)->Transformed(*$(gp_Trsf* trsf)));
+    } |]

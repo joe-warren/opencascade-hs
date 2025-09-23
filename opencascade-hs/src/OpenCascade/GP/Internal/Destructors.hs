@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.GP.Internal.Destructors
 ( deletePnt
 , deletePnt2d
@@ -17,21 +16,94 @@ module OpenCascade.GP.Internal.Destructors
 ) where
 
 import OpenCascade.GP.Types
-
+import OpenCascade.GP.Internal.Context
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 
-foreign import capi unsafe "hs_gp_Pnt.h hs_delete_gp_Pnt" deletePnt :: Ptr Pnt -> IO ()
-foreign import capi unsafe "hs_gp_Pnt2d.h hs_delete_gp_Pnt2d" deletePnt2d :: Ptr Pnt2d -> IO ()
-foreign import capi unsafe "hs_gp_Ax1.h hs_delete_gp_Ax1" deleteAx1 :: Ptr Ax1 -> IO ()
-foreign import capi unsafe "hs_gp_Ax2.h hs_delete_gp_Ax2" deleteAx2 :: Ptr Ax2 -> IO ()
-foreign import capi unsafe "hs_gp_Ax2d.h hs_delete_gp_Ax2d" deleteAx2d :: Ptr Ax2d -> IO ()
-foreign import capi unsafe "hs_gp_Ax3.h hs_delete_gp_Ax3" deleteAx3 :: Ptr Ax3 -> IO ()
-foreign import capi unsafe "hs_gp_Dir.h hs_delete_gp_Dir" deleteDir :: Ptr Dir -> IO ()
-foreign import capi unsafe "hs_gp_Dir2d.h hs_delete_gp_Dir2d" deleteDir2d :: Ptr Dir2d -> IO ()
-foreign import capi unsafe "hs_gp_Vec.h hs_delete_gp_Vec" deleteVec :: Ptr Vec -> IO ()
-foreign import capi unsafe "hs_gp_Vec2d.h hs_delete_gp_Vec2d" deleteVec2d :: Ptr Vec2d -> IO ()
-foreign import capi unsafe "hs_gp_Trsf.h hs_delete_gp_Trsf" deleteTrsf :: Ptr Trsf -> IO ()
-foreign import capi unsafe "hs_gp_GTrsf.h hs_delete_gp_GTrsf" deleteGTrsf :: Ptr GTrsf -> IO ()
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_delete_gp_Trsf2d" deleteTrsf2d :: Ptr Trsf2d -> IO ()
-foreign import capi unsafe "hs_gp_XYZ.h hs_delete_gp_XYZ" deleteXYZ :: Ptr XYZ -> IO ()
+C.context (C.cppCtx <> gpContext)
+
+C.include "<gp_Pnt.hxx>"
+C.include "<gp_Pnt2d.hxx>"
+C.include "<gp_Ax1.hxx>"
+C.include "<gp_Ax2.hxx>"
+C.include "<gp_Ax2d.hxx>"
+C.include "<gp_Ax3.hxx>"
+C.include "<gp_Dir.hxx>"
+C.include "<gp_Dir2d.hxx>"
+C.include "<gp_Vec.hxx>"
+C.include "<gp_Vec2d.hxx>"
+C.include "<gp_Trsf.hxx>"
+C.include "<gp_Trsf2d.hxx>"
+C.include "<gp_GTrsf.hxx>"
+C.include "<gp_XYZ.hxx>"
+
+deletePnt :: Ptr Pnt -> IO ()
+deletePnt ptr = [C.throwBlock| void {
+  delete $(gp_Pnt* ptr);
+} |]
+deletePnt2d :: Ptr Pnt2d -> IO ()
+deletePnt2d ptr = [C.throwBlock| void {
+  delete $(gp_Pnt2d* ptr);
+} |]
+
+deleteAx1 :: Ptr Ax1 -> IO ()
+deleteAx1 ptr = [C.throwBlock| void {
+  delete $(gp_Ax1* ptr);
+} |]
+
+deleteAx2 :: Ptr Ax2 -> IO ()
+deleteAx2 ptr = [C.throwBlock| void {
+  delete $(gp_Ax2* ptr);
+} |]
+
+deleteAx2d :: Ptr Ax2d -> IO ()
+deleteAx2d ptr = [C.throwBlock| void {
+  delete $(gp_Ax2d* ptr);
+} |]
+
+deleteAx3 :: Ptr Ax3 -> IO ()
+deleteAx3 ptr = [C.throwBlock| void {
+  delete $(gp_Ax3* ptr);
+} |]
+
+deleteDir :: Ptr Dir -> IO ()
+deleteDir ptr = [C.throwBlock| void {
+  delete $(gp_Dir* ptr);
+} |]
+
+deleteDir2d :: Ptr Dir2d -> IO ()
+deleteDir2d ptr = [C.throwBlock| void {
+  delete $(gp_Dir2d* ptr);
+} |]
+
+deleteVec :: Ptr Vec -> IO ()
+deleteVec ptr = [C.throwBlock| void {
+  delete $(gp_Vec* ptr);
+} |]
+
+deleteVec2d :: Ptr Vec2d -> IO ()
+deleteVec2d ptr = [C.throwBlock| void {
+  delete $(gp_Vec2d* ptr);
+} |]
+
+deleteTrsf :: Ptr Trsf -> IO ()
+deleteTrsf ptr = [C.throwBlock| void {
+  delete $(gp_Trsf* ptr);
+} |]
+
+deleteGTrsf :: Ptr GTrsf -> IO ()
+deleteGTrsf ptr = [C.throwBlock| void {
+  delete $(gp_GTrsf* ptr);
+} |]
+
+deleteTrsf2d :: Ptr Trsf2d -> IO ()
+deleteTrsf2d ptr = [C.throwBlock| void {
+  delete $(gp_Trsf2d* ptr);
+} |]
+
+deleteXYZ :: Ptr XYZ -> IO ()
+deleteXYZ ptr = [C.throwBlock| void {
+  delete $(gp_XYZ* ptr);
+} |]
 

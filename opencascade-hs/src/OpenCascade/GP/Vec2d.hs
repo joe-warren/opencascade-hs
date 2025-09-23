@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.GP.Vec2d
 ( Vec2d
 , new
@@ -39,224 +38,328 @@ module OpenCascade.GP.Vec2d
 , transformed
 ) where
 
-
 import Prelude hiding (reverse, subtract)
 import OpenCascade.GP.Types
+import OpenCascade.GP.Internal.Context
 import OpenCascade.GP.Internal.Destructors
-import Foreign.C
+import OpenCascade.Internal.Bool (cBoolToBool)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
-import Data.Coerce (coerce)
-import Data.Acquire 
+import Data.Acquire
+
+C.context (C.cppCtx <> gpContext)
+
+C.include "<gp_Vec2d.hxx>"
+C.include "<gp_Pnt2d.hxx>"
+C.include "<gp_Ax2d.hxx>"
+C.include "<gp_Trsf2d.hxx>" 
 
 -- new
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_new_gp_Vec2d" rawNew :: CDouble -> CDouble -> IO (Ptr Vec2d)
-
 new :: Double -> Double -> Acquire (Ptr Vec2d)
-new x y = mkAcquire (rawNew (CDouble x) (CDouble y)) deleteVec2d
+new x y = 
+  let cx = realToFrac x
+      cy = realToFrac y
+      createVec2d = [C.throwBlock| gp_Vec2d* {
+        return new gp_Vec2d($(double cx), $(double cy));
+      } |]
+  in mkAcquire createVec2d deleteVec2d
 
 -- getters
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_X" rawX :: Ptr Vec2d -> IO (CDouble)
-
 getX :: Ptr Vec2d -> IO Double
-getX = coerce rawX
-
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Y" rawY :: Ptr Vec2d -> IO (CDouble)
+getX vec = do
+  result <- [C.throwBlock| double {
+    return $(gp_Vec2d* vec)->X();
+  } |]
+  return (realToFrac result)
 
 getY :: Ptr Vec2d -> IO Double
-getY = coerce rawY
+getY vec = do
+  result <- [C.throwBlock| double {
+    return $(gp_Vec2d* vec)->Y();
+  } |]
+  return (realToFrac result)
 
 -- setters
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_SetX" rawSetX :: Ptr Vec2d -> CDouble -> IO ()
-
 setX :: Ptr Vec2d -> Double -> IO ()
-setX = coerce rawSetX
+setX vec x = 
+  let cx = realToFrac x
+  in [C.throwBlock| void {
+    $(gp_Vec2d* vec)->SetX($(double cx));
+  } |]
 
-
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_SetY" rawSetY :: Ptr Vec2d -> CDouble -> IO ()
 
 setY :: Ptr Vec2d -> Double -> IO ()
-setY = coerce rawSetY
+setY vec y = 
+  let cy = realToFrac y
+  in [C.throwBlock| void {
+    $(gp_Vec2d* vec)->SetY($(double cy));
+  } |]
 
 -- tests
 
 -- isEqual
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_IsEqual" rawIsEqual :: Ptr Vec2d -> Ptr Vec2d -> CDouble -> CDouble -> IO CBool
-
 isEqual :: Ptr Vec2d -> Ptr Vec2d -> Double -> Double -> IO Bool
-isEqual a b linearTolerance angularTolerance = (/= 0) <$> rawIsEqual a b (CDouble linearTolerance) (CDouble angularTolerance)
+isEqual a b linearTolerance angularTolerance = do
+  let cLinearTolerance = realToFrac linearTolerance
+      cAngularTolerance = realToFrac angularTolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Vec2d* a)->IsEqual(*$(gp_Vec2d* b), $(double cLinearTolerance), $(double cAngularTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- isNormal
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_IsNormal" rawIsNormal :: Ptr Vec2d -> Ptr Vec2d -> CDouble -> IO CBool
-
 isNormal :: Ptr Vec2d -> Ptr Vec2d -> Double -> IO Bool
-isNormal a b tolerance = (/= 0) <$> rawIsNormal a b (CDouble tolerance)
+isNormal a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Vec2d* a)->IsNormal(*$(gp_Vec2d* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- isOpposite
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_IsOpposite" rawIsOpposite :: Ptr Vec2d -> Ptr Vec2d -> CDouble -> IO CBool
-
 isOpposite :: Ptr Vec2d -> Ptr Vec2d -> Double -> IO Bool
-isOpposite a b tolerance = (/= 0) <$> rawIsOpposite a b (CDouble tolerance)
+isOpposite a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Vec2d* a)->IsOpposite(*$(gp_Vec2d* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- isParallel
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_IsParallel" rawIsParallel :: Ptr Vec2d -> Ptr Vec2d -> CDouble -> IO CBool
-
 isParallel :: Ptr Vec2d -> Ptr Vec2d -> Double -> IO Bool
-isParallel a b tolerance = (/= 0) <$> rawIsParallel a b (CDouble tolerance)
+isParallel a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Vec2d* a)->IsParallel(*$(gp_Vec2d* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- angle
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Angle" rawAngle :: Ptr Vec2d -> Ptr Vec2d -> IO CDouble
-
 angle :: Ptr Vec2d -> Ptr Vec2d -> IO Double
-angle = coerce rawAngle
+angle a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Vec2d* a)->Angle(*$(gp_Vec2d* b));
+  } |]
+  return (realToFrac result)
 
 
 -- magnitude
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Magnitude" rawMagnitude :: Ptr Vec2d -> IO CDouble
-
 magnitude :: Ptr Vec2d -> IO Double
-magnitude = coerce rawMagnitude
+magnitude vec = do
+  result <- [C.throwBlock| double {
+    return $(gp_Vec2d* vec)->Magnitude();
+  } |]
+  return (realToFrac result)
 
 
 -- squareMagnitude
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_SquareMagnitude" rawSquareMagnitude :: Ptr Vec2d -> IO CDouble
-
 squareMagnitude :: Ptr Vec2d -> IO Double
-squareMagnitude = coerce rawSquareMagnitude
+squareMagnitude vec = do
+  result <- [C.throwBlock| double {
+    return $(gp_Vec2d* vec)->SquareMagnitude();
+  } |]
+  return (realToFrac result)
 
 -- add/added
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Add" add :: Ptr Vec2d -> Ptr Vec2d -> IO ()
-
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Added" rawAdded :: Ptr Vec2d -> Ptr Vec2d -> IO (Ptr Vec2d)
+add :: Ptr Vec2d -> Ptr Vec2d -> IO ()
+add theVec other = [C.throwBlock| void {
+  $(gp_Vec2d* theVec)->Add(*$(gp_Vec2d* other));
+} |]
 
 added :: Ptr Vec2d -> Ptr Vec2d -> Acquire (Ptr Vec2d)
-added a b = mkAcquire (rawAdded a b) deleteVec2d
+added a b = mkAcquire createAdded deleteVec2d
+  where
+    createAdded = [C.throwBlock| gp_Vec2d* {
+      return new gp_Vec2d($(gp_Vec2d* a)->Added(*$(gp_Vec2d* b)));
+    } |]
 
 
 -- subtract/subtracted
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Subtract" subtract :: Ptr Vec2d -> Ptr Vec2d -> IO ()
-
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Subtracted" rawSubtracted :: Ptr Vec2d -> Ptr Vec2d -> IO (Ptr Vec2d)
+subtract :: Ptr Vec2d -> Ptr Vec2d -> IO ()
+subtract theVec other = [C.throwBlock| void {
+  $(gp_Vec2d* theVec)->Subtract(*$(gp_Vec2d* other));
+} |]
 
 subtracted :: Ptr Vec2d -> Ptr Vec2d -> Acquire (Ptr Vec2d)
-subtracted a b = mkAcquire (rawSubtracted a b) deleteVec2d
+subtracted a b = mkAcquire createSubtracted deleteVec2d
+  where
+    createSubtracted = [C.throwBlock| gp_Vec2d* {
+      return new gp_Vec2d($(gp_Vec2d* a)->Subtracted(*$(gp_Vec2d* b)));
+    } |]
 
 
 -- multiply/multiplied
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Multiply" rawMultiply :: Ptr Vec2d -> CDouble -> IO ()
-
 multiply :: Ptr Vec2d -> Double -> IO ()
-multiply = coerce rawMultiply
-
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Multiplied" rawMultiplied :: Ptr Vec2d -> CDouble -> IO (Ptr Vec2d)
+multiply theVec scalar = 
+  let cScalar = realToFrac scalar
+  in [C.throwBlock| void {
+    $(gp_Vec2d* theVec)->Multiply($(double cScalar));
+  } |]
 
 multiplied :: Ptr Vec2d -> Double -> Acquire (Ptr Vec2d)
-multiplied a b = mkAcquire (rawMultiplied a (CDouble b)) deleteVec2d
+multiplied vec scalar = mkAcquire createMultiplied deleteVec2d
+  where
+    createMultiplied = let
+      cScalar = realToFrac scalar
+      in [C.throwBlock| gp_Vec2d* {
+        return new gp_Vec2d($(gp_Vec2d* vec)->Multiplied($(double cScalar)));
+      } |]
 
 -- divide/divided
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Divide" rawDivide :: Ptr Vec2d -> CDouble -> IO ()
-
 divide :: Ptr Vec2d -> Double -> IO ()
-divide = coerce rawDivide
-
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Divided" rawDivided :: Ptr Vec2d -> CDouble -> IO (Ptr Vec2d)
+divide theVec scalar = 
+  let cScalar = realToFrac scalar
+  in [C.throwBlock| void {
+    $(gp_Vec2d* theVec)->Divide($(double cScalar));
+  } |]
 
 divided :: Ptr Vec2d -> Double -> Acquire (Ptr Vec2d)
-divided a b = mkAcquire (rawDivided a (CDouble b)) deleteVec2d
+divided vec scalar = mkAcquire createDivided deleteVec2d
+  where
+    createDivided = let
+      cScalar = realToFrac scalar
+      in [C.throwBlock| gp_Vec2d* {
+        return new gp_Vec2d($(gp_Vec2d* vec)->Divided($(double cScalar)));
+      } |]
 
 -- cross/crossed
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Crossed" rawCrossed :: Ptr Vec2d -> Ptr Vec2d -> IO (CDouble)
-
-crossed :: Ptr Vec2d -> Ptr Vec2d -> IO CDouble
-crossed = coerce rawCrossed
+crossed :: Ptr Vec2d -> Ptr Vec2d -> IO Double
+crossed a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Vec2d* a)->Crossed(*$(gp_Vec2d* b));
+  } |]
+  return (realToFrac result)
 
 -- crossMagnitude
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_CrossMagnitude" rawCrossMagnitude :: Ptr Vec2d -> Ptr Vec2d -> IO CDouble
-
 crossMagnitude :: Ptr Vec2d -> Ptr Vec2d -> IO Double
-crossMagnitude = coerce rawCrossMagnitude
+crossMagnitude a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Vec2d* a)->CrossMagnitude(*$(gp_Vec2d* b));
+  } |]
+  return (realToFrac result)
 
 -- crossSquareMagnitude
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_CrossSquareMagnitude" rawCrossSquareMagnitude :: Ptr Vec2d -> Ptr Vec2d -> IO CDouble
-
 crossSquareMagnitude :: Ptr Vec2d -> Ptr Vec2d -> IO Double
-crossSquareMagnitude = coerce rawCrossSquareMagnitude
+crossSquareMagnitude a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Vec2d* a)->CrossSquareMagnitude(*$(gp_Vec2d* b));
+  } |]
+  return (realToFrac result)
 
 -- dot
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Dot" rawDot :: Ptr Vec2d -> Ptr Vec2d -> IO CDouble
-
 dot :: Ptr Vec2d -> Ptr Vec2d -> IO Double
-dot = coerce rawDot
+dot a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Vec2d* a)->Dot(*$(gp_Vec2d* b));
+  } |]
+  return (realToFrac result)
 
 -- reverse/reversed
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Reverse" reverse :: Ptr Vec2d -> IO ()
-
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Reversed" rawReversed :: Ptr Vec2d -> IO (Ptr Vec2d)
+reverse :: Ptr Vec2d -> IO ()
+reverse vec = [C.throwBlock| void {
+  $(gp_Vec2d* vec)->Reverse();
+} |]
 
 reversed :: Ptr Vec2d -> Acquire (Ptr Vec2d)
-reversed axis = mkAcquire (rawReversed axis) deleteVec2d
+reversed axis = mkAcquire createReversed deleteVec2d
+  where
+    createReversed = [C.throwBlock| gp_Vec2d* {
+      return new gp_Vec2d($(gp_Vec2d* axis)->Reversed());
+    } |]
 
 -- mirror/mirrored
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Mirror" mirror :: Ptr Vec2d -> Ptr Vec2d -> IO ()
-
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Mirrored" rawMirrored :: Ptr Vec2d -> Ptr Vec2d -> IO (Ptr Vec2d)
+mirror :: Ptr Vec2d -> Ptr Vec2d -> IO ()
+mirror theVec mirrorVec = [C.throwBlock| void {
+  $(gp_Vec2d* theVec)->Mirror(*$(gp_Vec2d* mirrorVec));
+} |]
 
 mirrored :: Ptr Vec2d -> Ptr Vec2d -> Acquire (Ptr Vec2d)
-mirrored point axis = mkAcquire (rawMirrored point axis) deleteVec2d
+mirrored point axis = mkAcquire createMirrored deleteVec2d
+  where
+    createMirrored = [C.throwBlock| gp_Vec2d* {
+      return new gp_Vec2d($(gp_Vec2d* point)->Mirrored(*$(gp_Vec2d* axis)));
+    } |]
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_MirrorAboutAx2d" mirrorAboutAx2d :: Ptr Vec2d -> Ptr Ax2d -> IO ()
-
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_MirroredAboutAx2d" rawMirroredAboutAx2d :: Ptr Vec2d -> Ptr Ax2d -> IO (Ptr Vec2d)
+mirrorAboutAx2d :: Ptr Vec2d -> Ptr Ax2d -> IO ()
+mirrorAboutAx2d theVec mirrorAxis = [C.throwBlock| void {
+  $(gp_Vec2d* theVec)->Mirror(*$(gp_Ax2d* mirrorAxis));
+} |]
 
 mirroredAboutAx2d :: Ptr Vec2d -> Ptr Ax2d -> Acquire (Ptr Vec2d)
-mirroredAboutAx2d point axis = mkAcquire (rawMirroredAboutAx2d point axis) deleteVec2d
+mirroredAboutAx2d point axis = mkAcquire createMirrored deleteVec2d
+  where
+    createMirrored = [C.throwBlock| gp_Vec2d* {
+      return new gp_Vec2d($(gp_Vec2d* point)->Mirrored(*$(gp_Ax2d* axis)));
+    } |]
 
 -- rotate/rotated
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Rotate" rotate :: Ptr Vec2d -> CDouble-> IO ()
-
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Rotated" rawRotated :: Ptr Vec2d -> CDouble -> IO (Ptr Vec2d)
+rotate :: Ptr Vec2d -> Double -> IO ()
+rotate theVec amount = 
+  let cAmount = realToFrac amount
+  in [C.throwBlock| void {
+    $(gp_Vec2d* theVec)->Rotate($(double cAmount));
+  } |]
 
 rotated :: Ptr Vec2d -> Double -> Acquire (Ptr Vec2d)
-rotated point angleOfRotation = mkAcquire (rawRotated point (CDouble angleOfRotation)) deleteVec2d
+rotated point angleOfRotation = mkAcquire createRotated deleteVec2d
+  where
+    createRotated = let
+      cAngle = realToFrac angleOfRotation
+      in [C.throwBlock| gp_Vec2d* {
+        return new gp_Vec2d($(gp_Vec2d* point)->Rotated($(double cAngle)));
+      } |]
 
 -- scale/scaled
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Scale" rawScale :: Ptr Vec2d -> CDouble -> IO ()
-
 scale :: Ptr Vec2d -> Double -> IO ()
-scale = coerce rawScale
-
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Scaled" rawScaled :: Ptr Vec2d -> CDouble -> IO (Ptr Vec2d)
+scale theVec factor = 
+  let cFactor = realToFrac factor
+  in [C.throwBlock| void {
+    $(gp_Vec2d* theVec)->Scale($(double cFactor));
+  } |]
 
 scaled :: Ptr Vec2d -> Double -> Acquire (Ptr Vec2d)
-scaled a b = mkAcquire (rawScaled a (CDouble b)) deleteVec2d
+scaled vec factor = mkAcquire createScaled deleteVec2d
+  where
+    createScaled = let
+      cFactor = realToFrac factor
+      in [C.throwBlock| gp_Vec2d* {
+        return new gp_Vec2d($(gp_Vec2d* vec)->Scaled($(double cFactor)));
+      } |]
 
 
 -- transform/transformed
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Transform" transform :: Ptr Vec2d -> Ptr Trsf -> IO ()
+transform :: Ptr Vec2d -> Ptr Trsf2d -> IO ()
+transform theVec trsf = [C.throwBlock| void {
+  $(gp_Vec2d* theVec)->Transform(*$(gp_Trsf2d* trsf));
+} |]
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Transformed" rawTransformed :: Ptr Vec2d -> Ptr Trsf -> IO (Ptr Vec2d)
-
-transformed :: Ptr Vec2d -> Ptr Trsf -> Acquire (Ptr Vec2d)
-transformed point trsf = mkAcquire (rawTransformed point trsf) deleteVec2d
+transformed :: Ptr Vec2d -> Ptr Trsf2d -> Acquire (Ptr Vec2d)
+transformed point trsf = mkAcquire createTransformed deleteVec2d
+  where
+    createTransformed = [C.throwBlock| gp_Vec2d* {
+      return new gp_Vec2d($(gp_Vec2d* point)->Transformed(*$(gp_Trsf2d* trsf)));
+    } |]

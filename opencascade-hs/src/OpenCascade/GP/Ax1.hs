@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.GP.Ax1
 ( Ax1
 , new
@@ -33,155 +32,236 @@ module OpenCascade.GP.Ax1
 
 import Prelude hiding (reverse)
 import OpenCascade.GP.Types
+import OpenCascade.GP.Internal.Context
 import OpenCascade.GP.Internal.Destructors
+import OpenCascade.Internal.Bool (cBoolToBool)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
-import Foreign.C.Types
-import Data.Acquire 
-import Data.Coerce (coerce)
+import Data.Acquire
+
+C.context (C.cppCtx <> gpContext)
+
+C.include "<gp_Ax1.hxx>"
+C.include "<gp_Pnt.hxx>"
+C.include "<gp_Dir.hxx>"
+C.include "<gp_Ax2.hxx>"
+C.include "<gp_Trsf.hxx>"
+C.include "<gp_Vec.hxx>"
 
 -- new and delete
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_new_gp_Ax1" rawNew :: Ptr Pnt -> Ptr Dir -> IO (Ptr Ax1)
-
 new :: Ptr Pnt -> Ptr Dir -> Acquire (Ptr Ax1)
-new origin dir = mkAcquire (rawNew origin dir) deleteAx1
+new origin dir = mkAcquire createAx1 deleteAx1
+  where
+    createAx1 = [C.throwBlock| gp_Ax1* {
+      return new gp_Ax1(*$(gp_Pnt* origin), *$(gp_Dir* dir));
+    } |]
 
 -- getters
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Location" rawLocation :: Ptr Ax1 -> IO (Ptr Pnt)
-
 location :: Ptr Ax1 -> Acquire (Ptr Pnt)
-location ax1 = mkAcquire (rawLocation ax1) deletePnt
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Direction" rawDirection :: Ptr Ax1 -> IO (Ptr Dir)
+location ax1 = mkAcquire createLocation deletePnt
+  where
+    createLocation = [C.throwBlock| gp_Pnt* {
+      return new gp_Pnt($(gp_Ax1* ax1)->Location());
+    } |]
 
 direction :: Ptr Ax1 -> Acquire (Ptr Dir)
-direction ax1 = mkAcquire (rawDirection ax1) deleteDir
+direction ax1 = mkAcquire createDirection deleteDir
+  where
+    createDirection = [C.throwBlock| gp_Dir* {
+      return new gp_Dir($(gp_Ax1* ax1)->Direction());
+    } |]
 
 -- setters
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_SetDirection" setDirection :: Ptr Ax1 -> Ptr Dir -> IO ()
+setDirection :: Ptr Ax1 -> Ptr Dir -> IO ()
+setDirection ax1 dir = [C.throwBlock| void {
+  $(gp_Ax1* ax1)->SetDirection(*$(gp_Dir* dir));
+} |]
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_SetLocation" setLocation :: Ptr Ax1 -> Ptr Pnt -> IO ()
+setLocation :: Ptr Ax1 -> Ptr Pnt -> IO ()
+setLocation ax1 pnt = [C.throwBlock| void {
+  $(gp_Ax1* ax1)->SetLocation(*$(gp_Pnt* pnt));
+} |]
 
 -- tests
 
 -- isCoaxial
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_IsCoaxial" rawIsCoaxial :: Ptr Ax1 -> Ptr Ax1 -> CDouble -> CDouble -> IO CBool
-
 isCoaxial :: Ptr Ax1 -> Ptr Ax1 -> Double -> Double -> IO Bool
-isCoaxial a b angularTolerance linearTolerance = (/= 0) <$> rawIsCoaxial a b (CDouble angularTolerance) (CDouble linearTolerance)
+isCoaxial a b angularTolerance linearTolerance = do
+  let cAngularTolerance = realToFrac angularTolerance
+      cLinearTolerance = realToFrac linearTolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Ax1* a)->IsCoaxial(*$(gp_Ax1* b), $(double cAngularTolerance), $(double cLinearTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- isNormal
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_IsNormal" rawIsNormal :: Ptr Ax1 -> Ptr Ax1 -> CDouble -> IO CBool
-
 isNormal :: Ptr Ax1 -> Ptr Ax1 -> Double -> IO Bool
-isNormal a b angularTolerance = (/= 0) <$> rawIsNormal a b (CDouble angularTolerance)
+isNormal a b angularTolerance = do
+  let cAngularTolerance = realToFrac angularTolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Ax1* a)->IsNormal(*$(gp_Ax1* b), $(double cAngularTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- isOpposite
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_IsOpposite" rawIsOpposite :: Ptr Ax1 -> Ptr Ax1 -> CDouble -> IO CBool
-
 isOpposite :: Ptr Ax1 -> Ptr Ax1 -> Double -> IO Bool
-isOpposite a b angularTolerance = (/= 0) <$> rawIsOpposite a b (CDouble angularTolerance)
+isOpposite a b angularTolerance = do
+  let cAngularTolerance = realToFrac angularTolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Ax1* a)->IsOpposite(*$(gp_Ax1* b), $(double cAngularTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- isParallel
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_IsParallel" rawIsParallel :: Ptr Ax1 -> Ptr Ax1 -> CDouble -> IO CBool
-
 isParallel :: Ptr Ax1 -> Ptr Ax1 -> Double -> IO Bool
-isParallel a b angularTolerance = (/= 0) <$> rawIsParallel a b (CDouble angularTolerance)
+isParallel a b angularTolerance = do
+  let cAngularTolerance = realToFrac angularTolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Ax1* a)->IsParallel(*$(gp_Ax1* b), $(double cAngularTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- angle
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Angle" rawAngle :: Ptr Ax1 -> Ptr Ax1 -> IO CDouble
-
 angle :: Ptr Ax1 -> Ptr Ax1 -> IO Double
-angle = coerce rawAngle
+angle a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Ax1* a)->Angle(*$(gp_Ax1* b));
+  } |]
+  return (realToFrac result)
 
 -- reverse/reversed
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Reverse" reverse :: Ptr Ax1 -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Reversed" rawReversed :: Ptr Ax1 -> IO (Ptr Ax1)
+reverse :: Ptr Ax1 -> IO ()
+reverse axis = [C.throwBlock| void {
+  $(gp_Ax1* axis)->Reverse();
+} |]
 
 reversed :: Ptr Ax1 -> Acquire (Ptr Ax1)
-reversed axis = mkAcquire (rawReversed axis) deleteAx1
+reversed axis = mkAcquire createReversed deleteAx1
+  where
+    createReversed = [C.throwBlock| gp_Ax1* {
+      return new gp_Ax1($(gp_Ax1* axis)->Reversed());
+    } |]
 
 -- mirror/mirrored
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Mirror" mirror :: Ptr Ax1 -> Ptr Ax1 -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Mirrored" rawMirrored :: Ptr Ax1 -> Ptr Ax1 -> IO (Ptr Ax1)
+mirror :: Ptr Ax1 -> Ptr Ax1 -> IO ()
+mirror theAx1 mirrorAxis = [C.throwBlock| void {
+  $(gp_Ax1* theAx1)->Mirror(*$(gp_Ax1* mirrorAxis));
+} |]
 
 mirrored :: Ptr Ax1 -> Ptr Ax1 -> Acquire (Ptr Ax1)
-mirrored axis mirrorAxis = mkAcquire (rawMirrored axis mirrorAxis) deleteAx1
+mirrored axis mirrorAxis = mkAcquire createMirrored deleteAx1
+  where
+    createMirrored = [C.throwBlock| gp_Ax1* {
+      return new gp_Ax1($(gp_Ax1* axis)->Mirrored(*$(gp_Ax1* mirrorAxis)));
+    } |]
 
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirrorAboutPnt" mirrorAboutPnt :: Ptr Ax1 -> Ptr Pnt -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirroredAboutPnt" rawMirroredAboutPnt :: Ptr Ax1 -> Ptr Pnt -> IO (Ptr Ax1)
+mirrorAboutPnt :: Ptr Ax1 -> Ptr Pnt -> IO ()
+mirrorAboutPnt theAx1 mirrorPnt = [C.throwBlock| void {
+  $(gp_Ax1* theAx1)->Mirror(*$(gp_Pnt* mirrorPnt));
+} |]
 
 mirroredAboutPnt :: Ptr Ax1 -> Ptr Pnt -> Acquire (Ptr Ax1)
-mirroredAboutPnt axis mirrorPnt = mkAcquire (rawMirroredAboutPnt axis mirrorPnt) deleteAx1
+mirroredAboutPnt axis mirrorPnt = mkAcquire createMirrored deleteAx1
+  where
+    createMirrored = [C.throwBlock| gp_Ax1* {
+      return new gp_Ax1($(gp_Ax1* axis)->Mirrored(*$(gp_Pnt* mirrorPnt)));
+    } |]
 
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirrorAboutAx2" mirrorAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_MirroredAboutAx2" rawMirroredAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> IO (Ptr Ax1)
+mirrorAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> IO ()
+mirrorAboutAx2 theAx1 mirrorAxis = [C.throwBlock| void {
+  $(gp_Ax1* theAx1)->Mirror(*$(gp_Ax2* mirrorAxis));
+} |]
 
 mirroredAboutAx2 :: Ptr Ax1 -> Ptr Ax2 -> Acquire (Ptr Ax1)
-mirroredAboutAx2 axis mirrorAxis = mkAcquire (rawMirroredAboutAx2 axis mirrorAxis) deleteAx1
+mirroredAboutAx2 axis mirrorAxis = mkAcquire createMirrored deleteAx1
+  where
+    createMirrored = [C.throwBlock| gp_Ax1* {
+      return new gp_Ax1($(gp_Ax1* axis)->Mirrored(*$(gp_Ax2* mirrorAxis)));
+    } |]
 
 -- rotate/rotated 
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Rotate" rawRotate :: Ptr Ax1 -> Ptr Ax1 -> CDouble -> IO ()
-
 rotate :: Ptr Ax1 -> Ptr Ax1 -> Double -> IO ()
-rotate = coerce rawRotate
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Rotated" rawRotated :: Ptr Ax1 -> Ptr Ax1 -> CDouble -> IO (Ptr Ax1)
+rotate theAx1 axisOfRotation angleOfRotation = 
+  let cAngle = realToFrac angleOfRotation
+  in [C.throwBlock| void {
+    $(gp_Ax1* theAx1)->Rotate(*$(gp_Ax1* axisOfRotation), $(double cAngle));
+  } |]
 
 rotated :: Ptr Ax1 -> Ptr Ax1 -> Double -> Acquire (Ptr Ax1)
-rotated axis axisOfRotation angleOfRotation = mkAcquire (rawRotated axis axisOfRotation (CDouble angleOfRotation)) deleteAx1
+rotated axis axisOfRotation angleOfRotation = 
+  let cAngle = realToFrac angleOfRotation
+      createRotated = [C.throwBlock| gp_Ax1* {
+        return new gp_Ax1($(gp_Ax1* axis)->Rotated(*$(gp_Ax1* axisOfRotation), $(double cAngle)));
+      } |]
+  in mkAcquire createRotated deleteAx1
 
 -- scale/scaled 
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Scale" rawScale :: Ptr Ax1 -> Ptr Pnt -> CDouble -> IO ()
-
 scale :: Ptr Ax1 -> Ptr Pnt -> Double -> IO ()
-scale = coerce rawScale
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Scaled" rawScaled :: Ptr Ax1 -> Ptr Pnt -> CDouble -> IO (Ptr Ax1)
+scale theAx1 origin amount = 
+  let cAmount = realToFrac amount
+  in [C.throwBlock| void {
+    $(gp_Ax1* theAx1)->Scale(*$(gp_Pnt* origin), $(double cAmount));
+  } |]
 
 scaled :: Ptr Ax1 -> Ptr Pnt -> Double -> Acquire (Ptr Ax1)
-scaled axis origin amount = mkAcquire (rawScaled axis origin (CDouble amount)) deleteAx1
+scaled axis origin amount = 
+  let cAmount = realToFrac amount
+      createScaled = [C.throwBlock| gp_Ax1* {
+        return new gp_Ax1($(gp_Ax1* axis)->Scaled(*$(gp_Pnt* origin), $(double cAmount)));
+      } |]
+  in mkAcquire createScaled deleteAx1
 
 -- transform/transformed 
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Transform" transform :: Ptr Ax1 -> Ptr Trsf -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Transformed" rawTransformed :: Ptr Ax1 -> Ptr Trsf -> IO (Ptr Ax1)
+transform :: Ptr Ax1 -> Ptr Trsf -> IO ()
+transform theAx1 trsf = [C.throwBlock| void {
+  $(gp_Ax1* theAx1)->Transform(*$(gp_Trsf* trsf));
+} |]
 
 transformed :: Ptr Ax1 -> Ptr Trsf -> Acquire (Ptr Ax1)
-transformed axis trsf = mkAcquire (rawTransformed axis trsf) deleteAx1
+transformed axis trsf = mkAcquire createTransformed deleteAx1
+  where
+    createTransformed = [C.throwBlock| gp_Ax1* {
+      return new gp_Ax1($(gp_Ax1* axis)->Transformed(*$(gp_Trsf* trsf)));
+    } |]
 
 
 -- translate/translated
 
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Translate" translate :: Ptr Ax1 -> Ptr Vec -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_Translated" rawTranslated :: Ptr Ax1 -> Ptr Vec -> IO (Ptr Ax1)
+translate :: Ptr Ax1 -> Ptr Vec -> IO ()
+translate theAx1 vec = [C.throwBlock| void {
+  $(gp_Ax1* theAx1)->Translate(*$(gp_Vec* vec));
+} |]
 
 translated :: Ptr Ax1 -> Ptr Vec -> Acquire (Ptr Ax1)
-translated axis vec = mkAcquire (rawTranslated axis vec) deleteAx1
+translated axis vec = mkAcquire createTranslated deleteAx1
+  where
+    createTranslated = [C.throwBlock| gp_Ax1* {
+      return new gp_Ax1($(gp_Ax1* axis)->Translated(*$(gp_Vec* vec)));
+    } |]
 
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_TranslateRelative" translateRelative :: Ptr Ax1 -> Ptr Pnt -> Ptr Pnt -> IO ()
-
-foreign import capi unsafe "hs_gp_Ax1.h hs_gp_Ax1_TranslatedRelative" rawTranslatedRelative :: Ptr Ax1 -> Ptr Pnt -> Ptr Pnt -> IO (Ptr Ax1)
+translateRelative :: Ptr Ax1 -> Ptr Pnt -> Ptr Pnt -> IO ()
+translateRelative theAx1 from to = [C.throwBlock| void {
+  $(gp_Ax1* theAx1)->Translate(*$(gp_Pnt* from), *$(gp_Pnt* to));
+} |]
 
 translatedRelative :: Ptr Ax1 -> Ptr Pnt -> Ptr Pnt -> Acquire (Ptr Ax1)
-translatedRelative axis from to = mkAcquire (rawTranslatedRelative axis from to) deleteAx1
+translatedRelative axis from to = mkAcquire createTranslatedRelative deleteAx1
+  where
+    createTranslatedRelative = [C.throwBlock| gp_Ax1* {
+      return new gp_Ax1($(gp_Ax1* axis)->Translated(*$(gp_Pnt* from), *$(gp_Pnt* to)));
+    } |]

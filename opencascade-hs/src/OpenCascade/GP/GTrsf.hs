@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.GP.GTrsf
 ( GTrsf
 , new
@@ -7,20 +6,34 @@ module OpenCascade.GP.GTrsf
 ) where
 
 import OpenCascade.GP.Types
+import OpenCascade.GP.Internal.Context
 import OpenCascade.GP.Internal.Destructors
-import Foreign.C
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
-import Data.Coerce (coerce)
-import Data.Acquire 
+import Data.Acquire
 
-foreign import capi unsafe "hs_gp_GTrsf.h hs_new_gp_GTrsf" rawNew ::IO (Ptr GTrsf)
+C.context (C.cppCtx <> gpContext)
+
+C.include "<gp_GTrsf.hxx>"
 
 new :: Acquire (Ptr GTrsf)
-new = mkAcquire rawNew deleteGTrsf
-
-foreign import capi unsafe "hs_gp_GTrsf.h hs_gp_GTrsf_setValue" rawSetValue :: Ptr GTrsf -> CInt -> CInt -> CDouble -> IO () 
+new = mkAcquire createGTrsf deleteGTrsf
+  where
+    createGTrsf = [C.throwBlock| gp_GTrsf* {
+      return new gp_GTrsf();
+    } |]
 
 setValue :: Ptr GTrsf -> Int -> Int -> Double -> IO ()
-setValue trsf row column value = rawSetValue trsf (fromIntegral row) (fromIntegral column) (coerce value)
+setValue trsf row column value = do
+  let cRow = fromIntegral row
+      cColumn = fromIntegral column
+      cValue = realToFrac value
+  [C.throwBlock| void {
+    $(gp_GTrsf* trsf)->SetValue($(int cRow), $(int cColumn), $(double cValue));
+  } |]
 
-foreign import capi unsafe "hs_gp_GTrsf.h hs_gp_GTrsf_setForm" setForm :: Ptr GTrsf -> IO () 
+setForm :: Ptr GTrsf -> IO ()
+setForm trsf = [C.throwBlock| void {
+  $(gp_GTrsf* trsf)->SetForm();
+} |] 

@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -68,21 +68,6 @@ extra-source-files:
     cpp/hs_GeomAdaptor_Curve.h
     cpp/hs_GeomConvert_ApproxCurve.h
     cpp/hs_GeomConvert_BSplineCurveToBezierCurve.h
-    cpp/hs_gp.h
-    cpp/hs_gp_Ax1.h
-    cpp/hs_gp_Ax2.h
-    cpp/hs_gp_Ax2d.h
-    cpp/hs_gp_Ax3.h
-    cpp/hs_gp_Dir.h
-    cpp/hs_gp_Dir2d.h
-    cpp/hs_gp_GTrsf.h
-    cpp/hs_gp_Pnt.h
-    cpp/hs_gp_Pnt2d.h
-    cpp/hs_gp_Trsf.h
-    cpp/hs_gp_Trsf2d.h
-    cpp/hs_gp_Vec.h
-    cpp/hs_gp_Vec2d.h
-    cpp/hs_gp_XYZ.h
     cpp/hs_GProp_GProps.h
     cpp/hs_HLRAlgo_Projector.h
     cpp/hs_HLRBRep_Algo.h
@@ -228,6 +213,7 @@ library
       OpenCascade.GP.Dir
       OpenCascade.GP.Dir2d
       OpenCascade.GP.GTrsf
+      OpenCascade.GP.Internal.Context
       OpenCascade.GP.Internal.Destructors
       OpenCascade.GP.Pnt
       OpenCascade.GP.Pnt2d
@@ -343,6 +329,10 @@ library
       Paths_opencascade_hs
   hs-source-dirs:
       src
+  default-extensions:
+      QuasiQuotes
+      TemplateHaskell
+      OverloadedStrings
   ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration
   cxx-options: --std=c++17 -Wall -Werror -Wno-deprecated
   include-dirs:
@@ -396,21 +386,6 @@ library
       cpp/hs_GeomAdaptor_Curve.cpp
       cpp/hs_GeomConvert_ApproxCurve.cpp
       cpp/hs_GeomConvert_BSplineCurveToBezierCurve.cpp
-      cpp/hs_gp.cpp
-      cpp/hs_gp_Ax1.cpp
-      cpp/hs_gp_Ax2.cpp
-      cpp/hs_gp_Ax2d.cpp
-      cpp/hs_gp_Ax3.cpp
-      cpp/hs_gp_Dir.cpp
-      cpp/hs_gp_Dir2d.cpp
-      cpp/hs_gp_GTrsf.cpp
-      cpp/hs_gp_Pnt.cpp
-      cpp/hs_gp_Pnt2d.cpp
-      cpp/hs_gp_Trsf.cpp
-      cpp/hs_gp_Trsf2d.cpp
-      cpp/hs_gp_Vec.cpp
-      cpp/hs_gp_Vec2d.cpp
-      cpp/hs_gp_XYZ.cpp
       cpp/hs_GProp_GProps.cpp
       cpp/hs_HLRAlgo_Projector.cpp
       cpp/hs_HLRBRep_Algo.cpp
@@ -479,5 +454,7 @@ library
       TKXSBase
   build-depends:
       base >=4.7 && <5
+    , inline-c >=0.9 && <1.0
+    , inline-c-cpp >=0.4 && <0.6
     , resourcet >=1.2 && <1.4
   default-language: Haskell2010

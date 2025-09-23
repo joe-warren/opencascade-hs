@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.GP.Trsf2d
 ( Trsf2d
 , new
@@ -27,120 +26,195 @@ module OpenCascade.GP.Trsf2d
 ) where
 
 import OpenCascade.GP.Types
+import OpenCascade.GP.Internal.Context
 import OpenCascade.GP.Internal.Destructors
-import Foreign.C
+import OpenCascade.Internal.Bool (cBoolToBool)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
-import Data.Coerce (coerce)
-import Data.Acquire 
+import Data.Acquire
+
+C.context (C.cppCtx <> gpContext)
+
+C.include "<gp_Trsf2d.hxx>"
+C.include "<gp_Trsf.hxx>"
+C.include "<gp_Pnt2d.hxx>"
+C.include "<gp_Ax2d.hxx>"
+C.include "<gp_Vec2d.hxx>" 
 
 
 -- new
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_new_gp_Trsf2d" rawNew ::IO (Ptr Trsf2d)
-
 new :: Acquire (Ptr Trsf2d)
-new = mkAcquire rawNew deleteTrsf2d
-
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_new_gp_Trsf2d_fromTrsf" rawFromTrsf :: Ptr Trsf -> IO (Ptr Trsf2d)
+new = mkAcquire createTrsf2d deleteTrsf2d
+  where
+    createTrsf2d = [C.throwBlock| gp_Trsf2d* {
+      return new gp_Trsf2d();
+    } |]
 
 fromTrsf :: Ptr Trsf -> Acquire (Ptr Trsf2d)
-fromTrsf t = mkAcquire (rawFromTrsf t) deleteTrsf2d
+fromTrsf t = mkAcquire createTrsf2d deleteTrsf2d
+  where
+    createTrsf2d = [C.throwBlock| gp_Trsf2d* {
+      return new gp_Trsf2d(*$(gp_Trsf* t));
+    } |]
 
 -- mirror 
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetMirrorAboutPnt2d" setMirrorAboutPnt2d :: Ptr Trsf2d -> Ptr Pnt2d -> IO ()
+setMirrorAboutPnt2d :: Ptr Trsf2d -> Ptr Pnt2d -> IO ()
+setMirrorAboutPnt2d trsf pnt = [C.throwBlock| void {
+  $(gp_Trsf2d* trsf)->SetMirror(*$(gp_Pnt2d* pnt));
+} |]
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetMirrorAboutAx2d" setMirrorAboutAx2d :: Ptr Trsf2d -> Ptr Ax2d -> IO ()
+setMirrorAboutAx2d :: Ptr Trsf2d -> Ptr Ax2d -> IO ()
+setMirrorAboutAx2d trsf axis = [C.throwBlock| void {
+  $(gp_Trsf2d* trsf)->SetMirror(*$(gp_Ax2d* axis));
+} |]
 
 -- rotate
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetRotation" rawSetRotation :: Ptr Trsf2d -> Ptr Pnt2d -> CDouble -> IO ()
-
 setRotation :: Ptr Trsf2d -> Ptr Pnt2d -> Double -> IO ()
-setRotation = coerce rawSetRotation
+setRotation trsf pnt angle = 
+  let cAngle = realToFrac angle
+  in [C.throwBlock| void {
+    $(gp_Trsf2d* trsf)->SetRotation(*$(gp_Pnt2d* pnt), $(double cAngle));
+  } |]
 
 -- scale
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetScale" rawSetScale :: Ptr Trsf2d -> Ptr Pnt2d -> CDouble -> IO ()
-
 setScale :: Ptr Trsf2d -> Ptr Pnt2d -> Double -> IO ()
-setScale = coerce rawSetScale
+setScale trsf pnt scale = 
+  let cScale = realToFrac scale
+  in [C.throwBlock| void {
+    $(gp_Trsf2d* trsf)->SetScale(*$(gp_Pnt2d* pnt), $(double cScale));
+  } |]
 
 -- transformation
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetTransformation" setTransformation :: Ptr Trsf2d -> Ptr Ax2d -> IO ()
+setTransformation :: Ptr Trsf2d -> Ptr Ax2d -> IO ()
+setTransformation trsf axis = [C.throwBlock| void {
+  $(gp_Trsf2d* trsf)->SetTransformation(*$(gp_Ax2d* axis));
+} |]
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetTransformationRelative" setTransformationRelative :: Ptr Trsf2d -> Ptr Ax2d -> Ptr Ax2d -> IO ()
+setTransformationRelative :: Ptr Trsf2d -> Ptr Ax2d -> Ptr Ax2d -> IO ()
+setTransformationRelative trsf fromAx toAx = [C.throwBlock| void {
+  $(gp_Trsf2d* trsf)->SetTransformation(*$(gp_Ax2d* fromAx), *$(gp_Ax2d* toAx));
+} |]
 
 -- translation
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetTranslation" setTranslation :: Ptr Trsf2d -> Ptr Vec2d -> IO ()
+setTranslation :: Ptr Trsf2d -> Ptr Vec2d -> IO ()
+setTranslation trsf vec = [C.throwBlock| void {
+  $(gp_Trsf2d* trsf)->SetTranslation(*$(gp_Vec2d* vec));
+} |]
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetTranslationPart" setTranslationPart :: Ptr Trsf2d -> Ptr Vec2d -> IO ()
+setTranslationPart :: Ptr Trsf2d -> Ptr Vec2d -> IO ()
+setTranslationPart trsf vec = [C.throwBlock| void {
+  $(gp_Trsf2d* trsf)->SetTranslationPart(*$(gp_Vec2d* vec));
+} |]
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetTranslationRelative" setTranslationRelative :: Ptr Trsf2d -> Ptr Pnt2d -> Ptr Pnt2d -> IO ()
+setTranslationRelative :: Ptr Trsf2d -> Ptr Pnt2d -> Ptr Pnt2d -> IO ()
+setTranslationRelative trsf fromPnt toPnt = [C.throwBlock| void {
+  $(gp_Trsf2d* trsf)->SetTranslation(*$(gp_Pnt2d* fromPnt), *$(gp_Pnt2d* toPnt));
+} |]
 
 -- scaleFactor
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetScaleFactor" rawSetScaleFactor :: Ptr Trsf2d -> CDouble -> IO ()
-
 setScaleFactor :: Ptr Trsf2d -> Double -> IO ()
-setScaleFactor = coerce rawSetScaleFactor
+setScaleFactor trsf factor = 
+  let cFactor = realToFrac factor
+  in [C.throwBlock| void {
+    $(gp_Trsf2d* trsf)->SetScaleFactor($(double cFactor));
+  } |]
 
 -- setValues
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetValues" rawSetValues :: Ptr Trsf2d -> CDouble -> CDouble-> CDouble-> CDouble-> CDouble-> CDouble-> IO ()
-
-setValues :: Ptr Trsf2d -> Double -> Double -> Double -> Double-> Double -> Double -> IO ()
-setValues = coerce rawSetValues
+setValues :: Ptr Trsf2d -> Double -> Double -> Double -> Double -> Double -> Double -> IO ()
+setValues trsf a11 a12 a13 a21 a22 a23 = 
+  let ca11 = realToFrac a11
+      ca12 = realToFrac a12
+      ca13 = realToFrac a13
+      ca21 = realToFrac a21
+      ca22 = realToFrac a22
+      ca23 = realToFrac a23
+  in [C.throwBlock| void {
+    $(gp_Trsf2d* trsf)->SetValues($(double ca11), $(double ca12), $(double ca13),
+                                  $(double ca21), $(double ca22), $(double ca23));
+  } |]
 
 -- tests 
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_IsNegative" rawIsNegative :: Ptr Trsf2d -> IO CBool
-
 isNegative :: Ptr Trsf2d -> IO Bool
-isNegative = fmap (/= 0) . rawIsNegative
-
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_ScaleFactor" rawScaleFactor :: Ptr Trsf2d -> IO CDouble
+isNegative trsf = do
+  result <- [C.throwBlock| bool {
+    return $(gp_Trsf2d* trsf)->IsNegative();
+  } |]
+  return (cBoolToBool result)
 
 scaleFactor :: Ptr Trsf2d -> IO Double
-scaleFactor = coerce rawScaleFactor
-
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Value" rawValue :: Ptr Trsf2d -> CInt -> CInt -> IO CDouble
+scaleFactor trsf = do
+  result <- [C.throwBlock| double {
+    return $(gp_Trsf2d* trsf)->ScaleFactor();
+  } |]
+  return (realToFrac result)
 
 value :: Ptr Trsf2d -> Int -> Int -> IO Double
-value t row col = coerce $ rawValue t (fromIntegral row) (fromIntegral col)
+value trsf row col = do
+  let cRow = fromIntegral row
+      cCol = fromIntegral col
+  result <- [C.throwBlock| double {
+    return $(gp_Trsf2d* trsf)->Value($(int cRow), $(int cCol));
+  } |]
+  return (realToFrac result)
 
 -- invert/inverted
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Invert" invert :: Ptr Trsf2d-> IO ()
-
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Inverted" rawInverted :: Ptr Trsf2d-> IO (Ptr Trsf2d)
+invert :: Ptr Trsf2d -> IO ()
+invert trsf = [C.throwBlock| void {
+  $(gp_Trsf2d* trsf)->Invert();
+} |]
 
 inverted :: Ptr Trsf2d -> Acquire (Ptr Trsf2d)
-inverted t = mkAcquire (rawInverted t) deleteTrsf2d
+inverted trsf = mkAcquire createInverted deleteTrsf2d
+  where
+    createInverted = [C.throwBlock| gp_Trsf2d* {
+      return new gp_Trsf2d($(gp_Trsf2d* trsf)->Inverted());
+    } |]
 
 -- multiply/multiplied
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Multiply" multiply :: Ptr Trsf2d -> Ptr Trsf2d -> IO ()
-
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Multiplied" rawMultiplied :: Ptr Trsf2d -> Ptr Trsf2d -> IO (Ptr Trsf2d)
+multiply :: Ptr Trsf2d -> Ptr Trsf2d -> IO ()
+multiply trsf other = [C.throwBlock| void {
+  $(gp_Trsf2d* trsf)->Multiply(*$(gp_Trsf2d* other));
+} |]
 
 multiplied :: Ptr Trsf2d -> Ptr Trsf2d -> Acquire (Ptr Trsf2d)
-multiplied a b = mkAcquire (rawMultiplied a b) deleteTrsf2d
+multiplied a b = mkAcquire createMultiplied deleteTrsf2d
+  where
+    createMultiplied = [C.throwBlock| gp_Trsf2d* {
+      return new gp_Trsf2d($(gp_Trsf2d* a)->Multiplied(*$(gp_Trsf2d* b)));
+    } |]
 
 -- PreMultiply
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_PreMultiply" preMultiply :: Ptr Trsf2d -> Ptr Trsf2d -> IO ()
+preMultiply :: Ptr Trsf2d -> Ptr Trsf2d -> IO ()
+preMultiply trsf other = [C.throwBlock| void {
+  $(gp_Trsf2d* trsf)->PreMultiply(*$(gp_Trsf2d* other));
+} |]
 
 -- power/powered
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Power" rawPower :: Ptr Trsf2d -> CInt -> IO ()
-
 power :: Ptr Trsf2d -> Int -> IO ()
-power trsf times = rawPower trsf (fromIntegral times)
-
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Powered" rawPowered :: Ptr Trsf2d -> CInt -> IO (Ptr Trsf2d)
+power trsf times = 
+  let cTimes = fromIntegral times
+  in [C.throwBlock| void {
+    $(gp_Trsf2d* trsf)->Power($(int cTimes));
+  } |]
 
 powered :: Ptr Trsf2d -> Int -> Acquire (Ptr Trsf2d)
-powered trsf times = mkAcquire (rawPowered trsf (fromIntegral times)) deleteTrsf2d
+powered trsf times = 
+  let cTimes = fromIntegral times
+      createPowered = [C.throwBlock| gp_Trsf2d* {
+        return new gp_Trsf2d($(gp_Trsf2d* trsf)->Powered($(int cTimes)));
+      } |]
+  in mkAcquire createPowered deleteTrsf2d

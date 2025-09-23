@@ -53,6 +53,8 @@ description:         Please see the README on GitHub at <https://github.com/joe-
 dependencies:
 - base >= 4.7 && < 5
 - resourcet >= 1.2 && < 1.4
+- inline-c >= 0.9 && < 1.0
+- inline-c-cpp >= 0.4 && < 0.6
 
 ghc-options: *ghc-options
 
@@ -66,3 +68,7 @@ library:
   source-dirs: src
   cxx-sources:
     - cpp/*.cpp
+  default-extensions:
+    - QuasiQuotes
+    - TemplateHaskell
+    - OverloadedStrings

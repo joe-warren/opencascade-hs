@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.GP.Dir2d
 ( Dir2d
 , new
@@ -25,138 +24,204 @@ module OpenCascade.GP.Dir2d
 , transformed
 ) where
 
-
 import Prelude hiding (reverse)
 import OpenCascade.GP.Types
+import OpenCascade.GP.Internal.Context
 import OpenCascade.GP.Internal.Destructors
-import Foreign.C
+import OpenCascade.Internal.Bool (cBoolToBool)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
-import Data.Coerce (coerce)
-import Data.Acquire 
+import Data.Acquire
+
+C.context (C.cppCtx <> gpContext)
+
+C.include "<gp_Dir2d.hxx>"
+C.include "<gp_Pnt2d.hxx>"
+C.include "<gp_Ax2d.hxx>"
+C.include "<gp_Trsf2d.hxx>" 
 
 -- new
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_new_gp_Dir2d" rawNew :: CDouble -> CDouble -> IO (Ptr Dir2d)
-
 new :: Double -> Double -> Acquire (Ptr Dir2d)
-new x y = mkAcquire (rawNew (CDouble x) (CDouble y)) deleteDir2d
+new x y = mkAcquire createDir2d deleteDir2d
+  where
+    createDir2d = let
+      cx = realToFrac x
+      cy = realToFrac y
+      in [C.throwBlock| gp_Dir2d* {
+        return new gp_Dir2d($(double cx), $(double cy));
+      } |]
 
 -- getters
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_X" rawX :: Ptr Dir2d -> IO (CDouble)
-
 getX :: Ptr Dir2d -> IO Double
-getX = coerce rawX
-
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Y" rawY :: Ptr Dir2d -> IO (CDouble)
+getX dir = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir2d* dir)->X();
+  } |]
+  return (realToFrac result)
 
 getY :: Ptr Dir2d -> IO Double
-getY = coerce rawY
+getY dir = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir2d* dir)->Y();
+  } |]
+  return (realToFrac result)
 
 -- setters
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_SetX" rawSetX :: Ptr Dir2d -> CDouble -> IO ()
-
 setX :: Ptr Dir2d -> Double -> IO ()
-setX = coerce rawSetX
-
-
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_SetY" rawSetY :: Ptr Dir2d -> CDouble -> IO ()
+setX dir x = 
+  let cx = realToFrac x
+  in [C.throwBlock| void {
+    $(gp_Dir2d* dir)->SetX($(double cx));
+  } |]
 
 setY :: Ptr Dir2d -> Double -> IO ()
-setY = coerce rawSetY
+setY dir y = 
+  let cy = realToFrac y
+  in [C.throwBlock| void {
+    $(gp_Dir2d* dir)->SetY($(double cy));
+  } |]
 
 -- tests
 
 -- isEqual
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_IsEqual" rawIsEqual :: Ptr Dir2d -> Ptr Dir2d -> CDouble -> IO CBool
-
 isEqual :: Ptr Dir2d -> Ptr Dir2d -> Double -> IO Bool
-isEqual a b tolerance = (/= 0) <$> rawIsEqual a b (CDouble tolerance)
+isEqual a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Dir2d* a)->IsEqual(*$(gp_Dir2d* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- isNormal
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_IsNormal" rawIsNormal :: Ptr Dir2d -> Ptr Dir2d -> CDouble -> IO CBool
-
 isNormal :: Ptr Dir2d -> Ptr Dir2d -> Double -> IO Bool
-isNormal a b tolerance = (/= 0) <$> rawIsNormal a b (CDouble tolerance)
+isNormal a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Dir2d* a)->IsNormal(*$(gp_Dir2d* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 
 -- isOpposite
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_IsOpposite" rawIsOpposite :: Ptr Dir2d -> Ptr Dir2d -> CDouble -> IO CBool
-
 isOpposite :: Ptr Dir2d -> Ptr Dir2d -> Double -> IO Bool
-isOpposite a b tolerance = (/= 0) <$> rawIsOpposite a b (CDouble tolerance)
+isOpposite a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Dir2d* a)->IsOpposite(*$(gp_Dir2d* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- isParallel
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_IsParallel" rawIsParallel :: Ptr Dir2d -> Ptr Dir2d -> CDouble -> IO CBool
-
 isParallel :: Ptr Dir2d -> Ptr Dir2d -> Double -> IO Bool
-isParallel a b tolerance = (/= 0) <$> rawIsParallel a b (CDouble tolerance)
+isParallel a b tolerance = do
+  let cTolerance = realToFrac tolerance
+  result <- [C.throwBlock| bool {
+    return $(gp_Dir2d* a)->IsParallel(*$(gp_Dir2d* b), $(double cTolerance));
+  } |]
+  return (cBoolToBool result)
 
 -- angle
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Angle" rawAngle :: Ptr Dir2d -> Ptr Dir2d -> IO CDouble
-
 angle :: Ptr Dir2d -> Ptr Dir2d -> IO Double
-angle = coerce rawAngle
+angle a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir2d* a)->Angle(*$(gp_Dir2d* b));
+  } |]
+  return (realToFrac result)
 
 -- crossed
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Crossed" rawCrossed :: Ptr Dir2d -> Ptr Dir2d -> IO CDouble
-
 crossed :: Ptr Dir2d -> Ptr Dir2d -> IO Double
-crossed = coerce rawCrossed
+crossed a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir2d* a)->Crossed(*$(gp_Dir2d* b));
+  } |]
+  return (realToFrac result)
 
 -- dot
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Dot" rawDot :: Ptr Dir2d -> Ptr Dir2d -> IO CDouble
-
 dot :: Ptr Dir2d -> Ptr Dir2d -> IO Double
-dot = coerce rawDot
+dot a b = do
+  result <- [C.throwBlock| double {
+    return $(gp_Dir2d* a)->Dot(*$(gp_Dir2d* b));
+  } |]
+  return (realToFrac result)
 
 -- reverse/reversed
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Reverse" reverse :: Ptr Dir2d -> IO ()
-
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Reversed" rawReversed :: Ptr Dir2d -> IO (Ptr Dir2d)
+reverse :: Ptr Dir2d -> IO ()
+reverse dir = [C.throwBlock| void {
+  $(gp_Dir2d* dir)->Reverse();
+} |]
 
 reversed :: Ptr Dir2d -> Acquire (Ptr Dir2d)
-reversed axis = mkAcquire (rawReversed axis) deleteDir2d
+reversed axis = mkAcquire createReversed deleteDir2d
+  where
+    createReversed = [C.throwBlock| gp_Dir2d* {
+      return new gp_Dir2d($(gp_Dir2d* axis)->Reversed());
+    } |]
 
 -- mirror/mirrored
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Mirror" mirror :: Ptr Dir2d -> Ptr Dir2d -> IO ()
-
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Mirrored" rawMirrored :: Ptr Dir2d -> Ptr Dir2d -> IO (Ptr Dir2d)
+mirror :: Ptr Dir2d -> Ptr Dir2d -> IO ()
+mirror theDir mirrorDir = [C.throwBlock| void {
+  $(gp_Dir2d* theDir)->Mirror(*$(gp_Dir2d* mirrorDir));
+} |]
 
 mirrored :: Ptr Dir2d -> Ptr Dir2d -> Acquire (Ptr Dir2d)
-mirrored point axis = mkAcquire (rawMirrored point axis) deleteDir2d
+mirrored point axis = mkAcquire createMirrored deleteDir2d
+  where
+    createMirrored = [C.throwBlock| gp_Dir2d* {
+      return new gp_Dir2d($(gp_Dir2d* point)->Mirrored(*$(gp_Dir2d* axis)));
+    } |]
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_MirrorAboutAx2d" mirrorAboutAx2d :: Ptr Dir2d -> Ptr Ax2d -> IO ()
-
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_MirroredAboutAx2d" rawMirroredAboutAx2d :: Ptr Dir2d -> Ptr Ax2d -> IO (Ptr Dir2d)
+mirrorAboutAx2d :: Ptr Dir2d -> Ptr Ax2d -> IO ()
+mirrorAboutAx2d theDir mirrorAxis = [C.throwBlock| void {
+  $(gp_Dir2d* theDir)->Mirror(*$(gp_Ax2d* mirrorAxis));
+} |]
 
 mirroredAboutAx2d :: Ptr Dir2d -> Ptr Ax2d -> Acquire (Ptr Dir2d)
-mirroredAboutAx2d point axis = mkAcquire (rawMirroredAboutAx2d point axis) deleteDir2d
+mirroredAboutAx2d point axis = mkAcquire createMirrored deleteDir2d
+  where
+    createMirrored = [C.throwBlock| gp_Dir2d* {
+      return new gp_Dir2d($(gp_Dir2d* point)->Mirrored(*$(gp_Ax2d* axis)));
+    } |]
 
 -- rotate/rotated
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Rotate" rotate :: Ptr Dir2d -> CDouble-> IO ()
-
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Rotated" rawRotated :: Ptr Dir2d -> CDouble -> IO (Ptr Dir2d)
+rotate :: Ptr Dir2d -> Double -> IO ()
+rotate theDir amount = 
+  let cAmount = realToFrac amount
+  in [C.throwBlock| void {
+    $(gp_Dir2d* theDir)->Rotate($(double cAmount));
+  } |]
 
 rotated :: Ptr Dir2d -> Double -> Acquire (Ptr Dir2d)
-rotated point amount = mkAcquire (rawRotated point (CDouble amount)) deleteDir2d
+rotated point amount = 
+  let cAmount = realToFrac amount
+      createRotated = [C.throwBlock| gp_Dir2d* {
+        return new gp_Dir2d($(gp_Dir2d* point)->Rotated($(double cAmount)));
+      } |]
+  in mkAcquire createRotated deleteDir2d
 
 -- transform/transformed
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Transform" transform :: Ptr Dir2d -> Ptr Trsf2d -> IO ()
-
-foreign import capi unsafe "hs_gp_Dir2d.h hs_gp_Dir2d_Transformed" rawTransformed :: Ptr Dir2d -> Ptr Trsf2d -> IO (Ptr Dir2d)
+transform :: Ptr Dir2d -> Ptr Trsf2d -> IO ()
+transform theDir trsf = [C.throwBlock| void {
+  $(gp_Dir2d* theDir)->Transform(*$(gp_Trsf2d* trsf));
+} |]
 
 transformed :: Ptr Dir2d -> Ptr Trsf2d -> Acquire (Ptr Dir2d)
-transformed point trsf = mkAcquire (rawTransformed point trsf) deleteDir2d
+transformed point trsf = mkAcquire createTransformed deleteDir2d
+  where
+    createTransformed = [C.throwBlock| gp_Dir2d* {
+      return new gp_Dir2d($(gp_Dir2d* point)->Transformed(*$(gp_Trsf2d* trsf)));
+    } |]
