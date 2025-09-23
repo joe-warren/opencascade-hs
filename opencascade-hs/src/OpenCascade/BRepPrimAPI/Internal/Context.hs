@@ -6,11 +6,9 @@ import qualified Language.C.Inline.Cpp as C
 import Language.C.Types (CIdentifier)
 import Language.Haskell.TH (Q, Type)
 import OpenCascade.BRepPrimAPI.Types
-import OpenCascade.GP.Internal.Context (gpContext)
-import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 
 brepPrimAPIContext :: C.Context
-brepPrimAPIContext = gpContext <> topoDSContext <> C.cppTypePairs brepPrimAPITypePairs
+brepPrimAPIContext = C.cppTypePairs brepPrimAPITypePairs
   where
     brepPrimAPITypePairs :: [(CIdentifier, Q Type)]
     brepPrimAPITypePairs =

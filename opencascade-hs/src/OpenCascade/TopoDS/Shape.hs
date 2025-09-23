@@ -55,9 +55,10 @@ import Data.Acquire
 
 import qualified OpenCascade.TopLoc as TopLoc
 import qualified OpenCascade.TopLoc.Internal.Destructors as TopLoc.Destructors
+import OpenCascade.TopLoc.Internal.Context (topLocContext)
 import qualified OpenCascade.TopAbs as TopAbs
 
-C.context (C.cppCtx <> topoDSContext)
+C.context (C.cppCtx <> topoDSContext <> topLocContext)
 
 C.include "<TopoDS_Shape.hxx>"
 C.include "<TopLoc_Location.hxx>"
@@ -143,13 +144,12 @@ setOrientation shape orient =
 -- oriented
 
 oriented :: Ptr Shape -> TopAbs.Orientation -> Acquire (Ptr Shape)
-oriented shape orient = mkAcquire createOriented deleteShape
-  where
-    createOriented = 
-      let cOrient = fromIntegral . fromEnum $ orient
-      in [C.throwBlock| TopoDS_Shape* {
+oriented shape orient = 
+  let cOrient = fromIntegral . fromEnum $ orient
+      createOriented = [C.throwBlock| TopoDS_Shape* {
         return new TopoDS_Shape($(TopoDS_Shape* shape)->Oriented(static_cast<TopAbs_Orientation>($(int cOrient))));
       } |]
+  in mkAcquire createOriented deleteShape
 
 -- shapeType 
 

@@ -9,11 +9,13 @@ module OpenCascade.BRepPrimAPI.Internal.Destructors
 
 import OpenCascade.BRepPrimAPI.Types
 import OpenCascade.BRepPrimAPI.Internal.Context
+import OpenCascade.GP.Internal.Context (gpContext)
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 import qualified Language.C.Inline.Cpp as C
 import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 
-C.context (C.cppCtx <> brepPrimAPIContext)
+C.context (C.cppCtx <> gpContext <> topoDSContext <> brepPrimAPIContext)
 
 C.include "<BRepPrimAPI_MakeBox.hxx>"
 C.include "<BRepPrimAPI_MakeRevol.hxx>"

@@ -6,6 +6,8 @@ module OpenCascade.BRepPrimAPI.MakeCone
 import OpenCascade.BRepPrimAPI.Types (MakeCone)
 import OpenCascade.BRepPrimAPI.Internal.Context
 import OpenCascade.BRepPrimAPI.Internal.Destructors (deleteMakeCone)
+import OpenCascade.GP.Internal.Context (gpContext)
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Internal.Destructors as TopoDS.Destructors
 import qualified Language.C.Inline.Cpp as C
@@ -13,7 +15,7 @@ import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 import Data.Acquire 
 
-C.context (C.cppCtx <> brepPrimAPIContext)
+C.context (C.cppCtx <> gpContext <> topoDSContext <> brepPrimAPIContext)
 
 C.include "<BRepPrimAPI_MakeCone.hxx>"
 

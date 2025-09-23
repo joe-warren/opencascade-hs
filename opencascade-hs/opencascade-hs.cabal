@@ -31,17 +31,13 @@ extra-source-files:
     cpp/hs_BRepAlgoAPI_Cut.h
     cpp/hs_BRepAlgoAPI_Fuse.h
     cpp/hs_BRepBndLib.h
-    cpp/hs_BRepBuilderAPI_Copy.h
     cpp/hs_BRepBuilderAPI_GTransform.h
-    cpp/hs_BRepBuilderAPI_MakeEdge.h
     cpp/hs_BRepBuilderAPI_MakeFace.h
     cpp/hs_BRepBuilderAPI_MakePolygon.h
     cpp/hs_BRepBuilderAPI_MakeShape.h
     cpp/hs_BRepBuilderAPI_MakeSolid.h
-    cpp/hs_BRepBuilderAPI_MakeVertex.h
     cpp/hs_BRepBuilderAPI_MakeWire.h
     cpp/hs_BRepBuilderAPI_Sewing.h
-    cpp/hs_BRepBuilderAPI_Transform.h
     cpp/hs_BRepFilletAPI_MakeChamfer.h
     cpp/hs_BRepFilletAPI_MakeFillet.h
     cpp/hs_BRepGProp.h
@@ -121,6 +117,7 @@ library
       OpenCascade.BRepBuilderAPI.Copy
       OpenCascade.BRepBuilderAPI.FaceError
       OpenCascade.BRepBuilderAPI.GTransform
+      OpenCascade.BRepBuilderAPI.Internal.Context
       OpenCascade.BRepBuilderAPI.Internal.Destructors
       OpenCascade.BRepBuilderAPI.MakeEdge
       OpenCascade.BRepBuilderAPI.MakeFace
@@ -176,6 +173,7 @@ library
       OpenCascade.Geom.BezierCurve
       OpenCascade.Geom.BSplineCurve
       OpenCascade.Geom.Curve
+      OpenCascade.Geom.Internal.Context
       OpenCascade.Geom.Internal.Destructors
       OpenCascade.Geom.Types
       OpenCascade.GeomAbs.CurveType
@@ -214,6 +212,7 @@ library
       OpenCascade.Graphic3D.HorizontalTextAlignment
       OpenCascade.Graphic3D.VerticalTextAlignment
       OpenCascade.Handle
+      OpenCascade.Handle.Internal.Context
       OpenCascade.HLRAlgo.Internal.Destructors
       OpenCascade.HLRAlgo.Projector
       OpenCascade.HLRAlgo.Types
@@ -302,6 +301,7 @@ library
       OpenCascade.TopoDS.Vertex
       OpenCascade.TopoDS.Wire
       OpenCascade.TopTools
+      OpenCascade.TopTools.Internal.Context
       OpenCascade.TopTools.ShapeMapHasher
       OpenCascade.TopTools.Types
       OpenCascade.XCAFDoc.DocumentTool
@@ -336,17 +336,7 @@ library
       cpp/hs_BRepAlgoAPI_Cut.cpp
       cpp/hs_BRepAlgoAPI_Fuse.cpp
       cpp/hs_BRepBndLib.cpp
-      cpp/hs_BRepBuilderAPI_Copy.cpp
-      cpp/hs_BRepBuilderAPI_GTransform.cpp
-      cpp/hs_BRepBuilderAPI_MakeEdge.cpp
-      cpp/hs_BRepBuilderAPI_MakeFace.cpp
-      cpp/hs_BRepBuilderAPI_MakePolygon.cpp
       cpp/hs_BRepBuilderAPI_MakeShape.cpp
-      cpp/hs_BRepBuilderAPI_MakeSolid.cpp
-      cpp/hs_BRepBuilderAPI_MakeVertex.cpp
-      cpp/hs_BRepBuilderAPI_MakeWire.cpp
-      cpp/hs_BRepBuilderAPI_Sewing.cpp
-      cpp/hs_BRepBuilderAPI_Transform.cpp
       cpp/hs_BRepFilletAPI_MakeChamfer.cpp
       cpp/hs_BRepFilletAPI_MakeFillet.cpp
       cpp/hs_BRepGProp.cpp

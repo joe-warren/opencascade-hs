@@ -7,6 +7,8 @@ module OpenCascade.BRepPrimAPI.MakeRevol
 import OpenCascade.BRepPrimAPI.Types (MakeRevol)
 import OpenCascade.BRepPrimAPI.Internal.Context
 import OpenCascade.BRepPrimAPI.Internal.Destructors (deleteMakeRevol)
+import OpenCascade.GP.Internal.Context (gpContext)
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Internal.Destructors as TopoDS.Destructors
 import qualified OpenCascade.GP as GP
@@ -16,9 +18,10 @@ import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 import Data.Acquire
 
-C.context (C.cppCtx <> brepPrimAPIContext)
+C.context (C.cppCtx <> gpContext <> topoDSContext <> brepPrimAPIContext)
 
 C.include "<BRepPrimAPI_MakeRevol.hxx>"
+C.include "<TopoDS_Shape.hxx>"
 
 fromShapeAndAx1 :: Ptr TopoDS.Shape -> Ptr GP.Ax1 -> Bool -> Acquire (Ptr MakeRevol)
 fromShapeAndAx1 inputShape axis copy = mkAcquire createMakeRevol deleteMakeRevol

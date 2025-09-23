@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepBuilderAPI.MakeEdge
 ( fromVertices 
 , fromPnts
@@ -10,75 +9,120 @@ module OpenCascade.BRepBuilderAPI.MakeEdge
 , fromCurvePntsAndParameters 
 ) where
 
+import OpenCascade.BRepBuilderAPI.Internal.Context
+import OpenCascade.GP.Internal.Context (gpContext)
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
+import OpenCascade.Geom.Internal.Context (geomContext)
+import OpenCascade.Handle.Internal.Context (handleContext)
 import OpenCascade.TopoDS.Internal.Destructors as TopoDS.Destructors
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.Geom as Geom
 import OpenCascade.Handle
 import OpenCascade.Inheritance
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.C
 import Foreign.Ptr
-import Data.Acquire 
+import Data.Acquire
+
+C.context (C.cppCtx <> gpContext <> topoDSContext <> handleContext <> geomContext <> brepBuilderAPIContext)
+
+C.include "<BRepBuilderAPI_MakeEdge.hxx>"
+C.include "<TopoDS_Edge.hxx>"
+C.include "<Geom_Curve.hxx>" 
+C.include "<Standard_Handle.hxx>"
 
 
 -- fromVertices
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeEdge.h hs_BRepBuilderAPI_MakeEdge_fromVertices" rawFromVertices :: Ptr TopoDS.Vertex -> Ptr TopoDS.Vertex -> IO (Ptr TopoDS.Edge)
-
 fromVertices :: Ptr TopoDS.Vertex -> Ptr TopoDS.Vertex -> Acquire (Ptr TopoDS.Edge)
-fromVertices start end = mkAcquire (rawFromVertices start end) (TopoDS.Destructors.deleteShape . upcast)
-
+fromVertices startVertex endVertex = mkAcquire createEdge (TopoDS.Destructors.deleteShape . upcast)
+  where
+    createEdge = [C.throwBlock| TopoDS_Edge* {
+      BRepBuilderAPI_MakeEdge maker(*$(TopoDS_Vertex* startVertex), *$(TopoDS_Vertex* endVertex));
+      return new TopoDS_Edge(maker.Edge());
+    } |]
 
 -- fromPnts
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeEdge.h hs_BRepBuilderAPI_MakeEdge_fromPnts" rawFromPnts :: Ptr GP.Pnt -> Ptr GP.Pnt -> IO (Ptr TopoDS.Edge)
-
 fromPnts :: Ptr GP.Pnt -> Ptr GP.Pnt -> Acquire (Ptr TopoDS.Edge)
-fromPnts start end = mkAcquire (rawFromPnts start end) (TopoDS.Destructors.deleteShape . upcast)
-
+fromPnts startPnt endPnt = mkAcquire createEdge (TopoDS.Destructors.deleteShape . upcast)
+  where
+    createEdge = [C.throwBlock| TopoDS_Edge* {
+      BRepBuilderAPI_MakeEdge maker(*$(gp_Pnt* startPnt), *$(gp_Pnt* endPnt));
+      return new TopoDS_Edge(maker.Edge());
+    } |]
 
 -- fromCurve
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeEdge.h hs_BRepBuilderAPI_MakeEdge_fromCurve" rawFromCurve :: Ptr (Handle Geom.Curve) -> IO (Ptr TopoDS.Edge)
-
 fromCurve :: Ptr (Handle Geom.Curve) -> Acquire (Ptr TopoDS.Edge)
-fromCurve curve = mkAcquire (rawFromCurve curve) (TopoDS.Destructors.deleteShape . upcast)
+fromCurve curve = mkAcquire createEdge (TopoDS.Destructors.deleteShape . upcast)
+  where
+    createEdge = [C.throwBlock| TopoDS_Edge* {
+      BRepBuilderAPI_MakeEdge maker(*$(opencascade::handle<Geom_Curve>* curve));
+      return new TopoDS_Edge(maker.Edge());
+    } |]
 
 -- fromCurveAndParameters
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeEdge.h hs_BRepBuilderAPI_MakeEdge_fromCurveAndParameters" rawFromCurveAndParameters :: Ptr (Handle Geom.Curve) -> CDouble -> CDouble -> IO (Ptr TopoDS.Edge)
-
 fromCurveAndParameters :: Ptr (Handle Geom.Curve) -> Double -> Double -> Acquire (Ptr TopoDS.Edge)
-fromCurveAndParameters curve p1 p2 = mkAcquire (rawFromCurveAndParameters curve (CDouble p1) (CDouble p2)) (TopoDS.Destructors.deleteShape . upcast)
+fromCurveAndParameters curve p1 p2 = mkAcquire createEdge (TopoDS.Destructors.deleteShape . upcast)
+  where
+    createEdge = 
+      let cP1 = realToFrac p1
+          cP2 = realToFrac p2
+      in [C.throwBlock| TopoDS_Edge* {
+        BRepBuilderAPI_MakeEdge maker(*$(opencascade::handle<Geom_Curve>* curve), $(double cP1), $(double cP2));
+        return new TopoDS_Edge(maker.Edge());
+      } |]
 
 
 -- fromCurveAndVertices
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeEdge.h hs_BRepBuilderAPI_MakeEdge_fromCurveAndVertices" rawFromCurveAndVertices :: Ptr (Handle Geom.Curve) -> Ptr TopoDS.Vertex -> Ptr TopoDS.Vertex -> IO (Ptr TopoDS.Edge)
-
 fromCurveAndVertices :: Ptr (Handle Geom.Curve) -> Ptr TopoDS.Vertex -> Ptr TopoDS.Vertex -> Acquire (Ptr TopoDS.Edge)
-fromCurveAndVertices curve v1 v2 = mkAcquire (rawFromCurveAndVertices curve v1 v2) (TopoDS.Destructors.deleteShape . upcast)
+fromCurveAndVertices curve v1 v2 = mkAcquire createEdge (TopoDS.Destructors.deleteShape . upcast)
+  where
+    createEdge = [C.throwBlock| TopoDS_Edge* {
+      BRepBuilderAPI_MakeEdge maker(*$(opencascade::handle<Geom_Curve>* curve), *$(TopoDS_Vertex* v1), *$(TopoDS_Vertex* v2));
+      return new TopoDS_Edge(maker.Edge());
+    } |]
 
 
 -- fromCurveAndPnts
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeEdge.h hs_BRepBuilderAPI_MakeEdge_fromCurveAndPnts" rawFromCurveAndPnts :: Ptr (Handle Geom.Curve) -> Ptr GP.Pnt -> Ptr GP.Pnt -> IO (Ptr TopoDS.Edge)
-
 fromCurveAndPnts :: Ptr (Handle Geom.Curve) -> Ptr GP.Pnt -> Ptr GP.Pnt -> Acquire (Ptr TopoDS.Edge)
-fromCurveAndPnts curve v1 v2 = mkAcquire (rawFromCurveAndPnts curve v1 v2) (TopoDS.Destructors.deleteShape . upcast)
+fromCurveAndPnts curve v1 v2 = mkAcquire createEdge (TopoDS.Destructors.deleteShape . upcast)
+  where
+    createEdge = [C.throwBlock| TopoDS_Edge* {
+      BRepBuilderAPI_MakeEdge maker(*$(opencascade::handle<Geom_Curve>* curve), *$(gp_Pnt* v1), *$(gp_Pnt* v2));
+      return new TopoDS_Edge(maker.Edge());
+    } |]
 
 
 -- fromCurveVerticesAndParameters
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeEdge.h hs_BRepBuilderAPI_MakeEdge_fromCurveVerticesAndParameters" rawFromCurveVerticesAndParameters :: Ptr (Handle Geom.Curve) -> Ptr TopoDS.Vertex -> Ptr TopoDS.Vertex -> CDouble -> CDouble -> IO (Ptr TopoDS.Edge)
-
 fromCurveVerticesAndParameters :: Ptr (Handle Geom.Curve) -> Ptr TopoDS.Vertex -> Ptr TopoDS.Vertex -> Double -> Double -> Acquire (Ptr TopoDS.Edge)
-fromCurveVerticesAndParameters curve v1 v2 p1 p2 = mkAcquire (rawFromCurveVerticesAndParameters curve v1 v2 (CDouble p1) (CDouble p2)) (TopoDS.Destructors.deleteShape . upcast)
+fromCurveVerticesAndParameters curve v1 v2 p1 p2 = mkAcquire createEdge (TopoDS.Destructors.deleteShape . upcast)
+  where
+    createEdge = 
+      let cP1 = realToFrac p1
+          cP2 = realToFrac p2
+      in [C.throwBlock| TopoDS_Edge* {
+        BRepBuilderAPI_MakeEdge maker(*$(opencascade::handle<Geom_Curve>* curve), *$(TopoDS_Vertex* v1), *$(TopoDS_Vertex* v2), $(double cP1), $(double cP2));
+        return new TopoDS_Edge(maker.Edge());
+      } |]
 
 
 -- fromCurvePntsAndParameters
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeEdge.h hs_BRepBuilderAPI_MakeEdge_fromCurvePntsAndParameters" rawFromCurvePntsAndParameters :: Ptr (Handle Geom.Curve) -> Ptr GP.Pnt -> Ptr GP.Pnt -> CDouble -> CDouble -> IO (Ptr TopoDS.Edge)
-
 fromCurvePntsAndParameters :: Ptr (Handle Geom.Curve) -> Ptr GP.Pnt -> Ptr GP.Pnt -> Double -> Double -> Acquire (Ptr TopoDS.Edge)
-fromCurvePntsAndParameters curve v1 v2 p1 p2 = mkAcquire (rawFromCurvePntsAndParameters curve v1 v2 (CDouble p1) (CDouble p2)) (TopoDS.Destructors.deleteShape . upcast)
+fromCurvePntsAndParameters curve v1 v2 p1 p2 = mkAcquire createEdge (TopoDS.Destructors.deleteShape . upcast)
+  where
+    createEdge = 
+      let cP1 = realToFrac p1
+          cP2 = realToFrac p2
+      in [C.throwBlock| TopoDS_Edge* {
+        BRepBuilderAPI_MakeEdge maker(*$(opencascade::handle<Geom_Curve>* curve), *$(gp_Pnt* v1), *$(gp_Pnt* v2), $(double cP1), $(double cP2));
+        return new TopoDS_Edge(maker.Edge());
+      } |]

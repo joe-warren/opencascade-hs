@@ -6,10 +6,9 @@ import qualified Language.C.Inline.Cpp as C
 import Language.C.Types (CIdentifier)
 import Language.Haskell.TH (Q, Type)
 import OpenCascade.TopoDS.Types
-import OpenCascade.TopLoc.Internal.Context (topLocContext)
 
 topoDSContext :: C.Context
-topoDSContext = topLocContext <> C.cppTypePairs topoDSTypePairs
+topoDSContext = C.cppTypePairs topoDSTypePairs
   where
     topoDSTypePairs :: [(CIdentifier, Q Type)]
     topoDSTypePairs =

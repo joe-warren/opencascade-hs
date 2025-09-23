@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepBuilderAPI.MakeFace 
 ( MakeFace
 , new
@@ -15,7 +14,11 @@ module OpenCascade.BRepBuilderAPI.MakeFace
 
 import Prelude hiding (error)
 import OpenCascade.BRepBuilderAPI.Types
+import OpenCascade.BRepBuilderAPI.Internal.Context
 import OpenCascade.BRepBuilderAPI.Internal.Destructors
+import OpenCascade.GP.Internal.Context (gpContext)
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
+import OpenCascade.Geom.Internal.Context (geomContext)
 import OpenCascade.Handle
 import OpenCascade.Internal.Bool
 import qualified OpenCascade.TopoDS as TopoDS
@@ -23,71 +26,121 @@ import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
 import OpenCascade.Inheritance (upcast)
 import qualified OpenCascade.Geom as Geom
 import OpenCascade.BRepBuilderAPI.FaceError (FaceError)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.C
 import Foreign.Ptr
-import Data.Acquire 
+import Data.Acquire
+
+C.context (C.cppCtx <> gpContext <> topoDSContext <> geomContext <> brepBuilderAPIContext)
+
+C.include "<BRepBuilderAPI_MakeFace.hxx>"
+C.include "<TopoDS_Face.hxx>"
+C.include "<Geom_Surface.hxx>" 
 
 -- new
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_MakeFace" rawNew :: IO (Ptr MakeFace)
-
 new :: Acquire (Ptr MakeFace)
-new = mkAcquire rawNew deleteMakeFace
+new = mkAcquire createMakeFace deleteMakeFace
+  where
+    createMakeFace = [C.throwBlock| BRepBuilderAPI_MakeFace* {
+      return new BRepBuilderAPI_MakeFace();
+    } |]
 
 -- fromFace
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_MakeFace_fromFace" rawFromFace :: Ptr TopoDS.Face ->  IO (Ptr MakeFace)
-
 fromFace :: Ptr TopoDS.Face -> Acquire (Ptr MakeFace)
-fromFace theFace = mkAcquire (rawFromFace theFace) deleteMakeFace
+fromFace theFace = mkAcquire createMakeFace deleteMakeFace
+  where
+    createMakeFace = [C.throwBlock| BRepBuilderAPI_MakeFace* {
+      return new BRepBuilderAPI_MakeFace(*$(TopoDS_Face* theFace));
+    } |]
 
 -- fromSurface
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_MakeFace_fromSurface" rawFromSurface :: Ptr (Handle (Geom.Surface)) -> CDouble -> IO (Ptr MakeFace)
-
 fromSurface :: Ptr (Handle Geom.Surface) -> Double -> Acquire (Ptr MakeFace)
-fromSurface surf tolerance = mkAcquire (rawFromSurface surf (CDouble tolerance)) deleteMakeFace
+fromSurface surf tolerance = mkAcquire createMakeFace deleteMakeFace
+  where
+    createMakeFace = 
+      let cTolerance = realToFrac tolerance
+          voidPtr = castPtr surf
+      in [C.throwBlock| BRepBuilderAPI_MakeFace* {
+        opencascade::handle<Geom_Surface>* handlePtr = static_cast<opencascade::handle<Geom_Surface>*>($(void* voidPtr));
+        return new BRepBuilderAPI_MakeFace(*handlePtr, $(double cTolerance));
+      } |]
 
 -- fromSurfaceAndBounds
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_MakeFace_fromSurfaceAndBounds" rawFromSurfaceAndBounds :: Ptr (Handle (Geom.Surface)) -> CDouble -> CDouble -> CDouble -> CDouble -> CDouble -> IO (Ptr MakeFace)
-
 fromSurfaceAndBounds :: Ptr (Handle Geom.Surface) -> Double -> Double -> Double -> Double -> Double -> Acquire (Ptr MakeFace)
-fromSurfaceAndBounds surf uMin uMax vMin vMax tolerance = mkAcquire (rawFromSurfaceAndBounds surf (CDouble uMin) (CDouble uMax) (CDouble vMin) (CDouble vMax) (CDouble tolerance)) deleteMakeFace
+fromSurfaceAndBounds surf uMin uMax vMin vMax tolerance = mkAcquire createMakeFace deleteMakeFace
+  where
+    createMakeFace = 
+      let cUMin = realToFrac uMin
+          cUMax = realToFrac uMax
+          cVMin = realToFrac vMin
+          cVMax = realToFrac vMax
+          cTolerance = realToFrac tolerance
+          voidPtr = castPtr surf
+      in [C.throwBlock| BRepBuilderAPI_MakeFace* {
+        opencascade::handle<Geom_Surface>* handlePtr = static_cast<opencascade::handle<Geom_Surface>*>($(void* voidPtr));
+        return new BRepBuilderAPI_MakeFace(*handlePtr, $(double cUMin), $(double cUMax), $(double cVMin), $(double cVMax), $(double cTolerance));
+      } |]
 
 -- fromSurfaceAndWire
---
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_MakeFace_fromSurfaceAndWire" rawFromSurfaceAndWire :: Ptr (Handle (Geom.Surface)) -> Ptr TopoDS.Wire -> CBool -> IO (Ptr MakeFace)
 
 fromSurfaceAndWire :: Ptr (Handle Geom.Surface) -> Ptr TopoDS.Wire -> Bool -> Acquire (Ptr MakeFace)
-fromSurfaceAndWire surf wire inside = mkAcquire (rawFromSurfaceAndWire surf wire (boolToCBool inside)) deleteMakeFace
+fromSurfaceAndWire surf wire inside = mkAcquire createMakeFace deleteMakeFace
+  where
+    createMakeFace = 
+      let cInside = boolToCBool inside
+          voidPtr = castPtr surf
+      in [C.throwBlock| BRepBuilderAPI_MakeFace* {
+        opencascade::handle<Geom_Surface>* handlePtr = static_cast<opencascade::handle<Geom_Surface>*>($(void* voidPtr));
+        return new BRepBuilderAPI_MakeFace(*handlePtr, *$(TopoDS_Wire* wire), $(bool cInside));
+      } |]
 
 -- fromWire
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_MakeFace_fromWire" rawFromWire :: Ptr TopoDS.Wire -> CBool ->  IO (Ptr MakeFace)
-
 fromWire :: Ptr TopoDS.Wire -> Bool -> Acquire (Ptr MakeFace)
-fromWire wire onlyPlane = mkAcquire (rawFromWire wire (boolToCBool onlyPlane)) deleteMakeFace
+fromWire wire onlyPlane = mkAcquire createMakeFace deleteMakeFace
+  where
+    createMakeFace = 
+      let cOnlyPlane = boolToCBool onlyPlane
+      in [C.throwBlock| BRepBuilderAPI_MakeFace* {
+        return new BRepBuilderAPI_MakeFace(*$(TopoDS_Wire* wire), $(bool cOnlyPlane));
+      } |]
 
--- add 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_BRepBuilderAPI_MakeFace_Add" add :: Ptr MakeFace -> Ptr TopoDS.Wire -> IO ()
+-- add
+
+add :: Ptr MakeFace -> Ptr TopoDS.Wire -> IO ()
+add makeFace wireToAdd = [C.throwBlock| void {
+  $(BRepBuilderAPI_MakeFace* makeFace)->Add(*$(TopoDS_Wire* wireToAdd));
+} |]
 
 -- isDone
---
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_BRepBuilderAPI_MakeFace_IsDone" rawIsDone :: Ptr MakeFace -> IO (CBool)
 
 isDone :: Ptr MakeFace -> IO Bool
-isDone p = cBoolToBool <$> rawIsDone p
+isDone makeFace = do
+  result <- [C.throwBlock| bool {
+    return $(BRepBuilderAPI_MakeFace* makeFace)->IsDone();
+  } |]
+  return (cBoolToBool result)
 
 -- error
---
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_BRepBuilderAPI_MakeFace_Error" rawError :: Ptr MakeFace -> IO (CInt)
 
 error :: Ptr MakeFace -> IO FaceError 
-error p = toEnum . fromIntegral <$> rawError p
+error makeFace = do
+  result <- [C.throwBlock| int {
+    return static_cast<int>($(BRepBuilderAPI_MakeFace* makeFace)->Error());
+  } |]
+  return (toEnum . fromIntegral $ result)
 
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_BRepBuilderAPI_MakeFace_Face" rawFace :: Ptr MakeFace ->  IO (Ptr TopoDS.Face)
+-- face
 
 face :: Ptr MakeFace -> Acquire (Ptr TopoDS.Face)
-face builder = mkAcquire (rawFace builder) (deleteShape . upcast)
+face makeFace = mkAcquire createFace (deleteShape . upcast)
+  where
+    createFace = [C.throwBlock| TopoDS_Face* {
+      return new TopoDS_Face($(BRepBuilderAPI_MakeFace* makeFace)->Face());
+    } |]

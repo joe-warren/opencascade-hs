@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepBuilderAPI.Sewing
 ( Sewing
 , new
@@ -11,45 +10,77 @@ module OpenCascade.BRepBuilderAPI.Sewing
 , nbMultipleEdges
 ) where 
 
+import OpenCascade.BRepBuilderAPI.Internal.Context
+import OpenCascade.GP.Internal.Context (gpContext)
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
 import OpenCascade.BRepBuilderAPI.Internal.Destructors (deleteSewing)
 import OpenCascade.BRepBuilderAPI.Types (Sewing)
+import OpenCascade.Internal.Bool (boolToCBool)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr (Ptr)
 import Foreign.C (CBool (..), CDouble (..), CInt (..))
-import OpenCascade.Internal.Bool (boolToCBool)
 import Data.Acquire (Acquire, mkAcquire)
-import Data.Coerce (coerce)
 
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_new_BRepBuilderAPI_Sewing" rawNew :: CDouble -> CBool -> CBool -> CBool -> CBool -> IO (Ptr Sewing)
+C.context (C.cppCtx <> gpContext <> topoDSContext <> brepBuilderAPIContext)
+
+C.include "<BRepBuilderAPI_Sewing.hxx>"
+C.include "<TopoDS_Shape.hxx>"
 
 new :: Double -> Bool -> Bool -> Bool -> Bool -> Acquire (Ptr Sewing)
-new tolerance opt1 opt2 opt3 opt4 = mkAcquire (rawNew (coerce tolerance) (boolToCBool opt1) (boolToCBool opt2) (boolToCBool opt3) (boolToCBool opt4)) deleteSewing
+new tolerance opt1 opt2 opt3 opt4 = mkAcquire createSewing deleteSewing
+  where
+    createSewing = 
+      let cTolerance = realToFrac tolerance
+          cOpt1 = boolToCBool opt1
+          cOpt2 = boolToCBool opt2
+          cOpt3 = boolToCBool opt3
+          cOpt4 = boolToCBool opt4
+      in [C.throwBlock| BRepBuilderAPI_Sewing* {
+        return new BRepBuilderAPI_Sewing($(double cTolerance), $(bool cOpt1), $(bool cOpt2), $(bool cOpt3), $(bool cOpt4));
+      } |]
 
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_load" load :: Ptr Sewing -> Ptr TopoDS.Shape -> IO ()
+load :: Ptr Sewing -> Ptr TopoDS.Shape -> IO ()
+load sewing shape = [C.throwBlock| void {
+  $(BRepBuilderAPI_Sewing* sewing)->Load(*$(TopoDS_Shape* shape));
+} |]
 
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_add" add :: Ptr Sewing -> Ptr TopoDS.Shape -> IO ()
+add :: Ptr Sewing -> Ptr TopoDS.Shape -> IO ()
+add sewing shape = [C.throwBlock| void {
+  $(BRepBuilderAPI_Sewing* sewing)->Add(*$(TopoDS_Shape* shape));
+} |]
 
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_perform" perform :: Ptr Sewing -> IO ()
-
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_sewedShape" rawSewedShape :: Ptr Sewing -> IO (Ptr TopoDS.Shape)
+perform :: Ptr Sewing -> IO ()
+perform sewing = [C.throwBlock| void {
+  $(BRepBuilderAPI_Sewing* sewing)->Perform();
+} |]
 
 sewedShape :: Ptr Sewing -> Acquire (Ptr TopoDS.Shape)
-sewedShape sewing = mkAcquire (rawSewedShape sewing) (deleteShape)
-
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_nbFreeEdges" rawNbFreeEdges:: Ptr Sewing -> IO (CInt)
+sewedShape sewing = mkAcquire createSewedShape deleteShape
+  where
+    createSewedShape = [C.throwBlock| TopoDS_Shape* {
+      return new TopoDS_Shape($(BRepBuilderAPI_Sewing* sewing)->SewedShape());
+    } |]
 
 nbFreeEdges :: Ptr Sewing -> IO Int
-nbFreeEdges = fmap fromIntegral <$> rawNbFreeEdges
-
-
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_nbContigousEdges" rawNbContigousEdges:: Ptr Sewing -> IO (CInt)
+nbFreeEdges sewing = do
+  result <- [C.throwBlock| int {
+    return $(BRepBuilderAPI_Sewing* sewing)->NbFreeEdges();
+  } |]
+  return (fromIntegral result)
 
 nbContigousEdges :: Ptr Sewing -> IO Int
-nbContigousEdges = fmap fromIntegral <$> rawNbContigousEdges
-
-
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_nbMultipleEdges" rawNbMultipleEdges:: Ptr Sewing -> IO (CInt)
+nbContigousEdges sewing = do
+  result <- [C.throwBlock| int {
+    return $(BRepBuilderAPI_Sewing* sewing)->NbContigousEdges();
+  } |]
+  return (fromIntegral result)
 
 nbMultipleEdges :: Ptr Sewing -> IO Int
-nbMultipleEdges = fmap fromIntegral <$> rawNbMultipleEdges
+nbMultipleEdges sewing = do
+  result <- [C.throwBlock| int {
+    return $(BRepBuilderAPI_Sewing* sewing)->NbMultipleEdges();
+  } |]
+  return (fromIntegral result)

@@ -1,6 +1,5 @@
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.TopoDS.Types
 ( Shape
 , CompSolid
@@ -16,13 +15,13 @@ module OpenCascade.TopoDS.Types
 
 where
 
-
 import OpenCascade.Inheritance
 import OpenCascade.TopAbs.ShapeEnum
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 import Foreign.C
-
 
 data Shape
 data CompSolid
@@ -36,12 +35,25 @@ data Wire
 
 data Builder
 
--- duplicate definition of shape type from TopoDS.Shape
--- to simultaniously avoid Orphan Instances + circular dependencies
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_ShapeType" rawShapeType :: Ptr Shape -> IO CInt
+C.context (C.cppCtx <> C.cppTypePairs
+    [ ("TopoDS_Shape", [t| Shape |])
+    ])
 
+C.include "<TopoDS_Shape.hxx>"
+C.include "<TopAbs_ShapeEnum.hxx>"
+
+
+-- duplicate definition of shape type from TopoDS.Shape
+-- to simultaneously avoid Orphan Instances + circular dependencies
 shapeType :: Ptr Shape -> IO ShapeEnum
-shapeType s = toEnum . fromIntegral <$> rawShapeType s
+shapeType shape = do
+  result <- [C.throwBlock| int {
+    TopoDS_Shape* cShape = static_cast<TopoDS_Shape*>($(void* rawShape));
+    return static_cast<int>($(TopoDS_Shape* shape)->ShapeType());
+  } |]
+  return (toEnum . fromIntegral $ result)
+  where
+    rawShape = castPtr shape
 
 enumDowncast :: ShapeEnum -> Ptr Shape -> IO (Maybe (Ptr t))
 enumDowncast enum p = do

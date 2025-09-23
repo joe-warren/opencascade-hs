@@ -7,6 +7,8 @@ module OpenCascade.BRepPrimAPI.MakeBox
 import OpenCascade.BRepPrimAPI.Types (MakeBox)
 import OpenCascade.BRepPrimAPI.Internal.Context
 import OpenCascade.BRepPrimAPI.Internal.Destructors (deleteMakeBox)
+import OpenCascade.GP.Internal.Context (gpContext)
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 import qualified OpenCascade.TopoDS as TopoDS
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
 import qualified OpenCascade.GP as GP
@@ -15,7 +17,7 @@ import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 import Data.Acquire
 
-C.context (C.cppCtx <> brepPrimAPIContext)
+C.context (C.cppCtx <> gpContext <> topoDSContext <> brepPrimAPIContext)
 
 C.include "<BRepPrimAPI_MakeBox.hxx>"
 
