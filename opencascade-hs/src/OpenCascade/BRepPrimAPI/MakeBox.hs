@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepPrimAPI.MakeBox
 ( fromPnts
 , solid
@@ -6,34 +5,46 @@ module OpenCascade.BRepPrimAPI.MakeBox
 ) where
 
 import OpenCascade.BRepPrimAPI.Types (MakeBox)
+import OpenCascade.BRepPrimAPI.Internal.Context
 import OpenCascade.BRepPrimAPI.Internal.Destructors (deleteMakeBox)
 import qualified OpenCascade.TopoDS as TopoDS
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
 import qualified OpenCascade.GP as GP
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 import Data.Acquire
 
--- new
+C.context (C.cppCtx <> brepPrimAPIContext)
 
-foreign import capi unsafe "hs_BRepPrimAPI_MakeBox.h hs_new_BRepPrimAPI_MakeBox_fromPnts" rawFromPnts :: Ptr GP.Pnt -> Ptr GP.Pnt ->  IO (Ptr MakeBox)
+C.include "<BRepPrimAPI_MakeBox.hxx>"
+
+-- fromPnts
 
 fromPnts :: Ptr GP.Pnt -> Ptr GP.Pnt -> Acquire (Ptr MakeBox)
-fromPnts a b = mkAcquire (rawFromPnts a b) deleteMakeBox
+fromPnts pnt1 pnt2 = mkAcquire createMakeBox deleteMakeBox
+  where
+    createMakeBox = [C.throwBlock| BRepPrimAPI_MakeBox* {
+      return new BRepPrimAPI_MakeBox(*$(gp_Pnt* pnt1), *$(gp_Pnt* pnt2));
+    } |]
 
--- solid 
-
-
-foreign import capi unsafe "hs_BRepPrimAPI_MakeBox.h hs_BRepPrimAPI_MakeBox_Solid" rawSolid :: Ptr MakeBox ->  IO (Ptr TopoDS.Solid)
+-- solid
 
 solid :: Ptr MakeBox -> Acquire (Ptr TopoDS.Solid)
-solid builder = mkAcquire (rawSolid builder) (deleteShape . castPtr)
+solid makeBox = mkAcquire createSolid (deleteShape . castPtr)
+  where
+    createSolid = [C.throwBlock| TopoDS_Solid* {
+      return new TopoDS_Solid($(BRepPrimAPI_MakeBox* makeBox)->Solid());
+    } |]
 
 -- shell
 
-foreign import capi unsafe "hs_BRepPrimAPI_MakeBox.h hs_BRepPrimAPI_MakeBox_Shell" rawShell :: Ptr MakeBox ->  IO (Ptr TopoDS.Shell)
-
-shell:: Ptr MakeBox -> Acquire (Ptr TopoDS.Shell)
-shell builder = mkAcquire (rawShell builder) (deleteShape . castPtr)
+shell :: Ptr MakeBox -> Acquire (Ptr TopoDS.Shell)
+shell makeBox = mkAcquire createShell (deleteShape . castPtr)
+  where
+    createShell = [C.throwBlock| TopoDS_Shell* {
+      return new TopoDS_Shell($(BRepPrimAPI_MakeBox* makeBox)->Shell());
+    } |]
 
 
 

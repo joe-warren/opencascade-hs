@@ -1,16 +1,35 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepPrimAPI.MakeCylinder
 ( fromRadiusAndHeight
+, solid
 ) where
 
+import OpenCascade.BRepPrimAPI.Types (MakeCylinder)
+import OpenCascade.BRepPrimAPI.Internal.Context
+import OpenCascade.BRepPrimAPI.Internal.Destructors (deleteMakeCylinder)
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Internal.Destructors as TopoDS.Destructors
-import Foreign.C
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 import Data.Acquire 
-import Data.Coerce (coerce)
 
-foreign import capi unsafe "hs_BRepPrimAPI_MakeCylinder.h hs_BRepPrimAPI_MakeCylinder_fromRadiusAndHeight" rawFromRadiusAndHeight :: CDouble -> CDouble -> IO (Ptr TopoDS.Solid)
+C.context (C.cppCtx <> brepPrimAPIContext)
 
-fromRadiusAndHeight :: Double -> Double -> Acquire (Ptr TopoDS.Solid)
-fromRadiusAndHeight r h = mkAcquire (rawFromRadiusAndHeight (coerce r) (coerce h)) (TopoDS.Destructors.deleteShape . castPtr)
+C.include "<BRepPrimAPI_MakeCylinder.hxx>"
+
+fromRadiusAndHeight :: Double -> Double -> Acquire (Ptr MakeCylinder)
+fromRadiusAndHeight radius height = mkAcquire createMakeCylinder deleteMakeCylinder
+  where
+    createMakeCylinder = 
+      let cRadius = realToFrac radius
+          cHeight = realToFrac height
+      in [C.throwBlock| BRepPrimAPI_MakeCylinder* {
+        return new BRepPrimAPI_MakeCylinder($(double cRadius), $(double cHeight));
+      } |]
+
+solid :: Ptr MakeCylinder -> Acquire (Ptr TopoDS.Solid)
+solid makeCylinder = mkAcquire createSolid (TopoDS.Destructors.deleteShape . castPtr)
+  where
+    createSolid = [C.throwBlock| TopoDS_Solid* {
+      return new TopoDS_Solid($(BRepPrimAPI_MakeCylinder* makeCylinder)->Solid());
+    } |]

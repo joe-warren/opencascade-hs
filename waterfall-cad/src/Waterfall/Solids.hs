@@ -69,13 +69,19 @@ box (V3 x y z) = solidFromAcquire $ do
     
 -- | A sphere with radius of 1, centered on the origin
 unitSphere :: Solid
-unitSphere = solidFromAcquire $ Inheritance.upcast <$> MakeSphere.fromRadius 1
+unitSphere = solidFromAcquire $ do
+    sphereBuilder <- MakeSphere.fromRadius 1
+    solidShape <- MakeSphere.solid sphereBuilder
+    return $ Inheritance.upcast solidShape
 
 -- | A cylinder with radius 1, length 1,
 -- one of it's circular faces centered on the origin,
 -- the other centered on \( (0, 0, 1) \)
 unitCylinder :: Solid
-unitCylinder = solidFromAcquire $ Inheritance.upcast <$> MakeCylinder.fromRadiusAndHeight 1 1
+unitCylinder = solidFromAcquire $ do
+    cylinderBuilder <- MakeCylinder.fromRadiusAndHeight 1 1
+    solidShape <- MakeCylinder.solid cylinderBuilder
+    return $ Inheritance.upcast solidShape
 
 -- | A cylinder with radius 1, length 1,
 -- centered on the origin,
@@ -86,7 +92,10 @@ centeredCylinder = translate (unit _z ^* (-0.5)) $ unitCylinder
 -- With a point at the origin 
 -- and a circular face with Radius 1, centered on \( (0, 0, 1) \)
 unitCone :: Solid
-unitCone = solidFromAcquire $ Inheritance.upcast <$> MakeCone.fromTwoRadiiAndHeight 0 1 1
+unitCone = solidFromAcquire $ do
+    coneBuilder <- MakeCone.fromTwoRadiiAndHeight 0 1 1
+    solidShape <- MakeCone.solid coneBuilder
+    return $ Inheritance.upcast solidShape
 
 -- | Extruded a 2D face into a prism with a given length \(len\).
 --
@@ -96,7 +105,8 @@ prism :: Double -> TwoD.Shape.Shape -> Solid
 prism len face = solidFromAcquire $ do
     p <- toAcquire . rawShape $ face
     v <- GP.Vec.new 0 0 len
-    MakePrism.fromVec p v True True
+    prismBuilder <- MakePrism.fromVec p v True True
+    MakePrism.shape prismBuilder
 
 gPropQuery :: (Ptr GProps.GProps -> Acquire a) -> Solid -> a
 gPropQuery f s = unsafeFromAcquire $ do

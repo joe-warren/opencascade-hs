@@ -50,12 +50,6 @@ extra-source-files:
     cpp/hs_BRepOffsetAPI_MakeOffsetShape.h
     cpp/hs_BRepOffsetAPI_MakePipe.h
     cpp/hs_BRepOffsetAPI_ThruSections.h
-    cpp/hs_BRepPrimAPI_MakeBox.h
-    cpp/hs_BRepPrimAPI_MakeCone.h
-    cpp/hs_BRepPrimAPI_MakeCylinder.h
-    cpp/hs_BRepPrimAPI_MakePrism.h
-    cpp/hs_BRepPrimAPI_MakeRevol.h
-    cpp/hs_BRepPrimAPI_MakeSphere.h
     cpp/hs_BRepTools_WireExplorer.h
     cpp/hs_Font_BRepFont.h
     cpp/hs_Font_BRepTextBuilder.h
@@ -158,6 +152,7 @@ library
       OpenCascade.BRepOffsetAPI.ThruSections
       OpenCascade.BRepOffsetAPI.Types
       OpenCascade.BRepPrimAPI
+      OpenCascade.BRepPrimAPI.Internal.Context
       OpenCascade.BRepPrimAPI.Internal.Destructors
       OpenCascade.BRepPrimAPI.MakeBox
       OpenCascade.BRepPrimAPI.MakeCone
@@ -360,12 +355,6 @@ library
       cpp/hs_BRepOffsetAPI_MakeOffsetShape.cpp
       cpp/hs_BRepOffsetAPI_MakePipe.cpp
       cpp/hs_BRepOffsetAPI_ThruSections.cpp
-      cpp/hs_BRepPrimAPI_MakeBox.cpp
-      cpp/hs_BRepPrimAPI_MakeCone.cpp
-      cpp/hs_BRepPrimAPI_MakeCylinder.cpp
-      cpp/hs_BRepPrimAPI_MakePrism.cpp
-      cpp/hs_BRepPrimAPI_MakeRevol.cpp
-      cpp/hs_BRepPrimAPI_MakeSphere.cpp
       cpp/hs_BRepTools_WireExplorer.cpp
       cpp/hs_Font_BRepFont.cpp
       cpp/hs_Font_BRepTextBuilder.cpp
