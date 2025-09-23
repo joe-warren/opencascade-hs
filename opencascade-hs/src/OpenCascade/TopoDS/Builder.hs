@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.TopoDS.Builder 
 ( Builder 
 , new
@@ -12,25 +11,55 @@ module OpenCascade.TopoDS.Builder
 ) where
 
 import OpenCascade.TopoDS.Types 
+import OpenCascade.TopoDS.Internal.Context
 import OpenCascade.TopoDS.Internal.Destructors (deleteBuilder)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire, mkAcquire)
 
-foreign import capi unsafe "hs_TopoDS_Builder.h hs_new_TopoDS_Builder" rawNew :: IO (Ptr Builder)
+C.context (C.cppCtx <> topoDSContext)
+
+C.include "<TopoDS_Builder.hxx>"
 
 new :: Acquire (Ptr Builder)
-new = mkAcquire rawNew deleteBuilder
+new = mkAcquire createBuilder deleteBuilder
+  where
+    createBuilder = [C.throwBlock| TopoDS_Builder* {
+      return new TopoDS_Builder();
+    } |]
 
-foreign import capi unsafe "hs_TopoDS_Builder.h hs_TopoDS_Builder_makeWire" makeWire :: Ptr Builder -> Ptr Wire -> IO ()
+makeWire :: Ptr Builder -> Ptr Wire -> IO ()
+makeWire builder wire = [C.throwBlock| void {
+  $(TopoDS_Builder* builder)->MakeWire(*$(TopoDS_Wire* wire));
+} |]
 
-foreign import capi unsafe "hs_TopoDS_Builder.h hs_TopoDS_Builder_makeShell" makeShell :: Ptr Builder -> Ptr Shell -> IO ()
+makeShell :: Ptr Builder -> Ptr Shell -> IO ()
+makeShell builder shell = [C.throwBlock| void {
+  $(TopoDS_Builder* builder)->MakeShell(*$(TopoDS_Shell* shell));
+} |]
 
-foreign import capi unsafe "hs_TopoDS_Builder.h hs_TopoDS_Builder_makeSolid" makeSolid :: Ptr Builder -> Ptr Solid -> IO ()
+makeSolid :: Ptr Builder -> Ptr Solid -> IO ()
+makeSolid builder solid = [C.throwBlock| void {
+  $(TopoDS_Builder* builder)->MakeSolid(*$(TopoDS_Solid* solid));
+} |]
 
-foreign import capi unsafe "hs_TopoDS_Builder.h hs_TopoDS_Builder_makeCompSolid" makeCompSolid :: Ptr Builder -> Ptr CompSolid -> IO ()
+makeCompSolid :: Ptr Builder -> Ptr CompSolid -> IO ()
+makeCompSolid builder compSolid = [C.throwBlock| void {
+  $(TopoDS_Builder* builder)->MakeCompSolid(*$(TopoDS_CompSolid* compSolid));
+} |]
 
-foreign import capi unsafe "hs_TopoDS_Builder.h hs_TopoDS_Builder_makeCompound" makeCompound :: Ptr Builder -> Ptr Compound -> IO ()
+makeCompound :: Ptr Builder -> Ptr Compound -> IO ()
+makeCompound builder compound = [C.throwBlock| void {
+  $(TopoDS_Builder* builder)->MakeCompound(*$(TopoDS_Compound* compound));
+} |]
 
-foreign import capi unsafe "hs_TopoDS_Builder.h hs_TopoDS_Builder_add" add :: Ptr Builder -> Ptr Shape -> Ptr Shape -> IO ()
+add :: Ptr Builder -> Ptr Shape -> Ptr Shape -> IO ()
+add builder containerShape shapeToAdd = [C.throwBlock| void {
+  $(TopoDS_Builder* builder)->Add(*$(TopoDS_Shape* containerShape), *$(TopoDS_Shape* shapeToAdd));
+} |]
 
-foreign import capi unsafe "hs_TopoDS_Builder.h hs_TopoDS_Builder_remove" remove :: Ptr Builder -> Ptr Shape -> Ptr Shape -> IO ()
+remove :: Ptr Builder -> Ptr Shape -> Ptr Shape -> IO ()
+remove builder containerShape shapeToRemove = [C.throwBlock| void {
+  $(TopoDS_Builder* builder)->Remove(*$(TopoDS_Shape* containerShape), *$(TopoDS_Shape* shapeToRemove));
+} |]

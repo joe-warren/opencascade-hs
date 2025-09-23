@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.TopoDS.Shape
 ( Shape
 , new
@@ -45,8 +44,11 @@ module OpenCascade.TopoDS.Shape
 
 import Prelude hiding (reverse)
 import OpenCascade.TopoDS.Types
+import OpenCascade.TopoDS.Internal.Context
 import OpenCascade.TopoDS.Internal.Destructors
-import OpenCascade.Internal.Bool
+import OpenCascade.Internal.Bool (boolToCBool, cBoolToBool)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.C
 import Foreign.Ptr
 import Data.Acquire 
@@ -54,281 +56,361 @@ import Data.Acquire
 import qualified OpenCascade.TopLoc as TopLoc
 import qualified OpenCascade.TopLoc.Internal.Destructors as TopLoc.Destructors
 import qualified OpenCascade.TopAbs as TopAbs
+
+C.context (C.cppCtx <> topoDSContext)
+
+C.include "<TopoDS_Shape.hxx>"
+C.include "<TopLoc_Location.hxx>"
+C.include "<TopAbs_Orientation.hxx>"
 -- new
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_new_TopoDS_Shape" rawNew :: IO (Ptr Shape)
-
 new :: Acquire (Ptr Shape)
-new = mkAcquire rawNew  deleteShape
+new = mkAcquire createShape deleteShape
+  where
+    createShape = [C.throwBlock| TopoDS_Shape* {
+      return new TopoDS_Shape();
+    } |]
 
 -- copy
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_new_TopoDS_Shape_copy" rawCopy :: Ptr Shape -> IO (Ptr Shape)
-
 copy :: Ptr Shape -> Acquire (Ptr Shape)
-copy shape = mkAcquire (rawCopy shape)  deleteShape
+copy shape = mkAcquire createCopy deleteShape
+  where
+    createCopy = [C.throwBlock| TopoDS_Shape* {
+      return new TopoDS_Shape(*$(TopoDS_Shape* shape));
+    } |]
 
 -- isNull 
---
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_IsNull" rawIsNull :: Ptr Shape -> IO CBool
 
 isNull :: Ptr Shape -> IO Bool
-isNull s = cBoolToBool <$> rawIsNull s
+isNull shape = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shape)->IsNull();
+  } |]
+  return (cBoolToBool result)
 
 -- Nullify 
---
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Nullify" nullify :: Ptr Shape -> IO ()
+
+nullify :: Ptr Shape -> IO ()
+nullify shape = [C.throwBlock| void {
+  $(TopoDS_Shape* shape)->Nullify();
+} |]
 
 -- location 
---
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Location" rawLocation :: Ptr Shape -> IO (Ptr TopLoc.Location)
 
 location :: Ptr Shape -> Acquire (Ptr TopLoc.Location)
-location s = mkAcquire (rawLocation s) TopLoc.Destructors.deleteLocation  
+location shape = mkAcquire createLocation TopLoc.Destructors.deleteLocation  
+  where
+    createLocation = [C.throwBlock| TopLoc_Location* {
+      return new TopLoc_Location($(TopoDS_Shape* shape)->Location());
+    } |]
 
 -- setLocation 
---
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_SetLocation" setLocation :: Ptr Shape -> Ptr TopLoc.Location -> IO ()
+setLocation :: Ptr Shape -> Ptr TopLoc.Location -> IO ()
+setLocation shape loc = [C.throwBlock| void {
+  $(TopoDS_Shape* shape)->Location(*$(TopLoc_Location* loc));
+} |]
 
 -- located
---
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Located" rawLocated :: Ptr Shape -> Ptr TopLoc.Location -> IO (Ptr Shape)
 
 located :: Ptr Shape -> Ptr TopLoc.Location -> Acquire (Ptr Shape)
-located s l = mkAcquire (rawLocated s l) deleteShape
+located shape loc = mkAcquire createLocated deleteShape
+  where
+    createLocated = [C.throwBlock| TopoDS_Shape* {
+      return new TopoDS_Shape($(TopoDS_Shape* shape)->Located(*$(TopLoc_Location* loc)));
+    } |]
 
 
 -- orientation
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Orientation" rawOrientation :: Ptr Shape -> IO (CInt)
-
 orientation :: Ptr Shape -> IO TopAbs.Orientation
-orientation s = toEnum . fromIntegral <$> rawOrientation s
+orientation shape = do
+  result <- [C.throwBlock| int {
+    return static_cast<int>($(TopoDS_Shape* shape)->Orientation());
+  } |]
+  return (toEnum . fromIntegral $ result)
 
 -- setOrientation
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_SetOrientation" rawSetOrientation :: Ptr Shape -> CInt -> IO ()
-
 setOrientation :: Ptr Shape -> TopAbs.Orientation -> IO ()
-setOrientation s o = rawSetOrientation s (fromIntegral . fromEnum $ o) 
-
+setOrientation shape orient = 
+  let cOrient = fromIntegral . fromEnum $ orient
+  in [C.throwBlock| void {
+    $(TopoDS_Shape* shape)->Orientation(static_cast<TopAbs_Orientation>($(int cOrient)));
+  } |]
 
 -- oriented
---
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Oriented" rawOriented :: Ptr Shape -> CInt -> IO (Ptr Shape)
 
 oriented :: Ptr Shape -> TopAbs.Orientation -> Acquire (Ptr Shape)
-oriented s o = mkAcquire (rawOriented s (fromIntegral . fromEnum $ o)) deleteShape
+oriented shape orient = mkAcquire createOriented deleteShape
+  where
+    createOriented = 
+      let cOrient = fromIntegral . fromEnum $ orient
+      in [C.throwBlock| TopoDS_Shape* {
+        return new TopoDS_Shape($(TopoDS_Shape* shape)->Oriented(static_cast<TopAbs_Orientation>($(int cOrient))));
+      } |]
 
 -- shapeType 
---
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_ShapeType" rawShapeType :: Ptr Shape -> IO CInt
 
 shapeType :: Ptr Shape -> IO TopAbs.ShapeEnum
-shapeType s = toEnum . fromIntegral <$> rawShapeType s
+shapeType shape = do
+  result <- [C.throwBlock| int {
+    return static_cast<int>($(TopoDS_Shape* shape)->ShapeType());
+  } |]
+  return (toEnum . fromIntegral $ result)
 
 -- free
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Free" rawFree :: Ptr Shape -> IO CBool
-
 free :: Ptr Shape -> IO Bool
-free s = cBoolToBool <$> rawFree s
+free shape = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shape)->Free();
+  } |]
+  return (cBoolToBool result)
 
---setFree 
-
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_SetFree" rawSetFree :: Ptr Shape -> CBool-> IO ()
+-- setFree 
 
 setFree :: Ptr Shape -> Bool -> IO ()
-setFree s b = rawSetFree s (boolToCBool b)
+setFree shape value = 
+  let cValue = boolToCBool value
+  in [C.throwBlock| void {
+    $(TopoDS_Shape* shape)->Free($(bool cValue));
+  } |]
 
 -- locked
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Locked" rawLocked :: Ptr Shape -> IO CBool
-
 locked :: Ptr Shape -> IO Bool
-locked s = cBoolToBool <$> rawLocked s
+locked shape = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shape)->Locked();
+  } |]
+  return (cBoolToBool result)
 
---setLocked 
-
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_SetLocked" rawSetLocked :: Ptr Shape -> CBool-> IO ()
+-- setLocked 
 
 setLocked :: Ptr Shape -> Bool -> IO ()
-setLocked s b = rawSetLocked s (boolToCBool b)
-
-
+setLocked shape value = 
+  let cValue = boolToCBool value
+  in [C.throwBlock| void {
+    $(TopoDS_Shape* shape)->Locked($(bool cValue));
+  } |]
 
 -- modified
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Modified" rawModified :: Ptr Shape -> IO CBool
-
 modified :: Ptr Shape -> IO Bool
-modified s = cBoolToBool <$> rawModified s
+modified shape = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shape)->Modified();
+  } |]
+  return (cBoolToBool result)
 
---setModified 
-
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_SetModified" rawSetModified :: Ptr Shape -> CBool-> IO ()
+-- setModified 
 
 setModified :: Ptr Shape -> Bool -> IO ()
-setModified s b = rawSetModified s (boolToCBool b)
+setModified shape value = 
+  let cValue = boolToCBool value
+  in [C.throwBlock| void {
+    $(TopoDS_Shape* shape)->Modified($(bool cValue));
+  } |]
 
 
 -- checked
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Checked" rawChecked :: Ptr Shape -> IO CBool
-
 checked :: Ptr Shape -> IO Bool
-checked s = cBoolToBool <$> rawChecked s
+checked shape = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shape)->Checked();
+  } |]
+  return (cBoolToBool result)
 
---setChecked 
-
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_SetChecked" rawSetChecked :: Ptr Shape -> CBool-> IO ()
+-- setChecked 
 
 setChecked :: Ptr Shape -> Bool -> IO ()
-setChecked s b = rawSetChecked s (boolToCBool b)
+setChecked shape value = 
+  let cValue = boolToCBool value
+  in [C.throwBlock| void {
+    $(TopoDS_Shape* shape)->Checked($(bool cValue));
+  } |]
 
 -- orientable
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Orientable" rawOrientable :: Ptr Shape -> IO CBool
-
 orientable :: Ptr Shape -> IO Bool
-orientable s = cBoolToBool <$> rawOrientable s
+orientable shape = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shape)->Orientable();
+  } |]
+  return (cBoolToBool result)
 
---setOrientable 
-
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_SetOrientable" rawSetOrientable :: Ptr Shape -> CBool-> IO ()
+-- setOrientable 
 
 setOrientable :: Ptr Shape -> Bool -> IO ()
-setOrientable s b = rawSetOrientable s (boolToCBool b)
+setOrientable shape value = 
+  let cValue = boolToCBool value
+  in [C.throwBlock| void {
+    $(TopoDS_Shape* shape)->Orientable($(bool cValue));
+  } |]
 
 -- closed
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Closed" rawClosed :: Ptr Shape -> IO CBool
-
 closed :: Ptr Shape -> IO Bool
-closed s = cBoolToBool <$> rawClosed s
+closed shape = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shape)->Closed();
+  } |]
+  return (cBoolToBool result)
 
---setClosed 
-
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_SetClosed" rawSetClosed :: Ptr Shape -> CBool-> IO ()
+-- setClosed 
 
 setClosed :: Ptr Shape -> Bool -> IO ()
-setClosed s b = rawSetClosed s (boolToCBool b)
-
+setClosed shape value = 
+  let cValue = boolToCBool value
+  in [C.throwBlock| void {
+    $(TopoDS_Shape* shape)->Closed($(bool cValue));
+  } |]
 
 -- infinite
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Infinite" rawInfinite :: Ptr Shape -> IO CBool
-
 infinite :: Ptr Shape -> IO Bool
-infinite s = cBoolToBool <$> rawInfinite s
+infinite shape = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shape)->Infinite();
+  } |]
+  return (cBoolToBool result)
 
---setInfinite 
-
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_SetInfinite" rawSetInfinite :: Ptr Shape -> CBool-> IO ()
+-- setInfinite 
 
 setInfinite :: Ptr Shape -> Bool -> IO ()
-setInfinite s b = rawSetInfinite s (boolToCBool b)
-
-
+setInfinite shape value = 
+  let cValue = boolToCBool value
+  in [C.throwBlock| void {
+    $(TopoDS_Shape* shape)->Infinite($(bool cValue));
+  } |]
 
 -- convex
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Convex" rawConvex :: Ptr Shape -> IO CBool
-
 convex :: Ptr Shape -> IO Bool
-convex s = cBoolToBool <$> rawConvex s
+convex shape = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shape)->Convex();
+  } |]
+  return (cBoolToBool result)
 
---setConvex 
-
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_SetConvex" rawSetConvex :: Ptr Shape -> CBool-> IO ()
+-- setConvex 
 
 setConvex :: Ptr Shape -> Bool -> IO ()
-setConvex s b = rawSetConvex s (boolToCBool b)
+setConvex shape value = 
+  let cValue = boolToCBool value
+  in [C.throwBlock| void {
+    $(TopoDS_Shape* shape)->Convex($(bool cValue));
+  } |]
 
 
 -- move
---
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Move" move :: Ptr Shape -> Ptr TopLoc.Location -> IO ()
+move :: Ptr Shape -> Ptr TopLoc.Location -> IO ()
+move shape loc = [C.throwBlock| void {
+  $(TopoDS_Shape* shape)->Move(*$(TopLoc_Location* loc));
+} |]
 
 -- moved
---
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Moved" rawMoved :: Ptr Shape -> Ptr TopLoc.Location -> IO (Ptr Shape)
 
 moved :: Ptr Shape -> Ptr TopLoc.Location -> Acquire (Ptr Shape)
-moved s l = mkAcquire (rawMoved s l) deleteShape
+moved shape loc = mkAcquire createMoved deleteShape
+  where
+    createMoved = [C.throwBlock| TopoDS_Shape* {
+      return new TopoDS_Shape($(TopoDS_Shape* shape)->Moved(*$(TopLoc_Location* loc)));
+    } |]
 
 -- nbChildren
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_NbChildren" rawNbChildren :: Ptr Shape -> IO (CInt)
-
 nbChildren :: Ptr Shape -> IO Int
-nbChildren s = fromIntegral <$> rawNbChildren s
+nbChildren shape = do
+  result <- [C.throwBlock| int {
+    return $(TopoDS_Shape* shape)->NbChildren();
+  } |]
+  return (fromIntegral result)
 
 -- reverse
---
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Reverse" reverse :: Ptr Shape -> IO ()
+reverse :: Ptr Shape -> IO ()
+reverse shape = [C.throwBlock| void {
+  $(TopoDS_Shape* shape)->Reverse();
+} |]
 
 -- reversed
---
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Reversed" rawReversed :: Ptr Shape -> IO (Ptr Shape)
 
 reversed :: Ptr Shape -> Acquire (Ptr Shape)
-reversed s = mkAcquire (rawReversed s) deleteShape
-
+reversed shape = mkAcquire createReversed deleteShape
+  where
+    createReversed = [C.throwBlock| TopoDS_Shape* {
+      return new TopoDS_Shape($(TopoDS_Shape* shape)->Reversed());
+    } |]
 
 -- complement
---
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Complement" complement :: Ptr Shape -> IO ()
+complement :: Ptr Shape -> IO ()
+complement shape = [C.throwBlock| void {
+  $(TopoDS_Shape* shape)->Complement();
+} |]
 
 -- complemented
---
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Complemented" rawComplemented :: Ptr Shape -> IO (Ptr Shape)
 
 complemented :: Ptr Shape -> Acquire (Ptr Shape)
-complemented s = mkAcquire (rawComplemented s) deleteShape
+complemented shape = mkAcquire createComplemented deleteShape
+  where
+    createComplemented = [C.throwBlock| TopoDS_Shape* {
+      return new TopoDS_Shape($(TopoDS_Shape* shape)->Complemented());
+    } |]
 
 -- isEqual
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_IsEqual" rawIsEqual :: Ptr Shape -> Ptr Shape -> IO CBool
-
 isEqual :: Ptr Shape -> Ptr Shape -> IO Bool
-isEqual a b = cBoolToBool <$> rawIsEqual a b
-
+isEqual shapeA shapeB = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shapeA)->IsEqual(*$(TopoDS_Shape* shapeB));
+  } |]
+  return (cBoolToBool result)
 
 -- isSame
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_IsSame" rawIsSame :: Ptr Shape -> Ptr Shape -> IO CBool
-
 isSame :: Ptr Shape -> Ptr Shape -> IO Bool
-isSame a b = cBoolToBool <$> rawIsSame a b
-
+isSame shapeA shapeB = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shapeA)->IsSame(*$(TopoDS_Shape* shapeB));
+  } |]
+  return (cBoolToBool result)
 
 -- isPartner
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_IsPartner" rawIsPartner :: Ptr Shape -> Ptr Shape -> IO CBool
-
 isPartner :: Ptr Shape -> Ptr Shape -> IO Bool
-isPartner a b = cBoolToBool <$> rawIsPartner a b
+isPartner shapeA shapeB = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shapeA)->IsPartner(*$(TopoDS_Shape* shapeB));
+  } |]
+  return (cBoolToBool result)
 
 -- isNotEqual
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_IsNotEqual" rawIsNotEqual :: Ptr Shape -> Ptr Shape -> IO CBool
-
 isNotEqual :: Ptr Shape -> Ptr Shape -> IO Bool
-isNotEqual a b = cBoolToBool <$> rawIsNotEqual a b
+isNotEqual shapeA shapeB = do
+  result <- [C.throwBlock| bool {
+    return $(TopoDS_Shape* shapeA)->IsNotEqual(*$(TopoDS_Shape* shapeB));
+  } |]
+  return (cBoolToBool result)
 
 -- emptyCopy
---
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_EmptyCopy" emptyCopy :: Ptr Shape -> IO ()
+emptyCopy :: Ptr Shape -> IO ()
+emptyCopy shape = [C.throwBlock| void {
+  $(TopoDS_Shape* shape)->EmptyCopy();
+} |]
 
 -- emptyCopied
---
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_EmptyCopied" rawEmptyCopied :: Ptr Shape -> IO (Ptr Shape)
 
 emptyCopied :: Ptr Shape -> Acquire (Ptr Shape)
-emptyCopied s = mkAcquire (rawEmptyCopied s) deleteShape
+emptyCopied shape = mkAcquire createEmptyCopied deleteShape
+  where
+    createEmptyCopied = [C.throwBlock| TopoDS_Shape* {
+      return new TopoDS_Shape($(TopoDS_Shape* shape)->EmptyCopied());
+    } |]

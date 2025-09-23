@@ -1,14 +1,26 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.TopoDS.Internal.Destructors 
 ( deleteShape
 , deleteBuilder
 ) where
 
 import OpenCascade.TopoDS.Types
-
+import OpenCascade.TopoDS.Internal.Context
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_delete_TopoDS_Shape" deleteShape :: Ptr Shape -> IO ()
+C.context (C.cppCtx <> topoDSContext)
 
-foreign import capi unsafe "hs_TopoDS_Builder.h hs_delete_TopoDS_Builder" deleteBuilder :: Ptr Builder -> IO ()
+C.include "<TopoDS_Shape.hxx>"
+C.include "<TopoDS_Builder.hxx>"
+
+deleteShape :: Ptr Shape -> IO ()
+deleteShape shape = [C.throwBlock| void {
+  delete $(TopoDS_Shape* shape);
+} |]
+
+deleteBuilder :: Ptr Builder -> IO ()
+deleteBuilder builder = [C.throwBlock| void {
+  delete $(TopoDS_Builder* builder);
+} |]
 

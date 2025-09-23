@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.TopLoc.Location
 ( Location
 , new
@@ -18,109 +17,145 @@ module OpenCascade.TopLoc.Location
 ) where
 
 import OpenCascade.TopLoc.Types
+import OpenCascade.TopLoc.Internal.Context
 import OpenCascade.TopLoc.Internal.Destructors
+import OpenCascade.GP.Internal.Context (gpContext)
 import OpenCascade.GP.Internal.Destructors (deleteTrsf)
+import OpenCascade.Internal.Bool (cBoolToBool)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.C
 import Foreign.Ptr
 import Data.Acquire 
 import qualified OpenCascade.GP as GP
 
+C.context (C.cppCtx <> gpContext <> topLocContext)
+
+C.include "<TopLoc_Location.hxx>"
+C.include "<gp_Trsf.hxx>"
+
 -- new 
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_new_TopLoc_Location" rawNew :: IO (Ptr Location)
-
 new :: Acquire (Ptr Location)
-new = mkAcquire rawNew deleteLocation
+new = mkAcquire createLocation deleteLocation
+  where
+    createLocation = [C.throwBlock| TopLoc_Location* {
+      return new TopLoc_Location();
+    } |]
 
 -- from GP.Trsf
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_new_TopLoc_Location_fromGPTrsf" rawFromGPTrsf :: Ptr GP.Trsf -> IO (Ptr Location)
-
 fromGPTrsf :: Ptr (GP.Trsf) -> Acquire (Ptr Location)
-fromGPTrsf t = mkAcquire (rawFromGPTrsf t) deleteLocation
+fromGPTrsf trsf = mkAcquire createFromTrsf deleteLocation
+  where
+    createFromTrsf = [C.throwBlock| TopLoc_Location* {
+      return new TopLoc_Location(*$(gp_Trsf* trsf));
+    } |]
 
 -- isIdentity
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_IsIdentity" rawIsIdentity :: Ptr Location -> IO (CBool)
-
 isIdentity :: Ptr Location -> IO Bool
-isIdentity l = (/=0) <$>  rawIsIdentity l
+isIdentity location = do
+  result <- [C.throwBlock| bool {
+    return $(TopLoc_Location* location)->IsIdentity();
+  } |]
+  return (cBoolToBool result)
 
 -- firstPower 
---
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_FirstPower" rawFirstPower :: Ptr Location -> IO (CInt)
 
 firstPower :: Ptr Location -> IO Int
-firstPower l = fromIntegral <$> rawFirstPower l 
+firstPower location = do
+  result <- [C.throwBlock| int {
+    return $(TopLoc_Location* location)->FirstPower();
+  } |]
+  return (fromIntegral result) 
 
 -- nextLocation
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_NextLocation" rawNextLocation :: Ptr Location -> IO (Ptr Location)
-
 nextLocation :: Ptr Location -> Acquire (Ptr Location)
-nextLocation l = mkAcquire (rawNextLocation l) deleteLocation
+nextLocation location = mkAcquire createNext deleteLocation
+  where
+    createNext = [C.throwBlock| TopLoc_Location* {
+      return new TopLoc_Location($(TopLoc_Location* location)->NextLocation());
+    } |]
 
 -- inverted
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Inverted" rawInverted :: Ptr Location -> IO (Ptr Location)
-
 inverted :: Ptr Location -> Acquire (Ptr Location)
-inverted l = mkAcquire (rawInverted l) deleteLocation
+inverted location = mkAcquire createInverted deleteLocation
+  where
+    createInverted = [C.throwBlock| TopLoc_Location* {
+      return new TopLoc_Location($(TopLoc_Location* location)->Inverted());
+    } |]
 
 -- multiplied
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Multiplied" rawMultiplied :: Ptr Location -> Ptr Location -> IO (Ptr Location)
-
 multiplied :: Ptr Location -> Ptr Location -> Acquire (Ptr Location)
-multiplied a b = mkAcquire (rawMultiplied a b) deleteLocation
-
+multiplied locA locB = mkAcquire createMultiplied deleteLocation
+  where
+    createMultiplied = [C.throwBlock| TopLoc_Location* {
+      return new TopLoc_Location($(TopLoc_Location* locA)->Multiplied(*$(TopLoc_Location* locB)));
+    } |]
 
 -- divided
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Divided" rawDivided :: Ptr Location -> Ptr Location -> IO (Ptr Location)
-
 divided :: Ptr Location -> Ptr Location -> Acquire (Ptr Location)
-divided a b = mkAcquire (rawDivided a b) deleteLocation
-
+divided locA locB = mkAcquire createDivided deleteLocation
+  where
+    createDivided = [C.throwBlock| TopLoc_Location* {
+      return new TopLoc_Location($(TopLoc_Location* locA)->Divided(*$(TopLoc_Location* locB)));
+    } |]
 
 -- predivided
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Predivided" rawPredivided :: Ptr Location -> Ptr Location -> IO (Ptr Location)
-
 predivided :: Ptr Location -> Ptr Location -> Acquire (Ptr Location)
-predivided a b = mkAcquire (rawPredivided a b) deleteLocation
+predivided locA locB = mkAcquire createPredivided deleteLocation
+  where
+    createPredivided = [C.throwBlock| TopLoc_Location* {
+      return new TopLoc_Location($(TopLoc_Location* locA)->Predivided(*$(TopLoc_Location* locB)));
+    } |]
 
 -- powered
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Powered" rawPowered :: Ptr Location -> CInt -> IO (Ptr Location)
-
 powered :: Ptr Location -> Int -> Acquire (Ptr Location)
-powered l p = mkAcquire (rawPowered l (fromIntegral p)) deleteLocation
+powered location power = mkAcquire createPowered deleteLocation
+  where
+    createPowered = 
+      let cPower = fromIntegral power
+      in [C.throwBlock| TopLoc_Location* {
+        return new TopLoc_Location($(TopLoc_Location* location)->Powered($(int cPower)));
+      } |]
 
 -- isEqual
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_IsEqual" rawIsEqual :: Ptr Location -> Ptr Location -> IO (CBool)
-
 isEqual :: Ptr Location -> Ptr Location -> IO Bool
-isEqual a b = (/=0) <$> rawIsEqual a b
-
+isEqual locA locB = do
+  result <- [C.throwBlock| bool {
+    return $(TopLoc_Location* locA)->IsEqual(*$(TopLoc_Location* locB));
+  } |]
+  return (cBoolToBool result)
 
 -- isDifferent
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_IsDifferent" rawIsDifferent :: Ptr Location -> Ptr Location -> IO (CBool)
-
 isDifferent :: Ptr Location -> Ptr Location -> IO Bool
-isDifferent a b = (/=0) <$> rawIsDifferent a b
-
+isDifferent locA locB = do
+  result <- [C.throwBlock| bool {
+    return $(TopLoc_Location* locA)->IsDifferent(*$(TopLoc_Location* locB));
+  } |]
+  return (cBoolToBool result)
 
 -- clear
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Clear" clear :: Ptr Location -> IO ()
+clear :: Ptr Location -> IO ()
+clear location = [C.throwBlock| void {
+  $(TopLoc_Location* location)->Clear();
+} |]
 
 -- toGPTrsf
---
-
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_toGPTrsf" rawToGPTrsf :: Ptr Location -> IO (Ptr GP.Trsf)
 
 toGPTrsf :: Ptr Location -> Acquire (Ptr GP.Trsf)
-toGPTrsf l = mkAcquire (rawToGPTrsf l) deleteTrsf
+toGPTrsf location = mkAcquire createTrsf deleteTrsf
+  where
+    createTrsf = [C.throwBlock| gp_Trsf* {
+      return new gp_Trsf($(TopLoc_Location* location)->Transformation());
+    } |]

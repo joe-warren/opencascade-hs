@@ -1,17 +1,25 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.TopoDS.Shell
 ( Shell
 , new
 ) where 
 
 import OpenCascade.TopoDS.Types
+import OpenCascade.TopoDS.Internal.Context
 import OpenCascade.TopoDS.Internal.Destructors
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 import Data.Acquire 
 
+C.context (C.cppCtx <> topoDSContext)
+
+C.include "<TopoDS_Shell.hxx>"
+
 -- new
 
-foreign import capi unsafe "hs_TopoDS_Shell.h hs_new_TopoDS_Shell" rawNew :: IO (Ptr Shell)
-
 new :: Acquire (Ptr Shell)
-new = mkAcquire rawNew (deleteShape . castPtr)
+new = mkAcquire createShell (deleteShape . castPtr)
+  where
+    createShell = [C.throwBlock| TopoDS_Shell* {
+      return new TopoDS_Shell();
+    } |]

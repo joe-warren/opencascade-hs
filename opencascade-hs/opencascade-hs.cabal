@@ -92,17 +92,7 @@ extra-source-files:
     cpp/hs_TDF_Label.h
     cpp/hs_TDocStd_Document.h
     cpp/hs_TopExp_Explorer.h
-    cpp/hs_TopLoc_Location.h
-    cpp/hs_TopoDS_Builder.h
-    cpp/hs_TopoDS_Compound.h
-    cpp/hs_TopoDS_CompSolid.h
     cpp/hs_TopoDS_Edge.h
-    cpp/hs_TopoDS_Face.h
-    cpp/hs_TopoDS_Shape.h
-    cpp/hs_TopoDS_Shell.h
-    cpp/hs_TopoDS_Solid.h
-    cpp/hs_TopoDS_Vertex.h
-    cpp/hs_TopoDS_Wire.h
     cpp/hs_TopTools_ShapeMapHasher.h
     cpp/hs_types.h
     cpp/hs_XCAFDoc_DocumentTool.h
@@ -298,6 +288,7 @@ library
       OpenCascade.TopExp.Internal.Destructors
       OpenCascade.TopExp.Types
       OpenCascade.TopLoc
+      OpenCascade.TopLoc.Internal.Context
       OpenCascade.TopLoc.Internal.Destructors
       OpenCascade.TopLoc.Location
       OpenCascade.TopLoc.Types
@@ -307,6 +298,7 @@ library
       OpenCascade.TopoDS.CompSolid
       OpenCascade.TopoDS.Edge
       OpenCascade.TopoDS.Face
+      OpenCascade.TopoDS.Internal.Context
       OpenCascade.TopoDS.Internal.Destructors
       OpenCascade.TopoDS.Shape
       OpenCascade.TopoDS.Shell
@@ -410,17 +402,7 @@ library
       cpp/hs_TDF_Label.cpp
       cpp/hs_TDocStd_Document.cpp
       cpp/hs_TopExp_Explorer.cpp
-      cpp/hs_TopLoc_Location.cpp
-      cpp/hs_TopoDS_Builder.cpp
-      cpp/hs_TopoDS_Compound.cpp
-      cpp/hs_TopoDS_CompSolid.cpp
       cpp/hs_TopoDS_Edge.cpp
-      cpp/hs_TopoDS_Face.cpp
-      cpp/hs_TopoDS_Shape.cpp
-      cpp/hs_TopoDS_Shell.cpp
-      cpp/hs_TopoDS_Solid.cpp
-      cpp/hs_TopoDS_Vertex.cpp
-      cpp/hs_TopoDS_Wire.cpp
       cpp/hs_TopTools_ShapeMapHasher.cpp
       cpp/hs_XCAFDoc_DocumentTool.cpp
       cpp/hs_XCAFDoc_ShapeTool.cpp
@@ -457,4 +439,5 @@ library
     , inline-c >=0.9 && <1.0
     , inline-c-cpp >=0.4 && <0.6
     , resourcet >=1.2 && <1.4
+    , template-haskell
   default-language: Haskell2010

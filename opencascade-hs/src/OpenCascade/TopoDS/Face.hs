@@ -1,17 +1,25 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.TopoDS.Face
 ( Face
 , new
 ) where 
 
 import OpenCascade.TopoDS.Types
+import OpenCascade.TopoDS.Internal.Context
 import OpenCascade.TopoDS.Internal.Destructors
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 import Data.Acquire 
 
+C.context (C.cppCtx <> topoDSContext)
+
+C.include "<TopoDS_Face.hxx>"
+
 -- new
 
-foreign import capi unsafe "hs_TopoDS_Face.h hs_new_TopoDS_Face" rawNew :: IO (Ptr Face)
-
 new :: Acquire (Ptr Face)
-new = mkAcquire rawNew (deleteShape . castPtr)
+new = mkAcquire createFace (deleteShape . castPtr)
+  where
+    createFace = [C.throwBlock| TopoDS_Face* {
+      return new TopoDS_Face();
+    } |]

@@ -1,17 +1,25 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.TopoDS.Compound
 ( Compound
 , new
 ) where 
 
 import OpenCascade.TopoDS.Types
+import OpenCascade.TopoDS.Internal.Context
 import OpenCascade.TopoDS.Internal.Destructors
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 import Data.Acquire 
 
+C.context (C.cppCtx <> topoDSContext)
+
+C.include "<TopoDS_Compound.hxx>"
+
 -- new
 
-foreign import capi unsafe "hs_TopoDS_Compound.h hs_new_TopoDS_Compound" rawNew :: IO (Ptr Compound)
-
 new :: Acquire (Ptr Compound)
-new = mkAcquire rawNew (deleteShape . castPtr)
+new = mkAcquire createCompound (deleteShape . castPtr)
+  where
+    createCompound = [C.throwBlock| TopoDS_Compound* {
+      return new TopoDS_Compound();
+    } |]
