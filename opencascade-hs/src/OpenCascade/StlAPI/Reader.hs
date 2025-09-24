@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.StlAPI.Reader
 ( Reader
 , new
@@ -6,6 +5,8 @@ module OpenCascade.StlAPI.Reader
 ) where
 
 import Prelude hiding (read)
+import OpenCascade.StlAPI.Internal.Context
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 import OpenCascade.StlAPI.Types (Reader)
 import OpenCascade.StlAPI.Internal.Destructors (deleteReader)
 import qualified OpenCascade.TopoDS as TopoDS
@@ -13,13 +14,24 @@ import Foreign.C
 import Foreign.Ptr
 import Data.Acquire
 import OpenCascade.Internal.Bool (cBoolToBool)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 
-foreign import capi unsafe "hs_StlAPI_Reader.h hs_new_StlAPI_Reader" rawNew :: IO (Ptr Reader)
+C.context (C.cppCtx <> topoDSContext <> stlAPIContext)
+
+C.include "<StlAPI_Reader.hxx>"
+C.include "<TopoDS_Shape.hxx>"
 
 new :: Acquire (Ptr Reader)
-new = mkAcquire rawNew deleteReader
+new =
+  let createReader = [C.throwBlock| StlAPI_Reader* {
+        return new StlAPI_Reader();
+      } |]
+  in mkAcquire createReader deleteReader
 
-foreign import capi unsafe "hs_StlAPI_Reader.h hs_StlAPI_Reader_read" rawRead :: Ptr Reader -> Ptr TopoDS.Shape -> CString -> IO (CBool)
-
-read :: Ptr Reader -> Ptr TopoDS.Shape -> String -> IO (Bool)
-read reader shape filename = cBoolToBool <$> withCString filename (rawRead reader shape)
+read :: Ptr Reader -> Ptr TopoDS.Shape -> String -> IO Bool
+read reader shape filename = do
+  result <- withCString filename $ \cFilename -> [C.throwBlock| bool {
+    return $(StlAPI_Reader* reader)->Read(*$(TopoDS_Shape* shape), $(char* cFilename));
+  } |]
+  return (cBoolToBool result)

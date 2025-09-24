@@ -62,10 +62,6 @@ extra-source-files:
     cpp/hs_ShapeConstruct_Curve.h
     cpp/hs_ShapeExtend_WireData.h
     cpp/hs_ShapeFix_Solid.h
-    cpp/hs_STEPControl_Reader.h
-    cpp/hs_STEPControl_Writer.h
-    cpp/hs_StlAPI_Reader.h
-    cpp/hs_StlAPI_Writer.h
     cpp/hs_TColStd_IndexedDataMapOfStringString.h
     cpp/hs_TDF_Label.h
     cpp/hs_TDocStd_Document.h
@@ -254,6 +250,7 @@ library
       OpenCascade.STEPControl.Types
       OpenCascade.STEPControl.Writer
       OpenCascade.StlAPI
+      OpenCascade.StlAPI.Internal.Context
       OpenCascade.StlAPI.Internal.Destructors
       OpenCascade.StlAPI.Reader
       OpenCascade.StlAPI.Types
@@ -353,10 +350,6 @@ library
       cpp/hs_ShapeConstruct_Curve.cpp
       cpp/hs_ShapeExtend_WireData.cpp
       cpp/hs_ShapeFix_Solid.cpp
-      cpp/hs_STEPControl_Reader.cpp
-      cpp/hs_STEPControl_Writer.cpp
-      cpp/hs_StlAPI_Reader.cpp
-      cpp/hs_StlAPI_Writer.cpp
       cpp/hs_TColStd_IndexedDataMapOfStringString.cpp
       cpp/hs_TDF_Label.cpp
       cpp/hs_TDocStd_Document.cpp
