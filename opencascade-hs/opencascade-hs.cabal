@@ -23,15 +23,12 @@ extra-source-files:
     CHANGELOG.md
     cpp/hs_BRep_Tool.h
     cpp/hs_BRepAdaptor_Curve.h
-    cpp/hs_BRepBndLib.h
     cpp/hs_BRepBuilderAPI_GTransform.h
     cpp/hs_BRepBuilderAPI_MakeFace.h
     cpp/hs_BRepBuilderAPI_MakePolygon.h
     cpp/hs_BRepBuilderAPI_MakeSolid.h
     cpp/hs_BRepBuilderAPI_MakeWire.h
     cpp/hs_BRepBuilderAPI_Sewing.h
-    cpp/hs_BRepGProp.h
-    cpp/hs_BRepLib.h
     cpp/hs_BRepTools_WireExplorer.h
     cpp/hs_GC_MakeArcOfCircle.h
     cpp/hs_GC_MakeSegment.h
@@ -43,9 +40,6 @@ extra-source-files:
     cpp/hs_HLRBRep_Algo.h
     cpp/hs_HLRBRep_HLRToShape.h
     cpp/hs_Message_ProgressRange.h
-    cpp/hs_RWMesh_CafReader.h
-    cpp/hs_RWObj_CafReader.h
-    cpp/hs_RWObj_CafWriter.h
     cpp/hs_ShapeConstruct_Curve.h
     cpp/hs_ShapeExtend_WireData.h
     cpp/hs_ShapeFix_Solid.h
@@ -80,6 +74,7 @@ library
       OpenCascade.BRep.Tool
       OpenCascade.BRepAdaptor
       OpenCascade.BRepAdaptor.Curve
+      OpenCascade.BRepAdaptor.Internal.Context
       OpenCascade.BRepAdaptor.Internal.Destructors
       OpenCascade.BRepAdaptor.Types
       OpenCascade.BRepAlgoAPI.Common
@@ -135,6 +130,7 @@ library
       OpenCascade.BRepPrimAPI.MakeSphere
       OpenCascade.BRepPrimAPI.Types
       OpenCascade.BRepTools
+      OpenCascade.BRepTools.Internal.Context
       OpenCascade.BRepTools.Internal.Destructors
       OpenCascade.BRepTools.Types
       OpenCascade.BRepTools.WireExplorer
@@ -315,9 +311,6 @@ library
   cxx-sources:
       cpp/hs_BRep_Tool.cpp
       cpp/hs_BRepAdaptor_Curve.cpp
-      cpp/hs_BRepBndLib.cpp
-      cpp/hs_BRepGProp.cpp
-      cpp/hs_BRepLib.cpp
       cpp/hs_BRepTools_WireExplorer.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
@@ -329,9 +322,6 @@ library
       cpp/hs_HLRBRep_Algo.cpp
       cpp/hs_HLRBRep_HLRToShape.cpp
       cpp/hs_Message_ProgressRange.cpp
-      cpp/hs_RWMesh_CafReader.cpp
-      cpp/hs_RWObj_CafReader.cpp
-      cpp/hs_RWObj_CafWriter.cpp
       cpp/hs_ShapeConstruct_Curve.cpp
       cpp/hs_ShapeExtend_WireData.cpp
       cpp/hs_ShapeFix_Solid.cpp
