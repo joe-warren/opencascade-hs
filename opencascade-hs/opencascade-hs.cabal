@@ -37,7 +37,6 @@ extra-source-files:
     cpp/hs_BRepBuilderAPI_Sewing.h
     cpp/hs_BRepGProp.h
     cpp/hs_BRepLib.h
-    cpp/hs_BRepMesh_IncrementalMesh.h
     cpp/hs_BRepTools_WireExplorer.h
     cpp/hs_GC_MakeArcOfCircle.h
     cpp/hs_GC_MakeSegment.h
@@ -122,6 +121,7 @@ library
       OpenCascade.BRepLib
       OpenCascade.BRepMesh
       OpenCascade.BRepMesh.IncrementalMesh
+      OpenCascade.BRepMesh.Internal.Context
       OpenCascade.BRepMesh.Internal.Destructors
       OpenCascade.BRepMesh.Types
       OpenCascade.BRepOffset.Mode
@@ -324,7 +324,6 @@ library
       cpp/hs_BRepBuilderAPI_MakeShape.cpp
       cpp/hs_BRepGProp.cpp
       cpp/hs_BRepLib.cpp
-      cpp/hs_BRepMesh_IncrementalMesh.cpp
       cpp/hs_BRepTools_WireExplorer.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp

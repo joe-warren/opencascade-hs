@@ -1,20 +1,33 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepMesh.IncrementalMesh
 ( fromShapeAndLinDeflection
 , perform
 ) where 
 
+import OpenCascade.BRepMesh.Internal.Context
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 import OpenCascade.BRepMesh.Types (IncrementalMesh)
 import OpenCascade.BRepMesh.Internal.Destructors (deleteIncrementalMesh)
 import qualified OpenCascade.TopoDS as TopoDS
 import Foreign.Ptr
 import Data.Acquire
-import Data.Coerce (coerce)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 
+C.context (C.cppCtx <> topoDSContext <> brepMeshContext)
 
-foreign import capi unsafe "hs_BRepMesh_IncrementalMesh.h hs_BRepMesh_IncrementalMesh_fromShapeAndLinDeflection" rawFromShapeAndLinDeflection :: Ptr TopoDS.Shape -> Double ->  IO (Ptr IncrementalMesh)
+C.include "<BRepMesh_IncrementalMesh.hxx>"
+C.include "<TopoDS_Shape.hxx>"
+
 
 fromShapeAndLinDeflection :: Ptr TopoDS.Shape -> Double -> Acquire (Ptr IncrementalMesh)
-fromShapeAndLinDeflection shape linDeflection = mkAcquire (rawFromShapeAndLinDeflection shape (coerce linDeflection)) deleteIncrementalMesh
+fromShapeAndLinDeflection shape linDeflection =
+  let cLinDeflection = realToFrac linDeflection
+      createMesh = [C.throwBlock| BRepMesh_IncrementalMesh* {
+        return new BRepMesh_IncrementalMesh(*$(TopoDS_Shape* shape), $(double cLinDeflection));
+      } |]
+  in mkAcquire createMesh deleteIncrementalMesh
 
-foreign import capi unsafe "hs_BRepMesh_IncrementalMesh.h hs_BRepMesh_IncrementalMesh_Perform" perform :: Ptr IncrementalMesh -> IO ()
+perform :: Ptr IncrementalMesh -> IO ()
+perform mesh = [C.throwBlock| void {
+  $(BRepMesh_IncrementalMesh* mesh)->Perform();
+} |]
