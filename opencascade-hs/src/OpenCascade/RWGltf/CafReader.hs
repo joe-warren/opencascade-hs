@@ -1,24 +1,33 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.RWGltf.CafReader 
 ( CafReader
 , new
 , setDoublePrecision
 ) where
 
+import OpenCascade.RWGltf.Internal.Context
 import OpenCascade.RWGltf.Types (CafReader)
 import OpenCascade.RWGltf.Internal.Destructors (deleteCafReader)
 import Data.Acquire (Acquire, mkAcquire)
 import OpenCascade.Internal.Bool (boolToCBool)
 import Foreign.C (CBool (..))
 import Foreign.Ptr (Ptr)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 
-foreign import capi unsafe "hs_RWGltf_CafReader.h hs_new_RWGltf_CafReader" rawNew :: IO (Ptr CafReader)
+C.context (C.cppCtx <> rwGltfContext)
+
+C.include "<RWGltf_CafReader.hxx>"
 
 new :: Acquire (Ptr CafReader)
-new = mkAcquire rawNew deleteCafReader
-
-
-foreign import capi unsafe "hs_RWGltf_CafReader.h hs_RWGltf_CafReader_setDoublePrecision" rawSetDoublePrecision :: Ptr CafReader -> CBool -> IO ()
+new =
+  let createReader = [C.throwBlock| RWGltf_CafReader* {
+        return new RWGltf_CafReader();
+      } |]
+  in mkAcquire createReader deleteCafReader
 
 setDoublePrecision :: Ptr CafReader -> Bool -> IO ()
-setDoublePrecision reader isDouble = rawSetDoublePrecision reader (boolToCBool isDouble)
+setDoublePrecision reader isDouble = do
+  let cIsDouble = boolToCBool isDouble
+  [C.throwBlock| void {
+    $(RWGltf_CafReader* reader)->SetDoublePrecision($(bool cIsDouble));
+  } |]

@@ -51,8 +51,6 @@ extra-source-files:
     cpp/hs_NCollection_Array1.h
     cpp/hs_Poly_Triangle.h
     cpp/hs_Poly_Triangulation.h
-    cpp/hs_RWGltf_CafReader.h
-    cpp/hs_RWGltf_CafWriter.h
     cpp/hs_RWMesh_CafReader.h
     cpp/hs_RWObj_CafReader.h
     cpp/hs_RWObj_CafWriter.h
@@ -223,6 +221,7 @@ library
       OpenCascade.Poly.Types
       OpenCascade.RWGltf.CafReader
       OpenCascade.RWGltf.CafWriter
+      OpenCascade.RWGltf.Internal.Context
       OpenCascade.RWGltf.Internal.Destructors
       OpenCascade.RWGltf.Types
       OpenCascade.RWMesh.CafReader
@@ -338,8 +337,6 @@ library
       cpp/hs_NCollection_Array1.cpp
       cpp/hs_Poly_Triangle.cpp
       cpp/hs_Poly_Triangulation.cpp
-      cpp/hs_RWGltf_CafReader.cpp
-      cpp/hs_RWGltf_CafWriter.cpp
       cpp/hs_RWMesh_CafReader.cpp
       cpp/hs_RWObj_CafReader.cpp
       cpp/hs_RWObj_CafWriter.cpp
