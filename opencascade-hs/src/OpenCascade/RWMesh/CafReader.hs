@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.RWMesh.CafReader
 ( CafReader
 , setDocument
@@ -7,6 +6,11 @@ module OpenCascade.RWMesh.CafReader
 , setFileLengthUnit
 ) where
 
+import OpenCascade.RWMesh.Internal.Context
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
+import OpenCascade.TDocStd.Internal.Context (tDocStdContext)
+import OpenCascade.Message.Internal.Context (messageContext)
+import OpenCascade.Handle.Internal.Context (handleContext)
 import OpenCascade.RWMesh.Types (CafReader)
 import qualified OpenCascade.TDocStd.Types as TDocStd
 import qualified OpenCascade.Message.Types as Message
@@ -17,23 +21,41 @@ import OpenCascade.Internal.Bool (cBoolToBool)
 import Foreign.C (CBool (..), CDouble (..))
 import Foreign.C.String (CString, withCString)
 import Foreign.Ptr (Ptr)
-import Data.Coerce (coerce)
 import Data.Acquire (Acquire, mkAcquire)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 
-foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_setDocument" setDocument :: Ptr CafReader -> Ptr (Handle TDocStd.Document) -> IO ()
+C.context (C.cppCtx <> topoDSContext <> tDocStdContext <> messageContext <> handleContext <> rwMeshContext)
 
-foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_setFileLengthUnit" rawSetFileLengthUnit :: Ptr CafReader -> CDouble -> IO ()
+C.include "<RWMesh_CafReader.hxx>"
+C.include "<TopoDS_Shape.hxx>"
+C.include "<TDocStd_Document.hxx>"
+C.include "<Message_ProgressRange.hxx>"
+C.include "<Standard_Handle.hxx>"
+
+setDocument :: Ptr CafReader -> Ptr (Handle TDocStd.Document) -> IO ()
+setDocument reader doc = [C.throwBlock| void {
+  $(RWMesh_CafReader* reader)->SetDocument(*$(opencascade::handle<TDocStd_Document>* doc));
+} |]
 
 setFileLengthUnit :: Ptr CafReader -> Double -> IO ()
-setFileLengthUnit = coerce rawSetFileLengthUnit
-
-foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_perform" rawPerform :: Ptr CafReader -> CString -> Ptr Message.ProgressRange -> IO CBool
+setFileLengthUnit reader unit = do
+  let cUnit = realToFrac unit
+  [C.throwBlock| void {
+    $(RWMesh_CafReader* reader)->SetFileLengthUnit($(double cUnit));
+  } |]
 
 perform :: Ptr CafReader -> String -> Ptr Message.ProgressRange -> IO Bool
-perform reader filename progress = cBoolToBool <$> (withCString filename $ \str -> rawPerform reader str progress)
-
-foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_singleShape" rawSingleShape :: Ptr CafReader -> IO (Ptr TopoDS.Shape)
+perform reader filename progress = do
+  result <- withCString filename $ \cFilename -> [C.throwBlock| bool {
+    return $(RWMesh_CafReader* reader)->Perform($(char* cFilename), *$(Message_ProgressRange* progress));
+  } |]
+  return (cBoolToBool result)
 
 singleShape :: Ptr CafReader -> Acquire (Ptr TopoDS.Shape)
-singleShape reader = mkAcquire (rawSingleShape reader) deleteShape
+singleShape reader =
+  let createShape = [C.throwBlock| TopoDS_Shape* {
+        return new TopoDS_Shape($(RWMesh_CafReader* reader)->SingleShape());
+      } |]
+  in mkAcquire createShape deleteShape
 
