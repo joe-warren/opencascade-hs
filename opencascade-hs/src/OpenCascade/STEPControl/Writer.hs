@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.STEPControl.Writer
 ( new
 , setTolerance
@@ -7,6 +6,8 @@ module OpenCascade.STEPControl.Writer
 , write
 ) where
 
+import OpenCascade.STEPControl.Internal.Context
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 import OpenCascade.STEPControl.Types (Writer)
 import OpenCascade.STEPControl.Internal.Destructors (deleteWriter)
 import qualified OpenCascade.TopoDS as TopoDS
@@ -16,26 +17,51 @@ import Data.Acquire
 import OpenCascade.Internal.Bool (boolToCBool)
 import qualified OpenCascade.IFSelect.ReturnStatus as IFSelect.ReturnStatus
 import OpenCascade.STEPControl.StepModelType (StepModelType)
-import Data.Coerce (coerce)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 
-foreign import capi unsafe "hs_STEPControl_Writer.h hs_new_STEPControl_Writer" rawNew :: IO (Ptr Writer)
+C.context (C.cppCtx <> topoDSContext <> stepControlContext)
+
+C.include "<STEPControl_Writer.hxx>"
+C.include "<TopoDS_Shape.hxx>"
+C.include "<IFSelect_ReturnStatus.hxx>"
+C.include "<STEPControl_StepModelType.hxx>"
 
 new :: Acquire (Ptr Writer)
-new = mkAcquire rawNew deleteWriter
-
-foreign import capi unsafe "hs_STEPControl_Writer.h hs_STEPControl_Writer_setTolerance" rawSetTolerance :: Ptr Writer -> CDouble -> IO ()
+new =
+  let createWriter = [C.throwBlock| STEPControl_Writer* {
+        return new STEPControl_Writer();
+      } |]
+  in mkAcquire createWriter deleteWriter
 
 setTolerance :: Ptr Writer -> Double -> IO ()
-setTolerance = coerce rawSetTolerance 
+setTolerance writer tolerance = do
+  let cTolerance = realToFrac tolerance
+  [C.throwBlock| void {
+    $(STEPControl_Writer* writer)->SetTolerance($(double cTolerance));
+  } |]
 
-foreign import capi unsafe "hs_STEPControl_Writer.h hs_STEPControl_Writer_unsetTolerance" unsetTolerance :: Ptr Writer -> IO ()
-
-foreign import capi unsafe "hs_STEPControl_Writer.h hs_STEPControl_Writer_transfer" rawTransfer :: Ptr Writer -> Ptr TopoDS.Shape -> CInt -> CBool -> IO CInt
+unsetTolerance :: Ptr Writer -> IO ()
+unsetTolerance writer = [C.throwBlock| void {
+  $(STEPControl_Writer* writer)->UnsetTolerance();
+} |]
 
 transfer :: Ptr Writer -> Ptr TopoDS.Shape -> StepModelType -> Bool -> IO IFSelect.ReturnStatus.ReturnStatus
-transfer writer shape mode compgraph = toEnum . fromIntegral <$> rawTransfer writer shape (fromIntegral . fromEnum $ mode) (boolToCBool compgraph)
-
-foreign import capi unsafe "hs_STEPControl_Writer.h hs_STEPControl_Writer_write" rawWrite :: Ptr Writer -> CString -> IO CInt
+transfer writer shape mode compgraph = do
+  let cMode = fromIntegral $ fromEnum mode
+      cCompgraph = boolToCBool compgraph
+  result <- [C.throwBlock| int {
+    return static_cast<int>($(STEPControl_Writer* writer)->Transfer(
+      *$(TopoDS_Shape* shape), 
+      static_cast<STEPControl_StepModelType>($(int cMode)), 
+      $(bool cCompgraph)
+    ));
+  } |]
+  return (toEnum . fromIntegral $ result)
 
 write :: Ptr Writer -> String -> IO IFSelect.ReturnStatus.ReturnStatus
-write writer filename = toEnum . fromIntegral <$> withCString filename (rawWrite writer)
+write writer filename = do
+  result <- withCString filename $ \cFilename -> [C.throwBlock| int {
+    return static_cast<int>($(STEPControl_Writer* writer)->Write($(char* cFilename)));
+  } |]
+  return (toEnum . fromIntegral $ result)

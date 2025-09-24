@@ -38,9 +38,6 @@ extra-source-files:
     cpp/hs_BRepGProp.h
     cpp/hs_BRepLib.h
     cpp/hs_BRepMesh_IncrementalMesh.h
-    cpp/hs_BRepOffsetAPI_MakeOffsetShape.h
-    cpp/hs_BRepOffsetAPI_MakePipe.h
-    cpp/hs_BRepOffsetAPI_ThruSections.h
     cpp/hs_BRepTools_WireExplorer.h
     cpp/hs_Font_BRepFont.h
     cpp/hs_Font_BRepTextBuilder.h
@@ -250,6 +247,7 @@ library
       OpenCascade.ShapeFix.Solid
       OpenCascade.ShapeFix.Types
       OpenCascade.STEPControl
+      OpenCascade.STEPControl.Internal.Context
       OpenCascade.STEPControl.Internal.Destructors
       OpenCascade.STEPControl.Reader
       OpenCascade.STEPControl.StepModelType
@@ -331,9 +329,6 @@ library
       cpp/hs_BRepGProp.cpp
       cpp/hs_BRepLib.cpp
       cpp/hs_BRepMesh_IncrementalMesh.cpp
-      cpp/hs_BRepOffsetAPI_MakeOffsetShape.cpp
-      cpp/hs_BRepOffsetAPI_MakePipe.cpp
-      cpp/hs_BRepOffsetAPI_ThruSections.cpp
       cpp/hs_BRepTools_WireExplorer.cpp
       cpp/hs_Font_BRepFont.cpp
       cpp/hs_Font_BRepTextBuilder.cpp

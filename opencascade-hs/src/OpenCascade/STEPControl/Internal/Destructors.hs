@@ -1,12 +1,25 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.STEPControl.Internal.Destructors 
 ( deleteWriter
 , deleteReader
 ) where
 
+import OpenCascade.STEPControl.Internal.Context
 import OpenCascade.STEPControl.Types
-
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 
-foreign import capi unsafe "hs_STEPControl_Writer.h hs_delete_STEPControl_Writer" deleteWriter :: Ptr Writer -> IO ()
-foreign import capi unsafe "hs_STEPControl_Reader.h hs_delete_STEPControl_Reader" deleteReader :: Ptr Reader -> IO ()
+C.context (C.cppCtx <> stepControlContext)
+
+C.include "<STEPControl_Writer.hxx>"
+C.include "<STEPControl_Reader.hxx>"
+
+deleteWriter :: Ptr Writer -> IO ()
+deleteWriter writerPtr = [C.throwBlock| void {
+  delete $(STEPControl_Writer* writerPtr);
+} |]
+
+deleteReader :: Ptr Reader -> IO ()
+deleteReader readerPtr = [C.throwBlock| void {
+  delete $(STEPControl_Reader* readerPtr);
+} |]
