@@ -19,8 +19,10 @@ C.context (C.cppCtx <> gpContext <> topoDSContext <> brepBuilderAPIContext)
 
 C.include "<BRepBuilderAPI_Transform.hxx>"
 
--- needed to avoid a linker error about duplicate symbols
-C.verbatim "extern template class NCollection_Map<TopoDS_Shape, TopTools_ShapeMapHasher>;"
+-- Explicitly provide template instantiations for other modules to use
+C.verbatim "template class NCollection_Map<TopoDS_Shape, TopTools_ShapeMapHasher>;"
+C.verbatim "template class NCollection_DataMap<TopoDS_Shape, TopTools_ListOfShape, TopTools_ShapeMapHasher>;"
+
 
 transform :: Ptr TopoDS.Shape -> Ptr GP.Trsf -> Bool -> Acquire (Ptr TopoDS.Shape)
 transform shape trsf copy =

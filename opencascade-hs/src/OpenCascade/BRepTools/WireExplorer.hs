@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepTools.WireExplorer
 ( WireExplorer
 , fromWire
@@ -8,6 +7,8 @@ module OpenCascade.BRepTools.WireExplorer
 , orientation
 )where
 
+import OpenCascade.BRepTools.Internal.Context
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 import qualified OpenCascade.TopoDS as TopoDS
 import OpenCascade.BRepTools.Types (WireExplorer)
 import OpenCascade.BRepTools.Internal.Destructors (deleteWireExplorer)
@@ -16,22 +17,48 @@ import qualified OpenCascade.TopAbs as TopAbs
 import Foreign.Ptr
 import Foreign.C
 import Data.Acquire
-foreign import capi unsafe "hs_BRepTools_WireExplorer.h hs_new_BRepTools_WireExplorer_fromWire" rawNew :: Ptr TopoDS.Wire -> IO (Ptr WireExplorer)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
+
+C.context (C.cppCtx <> topoDSContext <> brepToolsContext)
+
+C.include "<BRepTools_WireExplorer.hxx>"
+C.include "<TopoDS_Wire.hxx>"
+C.include "<TopoDS_Edge.hxx>"
+C.include "<TopAbs_Orientation.hxx>"
+
+C.verbatim "extern template class NCollection_Map<TopoDS_Shape, TopTools_ShapeMapHasher>;"
+C.verbatim "extern template class NCollection_DataMap<TopoDS_Shape, TopTools_ListOfShape, TopTools_ShapeMapHasher>;"
+C.verbatim "extern template class NCollection_DataMap<TopoDS_Shape, TopTools_ListOfShape, TopTools_ShapeMapHasher>::Iterator;"
 
 fromWire :: Ptr TopoDS.Wire -> Acquire (Ptr WireExplorer)
-fromWire wire = mkAcquire (rawNew wire) deleteWireExplorer
-
-foreign import capi unsafe "hs_BRepTools_WireExplorer.h hs_BRepTools_WireExplorer_more" rawMore :: Ptr WireExplorer -> IO (CBool)
+fromWire wire =
+  let createExplorer = [C.throwBlock| BRepTools_WireExplorer* {
+        return new BRepTools_WireExplorer(*$(TopoDS_Wire* wire));
+      } |]
+  in mkAcquire createExplorer deleteWireExplorer
 
 more :: Ptr WireExplorer -> IO Bool
-more = fmap (cBoolToBool) . rawMore 
+more explorer = do
+  result <- [C.throwBlock| bool {
+    return $(BRepTools_WireExplorer* explorer)->More();
+  } |]
+  return (cBoolToBool result)
 
-foreign import capi unsafe "hs_BRepTools_WireExplorer.h hs_BRepTools_WireExplorer_next" next :: Ptr WireExplorer -> IO ()
+next :: Ptr WireExplorer -> IO ()
+next explorer = [C.throwBlock| void {
+  $(BRepTools_WireExplorer* explorer)->Next();
+} |]
 
-foreign import capi unsafe "hs_BRepTools_WireExplorer.h hs_BRepTools_WireExplorer_current" current :: Ptr WireExplorer -> IO (Ptr TopoDS.Edge)
-
-foreign import capi unsafe "hs_BRepTools_WireExplorer.h hs_BRepTools_WireExplorer_orientation" rawOrientation :: Ptr WireExplorer -> IO (CInt)
+current :: Ptr WireExplorer -> IO (Ptr TopoDS.Edge)
+current explorer = [C.throwBlock| TopoDS_Edge* {
+  return new TopoDS_Edge($(BRepTools_WireExplorer* explorer)->Current());
+} |]
 
 orientation :: Ptr WireExplorer -> IO TopAbs.Orientation
-orientation explorer = toEnum . fromIntegral <$>  rawOrientation explorer
+orientation explorer = do
+  result <- [C.throwBlock| int {
+    return static_cast<int>($(BRepTools_WireExplorer* explorer)->Orientation());
+  } |]
+  return (toEnum $ fromIntegral result)
 

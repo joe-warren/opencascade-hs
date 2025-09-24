@@ -19,6 +19,7 @@ C.context (C.cppCtx <> gpContext <> topoDSContext <> brepBuilderAPIContext)
 C.include "<TopTools_ListOfShape.hxx>"
 C.include "<BRepBuilderAPI_Copy.hxx>"
 
+
 copy :: Ptr TopoDS.Shape -> Bool -> Bool -> Acquire (Ptr TopoDS.Shape)
 copy shape copyGeom copyMesh =
   let cCopyGeom = boolToCBool copyGeom
