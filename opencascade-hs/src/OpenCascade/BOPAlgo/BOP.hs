@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-} 
 module OpenCascade.BOPAlgo.BOP 
 ( BOP
 , new
@@ -6,24 +5,40 @@ module OpenCascade.BOPAlgo.BOP
 , setOperation
 ) where
 
+import OpenCascade.BOPAlgo.Internal.Context
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 import OpenCascade.BOPAlgo.Types
 import OpenCascade.BOPAlgo.Internal.Destructors (deleteBOP)
 import OpenCascade.BOPAlgo.Operation (Operation)
 import qualified OpenCascade.TopoDS.Types as TopoDS
-
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire, mkAcquire)
 import Foreign.C (CInt (..))
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 
+C.context (C.cppCtx <> topoDSContext <> bopAlgoContext)
 
-foreign import capi unsafe "hs_BOPAlgo_BOP.h hs_new_BOPAlgo_BOP" rawNew :: IO (Ptr BOP)
+C.include "<BOPAlgo_BOP.hxx>"
+C.include "<TopoDS_Shape.hxx>"
+C.include "<BOPAlgo_Operation.hxx>"
+
 
 new :: Acquire (Ptr BOP)
-new = mkAcquire rawNew deleteBOP
+new =
+  let createBOP = [C.throwBlock| BOPAlgo_BOP* {
+        return new BOPAlgo_BOP();
+      } |]
+  in mkAcquire createBOP deleteBOP
 
-foreign import capi unsafe "hs_BOPAlgo_BOP.h hs_BOPAlgo_BOP_AddTool" addTool :: Ptr BOP -> Ptr TopoDS.Shape -> IO ()
-
-foreign import capi unsafe "hs_BOPAlgo_BOP.h hs_BOPAlgo_BOP_SetOperation" rawSetOperation :: Ptr BOP -> CInt -> IO ()
+addTool :: Ptr BOP -> Ptr TopoDS.Shape -> IO ()
+addTool bop shape = [C.throwBlock| void {
+  $(BOPAlgo_BOP* bop)->AddTool(*$(TopoDS_Shape* shape));
+} |]
 
 setOperation :: Ptr BOP -> Operation -> IO ()
-setOperation bop op = rawSetOperation bop (fromIntegral . fromEnum $ op)
+setOperation bop op = do
+  let cOp = fromIntegral $ fromEnum op
+  [C.throwBlock| void {
+    $(BOPAlgo_BOP* bop)->SetOperation(static_cast<BOPAlgo_Operation>($(int cOp)));
+  } |]

@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-} 
 module OpenCascade.BOPAlgo.Builder
 ( Builder
 , new
@@ -8,6 +7,8 @@ module OpenCascade.BOPAlgo.Builder
 , perform
 ) where
 
+import OpenCascade.BOPAlgo.Internal.Context
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
 import OpenCascade.BOPAlgo.Types
 import OpenCascade.BOPAlgo.Internal.Destructors (deleteBuilder)
 import qualified OpenCascade.TopoDS.Types as TopoDS
@@ -16,24 +17,42 @@ import Foreign.Ptr (Ptr)
 import Foreign.C (CBool (..))
 import Data.Acquire (Acquire, mkAcquire)
 import OpenCascade.Internal.Bool (boolToCBool)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 
-foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_new_BOPAlgo_Builder" rawNew :: IO (Ptr Builder)
+C.context (C.cppCtx <> topoDSContext <> bopAlgoContext)
+
+C.include "<BOPAlgo_Builder.hxx>"
+C.include "<TopoDS_Shape.hxx>"
 
 new :: Acquire (Ptr Builder)
-new = mkAcquire rawNew deleteBuilder
+new =
+  let createBuilder = [C.throwBlock| BOPAlgo_Builder* {
+        return new BOPAlgo_Builder();
+      } |]
+  in mkAcquire createBuilder deleteBuilder
 
-foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_AddArgument" addArgument :: Ptr Builder -> Ptr TopoDS.Shape -> IO ()
-
-foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_SetRunParallel" rawSetRunParallel :: Ptr Builder -> CBool -> IO ()
+addArgument :: Ptr Builder -> Ptr TopoDS.Shape -> IO ()
+addArgument builder shape = [C.throwBlock| void {
+  $(BOPAlgo_Builder* builder)->AddArgument(*$(TopoDS_Shape* shape));
+} |]
 
 setRunParallel :: Ptr Builder -> Bool -> IO ()
-setRunParallel builder = rawSetRunParallel builder . boolToCBool
-
-foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_Shape" rawShape :: Ptr Builder -> IO (Ptr TopoDS.Shape)
+setRunParallel builder runParallel = do
+  let cRunParallel = boolToCBool runParallel
+  [C.throwBlock| void {
+    $(BOPAlgo_Builder* builder)->SetRunParallel($(bool cRunParallel));
+  } |]
 
 shape :: Ptr Builder -> Acquire (Ptr TopoDS.Shape)
-shape builder = mkAcquire (rawShape builder) deleteShape  
+shape builder =
+  let createShape = [C.throwBlock| TopoDS_Shape* {
+        return new TopoDS_Shape($(BOPAlgo_Builder* builder)->Shape());
+      } |]
+  in mkAcquire createShape deleteShape
 
-
-foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_Perform" perform :: Ptr Builder -> IO ()
+perform :: Ptr Builder -> IO ()
+perform builder = [C.throwBlock| void {
+  $(BOPAlgo_Builder* builder)->Perform();
+} |]
 
