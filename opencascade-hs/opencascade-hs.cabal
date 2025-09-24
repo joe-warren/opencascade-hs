@@ -124,6 +124,7 @@ library
       OpenCascade.BRepBuilderAPI.Types
       OpenCascade.BRepBuilderAPI.WireError
       OpenCascade.BRepFilletAPI
+      OpenCascade.BRepFilletAPI.Internal.Context
       OpenCascade.BRepFilletAPI.Internal.Destructors
       OpenCascade.BRepFilletAPI.MakeChamfer
       OpenCascade.BRepFilletAPI.MakeFillet
