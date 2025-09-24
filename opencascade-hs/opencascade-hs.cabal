@@ -39,8 +39,6 @@ extra-source-files:
     cpp/hs_BRepLib.h
     cpp/hs_BRepMesh_IncrementalMesh.h
     cpp/hs_BRepTools_WireExplorer.h
-    cpp/hs_Font_BRepFont.h
-    cpp/hs_Font_BRepTextBuilder.h
     cpp/hs_GC_MakeArcOfCircle.h
     cpp/hs_GC_MakeSegment.h
     cpp/hs_GeomAdaptor_Curve.h
@@ -151,6 +149,7 @@ library
       OpenCascade.Font.BRepFont
       OpenCascade.Font.BRepTextBuilder
       OpenCascade.Font.FontAspect
+      OpenCascade.Font.Internal.Context
       OpenCascade.Font.Internal.Destructors
       OpenCascade.Font.Types
       OpenCascade.GC.MakeArcOfCircle
@@ -327,8 +326,6 @@ library
       cpp/hs_BRepLib.cpp
       cpp/hs_BRepMesh_IncrementalMesh.cpp
       cpp/hs_BRepTools_WireExplorer.cpp
-      cpp/hs_Font_BRepFont.cpp
-      cpp/hs_Font_BRepTextBuilder.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
       cpp/hs_GeomAdaptor_Curve.cpp
