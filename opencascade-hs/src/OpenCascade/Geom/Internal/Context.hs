@@ -14,6 +14,7 @@ geomContext = C.cppTypePairs geomTypePairs
     geomTypePairs =
       [ ("Geom_Curve", [t| Geom.Curve |])
       , ("Geom_Surface", [t| Geom.Surface |])
+      , ("Geom_TrimmedCurve", [t| Geom.TrimmedCurve |])
       , ("Geom_BSplineCurve", [t| Geom.BSplineCurve |])
       , ("Geom_BezierCurve", [t| Geom.BezierCurve |])
       ]

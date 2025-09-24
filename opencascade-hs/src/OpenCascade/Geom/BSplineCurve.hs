@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.Geom.BSplineCurve 
 ( toHandle
 , nbPoles
@@ -6,6 +5,12 @@ module OpenCascade.Geom.BSplineCurve
 , isRational
 , segment
 ) where
+
+import OpenCascade.Geom.Internal.Context
+import OpenCascade.Handle.Internal.Context (handleContext)
+import OpenCascade.GP.Internal.Context (gpContext)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 import Foreign.C (CInt (..), CBool (..), CDouble (..))
 import Data.Acquire
@@ -15,30 +20,48 @@ import OpenCascade.Handle (Handle)
 import OpenCascade.Internal.Bool (cBoolToBool)
 import OpenCascade.GP (Pnt)
 import OpenCascade.GP.Internal.Destructors (deletePnt)
-import Data.Coerce (coerce)
 
-foreign import capi unsafe "hs_Geom_BSplineCurve.h hs_Geom_BSplineCurve_toHandle" rawToHandle :: Ptr BSplineCurve -> IO (Ptr (Handle BSplineCurve))
+C.context (C.cppCtx <> gpContext <> handleContext <> geomContext)
+
+C.include "<Geom_BSplineCurve.hxx>"
+C.include "<Standard_Handle.hxx>"
+C.include "<gp_Pnt.hxx>"
 
 toHandle :: Ptr BSplineCurve -> Acquire (Ptr (Handle BSplineCurve))
-toHandle curve = mkAcquire (rawToHandle curve) deleteHandleBSplineCurve
+toHandle curve =
+  let createHandle = [C.throwBlock| opencascade::handle<Geom_BSplineCurve>* {
+        return new opencascade::handle<Geom_BSplineCurve>($(Geom_BSplineCurve* curve));
+      } |]
+  in mkAcquire createHandle deleteHandleBSplineCurve
 
-foreign import capi unsafe "hs_Geom_BSplineCurve.h hs_Geom_BSplineCurve_nbPoles" rawNbPoles :: Ptr (Handle BSplineCurve) -> IO (CInt)
-
-nbPoles :: Ptr (Handle (BSplineCurve)) -> IO Int 
-nbPoles h = fromIntegral <$> rawNbPoles h
-
-foreign import capi unsafe "hs_Geom_BSplineCurve.h hs_Geom_BSplineCurve_pole" rawPole :: Ptr (Handle BSplineCurve) -> CInt -> IO (Ptr Pnt)
+nbPoles :: Ptr (Handle BSplineCurve) -> IO Int 
+nbPoles handle = do
+  result <- [C.throwBlock| int {
+    return (*$(opencascade::handle<Geom_BSplineCurve>* handle))->NbPoles();
+  } |]
+  return (fromIntegral result)
 
 pole :: Ptr (Handle BSplineCurve) -> Int -> Acquire (Ptr Pnt)
-pole h n = mkAcquire (rawPole h (fromIntegral n)) deletePnt
+pole handle n =
+  let cN = fromIntegral n
+      createPole = [C.throwBlock| gp_Pnt* {
+        return new gp_Pnt((*$(opencascade::handle<Geom_BSplineCurve>* handle))->Pole($(int cN)));
+      } |]
+  in mkAcquire createPole deletePnt
 
-foreign import capi unsafe "hs_Geom_BSplineCurve.h hs_Geom_BSplineCurve_isRational" rawIsRational :: Ptr (Handle BSplineCurve) -> IO (CBool)
-
-isRational :: Ptr (Handle (BSplineCurve)) -> IO Bool
-isRational h = cBoolToBool <$> rawIsRational h
-
-foreign import capi unsafe "hs_Geom_BSplineCurve.h hs_Geom_BSplineCurve_segment" rawSegment :: Ptr (Handle BSplineCurve) -> CDouble -> CDouble -> CDouble -> IO ()
+isRational :: Ptr (Handle BSplineCurve) -> IO Bool
+isRational handle = do
+  result <- [C.throwBlock| bool {
+    return (*$(opencascade::handle<Geom_BSplineCurve>* handle))->IsRational();
+  } |]
+  return (cBoolToBool result)
 
 segment :: Ptr (Handle BSplineCurve) -> Double -> Double -> Double -> IO ()
-segment = coerce rawSegment
+segment handle u1 u2 tolerance = do
+  let cU1 = realToFrac u1
+      cU2 = realToFrac u2
+      cTolerance = realToFrac tolerance
+  [C.throwBlock| void {
+    (*$(opencascade::handle<Geom_BSplineCurve>* handle))->Segment($(double cU1), $(double cU2), $(double cTolerance));
+  } |]
 

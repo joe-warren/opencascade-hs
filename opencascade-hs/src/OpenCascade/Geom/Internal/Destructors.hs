@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.Geom.Internal.Destructors 
 ( deleteHandleCurve
 , deleteHandleTrimmedCurve
@@ -7,18 +6,43 @@ module OpenCascade.Geom.Internal.Destructors
 , deleteBezierCurve
 ) where
 
+import OpenCascade.Geom.Internal.Context
+import OpenCascade.Handle.Internal.Context (handleContext)
 import OpenCascade.Geom.Types
-
 import OpenCascade.Handle
-
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 import Foreign.Ptr
 
-foreign import capi unsafe "hs_Geom_Curve.h hs_delete_Handle_Geom_Curve" deleteHandleCurve :: Ptr (Handle Curve) -> IO ()
+C.context (C.cppCtx <> handleContext <> geomContext)
 
-foreign import capi unsafe "hs_Geom_TrimmedCurve.h hs_delete_Handle_Geom_TrimmedCurve" deleteHandleTrimmedCurve :: Ptr (Handle TrimmedCurve) -> IO ()
+C.include "<Standard_Handle.hxx>"
+C.include "<Geom_Curve.hxx>"
+C.include "<Geom_TrimmedCurve.hxx>"
+C.include "<Geom_BezierCurve.hxx>"
+C.include "<Geom_BSplineCurve.hxx>"
 
-foreign import capi unsafe "hs_Geom_BezierCurve.h hs_delete_Handle_Geom_BezierCurve" deleteHandleBezierCurve :: Ptr (Handle BezierCurve) -> IO ()
+deleteHandleCurve :: Ptr (Handle Curve) -> IO ()
+deleteHandleCurve handlePtr = [C.throwBlock| void {
+  delete $(opencascade::handle<Geom_Curve>* handlePtr);
+} |]
 
-foreign import capi unsafe "hs_Geom_BSplineCurve.h hs_delete_Handle_Geom_BSplineCurve" deleteHandleBSplineCurve :: Ptr (Handle BSplineCurve) -> IO ()
+deleteHandleTrimmedCurve :: Ptr (Handle TrimmedCurve) -> IO ()
+deleteHandleTrimmedCurve handlePtr = [C.throwBlock| void {
+  delete $(opencascade::handle<Geom_TrimmedCurve>* handlePtr);
+} |]
 
-foreign import capi unsafe "hs_Geom_BezierCurve.h hs_delete_Geom_BezierCurve" deleteBezierCurve :: Ptr BezierCurve -> IO ()
+deleteHandleBezierCurve :: Ptr (Handle BezierCurve) -> IO ()
+deleteHandleBezierCurve handlePtr = [C.throwBlock| void {
+  delete $(opencascade::handle<Geom_BezierCurve>* handlePtr);
+} |]
+
+deleteHandleBSplineCurve :: Ptr (Handle BSplineCurve) -> IO ()
+deleteHandleBSplineCurve handlePtr = [C.throwBlock| void {
+  delete $(opencascade::handle<Geom_BSplineCurve>* handlePtr);
+} |]
+
+deleteBezierCurve :: Ptr BezierCurve -> IO ()
+deleteBezierCurve curvePtr = [C.throwBlock| void {
+  delete $(Geom_BezierCurve* curvePtr);
+} |]
