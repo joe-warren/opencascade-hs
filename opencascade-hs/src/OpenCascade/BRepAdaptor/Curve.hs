@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-} 
 module OpenCascade.BRepAdaptor.Curve
 ( Curve
 , fromEdge
@@ -9,7 +8,11 @@ module OpenCascade.BRepAdaptor.Curve
 , firstParameter
 , lastParameter
 ) where
- 
+
+import OpenCascade.BRepAdaptor.Internal.Context
+import OpenCascade.TopoDS.Internal.Context (topoDSContext)
+import OpenCascade.Geom.Internal.Context (geomContext)
+import OpenCascade.Handle.Internal.Context (handleContext)
 import OpenCascade.BRepAdaptor.Types (Curve)
 import OpenCascade.BRepAdaptor.Internal.Destructors (deleteCurve)
 import OpenCascade.Geom.Internal.Destructors (deleteHandleBezierCurve, deleteHandleBSplineCurve)
@@ -20,43 +23,67 @@ import Foreign.Ptr (Ptr)
 import Foreign.C (CInt (..), CDouble (..))
 import Data.Acquire (Acquire, mkAcquire)
 import OpenCascade.Handle (Handle)
-import Data.Coerce (coerce)
 import qualified OpenCascade.GeomAdaptor.Types as GeomAdaptor
 import qualified OpenCascade.GeomAdaptor.Internal.Destructors as GeomAdaptor.Destructors
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 
-foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_new_BRepAdaptor_Curve_fromEdge" rawFromEdge :: Ptr TopoDS.Edge -> IO (Ptr Curve)
+C.context (C.cppCtx <> topoDSContext <> geomContext <> handleContext <> brepAdaptorContext <> C.cppTypePairs [("GeomAdaptor_Curve", [t| GeomAdaptor.Curve |])])
+
+C.include "<BRepAdaptor_Curve.hxx>"
+C.include "<TopoDS_Edge.hxx>"
+C.include "<Geom_Curve.hxx>"
+C.include "<Geom_BezierCurve.hxx>"
+C.include "<Geom_BSplineCurve.hxx>"
+C.include "<GeomAdaptor_Curve.hxx>"
+C.include "<GeomAbs_CurveType.hxx>"
+C.include "<Standard_Handle.hxx>"
 
 fromEdge :: Ptr TopoDS.Edge -> Acquire (Ptr Curve)
-fromEdge e = mkAcquire (rawFromEdge e) deleteCurve
-
-
-foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_curveType" rawCurveType :: Ptr Curve -> IO (CInt)
+fromEdge edge =
+  let createCurve = [C.throwBlock| BRepAdaptor_Curve* {
+        return new BRepAdaptor_Curve(*$(TopoDS_Edge* edge));
+      } |]
+  in mkAcquire createCurve deleteCurve
 
 curveType :: Ptr Curve -> IO CurveType
-curveType c = toEnum . fromIntegral <$> rawCurveType c
-
-foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_bezier" rawBezier :: Ptr Curve -> IO (Ptr (Handle (Geom.BezierCurve)))
+curveType adaptorCurve = do
+  result <- [C.throwBlock| int {
+    return static_cast<int>($(BRepAdaptor_Curve* adaptorCurve)->GetType());
+  } |]
+  return (toEnum $ fromIntegral result)
 
 bezier :: Ptr Curve -> Acquire (Ptr (Handle Geom.BezierCurve))
-bezier theCurve = mkAcquire (rawBezier theCurve) deleteHandleBezierCurve
-
-foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_bspline" rawBSpline :: Ptr Curve -> IO (Ptr (Handle (Geom.BSplineCurve)))
+bezier adaptorCurve =
+  let createBezier = [C.throwBlock| opencascade::handle<Geom_BezierCurve>* {
+        return new opencascade::handle<Geom_BezierCurve>($(BRepAdaptor_Curve* adaptorCurve)->Bezier());
+      } |]
+  in mkAcquire createBezier deleteHandleBezierCurve
 
 bspline :: Ptr Curve -> Acquire (Ptr (Handle Geom.BSplineCurve))
-bspline theCurve = mkAcquire (rawBSpline theCurve) deleteHandleBSplineCurve
-
-
-foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_curve" rawCurve :: Ptr Curve -> IO (Ptr GeomAdaptor.Curve)
+bspline adaptorCurve =
+  let createBSpline = [C.throwBlock| opencascade::handle<Geom_BSplineCurve>* {
+        return new opencascade::handle<Geom_BSplineCurve>($(BRepAdaptor_Curve* adaptorCurve)->BSpline());
+      } |]
+  in mkAcquire createBSpline deleteHandleBSplineCurve
 
 curve :: Ptr Curve -> Acquire (Ptr GeomAdaptor.Curve)
-curve theCurve = mkAcquire (rawCurve theCurve) GeomAdaptor.Destructors.deleteCurve
-
-foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_firstParameter" rawFirstParameter :: Ptr Curve -> IO CDouble
+curve adaptorCurve =
+  let createGeomCurve = [C.throwBlock| GeomAdaptor_Curve* {
+        return new GeomAdaptor_Curve($(BRepAdaptor_Curve* adaptorCurve)->Curve());
+      } |]
+  in mkAcquire createGeomCurve GeomAdaptor.Destructors.deleteCurve
 
 firstParameter :: Ptr Curve -> IO Double
-firstParameter = coerce rawFirstParameter
-
-foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_lastParameter" rawLastParameter :: Ptr Curve -> IO CDouble
+firstParameter adaptorCurve = do
+  result <- [C.throwBlock| double {
+    return $(BRepAdaptor_Curve* adaptorCurve)->FirstParameter();
+  } |]
+  return (realToFrac result)
 
 lastParameter :: Ptr Curve -> IO Double
-lastParameter = coerce rawLastParameter
+lastParameter adaptorCurve = do
+  result <- [C.throwBlock| double {
+    return $(BRepAdaptor_Curve* adaptorCurve)->LastParameter();
+  } |]
+  return (realToFrac result)

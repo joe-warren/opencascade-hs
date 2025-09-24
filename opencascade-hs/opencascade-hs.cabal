@@ -21,7 +21,6 @@ extra-source-files:
     LICENSE
     README.md
     CHANGELOG.md
-    cpp/hs_BRepAdaptor_Curve.h
     cpp/hs_BRepBuilderAPI_GTransform.h
     cpp/hs_BRepBuilderAPI_MakeFace.h
     cpp/hs_BRepBuilderAPI_MakePolygon.h
@@ -308,7 +307,6 @@ library
       cpp
       /usr/include/opencascade
   cxx-sources:
-      cpp/hs_BRepAdaptor_Curve.cpp
       cpp/hs_BRepTools_WireExplorer.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
