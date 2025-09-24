@@ -49,8 +49,6 @@ extra-source-files:
     cpp/hs_HLRBRep_HLRToShape.h
     cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
-    cpp/hs_Poly_Triangle.h
-    cpp/hs_Poly_Triangulation.h
     cpp/hs_RWMesh_CafReader.h
     cpp/hs_RWObj_CafReader.h
     cpp/hs_RWObj_CafWriter.h
@@ -207,6 +205,7 @@ library
       OpenCascade.IFSelect.ReturnStatus
       OpenCascade.Inheritance
       OpenCascade.Internal.Bool
+      OpenCascade.Message.Internal.Context
       OpenCascade.Message.Internal.Destructors
       OpenCascade.Message.ProgressRange
       OpenCascade.Message.Types
@@ -215,6 +214,7 @@ library
       OpenCascade.NCollection.Internal.Context
       OpenCascade.NCollection.Internal.Destructors
       OpenCascade.NCollection.Types
+      OpenCascade.Poly.Internal.Context
       OpenCascade.Poly.Internal.Destructors
       OpenCascade.Poly.Triangle
       OpenCascade.Poly.Triangulation
@@ -254,11 +254,13 @@ library
       OpenCascade.StlAPI.Types
       OpenCascade.StlAPI.Writer
       OpenCascade.TColStd.IndexedDataMapOfStringString
+      OpenCascade.TColStd.Internal.Context
       OpenCascade.TColStd.Internal.Destructors
       OpenCascade.TColStd.Types
       OpenCascade.TDF.Internal.Destructors
       OpenCascade.TDF.Types
       OpenCascade.TDocStd.Document
+      OpenCascade.TDocStd.Internal.Context
       OpenCascade.TDocStd.Internal.Destructors
       OpenCascade.TDocStd.Types
       OpenCascade.TopAbs
@@ -335,8 +337,6 @@ library
       cpp/hs_HLRBRep_HLRToShape.cpp
       cpp/hs_Message_ProgressRange.cpp
       cpp/hs_NCollection_Array1.cpp
-      cpp/hs_Poly_Triangle.cpp
-      cpp/hs_Poly_Triangulation.cpp
       cpp/hs_RWMesh_CafReader.cpp
       cpp/hs_RWObj_CafReader.cpp
       cpp/hs_RWObj_CafWriter.cpp

@@ -1,4 +1,3 @@
-{-# LANGUAGE CApiFFI #-}
 module OpenCascade.Poly.Triangulation 
 (Triangulation
 , new
@@ -10,6 +9,9 @@ module OpenCascade.Poly.Triangulation
 , setTriangle
 ) where
 
+import OpenCascade.Poly.Internal.Context
+import OpenCascade.Handle.Internal.Context (handleContext)
+import OpenCascade.GP.Internal.Context (gpContext)
 import OpenCascade.Poly.Types (Triangle, Triangulation)
 import OpenCascade.Poly.Internal.Destructors (deleteHandleTriangulation, deleteTriangle)
 import OpenCascade.GP.Types as GP
@@ -19,38 +21,68 @@ import Foreign.Ptr (Ptr)
 import Foreign.C (CInt (..), CBool (..))
 import OpenCascade.Internal.Bool (boolToCBool)
 import Data.Acquire (Acquire, mkAcquire)
+import qualified Language.C.Inline.Cpp as C
+import qualified Language.C.Inline.Cpp.Exception as C
 
-foreign import capi unsafe "hs_Poly_Triangulation.h hs_new_Poly_Triangulation" rawNew :: CInt -> CInt -> CBool -> CBool -> IO (Ptr (Handle Triangulation))
+C.context (C.cppCtx <> handleContext <> gpContext <> polyContext)
+
+C.include "<Poly_Triangulation.hxx>"
+C.include "<Standard_Handle.hxx>"
+C.include "<gp_Pnt.hxx>"
 
 new :: Int -> Int -> Bool -> Bool -> Acquire (Ptr (Handle Triangulation))
-new nNodes nTriangles hasUVNodes hasNormals = mkAcquire (rawNew (fromIntegral nNodes) (fromIntegral nTriangles) (boolToCBool hasUVNodes) (boolToCBool hasNormals)) deleteHandleTriangulation
-
-foreign import capi unsafe "hs_Poly_Triangulation.h hs_Poly_Triangulation_nbNodes" rawNbNodes :: Ptr (Handle Triangulation) -> IO CInt
+new nNodes nTriangles hasUVNodes hasNormals =
+  let cNNodes = fromIntegral nNodes
+      cNTriangles = fromIntegral nTriangles
+      cHasUVNodes = boolToCBool hasUVNodes
+      cHasNormals = boolToCBool hasNormals
+      createTriangulation = [C.throwBlock| opencascade::handle<Poly_Triangulation>* {
+        return new opencascade::handle<Poly_Triangulation>(
+          new Poly_Triangulation($(int cNNodes), $(int cNTriangles), $(bool cHasUVNodes), $(bool cHasNormals))
+        );
+      } |]
+  in mkAcquire createTriangulation deleteHandleTriangulation
 
 nbNodes :: Ptr (Handle Triangulation) -> IO Int
-nbNodes tri = fromIntegral <$> rawNbNodes tri
-
-foreign import capi unsafe "hs_Poly_Triangulation.h hs_Poly_Triangulation_nbTriangles" rawNbTriangles :: Ptr (Handle Triangulation) -> IO CInt
+nbNodes tri = do
+  result <- [C.throwBlock| int {
+    return (*$(opencascade::handle<Poly_Triangulation>* tri))->NbNodes();
+  } |]
+  return (fromIntegral result)
 
 nbTriangles :: Ptr (Handle Triangulation) -> IO Int
-nbTriangles tri = fromIntegral <$> rawNbTriangles tri
-
-foreign import capi unsafe "hs_Poly_Triangulation.h hs_Poly_Triangulation_node" rawNode :: Ptr (Handle Triangulation) -> CInt -> IO (Ptr GP.Pnt)
+nbTriangles tri = do
+  result <- [C.throwBlock| int {
+    return (*$(opencascade::handle<Poly_Triangulation>* tri))->NbTriangles();
+  } |]
+  return (fromIntegral result)
 
 node :: Ptr (Handle Triangulation) -> Int -> Acquire (Ptr GP.Pnt)
-node tri index = mkAcquire (rawNode tri (fromIntegral index)) deletePnt
-
-foreign import capi unsafe "hs_Poly_Triangulation.h hs_Poly_Triangulation_setNode" rawSetNode :: Ptr (Handle Triangulation) -> CInt -> Ptr GP.Pnt -> IO()
+node tri index =
+  let cIndex = fromIntegral index
+      createNode = [C.throwBlock| gp_Pnt* {
+        return new gp_Pnt((*$(opencascade::handle<Poly_Triangulation>* tri))->Node($(int cIndex)));
+      } |]
+  in mkAcquire createNode deletePnt
 
 setNode :: Ptr (Handle Triangulation) -> Int -> Ptr GP.Pnt -> IO ()
-setNode tri index pnt = rawSetNode tri (fromIntegral index) pnt
-
-foreign import capi unsafe "hs_Poly_Triangulation.h hs_Poly_Triangulation_triangle" rawTriangle :: Ptr (Handle Triangulation) -> CInt -> IO (Ptr Triangle)
+setNode tri index pnt = do
+  let cIndex = fromIntegral index
+  [C.throwBlock| void {
+    (*$(opencascade::handle<Poly_Triangulation>* tri))->SetNode($(int cIndex), *$(gp_Pnt* pnt));
+  } |]
 
 triangle :: Ptr (Handle Triangulation) -> Int -> Acquire (Ptr Triangle)
-triangle tri index = mkAcquire (rawTriangle tri (fromIntegral index)) deleteTriangle
-
-foreign import capi unsafe "hs_Poly_Triangulation.h hs_Poly_Triangulation_setTriangle" rawSetTriangle :: Ptr (Handle Triangulation) -> CInt -> Ptr Triangle -> IO ()
+triangle tri index =
+  let cIndex = fromIntegral index
+      createTriangle = [C.throwBlock| Poly_Triangle* {
+        return new Poly_Triangle((*$(opencascade::handle<Poly_Triangulation>* tri))->Triangle($(int cIndex)));
+      } |]
+  in mkAcquire createTriangle deleteTriangle
 
 setTriangle :: Ptr (Handle Triangulation) -> Int -> Ptr Triangle -> IO ()
-setTriangle tri index theTriangle = rawSetTriangle tri (fromIntegral index) theTriangle 
+setTriangle tri index theTriangle = do
+  let cIndex = fromIntegral index
+  [C.throwBlock| void {
+    (*$(opencascade::handle<Poly_Triangulation>* tri))->SetTriangle($(int cIndex), *$(Poly_Triangle* theTriangle));
+  } |] 
