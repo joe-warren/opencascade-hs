@@ -21,8 +21,6 @@ extra-source-files:
     LICENSE
     README.md
     CHANGELOG.md
-    cpp/hs_Bnd_Box.h
-    cpp/hs_Bnd_OBB.h
     cpp/hs_BRep_Tool.h
     cpp/hs_BRepAdaptor_Curve.h
     cpp/hs_BRepBndLib.h
@@ -70,6 +68,7 @@ source-repository head
 library
   exposed-modules:
       OpenCascade.Bnd.Box
+      OpenCascade.Bnd.Internal.Context
       OpenCascade.Bnd.Internal.Destructors
       OpenCascade.Bnd.OBB
       OpenCascade.Bnd.Types
@@ -313,8 +312,6 @@ library
       cpp
       /usr/include/opencascade
   cxx-sources:
-      cpp/hs_Bnd_Box.cpp
-      cpp/hs_Bnd_OBB.cpp
       cpp/hs_BRep_Tool.cpp
       cpp/hs_BRepAdaptor_Curve.cpp
       cpp/hs_BRepBndLib.cpp
