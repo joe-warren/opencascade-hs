@@ -18,7 +18,7 @@ outputs = inputs: inputs.flake-parts.lib.mkFlake { inputs = inputs; } {
 	    ghc966 = pkgs.haskell.packages."${compilerVersion}".override {
 	      overrides = self: super: {
 	        opencascade-hs = haskell.lib.compose.overrideCabal (old: { configureFlags = old.configureFlags or [] ++ ["--extra-include-dirs=${pkgs.opencascade-occt}/include/opencascade"]; }) (pkgs.haskell.lib.addExtraLibrary super.opencascade-hs pkgs.opencascade-occt);
-			waterfall-cad-svg = hfinal.callCabal2nix "waterfall-cad-svg" ./waterfall-cad-svg { };
+			# waterfall-cad-svg = hfinal.callCabal2nix "waterfall-cad-svg" ./waterfall-cad-svg { };
           	# waterfall-cad = hfinal.callCabal2nix "waterfall-cad" ./waterfall-cad { };
 	      };
 	    };
@@ -41,7 +41,8 @@ outputs = inputs: inputs.flake-parts.lib.mkFlake { inputs = inputs; } {
       nativeBuildInputs = [
         pkgs.cabal-install
         pkgs.haskell-language-server
-	pkgs.haskellPackages.linear
+		pkgs.haskellPackages.linear
+		pkgs.haskellPackages.waterfall-cad-svg
       ];
     };
 
