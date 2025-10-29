@@ -17,7 +17,9 @@ outputs = inputs: inputs.flake-parts.lib.mkFlake { inputs = inputs; } {
 	  packages = pkgs.haskell.packages // {
 	    ghc966 = pkgs.haskell.packages."${compilerVersion}".override {
 	      overrides = self: super: {
-	        opencascade-hs = haskell.lib.compose.overrideCabal (old: { configureFlags = old.configureFlags or [] ++ ["--extra-include-dirs=${pkgs.opencascade-occt}/include/opencascade"]; }) (pkgs.haskell.lib.addExtraLibrary super.opencascade-hs pkgs.opencascade-occt); 
+	        opencascade-hs = haskell.lib.compose.overrideCabal (old: { configureFlags = old.configureFlags or [] ++ ["--extra-include-dirs=${pkgs.opencascade-occt}/include/opencascade"]; }) (pkgs.haskell.lib.addExtraLibrary super.opencascade-hs pkgs.opencascade-occt);
+			waterfall-cad-svg = hfinal.callCabal2nix "waterfall-cad-svg" ./waterfall-cad-svg { };
+          	# waterfall-cad = hfinal.callCabal2nix "waterfall-cad" ./waterfall-cad { };
 	      };
 	    };
           };
