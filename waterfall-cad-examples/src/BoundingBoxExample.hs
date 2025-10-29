@@ -1,5 +1,8 @@
+{-|
+<<models/bounding-boxes.glb>>
+-}
 module BoundingBoxExample
-(boundingBoxExample
+( boundingBoxExample
 ) where
 
 import Data.Function ((&))
@@ -16,9 +19,9 @@ boundingBoxExample =
             Transforms.rotate (unit _z) 1 &
             Transforms.rotate (unit _y) 0.5
         obb = OBB.orientedBoundingBox shape &
-            maybe Solids.nowhere OBB.obbToSolid
+            maybe Solids.emptySolid OBB.obbToSolid
         aabb = AABB.axisAlignedBoundingBox shape &
-            maybe Solids.nowhere AABB.aabbToSolid
+            maybe Solids.emptySolid AABB.aabbToSolid
         in mconcat 
             [ Transforms.translate (unit _y ^* (-5)) shape
             , obb

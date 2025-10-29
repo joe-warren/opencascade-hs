@@ -1,6 +1,6 @@
 module Waterfall.Solids 
 ( Solid
-, nowhere
+, emptySolid
 , unitCube
 , centeredCube
 , box
@@ -15,7 +15,7 @@ module Waterfall.Solids
 ) where
 
 
-import Waterfall.Internal.Solid (Solid (..), solidFromAcquire, acquireSolid, nowhere)
+import Waterfall.Internal.Solid (Solid (..), solidFromAcquire, acquireSolid, emptySolid)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Waterfall.TwoD.Internal.Shape (rawShape)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)

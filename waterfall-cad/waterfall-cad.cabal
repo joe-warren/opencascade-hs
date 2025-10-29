@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           waterfall-cad
-version:        0.4.0.0
+version:        0.6.0.0
 synopsis:       Declarative CAD/Solid Modeling Library
 description:    Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
 category:       Graphics
@@ -33,11 +33,14 @@ library
       Waterfall.Booleans.Operators
       Waterfall.BoundingBox.AxisAligned
       Waterfall.BoundingBox.Oriented
+      Waterfall.Diagram
       Waterfall.Fillet
+      Waterfall.Internal.Diagram
       Waterfall.Internal.Edges
       Waterfall.Internal.Finalizers
       Waterfall.Internal.FromOpenCascade
       Waterfall.Internal.Path
+      Waterfall.Internal.Path.Common
       Waterfall.Internal.Remesh
       Waterfall.Internal.Solid
       Waterfall.Internal.ToOpenCascade
@@ -50,6 +53,7 @@ library
       Waterfall.Solids
       Waterfall.Sweep
       Waterfall.Transforms
+      Waterfall.TwoD.Booleans
       Waterfall.TwoD.Internal.Path2D
       Waterfall.TwoD.Internal.Shape
       Waterfall.TwoD.Path2D
@@ -67,7 +71,7 @@ library
     , lattices >=2.0 && <3
     , lens ==5.*
     , linear >=1.21 && <2
-    , opencascade-hs >=0.4.0.0 && <0.5
+    , opencascade-hs >=0.6.0.0 && <0.7
     , primitive >=0.7 && <0.10
     , resourcet >=1.2 && <1.4
   default-language: Haskell2010

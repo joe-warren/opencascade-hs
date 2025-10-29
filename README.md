@@ -12,9 +12,17 @@ Waterfall CAD is a declarative CAD/Solid Modeling library.
 
 This uses [opencascade-hs](https://hackage.haskell.org/package/opencascade-hs) as the kernel, but provides a "more functional" API over it.
 
+### Waterfall CAD SVG
+
+Waterfall CAD SVG adds support for converting Waterfall objects to/from SVG.
+
+It uses the library [svg-tree](https://hackage.haskell.org/package/svg-tree).
+
+It's packaged as a separate library to Waterfall-CAD.
+
 ## Installing Dependencies
 
-OpenCASCADE-hs depends on Open Cascade version `7.8.x`. In order to run with an earlier version of Open Cascade, you'll need to use a version prior to `0.3.0.0`.
+OpenCASCADE-hs depends on Open Cascade version `>= 7.8.x`. In order to run with an earlier version of Open Cascade, you'll need to use a version prior to `0.3.0.0`.
 
 OpenCASCADE-hs is only tested on Debian and MacOS. 
 
@@ -44,10 +52,20 @@ On MacOS, you should be able to install [OpenCASCADE](https://formulae.brew.sh/f
 brew install opencascade
 ```
 
+#### MacOs Intel support:
 You'll also need to configure the path to the OpenCASCADE header files, either via `extra-include-dirs`, or `CPATH`:
 
 ```
-export CPATH=$CPATH:/usr/local/Cellar/opencascade/7.*/include/opencascade/
+export CPATH=$CPATH:$HOMEBREW_PREFIX/Cellar/opencascade/7.*/include/opencascade/
+```
+
+#### MacOs Apple Silicon support:
+
+In addition to configuring the path to the OpenCASCADE header files, you'll also need to add the libraries to the link and runtime library search paths, either via `extra-lib-dirs` or `LIBRARY_PATH`+`DYDLD_FALLBACK_LIBRARY_PATH`:
+```
+export CPATH=$CPATH:$HOMEBREW_PREFIX/Cellar/opencascade/7.*/include/opencascade/
+export LIBRARY_PATH=$LIBRARY_PATH:`echo $HOMEBREW_PREFIX/Cellar/opencascade/7.*/lib`
+export DYDLD_FALLBACK_LIBRARY_PATH=$DYDLD_FALLBACK_LIBRARY_PATH:`echo $HOMEBREW_PREFIX/Cellar/opencascade/7.*/lib`:/opt/homebrew/lib
 ```
 
 ## Licensing
@@ -62,18 +80,17 @@ If you've found the project useful, or interesting, or if you've built anything 
 
 ## Examples 
 
-[![](images/csg.png)](waterfall-cad-examples/src/CsgExample.hs)
+[![](images/revolution.svg)](waterfall-cad-examples/src/RevolutionExample.hs)
+[![](images/csg.svg)](waterfall-cad-examples/src/CsgExample.hs)
+&ThinSpace;[![](images/sweep.svg)](waterfall-cad-examples/src/SweepExample.hs)
+&ThinSpace;[![](images/bounding-boxes.svg)](waterfall-cad-examples/src/BoundingBoxExample.hs)
 
-[![](images/gear.png)](waterfall-cad-examples/src/GearExample.hs)
+[![](images/gear.svg)](waterfall-cad-examples/src/GearExample.hs)
 
-[![](images/revolution.png)](waterfall-cad-examples/src/RevolutionExample.hs)
+[![](images/offset.svg)](waterfall-cad-examples/src/OffsetExample.hs)
 
-[![](images/sweep.png)](waterfall-cad-examples/src/SweepExample.hs)
+[![](images/text.svg)](waterfall-cad-examples/src/TextExample.hs)
 
-[![](images/offset.png)](waterfall-cad-examples/src/OffsetExample.hs)
+[![](images/2d-booleans.svg)](waterfall-cad-examples/src/TwoDBooleansExample.hs)
 
-[![](images/text.png)](waterfall-cad-examples/src/TextExample.hs)
-
-[![](images/bounding_boxes.png)](waterfall-cad-examples/src/BoundingBoxExample.hs)
-
-[![](images/loft.png)](waterfall-cad-examples/src/LoftExample.hs)
+[![](images/loft.svg)](waterfall-cad-examples/src/LoftExample.hs)

@@ -8,6 +8,24 @@ and this project adheres to the
 
 ## Unreleased
 
+- Adjusted `CsgExample` to use `centeredCylinder`, and removed use of `Booleans.Operators` 
+- Use `whenNearlyEqual` in `FilletExample`
+
+## 0.6.0.0
+
+### Added
+
+- Added `TwoDBooleansExample` demonstrating 2D boolean operations
+- Added Chamfers to `FilletExample`
+
+## 0.5.1.1
+
+- Add 3D models to Haddocks
+
+## 0.5.0.0
+
+- Add SVG.PathExample and SVG.ReadFileExample
+- Add SVG output
 
 ## 0.4.0.0
 

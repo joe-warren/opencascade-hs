@@ -2,17 +2,16 @@ module Waterfall.Booleans.Operators
 ((~/\~), (~\/~), (~-~)
 )where 
 
-import Waterfall.Booleans
-import Waterfall.Solids (Solid)
+import Waterfall.Booleans (Boolean(..))
 
--- | Infix version of `intersection`
-(~/\~) :: Solid -> Solid -> Solid
+-- | Infix version of `intersection` (works for both 2D and 3D objects)
+(~/\~) :: Boolean a => a -> a -> a
 (~/\~) = intersection
 
--- | Infix version of `union`
-(~\/~) :: Solid -> Solid -> Solid
+-- | Infix version of `union` (works for both 2D and 3D objects)
+(~\/~) :: Boolean a => a -> a -> a
 (~\/~) = union
 
--- | Infix version of `difference`
-(~-~) :: Solid -> Solid -> Solid
+-- | Infix version of `difference` (works for both 2D and 3D objects)
+(~-~) :: Boolean a => a -> a -> a
 (~-~) = difference

@@ -26,16 +26,14 @@ module Waterfall.TwoD.Path2D
 , closeLoop2D
 , reversePath2D
 , splice2D
+, splitPath2D
 ) where 
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..))
 import Waterfall.TwoD.Transforms (rotate2D)
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
-import qualified Waterfall.Internal.Edges as Internal.Edges
 import Linear.V2 (V2(..))
-import Control.Monad.IO.Class (liftIO)
 import Control.Lens ((^.))
-import Linear ((^*), _xy, distance, normalize, unangle)
+import Linear ((^*), _xy, distance, normalize, unangle, nearZero)
 import Waterfall.Path.Common
 
 data Sense = Clockwise | Counterclockwise deriving (Eq, Show)
@@ -82,12 +80,15 @@ arcRelative sense radius dEnd = do
 --
 -- This can be used to construct paths with rotational symmetry, such as regular polygons, or gears.
 repeatLooping :: Path2D -> Path2D
-repeatLooping p = Path2D . unsafeFromAcquire $ do
-    path <- toAcquire . rawPath $ p 
-    (s, e) <- liftIO . Internal.Edges.wireEndpoints $ path
-    let a = unangle (e ^. _xy) - unangle (s ^. _xy)
-    let times :: Integer = abs . round $ pi * 2 / a 
-    toAcquire . rawPath . mconcat $ [rotate2D (fromIntegral n * a) p | n <- [0..times]]
+repeatLooping p = 
+    case pathEndpoints2D p of
+        Nothing -> p
+        Just (s, e) ->
+            let a = unangle (e ^. _xy) - unangle (s ^. _xy)
+            in if nearZero a 
+                then mempty
+                else let times :: Integer = abs . round $ pi * 2 / a 
+                      in mconcat $ [rotate2D (fromIntegral n * a) p | n <- [0..times]]
 
 
 -- $reexports
@@ -139,7 +140,7 @@ pathFromTo2D :: [V2 Double -> (V2 Double, Path2D)] -> V2 Double -> (V2 Double, P
 pathFromTo2D = pathFromTo
 
 -- | `pathEndpoints`, with the type fixed to `Path2D` 
-pathEndpoints2D :: Path2D -> (V2 Double, V2 Double)
+pathEndpoints2D :: Path2D -> Maybe (V2 Double, V2 Double)
 pathEndpoints2D = pathEndpoints
 
 -- | `closeLoop` with the type fixed to `Path2D`
@@ -154,3 +155,7 @@ reversePath2D = reversePath
 -- | `splice` with the type fixed to `Path2D`
 splice2D :: Path2D -> V2 Double -> (V2 Double, Path2D)
 splice2D = splice
+
+-- | `splitPath` with the type fixed to `Path2D`
+splitPath2D :: Path2D -> [Path2D]
+splitPath2D = splitPath

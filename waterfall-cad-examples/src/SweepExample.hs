@@ -1,3 +1,6 @@
+{-|
+<<models/sweep.glb>>
+-}
 module SweepExample 
 ( sweepExample 
 ) where
@@ -18,7 +21,7 @@ sweepExample =
             , Path.arcViaRelative (V3 0 1 1) (V3 0 2 0)
             , Path.lineTo (V3 0 2 0) 
             ] 
-        sweepProfile = Shape.fromPath $
+        sweepProfile = Shape.makeShape $
                 Path2D.repeatLooping $
                 Path2D.bezier (0.25 *^ unit _x) (0.5 *^ unit _x) (0.5 *^ angle (pi/6)) (0.25 *^ angle (pi/6))
     in sweep sweepPath sweepProfile

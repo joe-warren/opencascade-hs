@@ -1,0 +1,18 @@
+## update package-defaults.yaml and */CHANGELOG.md
+## remember to rebuild and add the cabal files
+rm -rf dist/* docs/* waterfall-cad-examples-*-docs
+stack build
+stack sdist --tar-dir dist
+stack upload dist/*.tar.gz --candidate
+stack haddock --haddock-for-hackage
+tar xvf ./waterfall-cad-examples/.stack-work/dist/*/ghc-*/waterfall-cad-examples-*-docs.tar.gz
+./scripts/enrich-examples.hs
+tar --format=ustar -czf ./waterfall-cad-examples/.stack-work/dist/*/ghc-*/waterfall-cad-examples-*-docs.tar.gz waterfall-cad-examples-*-docs
+stack upload -d opencascade-hs waterfall-cad waterfall-cad-svg waterfall-cad-examples --candidate
+
+# Check package candidate uploads here
+
+stack upload dist/*.tar.gz
+stack upload -d opencascade-hs waterfall-cad waterfall-cad-svg waterfall-cad-examples 
+
+# delete candidates here

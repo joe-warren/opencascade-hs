@@ -16,6 +16,8 @@ module Waterfall
 -- [Constructive Solid Geometry](https://en.wikipedia.org/wiki/Constructive_solid_geometry).
 , module Waterfall.Booleans
 , module Waterfall.Booleans.Operators
+-- | 2D `Shape`'s can also be combined with CSG operations.
+, module Waterfall.TwoD.Booleans
 -- | Once you've generated a `Solid`, 
 -- the functions in `Waterfall.IO` can be used to save it.
 -- 
@@ -50,12 +52,16 @@ module Waterfall
 -- This module defines functions that can be used with "Waterfall.Path" or "Waterfall.TwoD.Path2D".
 -- Those modules both export monomorphized variants of the functions defined in this module.
 , module Waterfall.Path.Common
+-- | Generate 2D `Diagram`s from 3D `Shape`s
+, module Waterfall.Diagram
 )where
 
 import Waterfall.Booleans
 import Waterfall.Booleans.Operators
+import Waterfall.TwoD.Booleans
 import Waterfall.BoundingBox.AxisAligned
 import Waterfall.BoundingBox.Oriented
+import Waterfall.Diagram
 import Waterfall.Fillet
 import Waterfall.IO
 import Waterfall.Offset

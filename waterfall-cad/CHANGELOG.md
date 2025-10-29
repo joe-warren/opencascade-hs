@@ -9,7 +9,67 @@ and this project adheres to the
 
 ## Unreleased
 
-- Add `splice`/`splice2D`/`splice3D` functions 
+- Added `whenNearlyEqual` to `Waterfall.Fillet` to make writing conditional Fillets easier
+
+## 0.6.0.0
+
+### Added
+
+- Added `Boolean` typeclass providing boolean operations on both 2D and 3D objects
+  - `union`, `intersection`, `difference`, `unions`, `intersections` and operators `(~/\~)`, `(~\/~)`, `(~-~)` are now polymorphic
+- Added 2D boolean operations: `union2D`, `difference2D`, `intersection2D`, `unions2D`, `intersections2D`
+- Added `emptyShape` for 2D shapes
+- Added `Waterfall.TwoD.Booleans` module
+- Added `chamfer`, `conditionalChamfer` and `indexedConditionalChamfer` to `Waterfall.Fillet`
+
+### Changed
+
+- Renamed `union` to `union3D`, `difference` to `difference3D`, `intersection` to `intersection3D` for 3D operations
+- Renamed `unions` to `unions3D`, `intersections` to `intersections3D` for 3D batch operations  
+- Renamed `nowhere3D` to `emptySolid`
+
+## 0.5.1.1
+
+### Added 
+
+- Added `unitPolygon`
+
+## 0.5.1.0
+
+### Added
+
+- Added `unions`, `intersections`, and specialized mconcat for `Solid` to improve performance
+
+## 0.5.0.1
+
+### Fixed
+
+- direction of internal `edgeValue` function, used by waterfall-cad-svg package
+
+## 0.5.0.0
+
+### Added
+
+- Add `splice`/`splice2D`/`splice3D` functions
+- Add `splitPath`/`splitPath3D`/`splitPath2D` functions
+- Add Epsilon constraint to `closeLoop` fixing behaviour when endpoints are _very close_ together 
+- Add `matTransform` and `matTransform2D` methods to the `Transformable` and `Transformable2D` typeclasses, respectively
+- Add `shapePaths` to `Waterfall.TwoD.Shape`
+
+### Changed
+
+- Most functions in `Waterfall.Path.Common` now have an `Epsilon` constraint
+- `pathEndpoints`/`pathEndpoints3D`/`pathEndpoints2D` now returns a `Maybe` (in case of an empty path)
+- `offset` now no longer takes a tolerance
+    - `offsetWithTolerance` is available if this is required
+- `pointedLoft` and `loft` now no longer takes a precision argument
+    - `pointedLoftWithPrecision` is available if this is required
+- Rename `fromPath` to `makeShape` as I think this will result in more readable code
+
+### Fixed
+
+- fixed behaviour when scaling with a unit vector (no scaling)
+- fixed `Path`/`Path2D` representation, so that the `Monoid` instance `mempty` value no longer generates crashes
 
 ## 0.4.0.0
 

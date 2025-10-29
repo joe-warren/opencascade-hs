@@ -4,10 +4,12 @@ module Waterfall.Internal.Solid
 ( Solid (..)
 , acquireSolid
 , solidFromAcquire
-, union
-, difference
-, intersection
-, nowhere
+, union3D
+, difference3D
+, intersection3D
+, unions3D
+, intersections3D
+, emptySolid
 , complement
 , debug
 ) where
@@ -22,8 +24,13 @@ import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
 import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
+import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
+import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
+import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import OpenCascade.Inheritance (upcast)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
+import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
+import Data.Foldable (traverse_)
 
 -- | The Boundary Representation of a solid object.
 --
@@ -42,6 +49,7 @@ acquireSolid (Solid ptr) = toAcquire ptr
 
 solidFromAcquire :: Acquire (Ptr TopoDS.Shape.Shape) -> Solid
 solidFromAcquire = Solid . unsafeFromAcquire
+
 
 -- | print debug information about a Solid when it's evaluated 
 -- exposes the properties of the underlying OpenCacade.TopoDS.Shape
@@ -72,7 +80,7 @@ debug (Solid ptr) =
 {--
 -- TODO: this does not work, need to fix
 everywhere :: Solid
-everywhere = complement $ nowhere
+everywhere = complement $ emptySolid
 --}
 
 -- | Invert a Solid, equivalent to `not` in boolean algebra.
@@ -80,15 +88,15 @@ everywhere = complement $ nowhere
 -- The complement of a solid represents the solid with the same surface,
 -- but where the opposite side of that surface is the \"inside\" of the solid.
 --
--- Be warned that @complement nowhere@ does not appear to work correctly.
+-- Be warned that @complement emptySolid@ does not appear to work correctly.
 complement :: Solid -> Solid
 complement (Solid ptr) = Solid . unsafeFromAcquire $ TopoDS.Shape.complemented =<< toAcquire ptr
 
 -- | An empty solid
 --
--- Be warned that @complement nowhere@ does not appear to work correctly.
-nowhere :: Solid 
-nowhere =  Solid . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
+-- Be warned that @complement emptySolid@ does not appear to work correctly.
+emptySolid :: Solid 
+emptySolid =  Solid . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
 
 -- defining the boolean CSG operators here, rather than in Waterfall.Booleans 
 -- means that we can use them in typeclass instances without resorting to orphans
@@ -102,38 +110,70 @@ toBoolean f (Solid ptrA) (Solid ptrB) = Solid . unsafeFromAcquire $ do
 -- | Take the sum of two solids
 --
 -- The region occupied by either one of them.
-union :: Solid -> Solid -> Solid
-union = toBoolean Fuse.fuse
+union3D :: Solid -> Solid -> Solid
+union3D = toBoolean Fuse.fuse
+
+
+toBooleans :: BOPAlgo.Operation.Operation -> [Solid] -> Solid
+toBooleans _ [] = emptySolid
+toBooleans _ [x] = x
+toBooleans op (h:solids) = Solid . unsafeFromAcquire $ do
+    firstPtr <- toAcquire . rawSolid $ h
+    ptrs <- traverse (toAcquire . rawSolid) solids
+    bop <- BOPAlgo.BOP.new
+    let builder = upcast bop
+    liftIO $ do
+        BOPAlgo.BOP.setOperation bop op
+        BOPAlgo.Builder.addArgument builder firstPtr
+        traverse_ (BOPAlgo.BOP.addTool bop) ptrs
+        BOPAlgo.setRunParallel builder True
+        BOPAlgo.Builder.perform builder
+    BOPAlgo.Builder.shape builder
+
+-- | Take the sum of a list of solids 
+-- 
+-- May be more performant than chaining multiple applications of `union3D`
+unions3D :: [Solid] -> Solid
+unions3D = toBooleans BOPAlgo.Operation.Fuse
 
 -- | Take the difference of two solids
 -- 
 -- The region occupied by the first, but not the second.
-difference :: Solid -> Solid -> Solid
-difference = toBoolean Cut.cut
+difference3D :: Solid -> Solid -> Solid
+difference3D = toBoolean Cut.cut
 
 -- | Take the intersection of two solids 
 --
 -- The region occupied by both of them.
-intersection :: Solid -> Solid -> Solid
-intersection = toBoolean Common.common
+intersection3D :: Solid -> Solid -> Solid
+intersection3D = toBoolean Common.common
 
--- | While `Solid` could form a Semigroup via either `union` or `intersection`.
--- the default Semigroup is from `union`.
+
+-- | Take the intersection of a list of solids 
+-- 
+-- May be more performant than chaining multiple applications of `intersection3D`
+intersections3D :: [Solid] -> Solid
+intersections3D = toBooleans BOPAlgo.Operation.Common
+
+-- | While `Solid` could form a Semigroup via either `union3D` or `intersection3D`.
+-- the default Semigroup is from `union3D`.
 --
--- The Semigroup from `intersection` can be obtained using `Meet` from the lattices package.
+-- The Semigroup from `intersection3D` can be obtained using `Meet` from the lattices package.
 instance Semigroup Solid where
     (<>) :: Solid -> Solid -> Solid
-    (<>) = union
+    (<>) = union3D
 
 instance Monoid Solid where
-    mempty = nowhere
+    mempty = emptySolid
+    mconcat = unions3D
 
 instance Lattice Solid where 
-    (/\) = intersection
-    (\/) = union
+    (/\) = intersection3D
+    (\/) = union3D
 
 instance BoundedJoinSemiLattice Solid where
-    bottom = nowhere
+    bottom = emptySolid
+
 {--
 -- TODO: because everywhere doesn't work correctly
 -- using the BoundedMeetSemiLattice instance

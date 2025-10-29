@@ -18,8 +18,30 @@ void hs_BRepFilletAPI_MakeFillet_addEdgeWithRadius(BRepFilletAPI_MakeFillet * bu
     builder->Add(r, *edge);
 }
 
-
 void hs_BRepFilletAPI_MakeFillet_addEdgeWithTwoRadiuses(BRepFilletAPI_MakeFillet * builder, double r1, double r2, TopoDS_Edge *edge ){
     builder->Add(r1, r2, *edge);
 }
 
+void hs_BRepFilletAPI_MakeFillet_reset(BRepFilletAPI_MakeFillet * builder){
+    builder->Reset();
+}
+
+int hs_BRepFilletAPI_MakeFillet_nbFaultyContours(BRepFilletAPI_MakeFillet * builder){
+    return builder->NbFaultyContours();
+}
+
+int hs_BRepFilletAPI_MakeFillet_faultyContour(BRepFilletAPI_MakeFillet * builder, int index){
+    return builder->FaultyContour(index);
+}
+
+int hs_BRepFilletAPI_MakeFillet_nbEdges(BRepFilletAPI_MakeFillet * builder, int contourIndex){
+    return builder->NbEdges(contourIndex);
+}
+
+TopoDS_Edge * hs_BRepFilletAPI_MakeFillet_edge(BRepFilletAPI_MakeFillet * builder, int contourIndex, int edgeIndex){
+    return new TopoDS_Edge(builder->Edge(contourIndex, edgeIndex));
+}
+
+void hs_BRepFilletAPI_MakeFillet_remove(BRepFilletAPI_MakeFillet * builder, TopoDS_Edge * edge){
+    builder->Remove(*edge);
+}

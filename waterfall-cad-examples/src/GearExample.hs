@@ -7,6 +7,8 @@
  and his [Inkscape Plugin](https://github.com/attoparsec/inkscape-extensions)
 
  And David Douard and Jonas Bähr, and their [FreeCAD module](https://github.com/FreeCAD/FreeCAD/blob/0ac0882eeb4e3390aef464e1807a3631c5f2e858/src/Mod/PartDesign/fcgear/involute.py)
+
+<<models/gear.glb>>
 -}
 module GearExample 
 ( gearExample
@@ -144,4 +146,4 @@ gearExample thickness moduleLength nGears pressureAngle =
     let segment = genGearToothData moduleLength nGears pressureAngle
         path = Path2D.repeatLooping segment
         --path = mconcat [rotate2D (-fromIntegral n * pi * 2 / fromIntegral nGears) segment | n <- [0..nGears]]
-    in Solids.prism thickness . Shape.fromPath $ path
+    in Solids.prism thickness . Shape.makeShape $ path

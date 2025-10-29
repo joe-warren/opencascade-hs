@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           waterfall-cad-examples
-version:        0.4.0.0
+version:        0.6.0.0
 synopsis:       Examples for Waterfall CAD, a Declarative CAD/Solid Modeling Library
 description:    Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
 category:       Graphics
@@ -30,6 +30,7 @@ library
   exposed-modules:
       BoundingBoxExample
       CsgExample
+      DarkModeSVG
       FilletExample
       GearExample
       LoftExample
@@ -37,8 +38,11 @@ library
       PrismExample
       ReadSolidExpressionExample
       RevolutionExample
+      SVG.PathExample
+      SVG.ReadFileExample
       SweepExample
       TextExample
+      TwoDBooleansExample
   other-modules:
       Paths_waterfall_cad_examples
   hs-source-dirs:
@@ -48,11 +52,15 @@ library
       base >=4.7 && <5
     , lens ==5.*
     , linear >=1.21 && <2
-    , opencascade-hs >=0.4.0.0 && <0.5
+    , opencascade-hs >=0.6.0.0 && <0.7
     , optparse-applicative >=0.17 && <0.19
     , parsec ==3.1.*
     , parser-combinators >=1.2 && <1.4
-    , waterfall-cad >=0.4.0.0 && <0.5
+    , raw-strings-qq >=1.1 && <2
+    , svg-tree >=0.6 && <1.0
+    , waterfall-cad >=0.6.0.0 && <0.7
+    , waterfall-cad-svg >=0.6.0.0 && <0.7
+    , xml ==1.*
   default-language: Haskell2010
 
 executable waterfall-cad-examples
@@ -66,10 +74,14 @@ executable waterfall-cad-examples
       base >=4.7 && <5
     , lens ==5.*
     , linear >=1.21 && <2
-    , opencascade-hs >=0.4.0.0 && <0.5
+    , opencascade-hs >=0.6.0.0 && <0.7
     , optparse-applicative >=0.17 && <0.19
     , parsec ==3.1.*
     , parser-combinators >=1.2 && <1.4
-    , waterfall-cad >=0.4.0.0 && <0.5
+    , raw-strings-qq >=1.1 && <2
+    , svg-tree >=0.6 && <1.0
+    , waterfall-cad >=0.6.0.0 && <0.7
     , waterfall-cad-examples
+    , waterfall-cad-svg >=0.6.0.0 && <0.7
+    , xml ==1.*
   default-language: Haskell2010

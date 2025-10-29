@@ -9,6 +9,7 @@ extern "C" {
 
 TopoDS_Shape * hs_BRepBuilderAPI_MakeShape_shape(BRepBuilderAPI_MakeShape * builder);
 
+void hs_BRepBuilderAPI_MakeShape_build(BRepBuilderAPI_MakeShape* builder);
 
 #ifdef __cplusplus
 }

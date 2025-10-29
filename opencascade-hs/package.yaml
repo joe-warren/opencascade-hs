@@ -23,6 +23,7 @@ extra-libraries:
 - TKStd 
 - TKG3d 
 - TKG2d 
+- TKHLR
 - TKMath 
 - TKernel 
 - TKBRep 
