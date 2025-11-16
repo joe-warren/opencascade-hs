@@ -348,10 +348,9 @@ library
   ld-options: -fwasm-exceptions
   include-dirs:
       cpp
-      /home/joseph/Programming/occt/OCCT/work/wasm/inc/
+      /OCCT/work/wasm/inc/
   extra-lib-dirs:
-      /home/joseph/Programming/occt/emsdk/upstream/lib/
-      /home/joseph/Programming/occt/OCCT/work/wasm/lib/
+      /OCCT/work/wasm/lib/
   cxx-sources:
       cpp/hs_Bnd_Box.cpp
       cpp/hs_Bnd_OBB.cpp
