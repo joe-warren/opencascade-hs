@@ -7,3 +7,7 @@ packages:
 package *
   ghc-options: -haddock
   documentation: True
+
+allow-newer: all:base
+allow-newer: all:template-haskell
+allow-newer: all:ghc-bignum

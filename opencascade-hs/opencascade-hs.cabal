@@ -343,11 +343,15 @@ library
       Paths_opencascade_hs
   hs-source-dirs:
       src
-  ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration
-  cxx-options: --std=c++17 -Wall -Werror -Wno-deprecated
+  ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Wwarn=redundant-constraints -optc -Werror-implicit-function-declaration
+  cxx-options: --std=c++17 -Wall -Werror -Wno-deprecated -fexceptions -mllvm -wasm-enable-sjlj -fwasm-exceptions -sDISABLE_EXCEPTION_CATCHING
+  ld-options: -fwasm-exceptions
   include-dirs:
       cpp
-      /usr/include/opencascade
+      /home/joseph/Programming/occt/OCCT/work/wasm/inc/
+  extra-lib-dirs:
+      /home/joseph/Programming/occt/emsdk/upstream/lib/
+      /home/joseph/Programming/occt/OCCT/work/wasm/lib/
   cxx-sources:
       cpp/hs_Bnd_Box.cpp
       cpp/hs_Bnd_OBB.cpp
@@ -451,7 +455,36 @@ library
       cpp/hs_XCAFDoc_ShapeTool.cpp
       cpp/hs_XSControl_Reader.cpp
   extra-libraries:
-      stdc++
+      c++
+      c++abi
+      TKGeomBase
+      TKStd
+      TKG3d
+      TKG2d
+      TKHLR
+      TKMath
+      TKernel
+      TKBRep
+      TKOffset
+      TKFillet
+      TKBO
+      TKPrim
+      TKTopAlgo
+      TKDESTL
+      TKDESTEP
+      TKDEGLTF
+      TKDEOBJ
+      TKV3d
+      TKMesh
+      TKRWMesh
+      TKLCAF
+      TKXCAF
+      TKService
+      TKShHealing
+      TKXSBase
+  extra-libraries-static:
+      c++
+      c++abi
       TKGeomBase
       TKStd
       TKG3d
