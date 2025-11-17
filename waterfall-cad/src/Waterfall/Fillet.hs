@@ -3,12 +3,17 @@ module Waterfall.Fillet
 ( 
 -- * \"Unsafe\" Functions
 -- | These functions may raise an exception if they're unable to construct a fillet
+--
+-- It may not be possible to construct a fillet because there is not enough space next to one of the fillet edges,
+-- Or because the geometry is too complicated for the fillet algorithm.
 
 -- ** Rounds
+-- | Add "rounding" to some or all of the sharp edges of a `Solid`.
   roundFillet
 , roundConditionalFillet
 , roundIndexedConditionalFillet
 -- ** Chamfers
+-- | Add transitional surfaces (or bevels) on the sharp edges of a `Solid`.
 , chamfer
 , conditionalChamfer
 , indexedConditionalChamfer
@@ -161,11 +166,9 @@ conditionalChamfer f = fromMaybe chamferError . safeConditionalChamfer f
 safeConditionalChamfer :: ((V3 Double, V3 Double) -> Maybe Double) -> Solid -> Maybe Solid
 safeConditionalChamfer f = safeIndexedConditionalChamfer (const f)
 
--- | Add a round with a given radius to every edge of a solid
+-- | Add a chamfer with a given size to every edge of a solid
 --
 -- This is applied to both internal (concave) and external (convex) edges
---
---
 chamfer :: Double -> Solid -> Solid 
 chamfer d = fromMaybe chamferError . safeChamfer d
 
