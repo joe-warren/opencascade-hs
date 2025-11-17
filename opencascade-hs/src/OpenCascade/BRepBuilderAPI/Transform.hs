@@ -23,7 +23,6 @@ C.include "<BRepBuilderAPI_Transform.hxx>"
 C.verbatim "template class NCollection_Map<TopoDS_Shape, TopTools_ShapeMapHasher>;"
 C.verbatim "template class NCollection_DataMap<TopoDS_Shape, TopTools_ListOfShape, TopTools_ShapeMapHasher>;"
 
-
 transform :: Ptr TopoDS.Shape -> Ptr GP.Trsf -> Bool -> Acquire (Ptr TopoDS.Shape)
 transform shape trsf copy =
   let cCopy = boolToCBool copy

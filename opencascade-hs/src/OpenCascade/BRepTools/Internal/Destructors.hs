@@ -12,10 +12,6 @@ C.context (C.cppCtx <> brepToolsContext)
 
 C.include "<BRepTools_WireExplorer.hxx>"
 
--- needed to avoid a linker error about duplicate symbols
-C.verbatim "extern template class NCollection_Map<TopoDS_Shape, TopTools_ShapeMapHasher>;"
-C.verbatim "extern template class NCollection_DataMap<TopoDS_Shape, TopTools_ListOfShape, TopTools_ShapeMapHasher>;"
-
 deleteWireExplorer :: Ptr WireExplorer -> IO ()
 deleteWireExplorer explorerPtr = [C.throwBlock| void {
   delete $(BRepTools_WireExplorer* explorerPtr);
