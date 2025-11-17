@@ -9,3 +9,7 @@ TopoDS_Shape * hs_BRepBuilderAPI_MakeShape_shape(BRepBuilderAPI_MakeShape* build
 void hs_BRepBuilderAPI_MakeShape_build(BRepBuilderAPI_MakeShape* builder){
     builder->Build();
 }
+
+bool hs_BRepBuilderAPI_MakeShape_isDone(BRepBuilderAPI_MakeShape* builder){
+    return builder->IsDone();
+}

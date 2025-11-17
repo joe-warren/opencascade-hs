@@ -10,6 +10,13 @@ and this project adheres to the
 ## Unreleased
 
 - Added `whenNearlyEqual` to `Waterfall.Fillet` to make writing conditional Fillets easier
+- Added the following "Safe" variants to `Waterfall.Fillet` which return Maybe rather than possibly throwing
+    - `safeRoundFillet`
+    - `safeRoundConditionalFillet`
+    - `safeRoundIndexedConditionalFillet`
+    - `safeChamfer`
+    - `safeConditionalChamfer`
+    - `safeIndexedConditionalChamfer`
 
 ## 0.6.0.0
 
