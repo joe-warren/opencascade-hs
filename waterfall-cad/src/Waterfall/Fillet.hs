@@ -95,10 +95,9 @@ safeRoundIndexedConditionalFillet radiusFunction solid = solidFromAcquireT $ do
 
     explorer <- Explorer.new s ShapeEnum.Edge
     liftIO $ addEdges radiusFunction (MakeFillet.addEdgeWithRadius builder) explorer
-    shape <- MakeShape.shape (upcast builder)
     done <- liftIO $ MakeShape.isDone (upcast builder)
     if done
-        then pure $ Just shape
+        then Just <$> MakeShape.shape (upcast builder)
         else pure Nothing
 
 
@@ -151,10 +150,9 @@ safeIndexedConditionalChamfer radiusFunction solid = solidFromAcquireT $ do
 
     explorer <- Explorer.new s ShapeEnum.Edge
     liftIO $ addEdges radiusFunction (MakeChamfer.addEdgeWithDistance builder) explorer
-    shape <- MakeShape.shape (upcast builder)
     done <- liftIO $ MakeShape.isDone (upcast builder)
     if done
-        then pure $ Just shape  
+        then Just <$> MakeShape.shape (upcast builder)
         else pure Nothing
 
 -- | Add chamfers with the given size to each edge of a solid, conditional on the endpoints of the edge.
