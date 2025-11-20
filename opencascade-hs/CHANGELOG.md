@@ -8,8 +8,6 @@ and this project adheres to the
 
 ## Unreleased
 
-- Add `isDone` to `OpenCascade.BRepBuilderAPI.MakeShape`
-
 ## 0.6.0.0
 
 - Add `OpenCascade.BRepFiletAPI_MakeChamfer`

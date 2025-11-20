@@ -11,8 +11,6 @@ TopoDS_Shape * hs_BRepBuilderAPI_MakeShape_shape(BRepBuilderAPI_MakeShape * buil
 
 void hs_BRepBuilderAPI_MakeShape_build(BRepBuilderAPI_MakeShape* builder);
 
-bool hs_BRepBuilderAPI_MakeShape_isDone(BRepBuilderAPI_MakeShape* builder);
-
 #ifdef __cplusplus
 }
 #endif
