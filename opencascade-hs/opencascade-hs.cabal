@@ -99,6 +99,7 @@ extra-source-files:
     cpp/hs_ShapeConstruct_Curve.h
     cpp/hs_ShapeExtend_WireData.h
     cpp/hs_ShapeFix_Solid.h
+    cpp/hs_Standard_Failure.h
     cpp/hs_STEPControl_Reader.h
     cpp/hs_STEPControl_Writer.h
     cpp/hs_StlAPI_Reader.h
@@ -285,6 +286,9 @@ library
       OpenCascade.ShapeFix.Internal.Destructors
       OpenCascade.ShapeFix.Solid
       OpenCascade.ShapeFix.Types
+      OpenCascade.Standard.Failure
+      OpenCascade.Standard.Internal.Destructors
+      OpenCascade.Standard.Types
       OpenCascade.STEPControl
       OpenCascade.STEPControl.Internal.Destructors
       OpenCascade.STEPControl.Reader
@@ -427,6 +431,7 @@ library
       cpp/hs_ShapeConstruct_Curve.cpp
       cpp/hs_ShapeExtend_WireData.cpp
       cpp/hs_ShapeFix_Solid.cpp
+      cpp/hs_Standard_Failure.cpp
       cpp/hs_STEPControl_Reader.cpp
       cpp/hs_STEPControl_Writer.cpp
       cpp/hs_StlAPI_Reader.cpp

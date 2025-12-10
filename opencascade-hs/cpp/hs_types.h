@@ -104,6 +104,7 @@ typedef int HLRBRep_TypeOfResultingEdge;
 typedef void BOPAlgo_Builder;
 typedef void BOPAlgo_BOP;
 typedef int BOPAlgo_Operation;
+typedef void Standard_Failure;
 
 #define Handle(X) void
 #define ARRAY_1(X) void
