@@ -20,12 +20,10 @@ foreign import ccall "wrapper" mkCallback :: IO () -> IO (FunPtr (IO ()))
 
 foreign import ccall "wrapper" mkHandlerCallback :: (Ptr Failure -> IO ()) -> IO (FunPtr (Ptr Failure -> IO ()))
 
-foreign import capi unsafe "hs_Standard_Failure.h hs_Standard_Failure_catch" rawCatch :: FunPtr (IO ()) -> FunPtr (Ptr Failure -> IO ()) -> IO ()
+foreign import capi safe "hs_Standard_Failure.h hs_Standard_Failure_catch" rawCatch :: FunPtr (IO ()) -> FunPtr (Ptr Failure -> IO ()) -> IO ()
 
 catch :: IO () -> (Ptr Failure -> IO ()) -> IO ()
 catch f handler = do
     addrF <- mkCallback f
     addrHandler <- mkHandlerCallback handler
     rawCatch addrF addrHandler
-
-    
