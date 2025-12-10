@@ -24,10 +24,9 @@ export BUILD_DataExchange=ON
 if [ -f "${aScriptDir}/wasm_custom.sh" ] ; then
   . "${aScriptDir}/wasm_custom.sh"
 fi
+source ~/.ghc-wasm/env
 
-. "${EMSDK_ROOT}/emsdk_env.sh"
-
-export aToolchain="${EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+export aToolchain=~/.ghc-wasm/wasi-sdk/share/cmake/wasi-sdk.cmake
 
 export aGitBranch=`git symbolic-ref --short HEAD`
 
@@ -82,7 +81,8 @@ echo cmake -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE:FILEPATH="${aToolchain}" \
 -DBUILD_MODULE_ApplicationFramework:BOOL="${BUILD_ApplicationFramework}" \
 -DBUILD_MODULE_DataExchange:BOOL="${BUILD_DataExchange}" \
 -DBUILD_MODULE_Draw:BOOL="OFF" \
--DBUILD_DOC_Overview:BOOL="OFF" "${aSrcRoot}"
+-DBUILD_DOC_Overview:BOOL="OFF" "${aSrcRoot}" \
+-DBUILD_RELEASE_DISABLE_EXCEPTIONS="ON"
 
 cmake -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE:FILEPATH="${aToolchain}" \
 -DCMAKE_BUILD_TYPE:STRING="Release" \
@@ -107,7 +107,8 @@ cmake -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE:FILEPATH="${aToolchain}" \
 -DBUILD_MODULE_ApplicationFramework:BOOL="${BUILD_ApplicationFramework}" \
 -DBUILD_MODULE_DataExchange:BOOL="${BUILD_DataExchange}" \
 -DBUILD_MODULE_Draw:BOOL="OFF" \
--DBUILD_DOC_Overview:BOOL="OFF" "${aSrcRoot}"
+-DBUILD_DOC_Overview:BOOL="OFF" "${aSrcRoot}" \
+-DBUILD_RELEASE_DISABLE_EXCEPTIONS="ON"
 
   if [ $? -ne 0 ]; then
     echo "Problem during configuration"

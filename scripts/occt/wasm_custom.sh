@@ -1,6 +1,5 @@
 # environment configuration template for occ_build_wasm.sh (to be renamed as wasm_custom_env.sh)
 export aFreeType="$aSrcRoot/../freetype"
-export EMSDK_ROOT="$aSrcRoot/../emsdk"
 export aRapidJson="$aSrcRoot/../rapidjson"
 export aDraco="$aSrcRoot/../3rdparty/draco/build-dir/draco"
 # Uncomment to customize building steps
