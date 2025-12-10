@@ -40,7 +40,6 @@ executables:
       waterfall-cad-examples
     source-dirs:         app
     ghc-options:
-    - -threaded
     - -rtsopts
     - -with-rtsopts=-N
 
