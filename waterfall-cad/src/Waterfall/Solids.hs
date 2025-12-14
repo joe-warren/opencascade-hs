@@ -8,6 +8,7 @@ module Waterfall.Solids
 , unitCylinder
 , centeredCylinder
 , unitCone
+, torus
 , prism
 , volume
 , centerOfMass
@@ -38,8 +39,6 @@ import qualified OpenCascade.GP.Dir as GP.Dir
 import qualified OpenCascade.GP.Ax1 as GP.Ax1
 import qualified OpenCascade.BRepPrimAPI.MakePrism as MakePrism
 import qualified OpenCascade.Inheritance as Inheritance
-import Waterfall.Revolution (revolution)
-
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad ((<=<))
@@ -87,7 +86,7 @@ centeredCylinder :: Solid
 centeredCylinder = translate (unit _z ^* (-0.5)) $ unitCylinder
 
 
--- | A Torus
+-- | A Torus, with the axis of revolution about the Z axis
 -- 
 -- Warning, this will generate malformed geometry if asked to generate a Spindle Torus
 -- (when the Major Radius is smaller than the Minor Radius)
