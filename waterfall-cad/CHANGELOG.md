@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added 
+
+- Added `Waterfall.Solids.torus`
+
 ## 0.6.0.1
 
 ### Added

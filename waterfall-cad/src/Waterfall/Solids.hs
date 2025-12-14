@@ -21,10 +21,12 @@ import Waterfall.TwoD.Internal.Shape (rawShape)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Waterfall.Transforms (translate)
 import qualified Waterfall.TwoD.Shape as TwoD.Shape
+import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
 import qualified OpenCascade.BRepPrimAPI.MakeSphere as MakeSphere
 import qualified OpenCascade.BRepPrimAPI.MakeCylinder as MakeCylinder
 import qualified OpenCascade.BRepPrimAPI.MakeCone as MakeCone
+import qualified OpenCascade.BRepPrimAPI.MakeTorus as MakeTorus
 import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
 import qualified OpenCascade.GP as GP
@@ -36,6 +38,8 @@ import qualified OpenCascade.GP.Dir as GP.Dir
 import qualified OpenCascade.GP.Ax1 as GP.Ax1
 import qualified OpenCascade.BRepPrimAPI.MakePrism as MakePrism
 import qualified OpenCascade.Inheritance as Inheritance
+import Waterfall.Revolution (revolution)
+
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad ((<=<))
@@ -81,6 +85,21 @@ unitCylinder = solidFromAcquire $ Inheritance.upcast <$> MakeCylinder.fromRadius
 -- centered on the origin,
 centeredCylinder :: Solid
 centeredCylinder = translate (unit _z ^* (-0.5)) $ unitCylinder
+
+
+-- | A Torus
+-- 
+-- Warning, this will generate malformed geometry if asked to generate a Spindle Torus
+-- (when the Major Radius is smaller than the Minor Radius)
+torus ::
+    Double -- ^ The Major Radius (Distance from center of torus to center of cube)
+    -> Double -- ^ The Minor Radius (Distance from center of torus to center of )
+    -> Solid
+torus major minor = 
+    solidFromAcquire
+         $ MakeShape.shape 
+         . Inheritance.upcast 
+         =<< MakeTorus.fromRadii major minor
 
 -- | A cone 
 -- With a point at the origin 

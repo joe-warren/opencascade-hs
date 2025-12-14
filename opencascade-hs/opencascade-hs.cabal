@@ -56,6 +56,7 @@ extra-source-files:
     cpp/hs_BRepPrimAPI_MakePrism.h
     cpp/hs_BRepPrimAPI_MakeRevol.h
     cpp/hs_BRepPrimAPI_MakeSphere.h
+    cpp/hs_BRepPrimAPI_MakeTorus.h
     cpp/hs_BRepTools_WireExplorer.h
     cpp/hs_Font_BRepFont.h
     cpp/hs_Font_BRepTextBuilder.h
@@ -190,6 +191,7 @@ library
       OpenCascade.BRepPrimAPI.MakePrism
       OpenCascade.BRepPrimAPI.MakeRevol
       OpenCascade.BRepPrimAPI.MakeSphere
+      OpenCascade.BRepPrimAPI.MakeTorus
       OpenCascade.BRepPrimAPI.Types
       OpenCascade.BRepTools
       OpenCascade.BRepTools.Internal.Destructors
@@ -384,6 +386,7 @@ library
       cpp/hs_BRepPrimAPI_MakePrism.cpp
       cpp/hs_BRepPrimAPI_MakeRevol.cpp
       cpp/hs_BRepPrimAPI_MakeSphere.cpp
+      cpp/hs_BRepPrimAPI_MakeTorus.cpp
       cpp/hs_BRepTools_WireExplorer.cpp
       cpp/hs_Font_BRepFont.cpp
       cpp/hs_Font_BRepTextBuilder.cpp
