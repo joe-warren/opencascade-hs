@@ -178,26 +178,25 @@ tetrahedron =
 
 -- | Regular Octahedron with unit side lengths
 --
--- Four vertexes of the octahedron lie in the XY plane.
--- And two lie on the Z axis
+-- The vertices of the Octahedra lie on the X, Y and Z axes
 octahedron :: Solid
 octahedron = 
     let h = 1 / sqrt 2
         t = unit _z ^* h
         b = negate t
-        c1 = V3 0.5 0.5 0
-        c2 = V3 0.5 (-0.5) 0 
-        c3 = V3 (-0.5) (-0.5) 0
-        c4 = V3 (-0.5) 0.5 0
+        c1 = h *^ unit _x
+        c2 = h *^ unit _y
+        c3 = negate c1
+        c4 = negate c2
     in solidFromVerts
-        [ [b, c1, c2]
-        , [b, c2, c3]
-        , [b, c3, c4]
-        , [b, c4, c1]
-        , [t, c2, c1]
-        , [t, c3, c2]
-        , [t, c4, c3]
-        , [t, c1, c4]
+        [ [t, c1, c2]
+        , [t, c2, c3]
+        , [t, c3, c4]
+        , [t, c4, c1]
+        , [b, c2, c1]
+        , [b, c3, c2]
+        , [b, c4, c3]
+        , [b, c1, c4]
         ]
 
 gPropQuery :: (Ptr GProps.GProps -> Acquire a) -> Solid -> a
