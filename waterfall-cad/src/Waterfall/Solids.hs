@@ -9,6 +9,7 @@ module Waterfall.Solids
 , centeredCylinder
 , unitCone
 , torus
+, tetrahedron
 , prism
 , volume
 , centerOfMass
@@ -19,10 +20,19 @@ module Waterfall.Solids
 import Waterfall.Internal.Solid (Solid (..), solidFromAcquire, acquireSolid, emptySolid)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Waterfall.TwoD.Internal.Shape (rawShape)
+import Waterfall.Internal.ToOpenCascade (v3ToVertex)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
-import Waterfall.Transforms (translate)
+import Waterfall.Internal.Remesh (makeSolidFromShell)
+import Waterfall.Transforms (translate, rotate)
 import qualified Waterfall.TwoD.Shape as TwoD.Shape
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
+import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
+import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
+import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
+import qualified OpenCascade.BRepBuilderAPI.Sewing as BRepBuilderAPI.Sewing
+import qualified OpenCascade.TopoDS as TopoDS
+import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
+import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
 import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
 import qualified OpenCascade.BRepPrimAPI.MakeSphere as MakeSphere
 import qualified OpenCascade.BRepPrimAPI.MakeCylinder as MakeCylinder
@@ -32,7 +42,7 @@ import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
 import qualified OpenCascade.GP as GP
 import Control.Lens ((^.))
-import Linear (V3 (..), unit, _x, _y, _z, (^*))
+import Linear (V3 (..), V2 (..), unit, _x, _y, _z, (^*), (*^), unangle)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.GP.Dir as GP.Dir
@@ -115,6 +125,55 @@ prism len face = solidFromAcquire $ do
     p <- toAcquire . rawShape $ face
     v <- GP.Vec.new 0 0 len
     MakePrism.fromVec p v True True
+    
+
+faceFromVerts :: [V3 Double] -> Acquire (Ptr TopoDS.Face)
+faceFromVerts pnts = do
+    verts <- traverse v3ToVertex pnts
+    edges <- traverse (uncurry MakeEdge.fromVertices) $ zip verts (drop 1 (cycle verts))
+    wireBuilder <- MakeWire.new
+    _ <- liftIO $ traverse (MakeWire.addEdge wireBuilder) edges
+    wire <- MakeWire.wire wireBuilder
+    -- passing True here forces the face to be a plane
+    faceBuilder <- MakeFace.fromWire wire True
+    MakeFace.face faceBuilder
+
+solidFromFaces :: [Ptr TopoDS.Face] -> Acquire (Ptr TopoDS.Solid)
+solidFromFaces faces = do
+    sewing <- BRepBuilderAPI.Sewing.new 1e-6 True True True False
+    compound <- TopoDS.Compound.new
+    builder <- TopoDS.Builder.new
+    liftIO $ TopoDS.Builder.makeCompound builder compound
+    _ <- liftIO $ traverse (TopoDS.Builder.add builder (Inheritance.upcast compound) . Inheritance.upcast) faces
+    liftIO $ BRepBuilderAPI.Sewing.load sewing (Inheritance.upcast compound)
+    liftIO . BRepBuilderAPI.Sewing.perform $ sewing
+    shape <- BRepBuilderAPI.Sewing.sewedShape sewing
+    maybeShapeAsSolid <- makeSolidFromShell shape
+    case maybeShapeAsSolid of 
+        Just s -> return s
+        Nothing -> error "Failed to construct solid from faces"
+
+solidFromVerts :: [[V3 Double]] -> Solid
+solidFromVerts = solidFromAcquire . fmap Inheritance.upcast . (solidFromFaces <=< traverse faceFromVerts)
+
+-- | Tetrahedron with unit side lengths
+-- 
+-- One vertex is in the Z direction
+tetrahedron :: Solid
+tetrahedron = 
+    let r = ((1/sqrt 8) *^)
+            . rotate (unit _z) (pi/4)
+            . rotate (V3 1 1 0) (pi - unangle (V2 1 (sqrt 2)))
+        v1 = V3 1 1 1
+        v2 = V3 1 (-1) (-1)
+        v3 = V3 (-1) 1 (-1)
+        v4 = V3 (-1) (-1) 1
+    in solidFromVerts . fmap (fmap r) $
+        [ [v1, v2, v3] 
+        , [v1 ,v2, v4]
+        , [v2, v3, v4]
+        , [v3, v1, v4]
+        ]
 
 gPropQuery :: (Ptr GProps.GProps -> Acquire a) -> Solid -> a
 gPropQuery f s = unsafeFromAcquire $ do
