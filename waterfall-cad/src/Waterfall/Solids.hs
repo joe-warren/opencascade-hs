@@ -10,6 +10,7 @@ module Waterfall.Solids
 , unitCone
 , torus
 , tetrahedron
+, octahedron
 , prism
 , volume
 , centerOfMass
@@ -156,7 +157,7 @@ solidFromFaces faces = do
 solidFromVerts :: [[V3 Double]] -> Solid
 solidFromVerts = solidFromAcquire . fmap Inheritance.upcast . (solidFromFaces <=< traverse faceFromVerts)
 
--- | Tetrahedron with unit side lengths
+-- | Regular Tetrahedron with unit side lengths
 -- 
 -- One vertex is in the Z direction
 tetrahedron :: Solid
@@ -173,6 +174,30 @@ tetrahedron =
         , [v1 ,v2, v4]
         , [v2, v3, v4]
         , [v3, v1, v4]
+        ]
+
+-- | Regular Octahedron with unit side lengths
+--
+-- Four vertexes of the octahedron lie in the XY plane.
+-- And two lie on the Z axis
+octahedron :: Solid
+octahedron = 
+    let h = 1 / sqrt 2
+        t = unit _z ^* h
+        b = negate t
+        c1 = V3 0.5 0.5 0
+        c2 = V3 0.5 (-0.5) 0 
+        c3 = V3 (-0.5) (-0.5) 0
+        c4 = V3 (-0.5) 0.5 0
+    in solidFromVerts
+        [ [b, c1, c2]
+        , [b, c2, c3]
+        , [b, c3, c4]
+        , [b, c4, c1]
+        , [t, c2, c1]
+        , [t, c3, c2]
+        , [t, c4, c3]
+        , [t, c1, c4]
         ]
 
 gPropQuery :: (Ptr GProps.GProps -> Acquire a) -> Solid -> a
