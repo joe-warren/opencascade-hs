@@ -9,6 +9,7 @@ import RevolutionExample (revolutionExample)
 import SweepExample (sweepExample)
 import OffsetExample (offsetExample)
 import LoftExample (loftExample)
+import PlatonicSolidsExample (platonicSolidsExample)
 import TextExample (textExample)
 import BoundingBoxExample (boundingBoxExample)
 import ReadSolidExpressionExample (readSolidExpressionExample)
@@ -67,15 +68,16 @@ outputOption =
 exampleOption :: OA.Parser (IO Solids.Solid)
 exampleOption = 
     fmap pure (
-      OA.flag' csgExample (OA.long "csg" <> OA.help "example from the wikipedia page on Constructive Solid Geometry" ) <|>
-      OA.flag' prismExample (OA.long "prism" <> OA.help "need to give this a better name" ) <|>
-      OA.flag' filletExample (OA.long "fillet" <> OA.help "demonstrates adding fillets to an object" ) <|>
-      OA.flag' revolutionExample (OA.long "revolution" <> OA.help "demonstrates revolving a path into a solid" ) <|>
-      OA.flag' sweepExample (OA.long "sweep" <> OA.help "demonstrates sweeping a shape along a path" ) <|>
-      OA.flag' offsetExample (OA.long "offset" <> OA.help "demonstrates offsetting the surface of a shape" ) <|>
-      OA.flag' loftExample (OA.long "loft" <> OA.help "generating a boat, defined as a loft of a series of paths" ) <|>
-      OA.flag' boundingBoxExample (OA.long "bound" <> OA.help "demonstrates calculating the oriented bounding box, and axis aligned bounding box, of a shape" ) <|>
-      OA.flag' twoDBooleansExample (OA.long "2d-booleans" <> OA.help "demonstrates 2D boolean operations (union, intersection, difference) on shapes" ) <|>
+      -- OA.flag' csgExample (OA.long "csg" <> OA.help "example from the wikipedia page on Constructive Solid Geometry" ) <|>
+      -- OA.flag' prismExample (OA.long "prism" <> OA.help "need to give this a better name" ) <|>
+      -- OA.flag' filletExample (OA.long "fillet" <> OA.help "demonstrates adding fillets to an object" ) <|>
+      -- OA.flag' revolutionExample (OA.long "revolution" <> OA.help "demonstrates revolving a path into a solid" ) <|>
+      -- OA.flag' sweepExample (OA.long "sweep" <> OA.help "demonstrates sweeping a shape along a path" ) <|>
+      -- OA.flag' offsetExample (OA.long "offset" <> OA.help "demonstrates offsetting the surface of a shape" ) <|>
+      -- OA.flag' loftExample (OA.long "loft" <> OA.help "generating a boat, defined as a loft of a series of paths" ) <|>
+      -- OA.flag' boundingBoxExample (OA.long "bound" <> OA.help "demonstrates calculating the oriented bounding box, and axis aligned bounding box, of a shape" ) <|>
+      -- OA.flag' twoDBooleansExample (OA.long "2d-booleans" <> OA.help "demonstrates 2D boolean operations (union, intersection, difference) on shapes" ) <|>
+      -- OA.flag' platonicSolidsExample (OA.long "platonic-solids" <> OA.help "demonstrates the 5 platonic solids (tetrahedron, cube, octahedron, dodecahedron and icosahedron)") <|>
       (OA.flag' gearExample (OA.long "gear" <> OA.help "generate an involute gear") <*>
        (OA.option OA.auto (OA.long "thickness" <> OA.help "gear depth") <|> pure 1.0) <*>
        (OA.option OA.auto (OA.long "module" <> OA.help "gear module") <|> pure 5.0) <*>
