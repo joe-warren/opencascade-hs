@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.6.1.0
+
 ### Added 
 
 - Added `PlatonicSolidsExample`, demonstrating `tetrahedron`, `centeredCube`, `octahedron`, `dodecahedron` and `icosahedron`

@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           waterfall-cad-svg
-version:        0.6.0.1
+version:        0.6.1.0
 synopsis:       Declarative CAD/Solid Modeling Library, SVG Support
 description:    Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
 category:       Graphics
@@ -42,9 +42,9 @@ library
     , base >=4.7 && <5
     , lens >5 && <6
     , linear >=1.0 && <2.0
-    , opencascade-hs >=0.6.0.1 && <0.7
+    , opencascade-hs >=0.6.1.0 && <0.7
     , resourcet >=1.2 && <1.4
     , svg-tree >=0.6 && <1.0
     , text >=1.2 && <3.0
-    , waterfall-cad >=0.6.0.1 && <0.7
+    , waterfall-cad >=0.6.1.0 && <0.7
   default-language: Haskell2010
