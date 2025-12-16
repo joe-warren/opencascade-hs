@@ -239,18 +239,10 @@ dodecahedron =
         blue x z = scale *^ V3 (x/phi) 0 (phi * z)
         pink x y = scale *^ V3 (phi * x) (y/phi) 0
     in solidFromVerts $
-        [ [ blue (-1) z, blue (1) z, orange (1) y z, green y z, orange (-1) y z]
-          | z <- plusMinusOne
-          , y <- plusMinusOne
-        ] <> 
-        [ [green y (-1), green y 1, orange x y 1, pink x y, orange x y (-1)]  
-            | y <- plusMinusOne 
-            , x <- plusMinusOne
-        ] <>
-        [   [ pink x (-1), pink x 1, orange x 1 z, blue x z, orange x (-1) z] 
-            | z <- plusMinusOne
-            , x <- plusMinusOne
-        ]
+        [ \y z -> [ blue (-1) z, blue (1) z, orange (1) y z, green y z, orange (-1) y z]
+        , \x y -> [ green y (-1), green y 1, orange x y 1, pink x y, orange x y (-1)]  
+        , \x z -> [ pink x (-1), pink x 1, orange x 1 z, blue x z, orange x (-1) z] 
+        ] <*> plusMinusOne <*> plusMinusOne
 
 gPropQuery :: (Ptr GProps.GProps -> Acquire a) -> Solid -> a
 gPropQuery f s = unsafeFromAcquire $ do
