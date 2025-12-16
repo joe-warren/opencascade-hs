@@ -35,6 +35,7 @@ library
       GearExample
       LoftExample
       OffsetExample
+      PlatonicSolidsExample
       PrismExample
       ReadSolidExpressionExample
       RevolutionExample

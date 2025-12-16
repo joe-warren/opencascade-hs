@@ -2,7 +2,7 @@ module Waterfall.Revolution
 ( revolution
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), solidFromAcquire)
+import Waterfall.Internal.Solid (Solid (..), solidFromAcquire, emptySolid)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.Internal.Finalizers (toAcquire)
 import qualified OpenCascade.BRepPrimAPI.MakeRevol as MakeRevol
@@ -14,7 +14,6 @@ import Waterfall.Transforms (rotate)
 import Control.Monad.IO.Class (liftIO)
 import Linear (unit, _x)
 import Waterfall.Internal.Path.Common (RawPath(..))
-import qualified Waterfall.Solids as Solids
 
 -- | Construct a `Solid` of revolution from a `Path2D`.
 --
@@ -31,4 +30,4 @@ revolution (Path2D (ComplexRawPath theRawPath)) =
         solidBuilder <- MakeSolid.new
         liftIO $ MakeSolid.add solidBuilder =<< unsafeDowncast shell
         MakeShape.shape (upcast solidBuilder)
-revolution _ = Solids.emptySolid
+revolution _ = emptySolid

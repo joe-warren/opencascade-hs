@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Add `OpenCascade.BRepPrimAPI_MakeTorus`
+
 ## 0.6.0.1
 
 ## 0.6.0.0

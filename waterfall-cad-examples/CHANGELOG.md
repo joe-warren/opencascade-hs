@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added 
+
+- Added `PlatonicSolidsExample`, demonstrating `tetrahedron`, `centeredCube`, `octahedron`, `dodecahedron` and `icosahedron`
+
 ## 0.6.0.1
 
 - Adjusted `CsgExample` to use `centeredCylinder`, and removed use of `Booleans.Operators` 
