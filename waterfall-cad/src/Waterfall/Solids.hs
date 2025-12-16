@@ -11,6 +11,7 @@ module Waterfall.Solids
 , torus
 , tetrahedron
 , octahedron
+, icosahedron
 , prism
 , volume
 , centerOfMass
@@ -42,8 +43,8 @@ import qualified OpenCascade.BRepPrimAPI.MakeTorus as MakeTorus
 import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
 import qualified OpenCascade.GP as GP
-import Control.Lens ((^.))
-import Linear (V3 (..), V2 (..), unit, _x, _y, _z, (^*), (*^), unangle)
+import Control.Lens ((^.), (&), (.~))
+import Linear (V3 (..), V2 (..), unit, _x, _y, _z, _xy, _yz, _zx, (^*), (*^), unangle, zero)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.GP.Dir as GP.Dir
@@ -197,6 +198,32 @@ octahedron =
         , [b, c3, c2]
         , [b, c4, c3]
         , [b, c1, c4]
+        ]
+
+-- | Regular Icosahedron with unit side lengths
+icosahedron :: Solid
+icosahedron = 
+    let phi = (1 + sqrt 5) / 2
+        signs = [-1, 1]
+    in solidFromVerts $
+        [ 
+            let a = zero & l1 .~ (V2 (s1 * phi/2) 0.5)
+                b = zero & l1 .~ (V2 (s1 * phi/2) (-0.5))
+                c = zero & l2 .~ (V2 (s2 * phi/2) (0.5 * s1))
+            in if s1 < 0 then [b, a, c]
+                         else [a, b, c]
+            | s1 <- signs
+            , s2 <- signs
+            , (l1, l2) <- [(_xy, _zx), (_zx, _yz), (_yz, _xy)]
+        ] <> 
+        [
+            [ zero & _xy .~ (V2 (a * phi/2) (c * 0.5))
+            , zero & _yz .~ (V2 (c * phi/2) (b * 0.5))
+            , zero & _zx .~ (V2 (b * phi/2) (a * 0.5))
+            ]
+            | a <- signs
+            , b <- signs
+            , c <- signs
         ]
 
 gPropQuery :: (Ptr GProps.GProps -> Acquire a) -> Solid -> a

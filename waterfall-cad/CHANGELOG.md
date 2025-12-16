@@ -14,6 +14,7 @@ and this project adheres to the
 - Added Platonic Solids
     - `Waterfall.Solids.tetrahedron`
     - `Waterfall.Solids.octahedron`
+    - `Waterfall.Solids.icosahedron`
 
 ## 0.6.0.1
 
