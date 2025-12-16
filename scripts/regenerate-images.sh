@@ -9,7 +9,7 @@ stack exec waterfall-cad-examples --  --text --content "Waterfall CAD" --dark-mo
 stack exec waterfall-cad-examples --  --bound --dark-mode-svg images/bounding-boxes.svg --height 200
 stack exec waterfall-cad-examples --  --loft --dark-mode-svg images/loft.svg
 stack exec waterfall-cad-examples --  --2d-booleans --dark-mode-svg images/2d-booleans.svg --height 200
-stack exec waterfall-cad-examples --  --platonic-solids --dark-mode-svg images/platonic.svg --height 200
+stack exec waterfall-cad-examples --  --platonic-solids --dark-mode-svg images/platonic.svg
 
 stack exec waterfall-cad-examples --  --csg --glb images/models/csg.glb
 stack exec waterfall-cad-examples --  --gear --glb images/models/gear.glb
