@@ -11,6 +11,7 @@ module Waterfall.Solids
 , torus
 , tetrahedron
 , octahedron
+, dodecahedron
 , icosahedron
 , prism
 , volume
@@ -224,6 +225,31 @@ icosahedron =
             | a <- signs
             , b <- signs
             , c <- signs
+        ]
+
+-- | Regular Dodecahedron with unit side lengths
+dodecahedron :: Solid
+dodecahedron = 
+    let phi = (1 + sqrt 5)/2 
+        plusMinusOne = [1, -1]
+        scale = phi / 2 
+        -- colours taken from https://commons.wikimedia.org/wiki/File:Dodecahedron_vertices.svg
+        orange x y z = scale *^ V3 x y z
+        green y z = scale *^ V3 0 (phi * y) (z / phi)
+        blue x z = scale *^ V3 (x/phi) 0 (phi * z)
+        pink x y = scale *^ V3 (phi * x) (y/phi) 0
+    in solidFromVerts $
+        [ [ blue (-1) z, blue (1) z, orange (1) y z, green y z, orange (-1) y z]
+          | z <- plusMinusOne
+          , y <- plusMinusOne
+        ] <> 
+        [ [green y (-1), green y 1, orange x y 1, pink x y, orange x y (-1)]  
+            | y <- plusMinusOne 
+            , x <- plusMinusOne
+        ] <>
+        [   [ pink x (-1), pink x 1, orange x 1 z, blue x z, orange x (-1) z] 
+            | z <- plusMinusOne
+            , x <- plusMinusOne
         ]
 
 gPropQuery :: (Ptr GProps.GProps -> Acquire a) -> Solid -> a

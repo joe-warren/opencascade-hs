@@ -11,10 +11,11 @@ and this project adheres to the
 ### Added 
 
 - Added `Waterfall.Solids.torus`
-- Added Platonic Solids
+- Added Platonic Solids:
     - `Waterfall.Solids.tetrahedron`
     - `Waterfall.Solids.octahedron`
     - `Waterfall.Solids.icosahedron`
+    - `Waterfall.Solids.dodecahedron`
 
 ## 0.6.0.1
 
