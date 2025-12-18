@@ -31,7 +31,7 @@ OpenCASCADE-hs is only tested on Debian and MacOS.
 As this library depends on OpenCASCADE, I've been developing on Debian with the following packages installed:
 
 ```
-> sudo apt-get install libocct-data-exchange-7.8 libocct-data-exchange-dev libocct-draw-7.8 libocct-draw-dev libocct-foundation-7.8 libocct-foundation-dev libocct-modeling-algorithms-7.8 libocct-modeling-algorithms-dev libocct-modeling-data-7.8 libocct-modeling-data-dev libocct-ocaf-7.8 libocct-ocaf-dev libocct-visualization-7.8 libocct-visualization-dev occt-misc
+> sudo apt-get install libocct-data-exchange-7.9 libocct-data-exchange-dev libocct-draw-7.9 libocct-draw-dev libocct-foundation-7.9 libocct-foundation-dev libocct-modeling-algorithms-7.9 libocct-modeling-algorithms-dev libocct-modeling-data-7.9 libocct-modeling-data-dev libocct-ocaf-7.9 libocct-ocaf-dev libocct-visualization-7.9 libocct-visualization-dev occt-misc
 ```
 
 I think there should be _some_ flexibility as to the exact version of libocct required, and which occt packages are necessary.
