@@ -45,6 +45,7 @@ library
       Waterfall.Internal.Solid
       Waterfall.Internal.ToOpenCascade
       Waterfall.IO
+      Waterfall.Lens
       Waterfall.Loft
       Waterfall.Offset
       Waterfall.Path
