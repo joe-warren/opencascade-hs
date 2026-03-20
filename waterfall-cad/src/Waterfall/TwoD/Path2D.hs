@@ -27,6 +27,7 @@ module Waterfall.TwoD.Path2D
 , reversePath2D
 , splice2D
 , splitPath2D
+, pathLength2D
 ) where 
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..))
@@ -159,3 +160,7 @@ splice2D = splice
 -- | `splitPath` with the type fixed to `Path2D`
 splitPath2D :: Path2D -> [Path2D]
 splitPath2D = splitPath
+
+-- | `pathLength` with the type fixed to `Path
+pathLength2D :: Path2D -> Double
+pathLength2D = pathLength

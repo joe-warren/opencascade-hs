@@ -22,6 +22,7 @@ module Waterfall.Path
 , reversePath3D
 , splice3D
 , splitPath3D
+, pathLength3D
 ) where
 
 import Waterfall.Internal.Path (Path(..))
@@ -102,3 +103,7 @@ splice3D = splice
 -- | `splitPath` with the type fixed to `Path`
 splitPath3D :: Path -> [Path]
 splitPath3D = splitPath
+
+-- | `pathLength` with the type fixed to `Path
+pathLength3D :: Path -> Double
+pathLength3D = pathLength

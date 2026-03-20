@@ -26,6 +26,7 @@ module Waterfall.Path.Common
 , closeLoop
 , reversePath
 , splitPath
+, pathLength
 ) where
 import Data.Acquire
 import qualified OpenCascade.TopoDS as TopoDS
@@ -53,6 +54,8 @@ import Data.Proxy (Proxy (..))
 import Linear (V3 (..), V2 (..), _xy, Epsilon, nearZero)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import Control.Lens ((^.))
+import qualified OpenCascade.GProp.GProps as GProps
+import qualified OpenCascade.BRepGProp as BRepGProp
 
 -- | Class used to abstract over constructing `Path` and `Path2D` 
 -- 
@@ -250,6 +253,18 @@ splitPath p =
     case deconstructPath p of 
         ComplexRawPath r -> fmap (reconstructPath . ComplexRawPath) . unsafeFromAcquireT . splitWires $ r
         _ -> [p]
+
+-- | Measure a path
+pathLength :: AnyPath point path => path -> Double
+pathLength p = 
+    case deconstructPath p of 
+        ComplexRawPath r -> unsafeFromAcquire $ do
+            toAcquire r
+            gProp <- GProps.new
+            liftIO $ BRepGProp.linearProperties (upcast r) gProp False False
+            liftIO $ GProps.mass gProp
+
+        _ -> 0
 
 instance AnyPath (V3 Double) Path where
     reconstructPath :: RawPath -> Path

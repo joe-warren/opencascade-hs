@@ -10,6 +10,8 @@ and this project adheres to the
 
 ## 0.6.1.0
 
+- Added `Waterfall.Path.Common.pathLength`, `Waterfall.Path.pathLength3D` and `Waterfall.TwoD.Path2D.pathLength2D`
+
 ### Added 
 
 - Added `Waterfall.Solids.torus`
