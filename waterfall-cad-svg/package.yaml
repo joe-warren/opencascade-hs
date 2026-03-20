@@ -23,7 +23,7 @@ dependencies:
 - *opencascade-hs-bound
 - svg-tree >= 0.6 && < 1
 - attoparsec >= 0.14 && < 1
-- text >= 1.2 && < 3.0
+- text >= 1.2 && < 3
 - linear >= 1.0 && < 2 
 - lens >= 5 && < 6
 - resourcet >= 1.2 && < 1.4
