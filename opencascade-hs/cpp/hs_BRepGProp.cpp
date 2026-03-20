@@ -6,7 +6,7 @@ void hs_BRepGProp_VolumeProperties(TopoDS_Shape *shape, GProp_GProps *props, boo
 }
 
 void hs_BRepGProp_SurfaceProperties(TopoDS_Shape *shape, GProp_GProps *props, bool skipShared, bool useTriangulation ){
-    BRepGProp::LinearProperties(*shape, *props, skipShared, useTriangulation);
+    BRepGProp::SurfaceProperties(*shape, *props, skipShared, useTriangulation);
 }
 
 void hs_BRepGProp_LinearProperties(TopoDS_Shape *shape, GProp_GProps *props, bool skipShared, bool useTriangulation ){
