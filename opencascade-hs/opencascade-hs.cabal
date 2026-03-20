@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -62,6 +62,7 @@ extra-source-files:
     cpp/hs_Font_BRepTextBuilder.h
     cpp/hs_GC_MakeArcOfCircle.h
     cpp/hs_GC_MakeSegment.h
+    cpp/hs_GCPnts_AbscissaPoint.h
     cpp/hs_Geom_BezierCurve.h
     cpp/hs_Geom_BSplineCurve.h
     cpp/hs_Geom_Curve.h
@@ -204,6 +205,9 @@ library
       OpenCascade.Font.Types
       OpenCascade.GC.MakeArcOfCircle
       OpenCascade.GC.MakeSegment
+      OpenCascade.GCPnts.AbscissaPoint
+      OpenCascade.GCPnts.Internal.Destructors
+      OpenCascade.GCPnts.Types
       OpenCascade.Geom
       OpenCascade.Geom.BezierCurve
       OpenCascade.Geom.BSplineCurve
@@ -392,6 +396,7 @@ library
       cpp/hs_Font_BRepTextBuilder.cpp
       cpp/hs_GC_MakeArcOfCircle.cpp
       cpp/hs_GC_MakeSegment.cpp
+      cpp/hs_GCPnts_AbscissaPoint.cpp
       cpp/hs_Geom_BezierCurve.cpp
       cpp/hs_Geom_BSplineCurve.cpp
       cpp/hs_Geom_Curve.cpp

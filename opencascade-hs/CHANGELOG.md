@@ -9,6 +9,7 @@ and this project adheres to the
 ## Unreleased
 
 - Add `surfaceProperties` and `linearProperties` to `OpenCascade.BRepGProp`
+- Add `OpenCascade.GCPnts.AbscissaPoint`
 
 ## 0.6.1.0
 
