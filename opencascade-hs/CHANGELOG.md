@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Add `surfaceProperties` and `linearProperties` to `OpenCascade.BRepGProp`
+
 ## 0.6.1.0
 
 - Add `OpenCascade.BRepPrimAPI_MakeTorus`
