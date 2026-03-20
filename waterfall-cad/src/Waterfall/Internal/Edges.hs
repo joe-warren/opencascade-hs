@@ -273,7 +273,7 @@ truncateWire targetLength wire = do
     builder <- MakeWire.new
     let go remaining = do
             more <- liftIO $ WireExplorer.more explorer
-            when more $ do
+            when (more && not (nearZero remaining)) $ do
                 edge <- liftIO $ WireExplorer.current explorer
                 len <- liftIO $ edgeLength edge
                 if len <= remaining
