@@ -14,6 +14,8 @@ module Waterfall.Internal.Edges
 , joinWires
 , splitWires
 , edgeToWire
+, wireLength
+, truncateWire
 ) where
 
 import qualified OpenCascade.TopoDS as TopoDS
@@ -28,6 +30,10 @@ import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import qualified OpenCascade.BRepLib as BRepLib
 import OpenCascade.GeomAbs.Shape as GeomAbs.Shape
 import Waterfall.Internal.FromOpenCascade (gpPntToV3, gpVecToV3)
+import qualified OpenCascade.BRepAdaptor.Curve as BRepAdaptor.Curve
+import qualified OpenCascade.GCPnts.AbscissaPoint as AbscissaPoint
+import qualified OpenCascade.GProp.GProps as GProps
+import qualified OpenCascade.BRepGProp as BRepGProp
 import Data.Acquire
 import Control.Monad.IO.Class (liftIO)
 import Linear (V3 (..), distance, normalize, nearZero)
@@ -244,8 +250,45 @@ splitWires wire = do
     makeSegment
 
 buildEdgeCurve3D :: Ptr TopoDS.Edge -> Acquire (Ptr TopoDS.Edge)
-buildEdgeCurve3D edge = do 
+buildEdgeCurve3D edge = do
     edge' <- (liftIO . unsafeDowncast) =<< TopoDS.Shape.copy (upcast edge)
     _ <- liftIO $ BRepLib.buildCurve3d edge' 1e-5 GeomAbs.Shape.C1 14 0
     return edge'
+
+shapeLength :: Ptr TopoDS.Shape -> IO Double
+shapeLength shape = (`with` pure) $ do
+    gProp <- GProps.new
+    liftIO $ BRepGProp.linearProperties shape gProp False False
+    liftIO $ GProps.mass gProp
+
+edgeLength :: Ptr TopoDS.Edge -> IO Double
+edgeLength = shapeLength . upcast
+
+wireLength :: Ptr TopoDS.Wire -> IO Double
+wireLength = shapeLength . upcast
+
+truncateWire :: Double -> Ptr TopoDS.Wire -> Acquire (Ptr TopoDS.Wire)
+truncateWire targetLength wire = do
+    explorer <- WireExplorer.fromWire wire
+    builder <- MakeWire.new
+    let go remaining = do
+            more <- liftIO $ WireExplorer.more explorer
+            when more $ do
+                edge <- liftIO $ WireExplorer.current explorer
+                len <- liftIO $ edgeLength edge
+                if len <= remaining
+                    then do
+                        liftIO $ MakeWire.addEdge builder edge
+                        liftIO $ WireExplorer.next explorer
+                        go (remaining - len)
+                    else do
+                        curve <- BRep.Tool.curve edge
+                        firstP <- liftIO $ BRep.Tool.curveParamFirst edge
+                        adaptor <- BRepAdaptor.Curve.fromEdge edge
+                        absPnt <- AbscissaPoint.fromCurveAbscissaAndParam adaptor remaining firstP
+                        cutParam <- liftIO $ AbscissaPoint.parameter absPnt
+                        trimmedEdge <- MakeEdge.fromCurveAndParameters curve firstP cutParam
+                        liftIO $ MakeWire.addEdge builder trimmedEdge
+    go targetLength
+    MakeWire.wire builder
 

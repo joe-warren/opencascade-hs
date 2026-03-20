@@ -27,6 +27,7 @@ module Waterfall.Path.Common
 , reversePath
 , splitPath
 , pathLength
+, takePathFraction
 ) where
 import Data.Acquire
 import qualified OpenCascade.TopoDS as TopoDS
@@ -37,7 +38,7 @@ import Waterfall.Internal.Path (Path (..))
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.Internal.Finalizers (unsafeFromAcquire, toAcquire, unsafeFromAcquireT)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
-import Waterfall.Internal.Edges (wireEndpoints, reverseWire, splitWires)
+import Waterfall.Internal.Edges (wireEndpoints, reverseWire, splitWires, wireLength, truncateWire)
 import Control.Arrow (second)
 import Data.Foldable (foldl')
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
@@ -54,8 +55,6 @@ import Data.Proxy (Proxy (..))
 import Linear (V3 (..), V2 (..), _xy, Epsilon, nearZero)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import Control.Lens ((^.))
-import qualified OpenCascade.GProp.GProps as GProps
-import qualified OpenCascade.BRepGProp as BRepGProp
 
 -- | Class used to abstract over constructing `Path` and `Path2D` 
 -- 
@@ -247,7 +246,7 @@ reversePath p =
         ComplexRawPath r -> fromWire . reverseWire $ r
         _ -> p
 
--- | Break a path appart at any "non smooth" point
+-- | Break a path apart at any "non smooth" point
 splitPath :: (AnyPath point path) => path -> [path]
 splitPath p = 
     case deconstructPath p of 
@@ -256,15 +255,31 @@ splitPath p =
 
 -- | Measure a path
 pathLength :: AnyPath point path => path -> Double
-pathLength p = 
-    case deconstructPath p of 
-        ComplexRawPath r -> unsafeFromAcquire $ do
-            toAcquire r
-            gProp <- GProps.new
-            liftIO $ BRepGProp.linearProperties (upcast r) gProp False False
-            liftIO $ GProps.mass gProp
-
+pathLength p =
+    case deconstructPath p of
+        ComplexRawPath r -> unsafeFromAcquire $ liftIO . wireLength =<< toAcquire r
         _ -> 0
+
+-- | Truncate a path to a fraction of its total length.
+--
+-- The fraction is clamped to the range [0, 1].
+-- A value of 0 (or less) returns a single point at the start of the path,
+-- a value of 1 (or greater) returns the original path.
+takePathFraction :: forall point path. AnyPath point path => Double -> path -> path
+takePathFraction fraction p
+    | fraction >= 1 = p
+    | fraction <= 0 =
+        case pathEndpoints p of
+            Just (s, _) -> reconstructPath . SinglePointRawPath $ pointToV3 (Proxy :: Proxy path) s
+            Nothing -> p
+    | otherwise =
+        case deconstructPath p of
+            ComplexRawPath r -> fromWire $ do
+                wire <- toAcquire r
+                totalLength <- liftIO $ wireLength wire
+                let targetLength = fraction * totalLength
+                truncateWire targetLength wire
+            _ -> p
 
 instance AnyPath (V3 Double) Path where
     reconstructPath :: RawPath -> Path

@@ -28,7 +28,8 @@ module Waterfall.TwoD.Path2D
 , splice2D
 , splitPath2D
 , pathLength2D
-) where 
+, takePathFraction2D
+) where
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..))
 import Waterfall.TwoD.Transforms (rotate2D)
@@ -164,3 +165,7 @@ splitPath2D = splitPath
 -- | `pathLength` with the type fixed to `Path
 pathLength2D :: Path2D -> Double
 pathLength2D = pathLength
+
+-- | `takePathFraction` with the type fixed to `Path2D`
+takePathFraction2D :: Double -> Path2D -> Path2D
+takePathFraction2D = takePathFraction
