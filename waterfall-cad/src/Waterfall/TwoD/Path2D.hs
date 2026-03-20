@@ -162,7 +162,7 @@ splice2D = splice
 splitPath2D :: Path2D -> [Path2D]
 splitPath2D = splitPath
 
--- | `pathLength` with the type fixed to `Path
+-- | `pathLength` with the type fixed to `Path`
 pathLength2D :: Path2D -> Double
 pathLength2D = pathLength
 

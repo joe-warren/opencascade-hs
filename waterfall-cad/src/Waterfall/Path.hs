@@ -105,7 +105,7 @@ splice3D = splice
 splitPath3D :: Path -> [Path]
 splitPath3D = splitPath
 
--- | `pathLength` with the type fixed to `Path
+-- | `pathLength` with the type fixed to `Path`
 pathLength3D :: Path -> Double
 pathLength3D = pathLength
 
