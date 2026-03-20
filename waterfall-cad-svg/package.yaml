@@ -21,11 +21,11 @@ dependencies:
 - base >= 4.7 && < 5
 - *waterfall-cad-bound
 - *opencascade-hs-bound
-- svg-tree >= 0.6 && < 1.0
-- attoparsec >= 0.14 && < 1.0
+- svg-tree >= 0.6 && < 1
+- attoparsec >= 0.14 && < 1
 - text >= 1.2 && < 3.0
-- linear >= 1.0 && < 2.0 
-- lens > 5 && < 6
+- linear >= 1.0 && < 2 
+- lens >= 5 && < 6
 - resourcet >= 1.2 && < 1.4
 - JuicyPixels >= 3 && < 4
 
