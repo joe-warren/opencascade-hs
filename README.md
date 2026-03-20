@@ -88,3 +88,5 @@ If you've found the project useful, or interesting, or if you've built anything 
 [![](images/loft.svg)](waterfall-cad-examples/src/LoftExample.hs)
 
 [![](images/platonic.svg)](waterfall-cad-examples/src/PlatonicSolidsExample.hs)
+
+[![](images/takePathFraction.svg)](waterfall-cad-examples/src/TakePathFractionExample.hs)

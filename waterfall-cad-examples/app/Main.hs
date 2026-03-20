@@ -16,6 +16,7 @@ import ReadSolidExpressionExample (readSolidExpressionExample)
 import TwoDBooleansExample (twoDBooleansExample)
 import SVG.PathExample (pathExample)
 import SVG.ReadFileExample (readFileExample)
+import TakePathFractionExample (takePathFractionExample)
 import Waterfall.SVG (writeDiagramSVG)
 import DarkModeSVG (writeDarkModeSVG)
 import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB, writeOBJ)
@@ -78,6 +79,7 @@ exampleOption =
       OA.flag' boundingBoxExample (OA.long "bound" <> OA.help "demonstrates calculating the oriented bounding box, and axis aligned bounding box, of a shape" ) <|>
       OA.flag' twoDBooleansExample (OA.long "2d-booleans" <> OA.help "demonstrates 2D boolean operations (union, intersection, difference) on shapes" ) <|>
       OA.flag' platonicSolidsExample (OA.long "platonic-solids" <> OA.help "demonstrates the 5 platonic solids (tetrahedron, cube, octahedron, dodecahedron and icosahedron)") <|>
+      OA.flag' takePathFractionExample (OA.long "take-path-fraction" <> OA.help "demonstrates truncating a path to different fractions of its length") <|>
       (OA.flag' gearExample (OA.long "gear" <> OA.help "generate an involute gear") <*>
        (OA.option OA.auto (OA.long "thickness" <> OA.help "gear depth") <|> pure 1.0) <*>
        (OA.option OA.auto (OA.long "module" <> OA.help "gear module") <|> pure 5.0) <*>
