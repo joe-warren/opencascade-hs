@@ -89,8 +89,8 @@ repeatLooping p =
             let a = unangle (e ^. _xy) - unangle (s ^. _xy)
             in if nearZero a 
                 then mempty
-                else let times :: Integer = abs . round $ pi * 2 / a 
-                      in mconcat $ [rotate2D (fromIntegral n * a) p | n <- [0..times]]
+                else let times :: Integer = round (pi * 2 / abs a)
+                      in mconcat [rotate2D (fromIntegral n * a) p | n <- [0 .. times-1]]
 
 
 -- $reexports
