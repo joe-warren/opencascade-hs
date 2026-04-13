@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.6.2.1
+
 ## 0.6.2.0
 
 - Added `TakePathFractionExample`, demonstrating `takePathFraction`
