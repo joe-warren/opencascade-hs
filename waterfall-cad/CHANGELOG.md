@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Fixed an off by one error in `Waterfall.TwoD.repeatLooping` that would produce overlapping wire segments in `repeatLooping`
+
 ## 0.6.2.0
 
 - Added `Waterfall.Path.Common.pathLength`, `Waterfall.Path.pathLength3D` and `Waterfall.TwoD.Path2D.pathLength2D`
