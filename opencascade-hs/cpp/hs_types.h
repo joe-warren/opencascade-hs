@@ -48,6 +48,7 @@ typedef void TopExp_Explorer;
 typedef void BRepPrimAPI_MakeCylinder;
 typedef void BRepPrimAPI_MakeRevol;
 typedef void BRepOffsetAPI_MakePipe;
+typedef void BRepOffsetAPI_MakePipeShell;
 typedef void TopTools_ListOfShape;
 typedef void BRepTools_WireExplorer;
 typedef void BRepOffsetAPI_MakeThickSolid;
