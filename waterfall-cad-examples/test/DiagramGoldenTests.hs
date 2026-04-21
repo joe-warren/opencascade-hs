@@ -4,17 +4,19 @@ module DiagramGoldenTests
 
 import Test.Tasty (TestTree, TestName, testGroup)
 import Test.Tasty.Golden.Advanced (goldenTest)
-import Waterfall (Diagram)
 import Text.XML.Light as XML
 import DarkModeSVG (darkModeSVG)
 import qualified Graphics.Svg as Svg
 import Data.Maybe (fromMaybe)
-import qualified Waterfall as W
+import Waterfall.Diagram (Diagram)
+import qualified Waterfall.Diagram as Diagram
+import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
+import Waterfall.Solids (Solid)
 import Linear
 import qualified CsgExample
 import Control.Monad.Except (runExceptT, liftEither)
 import qualified Data.ByteString.Char8 as BSC8
-import qualified Graphics.Rasterific.Svg as Svg
+import qualified Graphics.Rasterific.Svg as RSvg
 import qualified Graphics.Text.TrueType as FF
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (unless, join)
@@ -52,7 +54,7 @@ compareOutput :: FilePath -> XML.Element ->  XML.Element -> IO (Maybe String)
 compareOutput inputPath expected actual = 
     let extract (Left s) = Just s
         extract (Right ()) = Nothing 
-        render = Svg.renderSvgDocument
+        render = RSvg.renderSvgDocument
             FF.emptyFontCache
             Nothing -- Document Size 
             72 -- DPI, a so-so DPI for screens, higher would just mean making the test less sensitive
@@ -68,17 +70,27 @@ compareOutput inputPath expected actual =
         actualSvg <- liftEither $ xmlToSvg "actual" actual
         (expectedRendered, _) <- liftIO $ render expectedSvg
         (actualRendered, _) <- liftIO $ render actualSvg
+        
+        let makePath kind = "./test-results/" <> takeBaseName inputPath <> "." <> kind <> ".png"
+        let expectedPath = makePath "expected"
+        let diffPath = makePath "diff"
+        let actualPath = makePath "actual"
 
-        unless (size expectedRendered == size actualRendered) . liftEither . Left $ 
-            ("incompatible sizes, expected: " <> show (size expectedRendered) <> ", actual " <> show (size actualRendered))
+        unless (size expectedRendered == size actualRendered) $ do 
+            liftIO $ JP.writePng expectedPath expectedRendered
+            liftIO $ JP.writePng actualPath actualRendered
+            liftEither . Left $ 
+                ( "incompatible sizes, expected: "
+                <> show (size expectedRendered) 
+                <> ", actual " 
+                <> show (size actualRendered)
+                <> ", actual written to "
+                <> actualPath)
+
         let (width, height) = size expectedRendered
 
         let mismatchedCount = getSum $ foldMapOf zippingTraversal countMismatchedPixel (expectedRendered, actualRendered)
         unless (mismatchedCount < pixelCountThreshold) $ do
-            let makePath kind = "./test-results/" <> takeBaseName inputPath <> "." <> kind <> ".png"
-            let expectedPath = makePath "expected"
-            let diffPath = makePath "diff"
-            let actualPath = makePath "actual"
             let totalPixels = width * height
             let diffImage = 
                     (expectedRendered, actualRendered) 
@@ -88,7 +100,11 @@ compareOutput inputPath expected actual =
             liftIO $ JP.writePng diffPath diffImage
             liftIO $ JP.writePng actualPath actualRendered
 
-            liftEither . Left $ (show mismatchedCount <> "/" <> show totalPixels<> " pixels didn't match, details written to " <> diffPath)
+            liftEither . Left $
+                ( show mismatchedCount <> "/" <> show totalPixels 
+                <> " pixels didn't match, diff written to " 
+                <> diffPath
+                )
     
 doTest :: TestName -> FilePath -> IO Diagram -> TestTree
 doTest testName goldenPath makeDiagram = 
@@ -101,29 +117,28 @@ doTest testName goldenPath makeDiagram =
         (compareOutput goldenPath)
         updateGoldenFile
     
-standardSolidDiagram :: W.Solid -> W.Diagram
-standardSolidDiagram = withWidth 800 . W.solidDiagram (V3 2 3 1)
+standardSolidDiagram :: Solid -> Diagram
+standardSolidDiagram = withWidth 800 . Diagram.solidDiagram (V3 2 3 1)
 
-normalizeSize :: (V2 Double -> Double) -> Double -> W.Diagram -> W.Diagram
+normalizeSize :: (V2 Double -> Double) -> Double -> Diagram -> Diagram
 normalizeSize getter target d = 
-    case W.diagramBoundingBox d of 
+    case Diagram.diagramBoundingBox d of 
         Just (lo, hi) -> 
             let s = getter (hi - lo)
-            in W.uScale2D (target / s) d
+            in TwoD.Transforms.uScale2D (target / s) d
         Nothing -> d
 
-withHeight :: Double -> W.Diagram -> W.Diagram
+withHeight :: Double -> Diagram -> Diagram
 withHeight = normalizeSize (^. _y) 
 
-withWidth :: Double -> W.Diagram -> W.Diagram
+withWidth :: Double -> Diagram -> Diagram
 withWidth = normalizeSize (^. _x) 
 
-
-solidTest :: TestName -> FilePath -> W.Solid -> TestTree
+solidTest :: TestName -> FilePath -> Solid -> TestTree
 solidTest name filepath solid =
     doTest name filepath (pure . standardSolidDiagram $ solid)
 
-smallSolidTest :: TestName -> FilePath -> W.Solid -> TestTree
+smallSolidTest :: TestName -> FilePath -> Solid -> TestTree
 smallSolidTest name filepath solid =
     doTest name filepath (pure . withHeight 200 . standardSolidDiagram $ solid)
 
