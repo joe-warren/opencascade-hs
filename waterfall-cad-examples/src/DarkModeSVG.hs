@@ -20,6 +20,7 @@ styles :: String
 styles = [r|
 .edge {
   fill: None;
+  fill-opacity: 0;
 }
 .edge.visible {
   stroke: #000000;
