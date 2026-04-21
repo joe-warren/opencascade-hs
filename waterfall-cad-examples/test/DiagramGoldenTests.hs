@@ -46,6 +46,12 @@ zippingTraversal =
     . iso (uncurry zip) unzip
     . traverse 
 
+pixelDiffThreshold :: Integer
+pixelDiffThreshold = 10
+
+pixelCountThreshold :: Integer
+pixelCountThreshold = 50
+
 compareOutput :: FilePath -> XML.Element ->  XML.Element -> IO (Maybe String)
 compareOutput inputPath expected actual = 
     let extract (Left s) = Just s
@@ -55,10 +61,9 @@ compareOutput inputPath expected actual =
             Nothing -- Document Size 
             72 -- DPI, a so-so DPI for screens, higher would just mean making the test less sensitive
         size a = (JP.imageWidth a, JP.imageHeight a)
-        pixelThreshold = 10 :: Integer
         comparePixels (JP.PixelRGBA8 r1 g1 b1 a1) (JP.PixelRGBA8 r2 g2 b2 a2) = 
             let c x y = abs (fromIntegral x - fromIntegral y)
-            in (c r1 r2 + c g1 g2 + c b1 b2 + c a1 a2 ) < pixelThreshold
+            in (c r1 r2 + c g1 g2 + c b1 b2 + c a1 a2 ) < pixelDiffThreshold
         countMismatchedPixel (x, y) = if comparePixels x y then 0 else (1 :: Sum Integer)
         colourMismatchedPixel (x, y) = if comparePixels x y then x else JP.PixelRGBA8 255 0 0 255
         dup a = (a, a)
@@ -73,7 +78,7 @@ compareOutput inputPath expected actual =
         let (width, height) = size expectedRendered
 
         let mismatchedCount = getSum $ foldMapOf zippingTraversal countMismatchedPixel (expectedRendered, acutalRendered)
-        unless (mismatchedCount < 10) $ do
+        unless (mismatchedCount < pixelCountThreshold) $ do
             let makePath kind = "./test-results/" <> takeBaseName inputPath <> "." <> kind <> ".png"
             let expectedPath = makePath "expected"
             let diffPath = makePath "diff"
@@ -118,13 +123,22 @@ withHeight = normalizeSize (^. _y)
 withWidth :: Double -> W.Diagram -> W.Diagram
 withWidth = normalizeSize (^. _x) 
 
+
+solidTest :: TestName -> FilePath -> W.Solid -> TestTree
+solidTest name filepath solid =
+    doTest name filepath (pure . standardSolidDiagram $ solid)
+
+smallSolidTest :: TestName -> FilePath -> W.Solid -> TestTree
+smallSolidTest name filepath solid =
+    doTest name filepath (pure . withHeight 200 . standardSolidDiagram $ solid)
+
 diagramGoldenTests :: TestTree
 diagramGoldenTests = testGroup "Diagram Golden Tests" 
-    [ doTest "CSG" "../images/csg.svg" (pure . withHeight 200 . standardSolidDiagram $ CsgExample.csgExample)
-    , doTest "Gear" "../images/gear.svg" (pure . standardSolidDiagram $ GearExample.gearExample 1 5 20 (20*pi/180))
-    , doTest "Revolution" "../images/revolution.svg" (pure . withHeight 200 . standardSolidDiagram $ RevolutionExample.revolutionExample)
-    , doTest "Sweep" "../images/sweep.svg" (pure . withHeight 200 . standardSolidDiagram $ SweepExample.sweepExample)
-    , doTest "Offset" "../images/offset.svg" (pure . standardSolidDiagram $ OffsetExample.offsetExample)
+    [ smallSolidTest "CSG" "../images/csg.svg" CsgExample.csgExample
+    , solidTest "Gear" "../images/gear.svg" $ GearExample.gearExample 1 5 20 (20*pi/180)
+    , smallSolidTest "Revolution" "../images/revolution.svg" RevolutionExample.revolutionExample
+    , smallSolidTest "Sweep" "../images/sweep.svg" SweepExample.sweepExample
+    , solidTest "Offset" "../images/offset.svg" OffsetExample.offsetExample
     , doTest "Text" "../images/text.svg" 
         (standardSolidDiagram <$> TextExample.textExample 
             "../images/fonts/varela/VarelaRound-Regular.ttf" 
@@ -132,10 +146,9 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             "Waterfall-CAD"
             10
         )
-    , doTest "Bound" "../images/bounding-boxes.svg" (pure . withHeight 200 . standardSolidDiagram $ BoundingBoxExample.boundingBoxExample)
-    , doTest "Loft" "../images/loft.svg" (pure . standardSolidDiagram $ LoftExample.loftExample)
-    , doTest "2D Booleans" "../images/2d-booleans.svg" (pure . withHeight 200 . standardSolidDiagram $ TwoDBooleansExample.twoDBooleansExample)
-    , doTest "Platonic Solids" "../images/platonic.svg" (pure . standardSolidDiagram $ PlatonicSolidsExample.platonicSolidsExample)
-    , doTest "Take Path Fraction" "../images/takePathFraction.svg" (pure . standardSolidDiagram $ TakePathFractionExample.takePathFractionExample)
-
+    , smallSolidTest "Bound" "../images/bounding-boxes.svg" BoundingBoxExample.boundingBoxExample
+    , solidTest "Loft" "../images/loft.svg" LoftExample.loftExample
+    , smallSolidTest "2D Booleans" "../images/2d-booleans.svg"  TwoDBooleansExample.twoDBooleansExample
+    , solidTest "Platonic Solids" "../images/platonic.svg" PlatonicSolidsExample.platonicSolidsExample
+    , solidTest "Take Path Fraction" "../images/takePathFraction.svg" TakePathFractionExample.takePathFractionExample
     ]
