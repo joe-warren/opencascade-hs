@@ -26,6 +26,16 @@ import Data.Monoid (Sum (getSum))
 import Codec.Picture (imagePixels)
 import qualified Waterfall.SVG.ToSVG as Waterfall.SVG
 import System.FilePath (takeBaseName)
+import qualified GearExample
+import qualified RevolutionExample
+import qualified SweepExample
+import qualified OffsetExample
+import qualified TextExample
+import qualified BoundingBoxExample
+import qualified LoftExample
+import qualified TwoDBooleansExample
+import qualified PlatonicSolidsExample
+import qualified TakePathFractionExample
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
@@ -91,7 +101,7 @@ doTest testName goldenPath makeDiagram =
         updateGoldenFile
     
 standardSolidDiagram :: W.Solid -> W.Diagram
-standardSolidDiagram = W.solidDiagram (V3 2 3 1)
+standardSolidDiagram = withWidth 800 . W.solidDiagram (V3 2 3 1)
 
 
 normalizeSize :: (V2 Double -> Double) -> Double -> W.Diagram -> W.Diagram
@@ -105,7 +115,27 @@ normalizeSize getter target d =
 withHeight :: Double -> W.Diagram -> W.Diagram
 withHeight = normalizeSize (^. _y) 
 
+withWidth :: Double -> W.Diagram -> W.Diagram
+withWidth = normalizeSize (^. _x) 
+
 diagramGoldenTests :: TestTree
 diagramGoldenTests = testGroup "Diagram Golden Tests" 
     [ doTest "CSG" "../images/csg.svg" (pure . withHeight 200 . standardSolidDiagram $ CsgExample.csgExample)
+    , doTest "Gear" "../images/gear.svg" (pure . standardSolidDiagram $ GearExample.gearExample 1 5 20 (20*pi/180))
+    , doTest "Revolution" "../images/revolution.svg" (pure . withHeight 200 . standardSolidDiagram $ RevolutionExample.revolutionExample)
+    , doTest "Sweep" "../images/sweep.svg" (pure . withHeight 200 . standardSolidDiagram $ SweepExample.sweepExample)
+    , doTest "Offset" "../images/offset.svg" (pure . standardSolidDiagram $ OffsetExample.offsetExample)
+    , doTest "Text" "../images/text.svg" 
+        (standardSolidDiagram <$> TextExample.textExample 
+            "../images/fonts/varela/VarelaRound-Regular.ttf" 
+            12.0
+            "Waterfall-CAD"
+            10
+        )
+    , doTest "Bound" "../images/bounding-boxes.svg" (pure . withHeight 200 . standardSolidDiagram $ BoundingBoxExample.boundingBoxExample)
+    , doTest "Loft" "../images/loft.svg" (pure . standardSolidDiagram $ LoftExample.loftExample)
+    , doTest "2D Booleans" "../images/2d-booleans.svg" (pure . withHeight 200 . standardSolidDiagram $ TwoDBooleansExample.twoDBooleansExample)
+    , doTest "Platonic Solids" "../images/platonic.svg" (pure . standardSolidDiagram $ PlatonicSolidsExample.platonicSolidsExample)
+    , doTest "Take Path Fraction" "../images/takePathFraction.svg" (pure . standardSolidDiagram $ TakePathFractionExample.takePathFractionExample)
+
     ]
