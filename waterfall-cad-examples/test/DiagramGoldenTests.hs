@@ -34,7 +34,6 @@ import qualified LoftExample
 import qualified TwoDBooleansExample
 import qualified PlatonicSolidsExample
 import qualified TakePathFractionExample
-import qualified Graphics.Rasterific.Svg as RSvg
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
