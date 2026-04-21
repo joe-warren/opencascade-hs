@@ -46,3 +46,18 @@ executables:
 
 library:
   source-dirs: src
+
+tests:
+  waterfall-cad-tests:
+    main: Main.hs
+    source-dirs: test
+    dependencies:
+    - waterfall-cad-examples
+    - tasty
+    - tasty-golden
+    - rasterific-svg
+    - mtl
+    - bytestring
+    - JuicyPixels
+    - FontyFruity
+

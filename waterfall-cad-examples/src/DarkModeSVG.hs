@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 module DarkModeSVG
-( writeDarkModeSVG
+( darkModeSVG
+, writeDarkModeSVG
 ) where
 
 import qualified Waterfall.SVG
@@ -36,15 +37,15 @@ styles = [r|
 }
 |]
 
-writeDarkModeSVG :: FilePath -> Waterfall.Diagram -> IO ()
-writeDarkModeSVG path diagram =
-    let svgAsXML = 
+darkModeSVG :: Waterfall.Diagram -> XML.Element
+darkModeSVG diagram =
+    let svgAsXML =
             diagram 
-                & Waterfall.SVG.diagramToSvg
-                & Svg.xmlOfDocument
+              & Waterfall.SVG.diagramToSvg
+              & Svg.xmlOfDocument 
         nameIsStyle (XML.Elem e) = (== "style") . XML.qName . XML.elName $ e
         nameIsStyle _ = False
-    in svgAsXML 
+    in svgAsXML
             & XML.Cursor.fromElement
             & XML.Cursor.findChild (nameIsStyle . XML.Cursor.current)
             & fmap XML.Cursor.firstChild 
@@ -56,6 +57,11 @@ writeDarkModeSVG path diagram =
             & XML.Proc.onlyElems
             & listToMaybe
             & fromMaybe svgAsXML
-            & XML.Output.ppTopElement
-            & writeFile path
+
+writeDarkModeSVG :: FilePath -> Waterfall.Diagram -> IO ()
+writeDarkModeSVG path diagram =
+  diagram 
+    & darkModeSVG
+    & XML.Output.ppTopElement
+    & writeFile path
 
