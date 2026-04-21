@@ -72,21 +72,21 @@ If you've found the project useful, or interesting, or if you've built anything 
 
 ## Examples 
 
-[![](images/revolution.svg)](waterfall-cad-examples/src/RevolutionExample.hs)
-[![](images/csg.svg)](waterfall-cad-examples/src/CsgExample.hs)
-&ThinSpace;[![](images/sweep.svg)](waterfall-cad-examples/src/SweepExample.hs)
-&ThinSpace;[![](images/bounding-boxes.svg)](waterfall-cad-examples/src/BoundingBoxExample.hs)
+[![](waterfall-cad-examples/test-data/revolution.svg)](waterfall-cad-examples/src/RevolutionExample.hs)
+[![](waterfall-cad-examples/test-data/csg.svg)](waterfall-cad-examples/src/CsgExample.hs)
+&ThinSpace;[![](waterfall-cad-examples/test-data/sweep.svg)](waterfall-cad-examples/src/SweepExample.hs)
+&ThinSpace;[![](waterfall-cad-examples/test-data/bounding-boxes.svg)](waterfall-cad-examples/src/BoundingBoxExample.hs)
 
-[![](images/gear.svg)](waterfall-cad-examples/src/GearExample.hs)
+[![](waterfall-cad-examples/test-data/gear.svg)](waterfall-cad-examples/src/GearExample.hs)
 
-[![](images/offset.svg)](waterfall-cad-examples/src/OffsetExample.hs)
+[![](waterfall-cad-examples/test-data/offset.svg)](waterfall-cad-examples/src/OffsetExample.hs)
 
-[![](images/text.svg)](waterfall-cad-examples/src/TextExample.hs)
+[![](waterfall-cad-examples/test-data/text.svg)](waterfall-cad-examples/src/TextExample.hs)
 
-[![](images/2d-booleans.svg)](waterfall-cad-examples/src/TwoDBooleansExample.hs)
+[![](waterfall-cad-examples/test-data/2d-booleans.svg)](waterfall-cad-examples/src/TwoDBooleansExample.hs)
 
-[![](images/loft.svg)](waterfall-cad-examples/src/LoftExample.hs)
+[![](waterfall-cad-examples/test-data/loft.svg)](waterfall-cad-examples/src/LoftExample.hs)
 
-[![](images/platonic.svg)](waterfall-cad-examples/src/PlatonicSolidsExample.hs)
+[![](waterfall-cad-examples/test-data/platonic.svg)](waterfall-cad-examples/src/PlatonicSolidsExample.hs)
 
-[![](images/takePathFraction.svg)](waterfall-cad-examples/src/TakePathFractionExample.hs)
+[![](waterfall-cad-examples/test-data/takePathFraction.svg)](waterfall-cad-examples/src/TakePathFractionExample.hs)
