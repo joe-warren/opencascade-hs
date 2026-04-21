@@ -60,4 +60,5 @@ tests:
     - bytestring
     - JuicyPixels
     - FontyFruity
+    - filepath
 

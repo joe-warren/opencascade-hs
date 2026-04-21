@@ -25,6 +25,7 @@ import Control.Lens
 import Data.Monoid (Sum (getSum))
 import Codec.Picture (imagePixels)
 import qualified Waterfall.SVG.ToSVG as Waterfall.SVG
+import System.FilePath (takeBaseName)
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
@@ -63,9 +64,10 @@ compareOutput inputPath expected actual =
 
         let mismatchedCount = getSum $ foldMapOf zippingTraversal countMismatchedPixel (expectedRendered, acutalRendered)
         unless (mismatchedCount < 10) $ do
-            let expectedPath = inputPath <> ".expected.png"
-            let diffPath = inputPath <> ".diff.png"
-            let actualPath = inputPath <> ".actual.png"
+            let makePath kind = "./test-results/" <> takeBaseName inputPath <> "." <> kind <> ".png"
+            let expectedPath = makePath "expected"
+            let diffPath = makePath "diff"
+            let actualPath = makePath "actual"
             let totalPixels = width * height
             let diffImage = 
                     (expectedRendered, acutalRendered) 
