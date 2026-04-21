@@ -67,13 +67,13 @@ compareOutput inputPath expected actual =
         expectedSvg <- liftEither $ xmlToSvg "expected" expected
         actualSvg <- liftEither $ xmlToSvg "acutal" actual
         (expectedRendered, _) <- liftIO $ render expectedSvg
-        (acutalRendered, _) <- liftIO $ render actualSvg
+        (actualRendered, _) <- liftIO $ render actualSvg
 
-        unless (size expectedRendered == size acutalRendered) . liftEither . Left $ 
+        unless (size expectedRendered == size actualRendered) . liftEither . Left $ 
             ("incompatible sizes, expected: " <> show (size expectedRendered) <> ", actual " <> show (size acutalRendered))
         let (width, height) = size expectedRendered
 
-        let mismatchedCount = getSum $ foldMapOf zippingTraversal countMismatchedPixel (expectedRendered, acutalRendered)
+        let mismatchedCount = getSum $ foldMapOf zippingTraversal countMismatchedPixel (expectedRendered, actualRendered)
         unless (mismatchedCount < pixelCountThreshold) $ do
             let makePath kind = "./test-results/" <> takeBaseName inputPath <> "." <> kind <> ".png"
             let expectedPath = makePath "expected"
