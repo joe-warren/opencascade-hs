@@ -65,12 +65,12 @@ compareOutput inputPath expected actual =
         dup a = (a, a)
     in fmap extract . runExceptT $ do 
         expectedSvg <- liftEither $ xmlToSvg "expected" expected
-        actualSvg <- liftEither $ xmlToSvg "acutal" actual
+        actualSvg <- liftEither $ xmlToSvg "actual" actual
         (expectedRendered, _) <- liftIO $ render expectedSvg
         (actualRendered, _) <- liftIO $ render actualSvg
 
         unless (size expectedRendered == size actualRendered) . liftEither . Left $ 
-            ("incompatible sizes, expected: " <> show (size expectedRendered) <> ", actual " <> show (size acutalRendered))
+            ("incompatible sizes, expected: " <> show (size expectedRendered) <> ", actual " <> show (size actualRendered))
         let (width, height) = size expectedRendered
 
         let mismatchedCount = getSum $ foldMapOf zippingTraversal countMismatchedPixel (expectedRendered, actualRendered)
@@ -81,12 +81,12 @@ compareOutput inputPath expected actual =
             let actualPath = makePath "actual"
             let totalPixels = width * height
             let diffImage = 
-                    (expectedRendered, acutalRendered) 
+                    (expectedRendered, actualRendered) 
                         & zippingTraversal %~ (dup . colourMismatchedPixel)
                         & (^. _1)
             liftIO $ JP.writePng expectedPath expectedRendered
             liftIO $ JP.writePng diffPath diffImage
-            liftIO $ JP.writePng actualPath acutalRendered
+            liftIO $ JP.writePng actualPath actualRendered
 
             liftEither . Left $ (show mismatchedCount <> "/" <> show totalPixels<> " pixels didn't match, details written to " <> diffPath)
     
