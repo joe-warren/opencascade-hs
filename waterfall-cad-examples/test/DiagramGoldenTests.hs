@@ -23,7 +23,7 @@ import Control.Monad (unless, join)
 import qualified Codec.Picture as JP
 import Control.Lens
 import Data.Monoid (Sum (getSum))
-import System.FilePath (takeBaseName)
+import System.FilePath (takeBaseName, (</>))
 import qualified GearExample
 import qualified RevolutionExample
 import qualified SweepExample
@@ -34,10 +34,12 @@ import qualified LoftExample
 import qualified TwoDBooleansExample
 import qualified PlatonicSolidsExample
 import qualified TakePathFractionExample
+import qualified Paths_waterfall_cad_examples as Paths
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
 
+-- this is unlawful - it assumes the two images have the same size
 zippingTraversal :: JP.Pixel px => Traversal' (JP.Image px, JP.Image px) (px, px)
 zippingTraversal =
     alongside (partsOf JP.imagePixels) (partsOf JP.imagePixels) 
@@ -82,8 +84,10 @@ compareOutput inputPath expected actual =
         actualSvg <- liftEither $ xmlToSvg "actual" actual
         (expectedRendered, _) <- liftIO $ render expectedSvg
         (actualRendered, _) <- liftIO $ render actualSvg
-        
-        let makePath kind = "./test-results/" <> takeBaseName inputPath <> "." <> kind <> ".png"
+    
+        projectRoot <- liftIO Paths.getDataDir
+
+        let makePath kind = projectRoot </> "test-results" </> takeBaseName inputPath <> "." <> kind <> ".png"
         let expectedPath = makePath "expected"
         let diffPath = makePath "diff"
         let actualPath = makePath "actual"
@@ -120,13 +124,17 @@ compareOutput inputPath expected actual =
     
 doTest :: TestName -> FilePath -> IO Diagram -> TestTree
 doTest testName goldenPath makeDiagram = 
-    let readGoldenFile = fromMaybe (error $ "failed to read " <> goldenPath) . parseXMLDoc <$> readFile goldenPath
+    let qualifyGoldenPath = (</> "test-data" </> goldenPath) <$> Paths.getDataDir
+        readGoldenFile = fromMaybe (error $ "failed to read " <> goldenPath) . parseXMLDoc <$> (readFile =<< qualifyGoldenPath)
         updateGoldenFile = writeFile goldenPath . ppTopElement
     in goldenTest 
         testName
         readGoldenFile
         (darkModeSVG <$> makeDiagram)
-        (compareOutput goldenPath)
+        (\a b -> do
+            path <- qualifyGoldenPath
+            compareOutput path a b
+        )
         updateGoldenFile
     
 standardSolidDiagram :: Solid -> Diagram
@@ -156,21 +164,21 @@ smallSolidTest name filepath solid =
 
 diagramGoldenTests :: TestTree
 diagramGoldenTests = testGroup "Diagram Golden Tests" 
-    [ smallSolidTest "CSG" "../images/csg.svg" CsgExample.csgExample
-    , solidTest "Gear" "../images/gear.svg" $ GearExample.gearExample 1 5 20 (20*pi/180)
-    , smallSolidTest "Revolution" "../images/revolution.svg" RevolutionExample.revolutionExample
-    , smallSolidTest "Sweep" "../images/sweep.svg" SweepExample.sweepExample
-    , solidTest "Offset" "../images/offset.svg" OffsetExample.offsetExample
-    , doTest "Text" "../images/text.svg" 
-        (standardSolidDiagram <$> TextExample.textExample 
-            "../images/fonts/varela/VarelaRound-Regular.ttf" 
+    [ smallSolidTest "CSG" "csg.svg" CsgExample.csgExample
+    , solidTest "Gear" "gear.svg" $ GearExample.gearExample 1 5 20 (20*pi/180)
+    , smallSolidTest "Revolution" "revolution.svg" RevolutionExample.revolutionExample
+    , smallSolidTest "Sweep" "sweep.svg" SweepExample.sweepExample
+    , solidTest "Offset" "offset.svg" OffsetExample.offsetExample
+    , doTest "Text" "text.svg" $ do
+        projectRoot <- Paths.getDataDir 
+        standardSolidDiagram <$> TextExample.textExample 
+            (projectRoot </> "test-data/fonts/varela/VarelaRound-Regular.ttf")
             12.0
             "Waterfall-CAD"
             10
-        )
-    , smallSolidTest "Bound" "../images/bounding-boxes.svg" BoundingBoxExample.boundingBoxExample
-    , solidTest "Loft" "../images/loft.svg" LoftExample.loftExample
-    , smallSolidTest "2D Booleans" "../images/2d-booleans.svg"  TwoDBooleansExample.twoDBooleansExample
-    , solidTest "Platonic Solids" "../images/platonic.svg" PlatonicSolidsExample.platonicSolidsExample
-    , solidTest "Take Path Fraction" "../images/takePathFraction.svg" TakePathFractionExample.takePathFractionExample
+    , smallSolidTest "Bound" "bounding-boxes.svg" BoundingBoxExample.boundingBoxExample
+    , solidTest "Loft" "loft.svg" LoftExample.loftExample
+    , smallSolidTest "2D Booleans" "2d-booleans.svg"  TwoDBooleansExample.twoDBooleansExample
+    , solidTest "Platonic Solids" "platonic.svg" PlatonicSolidsExample.platonicSolidsExample
+    , solidTest "Take Path Fraction" "takePathFraction.svg" TakePathFractionExample.takePathFractionExample
     ]

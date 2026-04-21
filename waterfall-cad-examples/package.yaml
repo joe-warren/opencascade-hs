@@ -13,6 +13,11 @@ extra-source-files:
 - README.md
 - CHANGELOG.md
 
+data-files: 
+  - test-data/*
+  - test-data/**/*
+  - test-results/.keep
+
 synopsis:            Examples for Waterfall CAD, a Declarative CAD/Solid Modeling Library
 category:            Graphics
 description:         Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>

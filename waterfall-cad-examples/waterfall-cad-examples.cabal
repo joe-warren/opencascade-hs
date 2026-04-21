@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -21,6 +21,21 @@ extra-source-files:
     LICENSE
     README.md
     CHANGELOG.md
+data-files:
+    test-data/2d-booleans.svg
+    test-data/bounding-boxes.svg
+    test-data/csg.svg
+    test-data/gear.svg
+    test-data/loft.svg
+    test-data/offset.svg
+    test-data/platonic.svg
+    test-data/revolution.svg
+    test-data/sweep.svg
+    test-data/takePathFraction.svg
+    test-data/text.svg
+    test-data/fonts/varela/OFL.txt
+    test-data/fonts/varela/VarelaRound-Regular.ttf
+    test-results/.keep
 
 source-repository head
   type: git
