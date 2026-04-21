@@ -34,6 +34,7 @@ import qualified LoftExample
 import qualified TwoDBooleansExample
 import qualified PlatonicSolidsExample
 import qualified TakePathFractionExample
+import qualified Graphics.Rasterific.Svg as RSvg
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
@@ -50,21 +51,33 @@ pixelDiffThreshold = 10
 pixelCountThreshold :: Integer
 pixelCountThreshold = 50
 
+comparePixels :: JP.PixelRGBA8 -> JP.PixelRGBA8 -> Bool
+comparePixels (JP.PixelRGBA8 r1 g1 b1 a1) (JP.PixelRGBA8 r2 g2 b2 a2) = 
+    let c x y = abs (fromIntegral x - fromIntegral y)
+    in (c r1 r2 + c g1 g2 + c b1 b2 + c a1 a2 ) < pixelDiffThreshold
+
+size :: JP.Image px -> (Int, Int)
+size a = (JP.imageWidth a, JP.imageHeight a)
+
+render :: Svg.Document -> IO (JP.Image JP.PixelRGBA8, RSvg.LoadedElements)
+render = RSvg.renderSvgDocument
+    FF.emptyFontCache
+    Nothing -- Document Size 
+    72 -- DPI, a so-so DPI for screens, higher would just mean making the test less sensitive
+
+countMismatchedPixel :: (JP.PixelRGBA8, JP.PixelRGBA8) -> Sum Integer
+countMismatchedPixel (x, y) = if comparePixels x y then 0 else 1
+
+colourMismatchedPixel :: (JP.PixelRGBA8, JP.PixelRGBA8) -> JP.PixelRGBA8
+colourMismatchedPixel (x, y) = if comparePixels x y then x else JP.PixelRGBA8 255 0 0 255
+
+dup :: a -> (a, a)        
+dup = join (,)
+
 compareOutput :: FilePath -> XML.Element ->  XML.Element -> IO (Maybe String)
 compareOutput inputPath expected actual = 
     let extract (Left s) = Just s
         extract (Right ()) = Nothing 
-        render = RSvg.renderSvgDocument
-            FF.emptyFontCache
-            Nothing -- Document Size 
-            72 -- DPI, a so-so DPI for screens, higher would just mean making the test less sensitive
-        size a = (JP.imageWidth a, JP.imageHeight a)
-        comparePixels (JP.PixelRGBA8 r1 g1 b1 a1) (JP.PixelRGBA8 r2 g2 b2 a2) = 
-            let c x y = abs (fromIntegral x - fromIntegral y)
-            in (c r1 r2 + c g1 g2 + c b1 b2 + c a1 a2 ) < pixelDiffThreshold
-        countMismatchedPixel (x, y) = if comparePixels x y then 0 else (1 :: Sum Integer)
-        colourMismatchedPixel (x, y) = if comparePixels x y then x else JP.PixelRGBA8 255 0 0 255
-        dup = join (,)
     in fmap extract . runExceptT $ do 
         expectedSvg <- liftEither $ xmlToSvg "expected" expected
         actualSvg <- liftEither $ xmlToSvg "actual" actual
