@@ -5,10 +5,8 @@ module DiagramGoldenTests
 import Test.Tasty (TestTree, TestName, testGroup)
 import Test.Tasty.Golden.Advanced (goldenTest)
 import Waterfall (Diagram)
-import Text.XML.Light.Input (parseXMLDoc)
-import Text.XML.Light.Output (ppTopElement, showTopElement)
 import Text.XML.Light as XML
-import DarkModeSVG (darkModeSVG, writeDarkModeSVG)
+import DarkModeSVG (darkModeSVG)
 import qualified Graphics.Svg as Svg
 import Data.Maybe (fromMaybe)
 import qualified Waterfall as W
@@ -23,8 +21,6 @@ import Control.Monad (unless)
 import qualified Codec.Picture as JP
 import Control.Lens
 import Data.Monoid (Sum (getSum))
-import Codec.Picture (imagePixels)
-import qualified Waterfall.SVG.ToSVG as Waterfall.SVG
 import System.FilePath (takeBaseName)
 import qualified GearExample
 import qualified RevolutionExample
