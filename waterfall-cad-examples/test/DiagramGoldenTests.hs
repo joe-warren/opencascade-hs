@@ -17,7 +17,7 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Graphics.Rasterific.Svg as Svg
 import qualified Graphics.Text.TrueType as FF
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (unless)
+import Control.Monad (unless, join)
 import qualified Codec.Picture as JP
 import Control.Lens
 import Data.Monoid (Sum (getSum))
@@ -62,7 +62,7 @@ compareOutput inputPath expected actual =
             in (c r1 r2 + c g1 g2 + c b1 b2 + c a1 a2 ) < pixelDiffThreshold
         countMismatchedPixel (x, y) = if comparePixels x y then 0 else (1 :: Sum Integer)
         colourMismatchedPixel (x, y) = if comparePixels x y then x else JP.PixelRGBA8 255 0 0 255
-        dup a = (a, a)
+        dup = join (,)
     in fmap extract . runExceptT $ do 
         expectedSvg <- liftEither $ xmlToSvg "expected" expected
         actualSvg <- liftEither $ xmlToSvg "actual" actual
@@ -103,7 +103,6 @@ doTest testName goldenPath makeDiagram =
     
 standardSolidDiagram :: W.Solid -> W.Diagram
 standardSolidDiagram = withWidth 800 . W.solidDiagram (V3 2 3 1)
-
 
 normalizeSize :: (V2 Double -> Double) -> Double -> W.Diagram -> W.Diagram
 normalizeSize getter target d = 
