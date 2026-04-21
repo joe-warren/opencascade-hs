@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -21,6 +21,21 @@ extra-source-files:
     LICENSE
     README.md
     CHANGELOG.md
+data-files:
+    test-data/2d-booleans.svg
+    test-data/bounding-boxes.svg
+    test-data/csg.svg
+    test-data/gear.svg
+    test-data/loft.svg
+    test-data/offset.svg
+    test-data/platonic.svg
+    test-data/revolution.svg
+    test-data/sweep.svg
+    test-data/takePathFraction.svg
+    test-data/text.svg
+    test-data/fonts/varela/OFL.txt
+    test-data/fonts/varela/VarelaRound-Regular.ttf
+    test-results/.keep
 
 source-repository head
   type: git
@@ -82,6 +97,39 @@ executable waterfall-cad-examples
     , parser-combinators >=1.2 && <1.4
     , raw-strings-qq >=1.1 && <2
     , svg-tree >=0.6 && <1
+    , waterfall-cad >=0.6.2.1 && <0.7
+    , waterfall-cad-examples
+    , waterfall-cad-svg >=0.6.2.1 && <0.7
+    , xml ==1.*
+  default-language: Haskell2010
+
+test-suite waterfall-cad-tests
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      DiagramGoldenTests
+      Paths_waterfall_cad_examples
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration
+  build-depends:
+      FontyFruity
+    , JuicyPixels
+    , base >=4.7 && <5
+    , bytestring
+    , filepath
+    , lens ==5.*
+    , linear >=1.21 && <2
+    , mtl
+    , opencascade-hs >=0.6.2.1 && <0.7
+    , optparse-applicative >=0.17 && <0.19
+    , parsec ==3.1.*
+    , parser-combinators >=1.2 && <1.4
+    , rasterific-svg
+    , raw-strings-qq >=1.1 && <2
+    , svg-tree >=0.6 && <1
+    , tasty
+    , tasty-golden
     , waterfall-cad >=0.6.2.1 && <0.7
     , waterfall-cad-examples
     , waterfall-cad-svg >=0.6.2.1 && <0.7
