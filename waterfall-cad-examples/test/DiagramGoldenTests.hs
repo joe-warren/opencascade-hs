@@ -126,7 +126,10 @@ doTest :: TestName -> FilePath -> IO Diagram -> TestTree
 doTest testName goldenPath makeDiagram = 
     let qualifyGoldenPath = (</> "test-data" </> goldenPath) <$> Paths.getDataDir
         readGoldenFile = fromMaybe (error $ "failed to read " <> goldenPath) . parseXMLDoc <$> (readFile =<< qualifyGoldenPath)
-        updateGoldenFile = writeFile goldenPath . ppTopElement
+        -- most paths are relative to Paths_waterfall_cad_examples.getDataDir
+        -- however when updating the file, we want to modify the source file
+        -- therefore this is sensitive to the cwd
+        updateGoldenFile = writeFile ("test-data" </> goldenPath) . ppTopElement
     in goldenTest 
         testName
         readGoldenFile
