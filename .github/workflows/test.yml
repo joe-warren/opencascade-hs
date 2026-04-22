@@ -1,0 +1,64 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    container:
+      image: ubuntu:26.04
+    env:
+      STACK_ROOT: /root/.stack
+    steps:
+      - name: Install system dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            git ca-certificates curl build-essential \
+            libgmp-dev libtinfo-dev zlib1g-dev xz-utils \
+            libocct-data-exchange-dev \
+            libocct-draw-dev \
+            libocct-foundation-dev \
+            libocct-modeling-algorithms-dev \
+            libocct-modeling-data-dev \
+            libocct-ocaf-dev \
+            libocct-visualization-dev
+
+      - uses: actions/checkout@v4
+
+      - name: Install Stack
+        run: curl -sSL https://get.haskellstack.org/ | sh
+
+      - name: Cache stack
+        uses: actions/cache@v4
+        with:
+          path: |
+            /root/.stack
+            **/.stack-work
+          key: ${{ runner.os }}-stack-${{ hashFiles('stack.yaml', 'stack.yaml.lock', '**/package.yaml') }}-${{ hashFiles('**/*.hs', '**/*.cpp', '**/*.h') }}
+          restore-keys: |
+            ${{ runner.os }}-stack-${{ hashFiles('stack.yaml', 'stack.yaml.lock', '**/package.yaml') }}-
+            ${{ runner.os }}-stack-
+
+      - name: Build
+        run: stack --allow-different-user build --test --no-run-tests
+
+      - name: Run tests
+        run: stack --allow-different-user test
+
+      - name: Collect test images
+        if: failure()
+        run: |
+          mkdir -p test-artifacts
+          find . -path '*test-results*' -name '*.png' -exec cp {} test-artifacts/ \;
+
+      - name: Upload test images
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts
+          path: test-artifacts/*.png
+          if-no-files-found: ignore
