@@ -1,16 +1,5 @@
 #!/bin/sh
 stack build
-stack exec waterfall-cad-examples --  --csg --dark-mode-svg images/csg.svg --height 200
-stack exec waterfall-cad-examples --  --gear --dark-mode-svg images/gear.svg
-stack exec waterfall-cad-examples --  --revolution --dark-mode-svg images/revolution.svg --height 200
-stack exec waterfall-cad-examples --  --sweep --dark-mode-svg images/sweep.svg --height 200
-stack exec waterfall-cad-examples --  --offset --dark-mode-svg images/offset.svg
-stack exec waterfall-cad-examples --  --text --content "Waterfall CAD" --dark-mode-svg images/text.svg --font images/fonts/varela/VarelaRound-Regular.ttf 
-stack exec waterfall-cad-examples --  --bound --dark-mode-svg images/bounding-boxes.svg --height 200
-stack exec waterfall-cad-examples --  --loft --dark-mode-svg images/loft.svg
-stack exec waterfall-cad-examples --  --2d-booleans --dark-mode-svg images/2d-booleans.svg --height 200
-stack exec waterfall-cad-examples --  --platonic-solids --dark-mode-svg images/platonic.svg
-stack exec waterfall-cad-examples --  --take-path-fraction --dark-mode-svg images/takePathFraction.svg
 
 stack exec waterfall-cad-examples --  --csg --glb images/models/csg.glb
 stack exec waterfall-cad-examples --  --gear --glb images/models/gear.glb
