@@ -39,8 +39,11 @@ makeShape _ = Shape . unsafeFromAcquire $
 -- Ideally:
 --
 -- @
--- shapePaths . fromPath ≡ pure
+-- shapePaths . makeShape ≡ pure
 -- @
+-- 
+-- Although this can only hold when the shape has one boundary path, 
+-- and is not guaranteed
 shapePaths :: Shape -> [Path2D] 
 shapePaths (Shape r) = fmap (Path2D . ComplexRawPath) . unsafeFromAcquire $ do
     s <- toAcquire r 

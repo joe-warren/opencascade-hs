@@ -75,7 +75,7 @@ instance Exception WaterfallIOException
 data WaterfallIOExceptionCause = 
     -- | Something went wrong when accessing a file,
     -- eg. a write to a file path that is unreachable,
-    -- or a read to a file in the wrong format 
+    -- or a read from a file in the wrong format 
     FileError  
     -- | The contents of a file could not be converted into a `Waterfall.Solid`
     -- e.g the file did not contain a solid object
@@ -279,8 +279,6 @@ readGLB :: FilePath -> IO Solid
 readGLB = readGLTF
 
 -- | Read a `Solid` from an obj file at a given path
---
--- This should support reading both the GLTF (json) and GLB (binary) formats
 readOBJ :: FilePath -> IO Solid
 readOBJ  = cafReader $ do
     reader <- RWObj.CafReader.new 

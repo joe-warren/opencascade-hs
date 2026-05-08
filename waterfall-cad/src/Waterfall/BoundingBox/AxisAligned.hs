@@ -32,6 +32,6 @@ axisAlignedBoundingBox s =
 -- | A cuboid, specified by two diagonal vertices.
 --  
 -- This can be used to make a solid from the output of `axisAlignedBoundingBox` 
-aabbToSolid :: (V3 Double, V3 Double) -- ^ if this argument input is `(lo, hi)`, one vertex of the cuboid is placed at `lo`, the oposite vertex is at `hi`
+aabbToSolid :: (V3 Double, V3 Double) -- ^ if this argument input is `(lo, hi)`, one vertex of the cuboid is placed at `lo`, the opposite vertex is at `hi`
     -> Solid
 aabbToSolid (lo, hi) = translate lo $ box (hi ^-^ lo)

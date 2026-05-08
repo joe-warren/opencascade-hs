@@ -41,14 +41,14 @@ class Transformable2D a where
     rotate2D :: Double -> a -> a
     -- | Scale by different amounts along the x and y axes
     scale2D :: V2 Double -> a -> a
-    -- | Scale uniformally along both axes
+    -- | Scale uniformly along both axes
     uScale2D :: Double -> a -> a
     -- | Translate by a distance in 2D space
     translate2D :: V2 Double -> a -> a
-    -- | Mirror in the line, which passes through the origin, tangent to the specified vector
+    -- | Mirror in the line, which passes through the origin, perpendicular to the specified vector
     -- 
     -- Note that in order to maintain consistency with 'Waterfall.Transforms.Transformable',
-    -- the mirror is in the line / tangent / to the vector, not in the line / parallel / to the vector
+    -- the mirror is in the line / perpendicular / to the vector, not in the line / parallel / to the vector
     mirror2D :: V2 Double -> a -> a
 
 fromTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Ptr GP.Trsf) -> Path2D -> Path2D

@@ -126,7 +126,7 @@ arcViaTo mid end = \start -> (end, arcVia start mid end)
 -- | Version of `arcVia` designed to work with `pathFrom`
 -- 
 -- With relative points; specifying the distance of the midpoint and endpoint
--- relative to the start of the line, rather than in absolute space.
+-- relative to the start of the arc, rather than in absolute space.
 arcViaRelative :: (AnyPath point path, Epsilon point) => point -> point -> point -> (point, path)
 arcViaRelative dMid dEnd = do
     mid <- (+ dMid) 
@@ -161,7 +161,7 @@ bezierTo controlPoint1 controlPoint2 end = \start -> (end, bezier start controlP
 -- | Version of `bezier` designed to work with `pathFrom`
 -- 
 -- With relative points; specifying the distance of the control points and the endpoint
--- relative to the start of the line, rather than in absolute space.
+-- relative to the start of the curve, rather than in absolute space.
 bezierRelative :: (AnyPath point path, Epsilon point) => point -> point -> point -> point -> (point, path)
 bezierRelative dControlPoint1 dControlPoint2 dEnd = do
     controlPoint1 <- (+ dControlPoint1)

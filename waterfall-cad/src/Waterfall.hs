@@ -12,11 +12,11 @@ module Waterfall
   module Waterfall.Solids
 -- | The functions in this module can be used to transform `Solid`s.
 , module Waterfall.Transforms
--- | `Solid`'s can be combined together with 
+-- | `Solid`s can be combined together with 
 -- [Constructive Solid Geometry](https://en.wikipedia.org/wiki/Constructive_solid_geometry).
 , module Waterfall.Booleans
 , module Waterfall.Booleans.Operators
--- | 2D `Shape`'s can also be combined with CSG operations.
+-- | 2D `Shape`s can also be combined with CSG operations.
 , module Waterfall.TwoD.Booleans
 -- | Once you've generated a `Solid`, 
 -- the functions in `Waterfall.IO` can be used to save it.
@@ -50,9 +50,9 @@ module Waterfall
 -- | Paths in 2D / 3D space.
 --
 -- This module defines functions that can be used with "Waterfall.Path" or "Waterfall.TwoD.Path2D".
--- Those modules both export monomorphized variants of the functions defined in this module.
+-- Those modules both export monomorphised variants of the functions defined in this module.
 , module Waterfall.Path.Common
--- | Generate 2D `Diagram`s from 3D `Shape`s
+-- | Generate 2D `Diagram`s from 3D `Solid`s
 , module Waterfall.Diagram
 )where
 

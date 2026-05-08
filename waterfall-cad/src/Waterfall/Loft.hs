@@ -3,9 +3,9 @@ Module: Waterfall.Loft
 
 [Loft](https://en.wikipedia.org/wiki/Loft_\(3D\)) is a method to create smooth 3D shapes. 
 
-Analagous to the [lofting](https://en.wikipedia.org/wiki/Lofting) process in boat building. 
+Analogous to the [lofting](https://en.wikipedia.org/wiki/Lofting) process in boat building. 
 A loft is defined by planar cross-sections of the desired shape at chosen locations. 
-These cross-sections are then interpolated to form a smooth 3d shape.
+These cross-sections are then interpolated to form a smooth 3D shape.
 -}
 module Waterfall.Loft
 ( pointedLoftWithPrecision

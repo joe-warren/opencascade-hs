@@ -69,7 +69,7 @@ obbSideX = getSide OBB.xDirection OBB.xHSize
 obbSideY :: OrientedBoundingBox -> V3 Double 
 obbSideY = getSide OBB.yDirection OBB.yHSize
     
--- | the "Z" side of the oriented bounding box
+-- | The "Z" side of the oriented bounding box
 --
 -- This is measured from the center to one face.
 -- So the length of this vector is _half_ of the side length of the bounding box.

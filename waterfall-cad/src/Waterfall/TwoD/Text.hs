@@ -21,7 +21,7 @@ import Control.Exception (throwIO)
 
 newtype Font = Font { rawFont :: Ptr BRepFont.BRepFont }
 
--- | create a font from a filepath and a font size 
+-- | Create a font from a filepath and a font size 
 fontFromPath :: FilePath -> Double -> IO Font 
 fontFromPath fontpath size = do
     bRepFont <- fromAcquire $ BRepFont.new
@@ -37,10 +37,7 @@ fontFromSystem name aspect size = do
     unless (fontOk) $ throwIO $ WaterfallIOException FileError (name <> "::" <> show aspect)
     return $ Font bRepFont
 
--- | Render text, using the font from the provided filepath, at a given size.
---
--- The IO of actually loading the font/checking the file exists is defered 
--- until the Shape is actually used
+-- | Render text, using a given font
 text :: Font -> String -> Shape.Shape 
 text font content = Shape.Shape . unsafeFromAcquire $ do
     axis <- GP.Ax3.new

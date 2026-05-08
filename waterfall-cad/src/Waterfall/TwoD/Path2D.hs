@@ -68,17 +68,16 @@ arcTo sense radius end = \start -> (end, arc sense radius start end)
 -- | Version of `arc` designed to work with `pathFrom`
 -- 
 -- With relative points; specifying the distance of the endpoint
--- relative to the start of the line, rather than in absolute space.
+-- relative to the start of the arc, rather than in absolute space.
 arcRelative :: Sense -> Double -> V2 Double -> V2 Double -> (V2 Double, Path2D)
 arcRelative sense radius dEnd = do
     end <- (+ dEnd)
     arcTo sense radius end
 
--- | Given a Path where both endpoints are equidistant from the origin.
---
--- And which subtends an angle \( φ \) from the origin that evenly divides a complete revolution, such that \(n φ = 2 π \).
+-- | Given a Path where both endpoints are equidistant from the origin,
+-- and which subtends an angle \( φ \) from the origin that evenly divides a complete revolution, such that \(n φ = 2 π \).
 -- 
--- Replicates the path \( n \) times, rotating it by \( φ \), until the resulting path completes one revolution around the origin.
+-- `repeatLooping` replicates the path \( n \) times, rotating it by \( φ \), until the resulting path completes one revolution around the origin.
 --
 -- This can be used to construct paths with rotational symmetry, such as regular polygons, or gears.
 repeatLooping :: Path2D -> Path2D
@@ -162,7 +161,7 @@ splice2D = splice
 splitPath2D :: Path2D -> [Path2D]
 splitPath2D = splitPath
 
--- | `pathLength` with the type fixed to `Path`
+-- | `pathLength` with the type fixed to `Path2D`
 pathLength2D :: Path2D -> Double
 pathLength2D = pathLength
 

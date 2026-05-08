@@ -34,7 +34,7 @@ import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import OpenCascade.Inheritance (upcast)
 import Control.Monad (forM_)
 
--- | "Diagram" of a "Waterfall" part
+-- | `Diagram` of a Waterfall part
 --
 -- This is similar to a collection of `Path2D`
 -- indexed by `LineType` and `Visibility`

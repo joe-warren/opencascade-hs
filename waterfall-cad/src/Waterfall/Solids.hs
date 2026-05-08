@@ -88,13 +88,13 @@ unitSphere :: Solid
 unitSphere = solidFromAcquire $ Inheritance.upcast <$> MakeSphere.fromRadius 1
 
 -- | A cylinder with radius 1, length 1,
--- one of it's circular faces centered on the origin,
+-- one of its circular faces centered on the origin,
 -- the other centered on \( (0, 0, 1) \)
 unitCylinder :: Solid
 unitCylinder = solidFromAcquire $ Inheritance.upcast <$> MakeCylinder.fromRadiusAndHeight 1 1
 
 -- | A cylinder with radius 1, length 1,
--- centered on the origin,
+-- centered on the origin
 centeredCylinder :: Solid
 centeredCylinder = translate (unit _z ^* (-0.5)) $ unitCylinder
 
@@ -119,9 +119,9 @@ torus major minor =
 unitCone :: Solid
 unitCone = solidFromAcquire $ Inheritance.upcast <$> MakeCone.fromTwoRadiiAndHeight 0 1 1
 
--- | Extruded a 2D face into a prism with a given length \(len\).
+-- | Extrude a 2D face into a prism with a given length \(len\).
 --
--- One of the prisms faces lies on the plane \(z = 0\),
+-- One of the prism's faces lies on the plane \(z = 0\),
 -- the other on the plane \(z = len\).
 prism :: Double -> TwoD.Shape.Shape -> Solid
 prism len face = solidFromAcquire $ do

@@ -40,13 +40,13 @@ class Transformable a where
     -- | Scale by different amounts along the x, y and z axes
     scale :: V3 Double -> a -> a
     -- Uniform Scale
-    -- | Scale uniformally along all axes
+    -- | Scale uniformly along all axes
     uScale :: Double -> a -> a
     -- | Rotate by Axis and Angle (in radians)
     rotate :: V3 Double -> Double -> a -> a
     -- | Translate by a vector in 3D space
     translate :: V3 Double -> a -> a
-    -- | Mirror in the plane, which passes through the origin, tangent to the specified vector
+    -- | Mirror in the plane, which passes through the origin, perpendicular to the specified vector
     mirror :: V3 Double -> a -> a
 
 fromTrsfSolid :: Acquire (Ptr GP.Trsf) -> Solid -> Solid

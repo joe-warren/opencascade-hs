@@ -110,13 +110,13 @@ indexedConditionalChamfer radiusFunction solid = solidFromAcquire $ do
 conditionalChamfer :: ((V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
 conditionalChamfer f = indexedConditionalChamfer (const f)
 
--- | Add a round with a given radius to every edge of a solid
+-- | Add a chamfer with a given size to every edge of a solid
 --
 -- This is applied to both internal (concave) and external (convex) edges
 chamfer :: Double -> Solid -> Solid
 chamfer d = conditionalChamfer (const . pure $ d)
 
--- | Returns a value when the target of a lens on a two points are close to one another.
+-- | Returns a value when the target of a lens on two points are close to one another.
 -- 
 -- This can be used in combination with `roundConditionalFillet`/`conditionalChamfer`.
 --
