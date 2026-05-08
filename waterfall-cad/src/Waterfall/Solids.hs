@@ -104,8 +104,8 @@ centeredCylinder = translate (unit _z ^* (-0.5)) $ unitCylinder
 -- Warning, this will generate malformed geometry if asked to generate a Spindle Torus
 -- (when the Major Radius is smaller than the Minor Radius)
 torus ::
-    Double -- ^ The Major Radius (Distance from center of torus to center of cube)
-    -> Double -- ^ The Minor Radius (Distance from center of torus to center of )
+    Double -- ^ The Major Radius (Distance from center of torus to center of tube)
+    -> Double -- ^ The Minor Radius (Distance from center of tube to the surface of the torus)
     -> Solid
 torus major minor = 
     solidFromAcquire
