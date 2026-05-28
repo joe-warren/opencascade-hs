@@ -10,8 +10,21 @@ void hs_delete_BRepOffsetAPI_MakeOffsetShape(BRepOffsetAPI_MakeOffsetShape * bui
     delete builder;
 }
 
-void hs_BRepOffsetAPI_MakeOffsetShape_performBySimple(BRepOffsetAPI_MakeOffsetShape * builder, TopoDS_Shape * shape, double value){
-    builder->PerformBySimple(*shape, value);
+void hs_BRepOffsetAPI_MakeOffsetShape_performBySimple(
+    BRepOffsetAPI_MakeOffsetShape * builder,
+    TopoDS_Shape * shape,
+    double value, 
+    HSExceptionType* exType,
+    void** exPtr
+    ){
+        
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [builder, shape, value]{
+            builder->PerformBySimple(*shape, value);
+        }
+    );
 }
 
 void hs_BRepOffsetAPI_MakeOffsetShape_performByJoin(

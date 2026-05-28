@@ -23,11 +23,16 @@ foreign import capi unsafe "hs_BRepOffsetAPI_MakeOffsetShape.h hs_new_BRepOffset
 new :: Acquire (Ptr MakeOffsetShape)
 new = mkAcquire rawNew deleteMakeOffsetShape
 
-foreign import capi unsafe "hs_BRepOffsetAPI_MakeOffsetShape.h hs_BRepOffsetAPI_MakeOffsetShape_performBySimple" rawPerformBySimple :: Ptr MakeOffsetShape -> Ptr TopoDS.Shape -> CDouble -> IO ()
+foreign import capi unsafe "hs_BRepOffsetAPI_MakeOffsetShape.h hs_BRepOffsetAPI_MakeOffsetShape_performBySimple" rawPerformBySimple 
+    :: Ptr MakeOffsetShape 
+    -> Ptr TopoDS.Shape
+    -> CDouble
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO ()
  
 performBySimple :: Ptr MakeOffsetShape -> Ptr TopoDS.Shape -> Double -> IO ()
-performBySimple = coerce rawPerformBySimple
-
+performBySimple builder shape offset = wrapException $ rawPerformBySimple builder shape (coerce offset)
 
 foreign import capi unsafe "hs_BRepOffsetAPI_MakeOffsetShape.h hs_BRepOffsetAPI_MakeOffsetShape_performByJoin" rawPerformByJoin 
     :: Ptr MakeOffsetShape 
