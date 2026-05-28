@@ -25,21 +25,22 @@ void hs_BRepOffsetAPI_MakeOffsetShape_performByJoin(
     GeomAbs_JoinType join,
     bool removeIntEdges,
     HSExceptionType* exType,
-    void* exPtr
+    void** exPtr
      ){
-    hs_handleEx(
+    hs_handleExVoid(
         exType,
         exPtr,
-        builder,
-        &BRepOffsetAPI_MakeOffsetShape::PerformByJoin,
-        *shape,
-        value,
-        tol,
-        mode,
-        intersection,
-        selfInter,
-        join,
-        removeIntEdges,
-        Message_ProgressRange()
+        [builder, shape, value, tol, mode, intersection, selfInter, join, removeIntEdges]{
+            builder->PerformByJoin(
+                *shape,
+                value,
+                tol,
+                mode,
+                intersection,
+                selfInter,
+                join,
+                removeIntEdges
+            );
+        }
     );
 }

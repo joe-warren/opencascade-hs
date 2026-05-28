@@ -112,6 +112,7 @@ test-suite waterfall-cad-tests
   main-is: Main.hs
   other-modules:
       DiagramGoldenTests
+      ExceptionTests
       Paths_waterfall_cad_examples
   hs-source-dirs:
       test
@@ -134,6 +135,8 @@ test-suite waterfall-cad-tests
     , svg-tree >=0.6 && <1
     , tasty
     , tasty-golden
+    , tasty-hunit
+    , temporary
     , waterfall-cad >=0.6.2.1 && <0.7
     , waterfall-cad-examples
     , waterfall-cad-svg >=0.6.2.1 && <0.7

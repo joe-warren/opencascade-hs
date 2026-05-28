@@ -25,7 +25,7 @@ void hs_BRepOffsetAPI_MakeOffsetShape_performByJoin(
     GeomAbs_JoinType join,
     bool removeIntEdges,
     HSExceptionType* exType,
-    void* exPtr
+    void** exPtr
     );
 
 #ifdef __cplusplus

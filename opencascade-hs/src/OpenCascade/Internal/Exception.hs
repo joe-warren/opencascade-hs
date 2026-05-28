@@ -1,5 +1,6 @@
 module OpenCascade.Internal.Exception 
-( wrapException
+( OpenCascadeException (..)
+, wrapException
 ) where
 
 import Foreign.C
@@ -9,7 +10,6 @@ import Control.Exception (Exception, throw)
 import Data.Data (Typeable)
 import Foreign.Storable (peek)
 import qualified OpenCascade.Standard.Failure as Standard.Failure
-import OpenCascade.Inheritance (upcast)
 import qualified OpenCascade.Std.Exception as Std.Exception
 import OpenCascade.Standard.Internal.Destructors (deleteFailure)
 import OpenCascade.Std.Internal.Destructors (deleteException)
@@ -33,7 +33,7 @@ handleError flagPtr exPtr = do
         NoException -> pure ()
         StandardFailureException -> do
             stdFailure <- castPtr <$> peek exPtr
-            msgString <- peekCString =<< Std.Exception.what (upcast stdFailure)
+            msgString <- peekCString =<< Standard.Failure.getMessageString stdFailure
             stackString <- peekCString =<< Standard.Failure.getStackString stdFailure
             deleteFailure stdFailure
             throw (OpenCascadeStandardFailure msgString stackString)

@@ -12,11 +12,11 @@ enum HSExceptionType {
     OtherEx = 3
 };
 
-template <typename T, typename Function, typename ... Args>
-auto hs_handleEx(HSExceptionType* theType, void ** exPtr, T* t, Function f, Args&& ... args) {
+template <typename T>
+void hs_handleExVoid(HSExceptionType* theType, void ** exPtr, T&& f) {
   try {
     *theType = NoException;
-    return (t->*f)(std::forward<Args>(args)...);
+    f();
   }
   catch (Standard_Failure &e) {
     *theType = StandardFailureEx;
@@ -29,6 +29,26 @@ auto hs_handleEx(HSExceptionType* theType, void ** exPtr, T* t, Function f, Args
   catch(...) {
     *theType = OtherEx;
   }
+}
+
+template <typename T>
+auto hs_handleEx(HSExceptionType* theType, void ** exPtr, T&& f) {
+  try {
+    *theType = NoException;
+    return f();
+  }
+  catch (Standard_Failure &e) {
+    *theType = StandardFailureEx;
+    *exPtr = new Standard_Failure(e);
+  }
+  catch (std::exception &e) {
+    *theType = StdExceptionEx;
+    *exPtr = new std::exception(e);
+  }
+  catch(...) {
+    *theType = OtherEx;
+  }
+  return static_cast<decltype(f())>(nullptr);
 }
 
 #endif // __cplusplus
