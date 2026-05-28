@@ -107,6 +107,8 @@ typedef void BOPAlgo_BOP;
 typedef int BOPAlgo_Operation;
 typedef void GCPnts_AbscissaPoint;
 
+typedef int HSExceptionType;
+
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus

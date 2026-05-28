@@ -2,6 +2,7 @@
 #define HS_BREPOFFSETAPI_MAKEOFFSETSHAPE_H
 
 #include "hs_types.h"
+#include "hs_Exception.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,7 +23,9 @@ void hs_BRepOffsetAPI_MakeOffsetShape_performByJoin(
     bool intersection,
     bool selfInter,
     GeomAbs_JoinType join,
-    bool removeIntEdges
+    bool removeIntEdges,
+    HSExceptionType* exType,
+    void* exPtr
     );
 
 #ifdef __cplusplus
