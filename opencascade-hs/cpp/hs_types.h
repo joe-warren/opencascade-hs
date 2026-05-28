@@ -106,13 +106,18 @@ typedef void BOPAlgo_Builder;
 typedef void BOPAlgo_BOP;
 typedef int BOPAlgo_Operation;
 typedef void GCPnts_AbscissaPoint;
+typedef void Standard_Failure;
+typedef void STD_EXCEPTION;
 
 typedef int HSExceptionType;
 
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus
+#include <exception>
+
 #define ARRAY_1(X) NCollection_Array1<X>
+typedef std::exception STD_EXCEPTION;
 #endif // __cplusplus
 #endif // HS_TYPES_H
 

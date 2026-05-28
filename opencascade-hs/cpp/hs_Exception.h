@@ -1,6 +1,8 @@
 #ifndef HS__EXCEPTION__H
 #define HS__EXCEPTION__H
 
+#include "hs_types.h"
+
 #ifdef __cplusplus
 
 enum HSExceptionType {
@@ -30,5 +32,19 @@ auto hs_handleEx(HSExceptionType* theType, void ** exPtr, T* t, Function f, Args
 }
 
 #endif // __cplusplus
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void hs_delete_std_exception(STD_EXCEPTION * ex);
+
+char * hs_std_exception_what(STD_EXCEPTION * ex);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif // HS_EXCEPTION_H
