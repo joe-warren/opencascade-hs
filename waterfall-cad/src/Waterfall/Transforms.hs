@@ -152,7 +152,22 @@ instance Transformable Solid where
     matTransform = maybe id (either fromTrsfSolid fromGTrsfSolid) . matrixGTrsf 
     
     scale :: V3 Double -> Solid -> Solid
-    scale = maybe id (either fromTrsfSolid fromGTrsfSolid) . scaleTrsf
+    scale factor@(V3 x y z) solid = mirrors $ trsf solid
+      where
+      trsf :: Solid -> Solid
+      trsf = maybe id (either fromTrsfSolid fromGTrsfSolid) $ scaleTrsf (abs factor)
+
+      mirrors, mirrorx, mirrory, mirrorz :: Solid -> Solid
+      mirrors = mirrorx . mirrory . mirrorz
+      mirrorx
+        | x < 0 = mirror (V3 1 0 0)
+        | otherwise = id
+      mirrory
+        | y < 0 = mirror (V3 0 1 0)
+        | otherwise = id
+      mirrorz
+        | z < 0 = mirror (V3 0 0 1)
+        | otherwise = id
 
     uScale :: Double -> Solid -> Solid
     uScale = fromTrsfSolid . uScaleTrsf
