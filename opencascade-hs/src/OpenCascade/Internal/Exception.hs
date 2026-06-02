@@ -26,6 +26,12 @@ data OpenCascadeException
 
 instance Exception OpenCascadeException
 
+safePeekCString :: Ptr CChar -> IO String
+safePeekCString ptr = 
+    if ptr == nullPtr
+        then pure ""
+        else peekCString ptr
+
 handleError :: Ptr CInt -> Ptr (Ptr ()) -> IO ()
 handleError flagPtr exPtr = do
     flag <- peek flagPtr
@@ -33,13 +39,13 @@ handleError flagPtr exPtr = do
         NoException -> pure ()
         StandardFailureException -> do
             stdFailure <- castPtr <$> peek exPtr
-            msgString <- peekCString =<< Standard.Failure.getMessageString stdFailure
-            stackString <- peekCString =<< Standard.Failure.getStackString stdFailure
+            msgString <- safePeekCString =<< Standard.Failure.getMessageString stdFailure
+            stackString <- safePeekCString =<< Standard.Failure.getStackString stdFailure
             deleteFailure stdFailure
             throw (OpenCascadeStandardFailure msgString stackString)
         StdException -> do
             stdException <- castPtr <$> peek exPtr
-            msgString <- peekCString =<< Std.Exception.what stdException
+            msgString <- safePeekCString =<< Std.Exception.what stdException
             deleteException stdException
             throw (OpenCascadeStdException msgString)
         OtherException -> do
