@@ -62,6 +62,10 @@ fromGTrsfSolid mkTrsf s = solidFromAcquire $ do
     trsf <- mkTrsf 
     BRepBuilderAPI.GTransform.gtransform solid trsf True 
 
+transformPathSinglePointPaths :: (V3 Double -> V3 Double) -> Path -> Path
+transformPathSinglePointPaths f (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v 
+transformPathSinglePointPaths _ p = p 
+
 fromTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.Trsf) -> Path -> Path
 fromTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquire $ do 
     path <- toAcquire p
@@ -183,6 +187,7 @@ instance Transformable Solid where
     scale factor = 
         applyScaleTrsf fromTrsfSolid fromGTrsfSolid (scaleTrsf factor)
 
+    uScale :: Double -> Solid -> Solid
     uScale = fromTrsfSolid . uScaleTrsf
 
     rotate :: V3 Double -> Double -> Solid -> Solid
@@ -202,9 +207,8 @@ instance Transformable Path where
     
     scale :: V3 Double -> Path -> Path
     scale s =
-         
         let transformPnt = scale s 
-        in applyScaleTrsf (fromTrsfPath transformPnt) (fromGTrsfPath transformPnt) (scaleTrsf s)
+        in transformPathSinglePointPaths transformPnt . applyScaleTrsf (fromTrsfPath id) (fromGTrsfPath id) (scaleTrsf s)
 
     uScale :: Double -> Path -> Path
     uScale s = fromTrsfPath (uScale s) (uScaleTrsf s)
