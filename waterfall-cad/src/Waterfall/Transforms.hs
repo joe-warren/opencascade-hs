@@ -87,14 +87,18 @@ applyScaleTrsf applyTrsf applyGTrsf (maybeTrsf, maybeGTrsf) =
      maybe id applyTrsf maybeTrsf . maybe id applyGTrsf maybeGTrsf
     
 scaleTrsf :: V3 Double -> (Maybe (Acquire (Ptr GP.Trsf)), Maybe (Acquire (Ptr GP.GTrsf)))
+scaleTrsf (V3 1 1 1) = (Nothing, Nothing)
 scaleTrsf v@(V3 x y z ) = 
-    if x == y && y == z
+    let isUniform = abs x == abs y && abs y == abs z 
+        isAllPositive = x >= 0 && y >= 0 && z >= 0
+    in if isUniform && isAllPositive
         then (Just $ uScaleTrsf x, Nothing)
-        else  
-            ( if x >= 0 && y >= 0 && z >= 0
+        else ( if isAllPositive 
                 then Nothing 
                 else Just $ do
-                    trsf <- GP.Trsf.new 
+                    trsf <- if isUniform 
+                        then uScaleTrsf (abs x)
+                        else GP.Trsf.new 
                     when (x < 0) $ do
                         mirrorX <- mirrorTrsf (unit _x)
                         liftIO $ GP.Trsf.multiply trsf mirrorX
@@ -105,7 +109,7 @@ scaleTrsf v@(V3 x y z ) =
                         mirrorZ <- mirrorTrsf (unit _z)
                         liftIO $ GP.Trsf.multiply trsf mirrorZ
                     return trsf
-            , if (abs x, abs y, abs z) == (1, 1, 1)
+            , if isUniform
                 then Nothing
                 else Just $ do
                     gtrsf <- GP.GTrsf.new 
