@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Fixed an issue in `Waterfall.Transforms` where negative coefficients to `scale` would produce a broken `Solid`
+
 ## 0.6.2.1
 
 - Fixed an off by one error in `Waterfall.TwoD.repeatLooping` that would produce overlapping wire segments in `repeatLooping`
