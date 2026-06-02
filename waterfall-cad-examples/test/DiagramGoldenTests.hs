@@ -188,4 +188,10 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
     , solidTest "Take Path Fraction" "takePathFraction.svg" TakePathFractionExample.takePathFractionExample
     , solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
         (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
+    , solidTest "Negative Scaled Cube II" "negativeScaledCube-II.svg" 
+        (Transforms.scale (negate $ V3 1 1 1) Solids.unitCube)
+    , solidTest "Negative Scaled Cube III" "negativeScaledCube-III.svg" 
+        (Transforms.scale (V3 (negate 10) (negate 10) 10) Solids.unitCube)
+    , solidTest "Negative Scaled Cuboid" "negativeScaledCuboid.svg" 
+        (Transforms.scale (V3 (negate 1) 2 3) Solids.unitCube)
     ]
