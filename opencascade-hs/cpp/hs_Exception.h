@@ -5,6 +5,8 @@
 
 #ifdef __cplusplus
 
+#include <stdexcept>
+
 enum HSExceptionType {
     NoException = 0,
     StandardFailureEx = 1,
@@ -24,7 +26,8 @@ void hs_handleExVoid(HSExceptionType* theType, void ** exPtr, T&& f) {
   }
   catch (std::exception &e) {
     *theType = StdExceptionEx;
-    *exPtr = new std::exception(e);
+    std::exception* copy = new std::runtime_error(e.what());
+    *exPtr = copy;
   }
   catch(...) {
     *theType = OtherEx;
@@ -43,7 +46,8 @@ auto hs_handleEx(HSExceptionType* theType, void ** exPtr, T&& f) {
   }
   catch (std::exception &e) {
     *theType = StdExceptionEx;
-    *exPtr = new std::exception(e);
+    std::exception* copy = new std::runtime_error(e.what());
+    *exPtr = copy;
   }
   catch(...) {
     *theType = OtherEx;
