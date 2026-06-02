@@ -12,6 +12,8 @@ import Waterfall.Diagram (Diagram)
 import qualified Waterfall.Diagram as Diagram
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
 import Waterfall.Solids (Solid)
+import qualified Waterfall.Solids as Solids
+import qualified Waterfall.Transforms as Transforms
 import Linear
 import qualified CsgExample
 import Control.Monad.Except (runExceptT, liftEither)
@@ -184,4 +186,6 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
     , smallSolidTest "2D Booleans" "2d-booleans.svg"  TwoDBooleansExample.twoDBooleansExample
     , solidTest "Platonic Solids" "platonic.svg" PlatonicSolidsExample.platonicSolidsExample
     , solidTest "Take Path Fraction" "takePathFraction.svg" TakePathFractionExample.takePathFractionExample
+    , solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
+        (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
     ]
