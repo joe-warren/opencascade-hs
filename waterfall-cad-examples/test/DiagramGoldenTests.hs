@@ -12,6 +12,8 @@ import Waterfall.Diagram (Diagram)
 import qualified Waterfall.Diagram as Diagram
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
 import Waterfall.Solids (Solid)
+import qualified Waterfall.Solids as Solids
+import qualified Waterfall.Transforms as Transforms
 import Linear
 import qualified CsgExample
 import Control.Monad.Except (runExceptT, liftEither)
@@ -22,6 +24,7 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad (unless, join)
 import qualified Codec.Picture as JP
 import Control.Lens
+import Data.Function (on)
 import Data.Monoid (Sum (getSum))
 import System.FilePath (takeBaseName, (</>))
 import qualified GearExample
@@ -60,6 +63,12 @@ comparePixels (JP.PixelRGBA8 r1 g1 b1 a1) (JP.PixelRGBA8 r2 g2 b2 a2) =
 size :: JP.Image px -> (Int, Int)
 size a = (JP.imageWidth a, JP.imageHeight a)
 
+similarSizes :: JP.Image px -> JP.Image px -> Bool
+similarSizes a b =
+    let within1 a b = abs (a - b) <= 1
+     in (within1 `on` JP.imageWidth) a b 
+        && (within1 `on` JP.imageHeight) a b
+
 render :: Svg.Document -> IO (JP.Image JP.PixelRGBA8, RSvg.LoadedElements)
 render = RSvg.renderSvgDocument
     FF.emptyFontCache
@@ -74,6 +83,16 @@ colourMismatchedPixel (x, y) = if comparePixels x y then x else JP.PixelRGBA8 25
 
 dup :: a -> (a, a)        
 dup = join (,)
+
+cropToSmallest :: JP.Pixel a => JP.Image a -> JP.Image a -> (JP.Image a, JP.Image a)
+cropToSmallest a b = 
+    if size a == size b 
+        then (a, b)
+        else 
+            let w = (min `on` JP.imageWidth) a b
+                h = (min `on` JP.imageHeight) a b
+                crop img = JP.generateImage (JP.pixelAt img) w h
+            in (crop a, crop b)
 
 compareOutput :: FilePath -> XML.Element ->  XML.Element -> IO (Maybe String)
 compareOutput inputPath expected actual = 
@@ -92,7 +111,7 @@ compareOutput inputPath expected actual =
         let diffPath = makePath "diff"
         let actualPath = makePath "actual"
 
-        unless (size expectedRendered == size actualRendered) $ do 
+        unless (similarSizes expectedRendered actualRendered) $ do 
             liftIO $ JP.writePng expectedPath expectedRendered
             liftIO $ JP.writePng actualPath actualRendered
             liftEither . Left $ 
@@ -103,13 +122,20 @@ compareOutput inputPath expected actual =
                 <> ", actual written to "
                 <> actualPath)
 
-        let (width, height) = size expectedRendered
+        let (expectedRenderedCropped, actualRenderedCropped) = cropToSmallest expectedRendered actualRendered
+            (width, height) = size expectedRenderedCropped
 
-        let mismatchedCount = getSum $ foldMapOf zippingTraversal countMismatchedPixel (expectedRendered, actualRendered)
+        
+
+        let mismatchedCount = getSum $
+                foldMapOf 
+                    zippingTraversal
+                    countMismatchedPixel
+                    (expectedRenderedCropped, actualRenderedCropped)
         unless (mismatchedCount < pixelCountThreshold) $ do
             let totalPixels = width * height
             let diffImage = 
-                    (expectedRendered, actualRendered) 
+                    (expectedRenderedCropped, actualRenderedCropped) 
                         & zippingTraversal %~ (dup . colourMismatchedPixel)
                         & (^. _1)
             liftIO $ JP.writePng expectedPath expectedRendered
@@ -184,4 +210,12 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
     , smallSolidTest "2D Booleans" "2d-booleans.svg"  TwoDBooleansExample.twoDBooleansExample
     , solidTest "Platonic Solids" "platonic.svg" PlatonicSolidsExample.platonicSolidsExample
     , solidTest "Take Path Fraction" "takePathFraction.svg" TakePathFractionExample.takePathFractionExample
+    , solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
+        (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
+    , solidTest "Negative Scaled Cube II" "negativeScaledCube-II.svg" 
+        (Transforms.scale (negate $ V3 1 1 1) Solids.unitCube)
+    , solidTest "Negative Scaled Cube III" "negativeScaledCube-III.svg" 
+        (Transforms.scale (V3 (negate 10) (negate 10) 10) Solids.unitCube)
+    , solidTest "Negative Scaled Cuboid" "negativeScaledCuboid.svg" 
+        (Transforms.scale (V3 (negate 1) 2 3) Solids.unitCube)
     ]

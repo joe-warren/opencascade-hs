@@ -27,6 +27,10 @@ data-files:
     test-data/csg.svg
     test-data/gear.svg
     test-data/loft.svg
+    test-data/negativeScaledCube-II.svg
+    test-data/negativeScaledCube-III.svg
+    test-data/negativeScaledCube.svg
+    test-data/negativeScaledCuboid.svg
     test-data/offset.svg
     test-data/platonic.svg
     test-data/revolution.svg
