@@ -10,8 +10,10 @@ import OpenCascade.BRepBuilderAPI.Internal.Destructors
 import qualified OpenCascade.TopoDS as TopoDS
 import OpenCascade.Inheritance (upcast)
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
+import OpenCascade.Internal.Exception (wrapException)
+import Foreign.C (CInt)
 import Foreign.Ptr
-import Data.Acquire 
+import Data.Acquire
 
 -- new
 
@@ -20,11 +22,23 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeSolid.h hs_new_BRepBuilderAPI_
 new :: Acquire (Ptr MakeSolid)
 new = mkAcquire rawNew deleteMakeSolid
 
--- add 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeSolid.h hs_BRepBuilderAPI_MakeSolid_add" add :: Ptr MakeSolid -> Ptr TopoDS.Shell -> IO ()
+-- add
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeSolid.h hs_BRepBuilderAPI_MakeSolid_add" rawAdd
+    :: Ptr MakeSolid
+    -> Ptr TopoDS.Shell
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO ()
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeSolid.h hs_BRepBuilderAPI_MakeSolid_solid" rawSolid :: Ptr MakeSolid -> IO (Ptr TopoDS.Solid)
+add :: Ptr MakeSolid -> Ptr TopoDS.Shell -> IO ()
+add builder shell = wrapException $ rawAdd builder shell
+
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeSolid.h hs_BRepBuilderAPI_MakeSolid_solid" rawSolid
+    :: Ptr MakeSolid
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr TopoDS.Solid)
 
 solid :: Ptr MakeSolid -> Acquire (Ptr TopoDS.Solid)
-solid builder = mkAcquire (rawSolid builder) (deleteShape . upcast)
+solid builder = mkAcquire (wrapException $ rawSolid builder) (deleteShape . upcast)
 

@@ -11,9 +11,17 @@ BRepBuilderAPI_MakeSolid * hs_new_BRepBuilderAPI_MakeSolid();
 
 void hs_delete_BRepBuilderAPI_MakeSolid(BRepBuilderAPI_MakeSolid * builder);
 
-void hs_BRepBuilderAPI_MakeSolid_add(BRepBuilderAPI_MakeSolid * builder, TopoDS_Shell * shell);
+void hs_BRepBuilderAPI_MakeSolid_add(
+    BRepBuilderAPI_MakeSolid * builder, TopoDS_Shell * shell,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
-TopoDS_Solid * hs_BRepBuilderAPI_MakeSolid_solid(BRepBuilderAPI_MakeSolid * builder);
+TopoDS_Solid * hs_BRepBuilderAPI_MakeSolid_solid(
+    BRepBuilderAPI_MakeSolid * builder,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 #ifdef __cplusplus
 }
