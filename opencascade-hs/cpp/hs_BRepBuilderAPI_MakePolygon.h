@@ -7,7 +7,11 @@
     extern "C" {
 #endif
 
-TopoDS_Wire * hs_BRepBuilderAPI_MakePolygon_from3Pnts(gp_Pnt * n1, gp_Pnt *n2, gp_Pnt * n3, bool close);
+TopoDS_Wire * hs_BRepBuilderAPI_MakePolygon_from3Pnts(
+    gp_Pnt * n1, gp_Pnt *n2, gp_Pnt * n3, bool close,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 #ifdef __cplusplus
     }
