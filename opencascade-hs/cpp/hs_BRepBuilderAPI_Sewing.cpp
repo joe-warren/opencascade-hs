@@ -1,4 +1,5 @@
 #include <BRepBuilderAPI_Sewing.hxx>
+#include "hs_Exception.h"
 #include "hs_BRepBuilderAPI_Sewing.h"
 
 BRepBuilderAPI_Sewing * hs_new_BRepBuilderAPI_Sewing(double tolerance , bool option1, bool option2, bool option3, bool option4){
@@ -9,20 +10,56 @@ void hs_delete_BRepBuilderAPI_Sewing(BRepBuilderAPI_Sewing * builder){
     delete builder;
 }
 
-void hs_BRepBuilderAPI_Sewing_load(BRepBuilderAPI_Sewing * builder, TopoDS_Shape * shape){
-    builder->Load(*shape);
+void hs_BRepBuilderAPI_Sewing_load(
+        BRepBuilderAPI_Sewing * builder, TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [builder, shape]{
+        builder->Load(*shape);
+    });
 }
 
-void hs_BRepBuilderAPI_Sewing_add(BRepBuilderAPI_Sewing * builder, TopoDS_Shape * shape){
-    builder->Add(*shape);
+void hs_BRepBuilderAPI_Sewing_add(
+        BRepBuilderAPI_Sewing * builder, TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [builder, shape]{
+        builder->Add(*shape);
+    });
 }
 
-void hs_BRepBuilderAPI_Sewing_perform(BRepBuilderAPI_Sewing * builder){
-    builder->Perform();
+void hs_BRepBuilderAPI_Sewing_perform(
+        BRepBuilderAPI_Sewing * builder,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [builder]{
+        builder->Perform();
+    });
 }
 
-TopoDS_Shape * hs_BRepBuilderAPI_Sewing_sewedShape(BRepBuilderAPI_Sewing * builder){
-    return new TopoDS_Shape(builder->SewedShape());
+TopoDS_Shape * hs_BRepBuilderAPI_Sewing_sewedShape(
+        BRepBuilderAPI_Sewing * builder,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [builder]{
+        return new TopoDS_Shape(builder->SewedShape());
+    });
 }
 
 

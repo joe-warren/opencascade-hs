@@ -11,13 +11,29 @@ BRepBuilderAPI_Sewing * hs_new_BRepBuilderAPI_Sewing(double tolerance , bool opt
 
 void hs_delete_BRepBuilderAPI_Sewing(BRepBuilderAPI_Sewing * builder);
 
-void hs_BRepBuilderAPI_Sewing_load(BRepBuilderAPI_Sewing * builder, TopoDS_Shape * shape);
+void hs_BRepBuilderAPI_Sewing_load(
+    BRepBuilderAPI_Sewing * builder, TopoDS_Shape * shape,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
-void hs_BRepBuilderAPI_Sewing_add(BRepBuilderAPI_Sewing * builder, TopoDS_Shape * shape);
+void hs_BRepBuilderAPI_Sewing_add(
+    BRepBuilderAPI_Sewing * builder, TopoDS_Shape * shape,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
-void hs_BRepBuilderAPI_Sewing_perform(BRepBuilderAPI_Sewing * builder);
+void hs_BRepBuilderAPI_Sewing_perform(
+    BRepBuilderAPI_Sewing * builder,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
-TopoDS_Shape * hs_BRepBuilderAPI_Sewing_sewedShape(BRepBuilderAPI_Sewing * builder);
+TopoDS_Shape * hs_BRepBuilderAPI_Sewing_sewedShape(
+    BRepBuilderAPI_Sewing * builder,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 int hs_BRepBuilderAPI_Sewing_nbFreeEdges(BRepBuilderAPI_Sewing * builder);
 
