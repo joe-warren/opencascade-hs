@@ -6,11 +6,18 @@ module OpenCascade.BRepBuilderAPI.Copy
 import qualified OpenCascade.TopoDS as TopoDS
 import OpenCascade.Internal.Bool
 import qualified OpenCascade.TopoDS.Internal.Destructors as TopoDS.Destructors
+import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C
 import Foreign.Ptr
-import Data.Acquire 
+import Data.Acquire
 
-foreign import capi unsafe "hs_BRepBuilderAPI_Copy.h hs_BRepBuilderAPI_Copy_copy" rawCopy :: Ptr TopoDS.Shape -> CBool -> CBool -> IO (Ptr TopoDS.Shape)
+foreign import capi unsafe "hs_BRepBuilderAPI_Copy.h hs_BRepBuilderAPI_Copy_copy" rawCopy
+    :: Ptr TopoDS.Shape
+    -> CBool
+    -> CBool
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr TopoDS.Shape)
 
 copy :: Ptr TopoDS.Shape -> Bool -> Bool -> Acquire (Ptr TopoDS.Shape)
-copy shape copyGeom copyMesh = mkAcquire (rawCopy shape (boolToCBool copyMesh) (boolToCBool copyGeom)) TopoDS.Destructors.deleteShape
+copy shape copyGeom copyMesh = mkAcquire (wrapException $ rawCopy shape (boolToCBool copyMesh) (boolToCBool copyGeom)) TopoDS.Destructors.deleteShape
