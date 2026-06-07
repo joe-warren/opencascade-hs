@@ -20,6 +20,7 @@ import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Internal.Destructors as TopoDS.Destructors
 import qualified OpenCascade.TopTools as TopTools
 import OpenCascade.BRepBuilderAPI.WireError (WireError)
+import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C
 import Foreign.Ptr
 import Data.Acquire 
@@ -31,33 +32,65 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_new_BRepBuilderAPI_M
 new :: Acquire (Ptr MakeWire)
 new = mkAcquire rawNew deleteMakeWire
 
--- addEdge 
+-- addEdge
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_AddEdge" addEdge :: Ptr MakeWire -> Ptr TopoDS.Edge -> IO ()
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_AddEdge" rawAddEdge
+    :: Ptr MakeWire
+    -> Ptr TopoDS.Edge
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO ()
+
+addEdge :: Ptr MakeWire -> Ptr TopoDS.Edge -> IO ()
+addEdge builder edge = wrapException $ rawAddEdge builder edge
 
 
--- addWire 
+-- addWire
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_AddWire" addWire :: Ptr MakeWire -> Ptr TopoDS.Wire -> IO ()
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_AddWire" rawAddWire
+    :: Ptr MakeWire
+    -> Ptr TopoDS.Wire
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO ()
+
+addWire :: Ptr MakeWire -> Ptr TopoDS.Wire -> IO ()
+addWire builder theWire = wrapException $ rawAddWire builder theWire
 
 
 -- addListOfShape
 
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_AddListOfShape" addListOfShape :: Ptr MakeWire -> Ptr TopTools.ListOfShape -> IO ()
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_AddListOfShape" rawAddListOfShape
+    :: Ptr MakeWire
+    -> Ptr TopTools.ListOfShape
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO ()
+
+addListOfShape :: Ptr MakeWire -> Ptr TopTools.ListOfShape -> IO ()
+addListOfShape builder list = wrapException $ rawAddListOfShape builder list
 
 -- wire
 --
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_Wire" rawWire :: Ptr MakeWire -> IO (Ptr TopoDS.Wire)
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_Wire" rawWire
+    :: Ptr MakeWire
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr TopoDS.Wire)
 
 wire :: Ptr MakeWire -> Acquire (Ptr TopoDS.Wire)
-wire builder = mkAcquire (rawWire builder) (TopoDS.Destructors.deleteShape . upcast)
+wire builder = mkAcquire (wrapException $ rawWire builder) (TopoDS.Destructors.deleteShape . upcast)
 
 -- vertex
 --
-foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_Vertex" rawVertex :: Ptr MakeWire -> IO (Ptr TopoDS.Vertex)
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_Vertex" rawVertex
+    :: Ptr MakeWire
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr TopoDS.Vertex)
 
 vertex :: Ptr MakeWire -> Acquire (Ptr TopoDS.Vertex)
-vertex builder = mkAcquire (rawVertex builder) (TopoDS.Destructors.deleteShape . upcast)
+vertex builder = mkAcquire (wrapException $ rawVertex builder) (TopoDS.Destructors.deleteShape . upcast)
 
 -- isDone
 --
