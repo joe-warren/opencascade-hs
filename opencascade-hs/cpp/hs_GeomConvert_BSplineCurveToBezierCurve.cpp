@@ -1,17 +1,35 @@
 #include <GeomConvert_BSplineCurveToBezierCurve.hxx>
 #include "hs_types.h"
+#include "hs_Exception.h"
 #include "hs_GeomConvert_BSplineCurveToBezierCurve.h"
 
-GeomConvert_BSplineCurveToBezierCurve * hs_new_GeomConvert_BSplineCurveToBezierCurve_fromHandle (Handle(Geom_BSplineCurve) *basisCurve){
-    return new GeomConvert_BSplineCurveToBezierCurve(*basisCurve);
+GeomConvert_BSplineCurveToBezierCurve * hs_new_GeomConvert_BSplineCurveToBezierCurve_fromHandle (
+        Handle(Geom_BSplineCurve) *basisCurve,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [basisCurve]{
+            return new GeomConvert_BSplineCurveToBezierCurve(*basisCurve);
+        }
+    );
 }
 
 GeomConvert_BSplineCurveToBezierCurve * hs_new_GeomConvert_BSplineCurveToBezierCurve_fromHandleParametersAndTolerance (
     Handle(Geom_BSplineCurve) *basisCurve,
-    double firstParameter, 
+    double firstParameter,
     double secondParameter,
-    double tolerance ){
-    return new GeomConvert_BSplineCurveToBezierCurve(*basisCurve, firstParameter, secondParameter, tolerance);
+    double tolerance,
+    HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [basisCurve, firstParameter, secondParameter, tolerance]{
+            return new GeomConvert_BSplineCurveToBezierCurve(*basisCurve, firstParameter, secondParameter, tolerance);
+        }
+    );
 }
 
 void hs_delete_GeomConvert_BSplineCurveToBezierCurve(GeomConvert_BSplineCurveToBezierCurve* ptr){
@@ -22,6 +40,15 @@ int hs_GeomConvert_BSplineCurveToBezierCurve_nbArcs(GeomConvert_BSplineCurveToBe
     return ptr->NbArcs();
 }
 
-Handle(Geom_BezierCurve) * hs_GeomConvert_BSplineCurveToBezierCurve_arc(GeomConvert_BSplineCurveToBezierCurve * ptr, int n){
-    return new opencascade::handle(ptr->Arc(n));
-} 
+Handle(Geom_BezierCurve) * hs_GeomConvert_BSplineCurveToBezierCurve_arc(
+        GeomConvert_BSplineCurveToBezierCurve * ptr, int n,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [ptr, n]{
+            return new opencascade::handle(ptr->Arc(n));
+        }
+    );
+}

@@ -8,16 +8,20 @@ extern "C" {
 #endif
 
 GeomConvert_ApproxCurve * hs_new_GeomConvert_ApproxCurve_fromCurveToleranceOrderSegmentsAndDegree(
-        Handle(Geom_Curve) *curve, 
-        double tolerance, 
-        GeomAbs_Shape order, 
-        int maxSegments, 
-        int maxDegree
+        Handle(Geom_Curve) *curve,
+        double tolerance,
+        GeomAbs_Shape order,
+        int maxSegments,
+        int maxDegree,
+        HSExceptionType* exType, void ** exPtr
     );
 
 void hs_delete_GeomConvert_ApproxCurve(GeomConvert_ApproxCurve * approxCurve);
 
-Handle(Geom_BSplineCurve) * hs_GeomConvert_ApproxCurve_curve(GeomConvert_ApproxCurve * approxCurve);
+Handle(Geom_BSplineCurve) * hs_GeomConvert_ApproxCurve_curve(
+    GeomConvert_ApproxCurve * approxCurve,
+    HSExceptionType* exType, void ** exPtr
+);
 
 bool hs_GeomConvert_ApproxCurve_isDone(GeomConvert_ApproxCurve * approxCurve);
 

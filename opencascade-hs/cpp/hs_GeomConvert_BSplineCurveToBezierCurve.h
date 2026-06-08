@@ -7,19 +7,27 @@
 extern "C" {
 #endif
 
-GeomConvert_BSplineCurveToBezierCurve * hs_new_GeomConvert_BSplineCurveToBezierCurve_fromHandle (Handle(Geom_BSplineCurve) *basisCurve);
+GeomConvert_BSplineCurveToBezierCurve * hs_new_GeomConvert_BSplineCurveToBezierCurve_fromHandle (
+    Handle(Geom_BSplineCurve) *basisCurve,
+    HSExceptionType* exType, void ** exPtr
+);
 
 GeomConvert_BSplineCurveToBezierCurve * hs_new_GeomConvert_BSplineCurveToBezierCurve_fromHandleParametersAndTolerance (
     Handle(Geom_BSplineCurve) *basisCurve,
-    double firstParameter, 
+    double firstParameter,
     double secondParameter,
-    double tolerance );
+    double tolerance,
+    HSExceptionType* exType, void ** exPtr
+);
 
 void hs_delete_GeomConvert_BSplineCurveToBezierCurve(GeomConvert_BSplineCurveToBezierCurve* ptr);
 
 int hs_GeomConvert_BSplineCurveToBezierCurve_nbArcs(GeomConvert_BSplineCurveToBezierCurve* ptr);
 
-Handle(Geom_BezierCurve) * hs_GeomConvert_BSplineCurveToBezierCurve_arc(GeomConvert_BSplineCurveToBezierCurve * ptr, int n);
+Handle(Geom_BezierCurve) * hs_GeomConvert_BSplineCurveToBezierCurve_arc(
+    GeomConvert_BSplineCurveToBezierCurve * ptr, int n,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }
