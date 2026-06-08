@@ -14,7 +14,8 @@ import qualified OpenCascade.TopoDS.Types as TopoDS
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
 import OpenCascade.Handle (Handle)
 import OpenCascade.Internal.Bool (cBoolToBool)
-import Foreign.C (CBool (..), CDouble (..))
+import OpenCascade.Internal.Exception (wrapException)
+import Foreign.C (CBool (..), CDouble (..), CInt)
 import Foreign.C.String (CString, withCString)
 import Foreign.Ptr (Ptr)
 import Data.Coerce (coerce)
@@ -27,13 +28,23 @@ foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_setFileLen
 setFileLengthUnit :: Ptr CafReader -> Double -> IO ()
 setFileLengthUnit = coerce rawSetFileLengthUnit
 
-foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_perform" rawPerform :: Ptr CafReader -> CString -> Ptr Message.ProgressRange -> IO CBool
+foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_perform" rawPerform
+    :: Ptr CafReader
+    -> CString
+    -> Ptr Message.ProgressRange
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO CBool
 
 perform :: Ptr CafReader -> String -> Ptr Message.ProgressRange -> IO Bool
-perform reader filename progress = cBoolToBool <$> (withCString filename $ \str -> rawPerform reader str progress)
+perform reader filename progress = cBoolToBool <$> (withCString filename $ \str -> wrapException $ rawPerform reader str progress)
 
-foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_singleShape" rawSingleShape :: Ptr CafReader -> IO (Ptr TopoDS.Shape)
+foreign import capi unsafe "hs_RWMesh_CafReader.h hs_RWMesh_CafReader_singleShape" rawSingleShape
+    :: Ptr CafReader
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr TopoDS.Shape)
 
 singleShape :: Ptr CafReader -> Acquire (Ptr TopoDS.Shape)
-singleShape reader = mkAcquire (rawSingleShape reader) deleteShape
+singleShape reader = mkAcquire (wrapException $ rawSingleShape reader) deleteShape
 

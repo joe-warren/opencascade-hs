@@ -11,9 +11,15 @@ void hs_RWMesh_CafReader_setDocument(RWMesh_CafReader * reader, Handle(TDocStd_D
 
 void hs_RWMesh_CafReader_setFileLengthUnit(RWMesh_CafReader * reader, double scale);
 
-TopoDS_Shape * hs_RWMesh_CafReader_singleShape(RWMesh_CafReader * reader);
+TopoDS_Shape * hs_RWMesh_CafReader_singleShape(
+    RWMesh_CafReader * reader,
+    HSExceptionType* exType, void ** exPtr
+);
 
-bool hs_RWMesh_CafReader_perform(RWMesh_CafReader * reader, char * filename, Message_ProgressRange * progress);
+bool hs_RWMesh_CafReader_perform(
+    RWMesh_CafReader * reader, char * filename, Message_ProgressRange * progress,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }
