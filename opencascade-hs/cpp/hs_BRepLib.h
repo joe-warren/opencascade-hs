@@ -7,9 +7,15 @@
 extern "C" {
 #endif
 
-bool hs_BRepLib_orientClosedSolid(TopoDS_Solid * solid);
+bool hs_BRepLib_orientClosedSolid(
+    TopoDS_Solid * solid,
+    HSExceptionType* exType, void ** exPtr
+);
 
-bool hs_BRepLib_buildCurve3d(TopoDS_Edge* edge, double tolerance, GeomAbs_Shape continuity, int maxDegree, int maxSegment);
+bool hs_BRepLib_buildCurve3d(
+    TopoDS_Edge* edge, double tolerance, GeomAbs_Shape continuity, int maxDegree, int maxSegment,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }
