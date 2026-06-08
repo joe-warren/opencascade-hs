@@ -7,7 +7,10 @@
 extern "C" {
 #endif
 
-Handle(Geom_TrimmedCurve) * hs_GC_MakeSegment_fromPnts(gp_Pnt* a, gp_Pnt* b);
+Handle(Geom_TrimmedCurve) * hs_GC_MakeSegment_fromPnts(
+    gp_Pnt* a, gp_Pnt* b,
+    HSExceptionType* exType, void ** exPtr
+);
 
 
 #ifdef __cplusplus
