@@ -7,7 +7,11 @@
 extern "C" {
 #endif
 
-TopoDS_Shape * hs_BRepAlgoAPI_Fuse(TopoDS_Shape * a, TopoDS_Shape * b);
+TopoDS_Shape * hs_BRepAlgoAPI_Fuse(
+    TopoDS_Shape * a, TopoDS_Shape * b,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 #ifdef __cplusplus
 }

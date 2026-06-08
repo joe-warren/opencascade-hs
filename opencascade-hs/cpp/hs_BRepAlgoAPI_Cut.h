@@ -8,7 +8,11 @@
 extern "C" {
 #endif
 
-TopoDS_Shape * hs_BRepAlgoAPI_Cut(TopoDS_Shape * a, TopoDS_Shape * b);
+TopoDS_Shape * hs_BRepAlgoAPI_Cut(
+    TopoDS_Shape * a, TopoDS_Shape * b,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 #ifdef __cplusplus
 }

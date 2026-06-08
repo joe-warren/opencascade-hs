@@ -5,11 +5,18 @@ module OpenCascade.BRepAlgoAPI.Fuse
 
 import qualified OpenCascade.TopoDS as TopoDS
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
+import OpenCascade.Internal.Exception (wrapException)
+import Foreign.C (CInt)
 import Foreign.Ptr
 import Data.Acquire
 
 
-foreign import capi unsafe "hs_BRepAlgoAPI_Fuse.h hs_BRepAlgoAPI_Fuse" rawFuse :: Ptr TopoDS.Shape -> Ptr TopoDS.Shape ->  IO (Ptr TopoDS.Shape)
+foreign import capi unsafe "hs_BRepAlgoAPI_Fuse.h hs_BRepAlgoAPI_Fuse" rawFuse
+    :: Ptr TopoDS.Shape
+    -> Ptr TopoDS.Shape
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr TopoDS.Shape)
 
 fuse :: Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
-fuse a b = mkAcquire (rawFuse a b) deleteShape
+fuse a b = mkAcquire (wrapException $ rawFuse a b) deleteShape
