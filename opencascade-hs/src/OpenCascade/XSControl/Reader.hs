@@ -16,19 +16,32 @@ import Foreign.C.String (CString, withCString)
 import Foreign.C (CInt (..), CBool (..))
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire, mkAcquire)
+import OpenCascade.Internal.Exception (wrapException)
 
-foreign import capi unsafe "hs_XSControl_Reader.h hs_XSControl_Reader_readFile" rawReadFile :: Ptr Reader -> CString -> IO CInt
+foreign import capi unsafe "hs_XSControl_Reader.h hs_XSControl_Reader_readFile" rawReadFile 
+    :: Ptr Reader
+    -> CString
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO CInt
 
 readFile :: Ptr Reader -> String -> IO ReturnStatus
-readFile reader s = toEnum . fromIntegral <$> withCString s (rawReadFile reader)
+readFile reader s = toEnum . fromIntegral <$> withCString s (wrapException . rawReadFile reader)
 
-
-foreign import capi unsafe "hs_XSControl_Reader.h hs_XSControl_Reader_transferRoots" rawTransferRoots :: Ptr Reader  -> IO (CBool)
+foreign import capi unsafe "hs_XSControl_Reader.h hs_XSControl_Reader_transferRoots" rawTransferRoots 
+    :: Ptr Reader 
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (CBool)
 
 transferRoots :: Ptr Reader -> IO Bool
-transferRoots reader = cBoolToBool <$> rawTransferRoots reader
+transferRoots reader = cBoolToBool <$> wrapException (rawTransferRoots reader)
 
-foreign import capi unsafe "hs_XSControl_Reader.h hs_XSControl_Reader_oneShape" rawOneShape :: Ptr Reader  -> IO (Ptr TopoDS.Shape) 
+foreign import capi unsafe "hs_XSControl_Reader.h hs_XSControl_Reader_oneShape" rawOneShape
+    :: Ptr Reader  
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr TopoDS.Shape) 
 
 oneShape :: Ptr Reader -> Acquire (Ptr TopoDS.Shape)
-oneShape reader  = mkAcquire (rawOneShape reader) deleteShape
+oneShape reader = mkAcquire (wrapException $ rawOneShape reader) deleteShape

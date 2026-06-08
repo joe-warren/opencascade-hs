@@ -36,6 +36,17 @@ void hs_handleExVoid(HSExceptionType* theType, void ** exPtr, T&& f) {
 
 template <typename T>
 auto hs_handleEx(HSExceptionType* theType, void ** exPtr, T&& f) {
+  return hs_handleExWithDefault(
+    theType, 
+    exPtr, 
+    f,
+    static_cast<decltype(f())>(nullptr)
+  );
+}
+
+
+template <typename T>
+auto hs_handleExWithDefault(HSExceptionType* theType, void ** exPtr, T&& f, decltype(f()) fallback) {
   try {
     *theType = NoException;
     return f();
@@ -52,7 +63,7 @@ auto hs_handleEx(HSExceptionType* theType, void ** exPtr, T&& f) {
   catch(...) {
     *theType = OtherEx;
   }
-  return static_cast<decltype(f())>(nullptr);
+  return fallback;
 }
 
 #endif // __cplusplus
