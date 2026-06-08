@@ -6,6 +6,7 @@
 #ifdef __cplusplus
 
 #include <stdexcept>
+#include <Standard_Failure.hxx>
 
 enum HSExceptionType {
     NoException = 0,
