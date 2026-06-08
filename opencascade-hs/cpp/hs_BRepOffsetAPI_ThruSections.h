@@ -12,9 +12,17 @@ BRepOffsetAPI_ThruSections * hs_new_BRepOffsetAPI_ThruSections(bool isSolid, boo
 
 void hs_delete_BRepOffsetAPI_ThruSections(BRepOffsetAPI_ThruSections* thruSections);
 
-void hs_BRepOffsetAPI_ThruSections_addWire(BRepOffsetAPI_ThruSections* thruSections, TopoDS_Wire * wire);
+void hs_BRepOffsetAPI_ThruSections_addWire(
+    BRepOffsetAPI_ThruSections* thruSections, TopoDS_Wire * wire,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
-void hs_BRepOffsetAPI_ThruSections_addVertex(BRepOffsetAPI_ThruSections* thruSections, TopoDS_Vertex* vertex);
+void hs_BRepOffsetAPI_ThruSections_addVertex(
+    BRepOffsetAPI_ThruSections* thruSections, TopoDS_Vertex* vertex,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 #ifdef __cplusplus
 }
