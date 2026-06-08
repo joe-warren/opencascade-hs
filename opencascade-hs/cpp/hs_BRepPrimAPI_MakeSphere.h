@@ -7,9 +7,17 @@
 extern "C" {
 #endif
 
-TopoDS_Solid * hs_BRepPrimAPI_MakeSphere_fromRadius(double r);
+TopoDS_Solid * hs_BRepPrimAPI_MakeSphere_fromRadius(
+    double r,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
-TopoDS_Solid * hs_BRepPrimAPI_MakeSphere_fromPntAndRadius(gp_Pnt * center, double r);
+TopoDS_Solid * hs_BRepPrimAPI_MakeSphere_fromPntAndRadius(
+    gp_Pnt * center, double r,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 #ifdef __cplusplus
 }
