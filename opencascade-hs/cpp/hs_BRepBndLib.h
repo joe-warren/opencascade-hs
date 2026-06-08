@@ -7,11 +7,20 @@
 extern "C" {
 #endif
 
-void hs_BRepBndLib_add(TopoDS_Shape * shape, Bnd_Box * box, bool useTriangulation);
+void hs_BRepBndLib_add(
+    TopoDS_Shape * shape, Bnd_Box * box, bool useTriangulation,
+    HSExceptionType* exType, void ** exPtr
+);
 
-void hs_BRepBndLib_addOptimal(TopoDS_Shape * shape, Bnd_Box * box, bool useTriangulation, bool useShapeTolerance);
+void hs_BRepBndLib_addOptimal(
+    TopoDS_Shape * shape, Bnd_Box * box, bool useTriangulation, bool useShapeTolerance,
+    HSExceptionType* exType, void ** exPtr
+);
 
-void hs_BRepBndLib_addOBB(TopoDS_Shape *shape, Bnd_OBB * obb, bool isTriangulationUsed, bool isOptimal, bool isShapeToleranceUsed);
+void hs_BRepBndLib_addOBB(
+    TopoDS_Shape *shape, Bnd_OBB * obb, bool isTriangulationUsed, bool isOptimal, bool isShapeToleranceUsed,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }
