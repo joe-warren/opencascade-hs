@@ -16,6 +16,7 @@ import Data.Acquire
 import OpenCascade.Internal.Bool (boolToCBool)
 import qualified OpenCascade.IFSelect.ReturnStatus as IFSelect.ReturnStatus
 import OpenCascade.STEPControl.StepModelType (StepModelType)
+import OpenCascade.Internal.Exception (wrapException)
 import Data.Coerce (coerce)
 
 foreign import capi unsafe "hs_STEPControl_Writer.h hs_new_STEPControl_Writer" rawNew :: IO (Ptr Writer)
@@ -30,12 +31,24 @@ setTolerance = coerce rawSetTolerance
 
 foreign import capi unsafe "hs_STEPControl_Writer.h hs_STEPControl_Writer_unsetTolerance" unsetTolerance :: Ptr Writer -> IO ()
 
-foreign import capi unsafe "hs_STEPControl_Writer.h hs_STEPControl_Writer_transfer" rawTransfer :: Ptr Writer -> Ptr TopoDS.Shape -> CInt -> CBool -> IO CInt
+foreign import capi unsafe "hs_STEPControl_Writer.h hs_STEPControl_Writer_transfer" rawTransfer
+    :: Ptr Writer
+    -> Ptr TopoDS.Shape
+    -> CInt
+    -> CBool
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO CInt
 
 transfer :: Ptr Writer -> Ptr TopoDS.Shape -> StepModelType -> Bool -> IO IFSelect.ReturnStatus.ReturnStatus
-transfer writer shape mode compgraph = toEnum . fromIntegral <$> rawTransfer writer shape (fromIntegral . fromEnum $ mode) (boolToCBool compgraph)
+transfer writer shape mode compgraph = toEnum . fromIntegral <$> wrapException (rawTransfer writer shape (fromIntegral . fromEnum $ mode) (boolToCBool compgraph))
 
-foreign import capi unsafe "hs_STEPControl_Writer.h hs_STEPControl_Writer_write" rawWrite :: Ptr Writer -> CString -> IO CInt
+foreign import capi unsafe "hs_STEPControl_Writer.h hs_STEPControl_Writer_write" rawWrite
+    :: Ptr Writer
+    -> CString
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO CInt
 
 write :: Ptr Writer -> String -> IO IFSelect.ReturnStatus.ReturnStatus
-write writer filename = toEnum . fromIntegral <$> withCString filename (rawWrite writer)
+write writer filename = toEnum . fromIntegral <$> withCString filename (wrapException . rawWrite writer)

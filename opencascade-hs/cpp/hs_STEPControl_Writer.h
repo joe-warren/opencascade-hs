@@ -15,9 +15,15 @@ void hs_STEPControl_Writer_setTolerance(STEPControl_Writer * writer, double tole
 
 void hs_STEPControl_Writer_unsetTolerance(STEPControl_Writer * writer);
 
-IFSelect_ReturnStatus hs_STEPControl_Writer_transfer(STEPControl_Writer * writer, TopoDS_Shape * shape, STEPControl_StepModelType mode, bool compgraph);
+IFSelect_ReturnStatus hs_STEPControl_Writer_transfer(
+    STEPControl_Writer * writer, TopoDS_Shape * shape, STEPControl_StepModelType mode, bool compgraph,
+    HSExceptionType* exType, void ** exPtr
+);
 
-IFSelect_ReturnStatus hs_STEPControl_Writer_write(STEPControl_Writer* writer, char* filename);
+IFSelect_ReturnStatus hs_STEPControl_Writer_write(
+    STEPControl_Writer* writer, char* filename,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }
