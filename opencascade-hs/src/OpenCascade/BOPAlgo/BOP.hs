@@ -9,6 +9,7 @@ module OpenCascade.BOPAlgo.BOP
 import OpenCascade.BOPAlgo.Types
 import OpenCascade.BOPAlgo.Internal.Destructors (deleteBOP)
 import OpenCascade.BOPAlgo.Operation (Operation)
+import OpenCascade.Internal.Exception (wrapException)
 import qualified OpenCascade.TopoDS.Types as TopoDS
 
 import Foreign.Ptr (Ptr)
@@ -21,7 +22,15 @@ foreign import capi unsafe "hs_BOPAlgo_BOP.h hs_new_BOPAlgo_BOP" rawNew :: IO (P
 new :: Acquire (Ptr BOP)
 new = mkAcquire rawNew deleteBOP
 
-foreign import capi unsafe "hs_BOPAlgo_BOP.h hs_BOPAlgo_BOP_AddTool" addTool :: Ptr BOP -> Ptr TopoDS.Shape -> IO ()
+foreign import capi unsafe "hs_BOPAlgo_BOP.h hs_BOPAlgo_BOP_AddTool" rawAddTool
+    :: Ptr BOP
+    -> Ptr TopoDS.Shape
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO ()
+
+addTool :: Ptr BOP -> Ptr TopoDS.Shape -> IO ()
+addTool bop tool = wrapException $ rawAddTool bop tool
 
 foreign import capi unsafe "hs_BOPAlgo_BOP.h hs_BOPAlgo_BOP_SetOperation" rawSetOperation :: Ptr BOP -> CInt -> IO ()
 
