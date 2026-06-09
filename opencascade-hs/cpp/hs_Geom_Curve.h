@@ -8,17 +8,29 @@ extern "C" {
 #endif
 void hs_delete_Handle_Geom_Curve(Handle(Geom_Curve) * handle);
 
-gp_Pnt * hs_Geom_Curve_value(Handle(Geom_Curve) * curve, double u);
+gp_Pnt * hs_Geom_Curve_value(
+    Handle(Geom_Curve) * curve, double u,
+    HSExceptionType* exType, void ** exPtr
+);
 
 double hs_Geom_Curve_firstParameter(Handle(Geom_Curve) * curve);
 
 double hs_Geom_Curve_lastParameter(Handle(Geom_Curve) * curve);
 
-gp_Vec * hs_Geom_Curve_dn(Handle (Geom_Curve) * curve, double u, int n);
+gp_Vec * hs_Geom_Curve_dn(
+    Handle (Geom_Curve) * curve, double u, int n,
+    HSExceptionType* exType, void ** exPtr
+);
 
-double hs_Geom_Curve_reversedParameter(Handle (Geom_Curve) * curve, double parameter);
+double hs_Geom_Curve_reversedParameter(
+    Handle (Geom_Curve) * curve, double parameter,
+    HSExceptionType* exType, void ** exPtr
+);
 
-Handle (Geom_Curve) * hs_Geom_Curve_reversed(Handle (Geom_Curve) * curve);
+Handle (Geom_Curve) * hs_Geom_Curve_reversed(
+    Handle (Geom_Curve) * curve,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }
