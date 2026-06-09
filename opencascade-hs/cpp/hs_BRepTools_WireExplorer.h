@@ -8,15 +8,24 @@ extern "C" {
 #endif
 
 
-BRepTools_WireExplorer * hs_new_BRepTools_WireExplorer_fromWire(TopoDS_Wire *wire);
+BRepTools_WireExplorer * hs_new_BRepTools_WireExplorer_fromWire(
+    TopoDS_Wire *wire,
+    HSExceptionType* exType, void ** exPtr
+);
 
 void hs_delete_BRepTools_WireExplorer(BRepTools_WireExplorer * explorer);
 
 bool hs_BRepTools_WireExplorer_more(BRepTools_WireExplorer * explorer);
 
-void hs_BRepTools_WireExplorer_next(BRepTools_WireExplorer * explorer);
+void hs_BRepTools_WireExplorer_next(
+    BRepTools_WireExplorer * explorer,
+    HSExceptionType* exType, void ** exPtr
+);
 
-TopoDS_Edge * hs_BRepTools_WireExplorer_current(BRepTools_WireExplorer * explorer);
+TopoDS_Edge * hs_BRepTools_WireExplorer_current(
+    BRepTools_WireExplorer * explorer,
+    HSExceptionType* exType, void ** exPtr
+);
 
 TopAbs_Orientation hs_BRepTools_WireExplorer_orientation(BRepTools_WireExplorer * explorer);
 
