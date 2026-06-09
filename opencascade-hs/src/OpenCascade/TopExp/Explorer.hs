@@ -15,17 +15,37 @@ import Data.Acquire
 import Foreign.Ptr
 import Foreign.C
 import OpenCascade.Internal.Bool (cBoolToBool)
+import OpenCascade.Internal.Exception (wrapException)
 
-foreign import capi unsafe "hs_TopExp_Explorer.h hs_new_TopExp_Explorer" rawNew :: Ptr TopoDS.Shape -> CInt -> IO (Ptr Explorer)
+foreign import capi unsafe "hs_TopExp_Explorer.h hs_new_TopExp_Explorer" rawNew
+    :: Ptr TopoDS.Shape
+    -> CInt
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr Explorer)
 
 new :: Ptr TopoDS.Shape -> TopAbs.ShapeEnum -> Acquire (Ptr Explorer)
-new shape theType = mkAcquire (rawNew shape (fromIntegral . fromEnum $ theType)) deleteExplorer
+new shape theType = mkAcquire (wrapException $ rawNew shape (fromIntegral . fromEnum $ theType)) deleteExplorer
 
 foreign import capi unsafe "hs_TopExp_Explorer.h hs_TopExp_Explorer_more" rawMore :: Ptr Explorer -> IO (CBool)
 
 more :: Ptr Explorer -> IO Bool
-more = fmap (cBoolToBool) . rawMore 
+more = fmap (cBoolToBool) . rawMore
 
-foreign import capi unsafe "hs_TopExp_Explorer.h hs_TopExp_Explorer_next" next :: Ptr Explorer -> IO ()
+foreign import capi unsafe "hs_TopExp_Explorer.h hs_TopExp_Explorer_next" rawNext
+    :: Ptr Explorer
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO ()
 
-foreign import capi unsafe "hs_TopExp_Explorer.h hs_TopExp_Explorer_value" value :: Ptr Explorer -> IO (Ptr TopoDS.Shape)
+next :: Ptr Explorer -> IO ()
+next explorer = wrapException $ rawNext explorer
+
+foreign import capi unsafe "hs_TopExp_Explorer.h hs_TopExp_Explorer_value" rawValue
+    :: Ptr Explorer
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr TopoDS.Shape)
+
+value :: Ptr Explorer -> IO (Ptr TopoDS.Shape)
+value explorer = wrapException $ rawValue explorer
