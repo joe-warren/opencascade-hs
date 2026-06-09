@@ -7,17 +7,29 @@
 extern "C" {
 #endif
 
-BRepAdaptor_Curve * hs_new_BRepAdaptor_Curve_fromEdge(TopoDS_Edge * edge);
+BRepAdaptor_Curve * hs_new_BRepAdaptor_Curve_fromEdge(
+    TopoDS_Edge * edge,
+    HSExceptionType* exType, void ** exPtr
+);
 
 void hs_delete_BRepAdaptor_Curve(BRepAdaptor_Curve * curve);
 
 GeomAbs_CurveType hs_BRepAdaptor_Curve_curveType(BRepAdaptor_Curve* curve);
 
-Handle(Geom_BezierCurve) * hs_BRepAdaptor_Curve_bezier(BRepAdaptor_Curve * curve);
+Handle(Geom_BezierCurve) * hs_BRepAdaptor_Curve_bezier(
+    BRepAdaptor_Curve * curve,
+    HSExceptionType* exType, void ** exPtr
+);
 
-Handle(Geom_BSplineCurve) * hs_BRepAdaptor_Curve_bspline(BRepAdaptor_Curve * curve);
+Handle(Geom_BSplineCurve) * hs_BRepAdaptor_Curve_bspline(
+    BRepAdaptor_Curve * curve,
+    HSExceptionType* exType, void ** exPtr
+);
 
-GeomAdaptor_Curve * hs_BRepAdaptor_Curve_curve(BRepAdaptor_Curve * curve);
+GeomAdaptor_Curve * hs_BRepAdaptor_Curve_curve(
+    BRepAdaptor_Curve * curve,
+    HSExceptionType* exType, void ** exPtr
+);
 
 double hs_BRepAdaptor_Curve_firstParameter(BRepAdaptor_Curve *curve);
 

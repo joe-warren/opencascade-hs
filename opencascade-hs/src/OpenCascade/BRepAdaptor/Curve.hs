@@ -23,11 +23,16 @@ import OpenCascade.Handle (Handle)
 import Data.Coerce (coerce)
 import qualified OpenCascade.GeomAdaptor.Types as GeomAdaptor
 import qualified OpenCascade.GeomAdaptor.Internal.Destructors as GeomAdaptor.Destructors
+import OpenCascade.Internal.Exception (wrapException)
 
-foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_new_BRepAdaptor_Curve_fromEdge" rawFromEdge :: Ptr TopoDS.Edge -> IO (Ptr Curve)
+foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_new_BRepAdaptor_Curve_fromEdge" rawFromEdge
+    :: Ptr TopoDS.Edge
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr Curve)
 
 fromEdge :: Ptr TopoDS.Edge -> Acquire (Ptr Curve)
-fromEdge e = mkAcquire (rawFromEdge e) deleteCurve
+fromEdge e = mkAcquire (wrapException $ rawFromEdge e) deleteCurve
 
 
 foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_curveType" rawCurveType :: Ptr Curve -> IO (CInt)
@@ -35,21 +40,33 @@ foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_curveTyp
 curveType :: Ptr Curve -> IO CurveType
 curveType c = toEnum . fromIntegral <$> rawCurveType c
 
-foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_bezier" rawBezier :: Ptr Curve -> IO (Ptr (Handle (Geom.BezierCurve)))
+foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_bezier" rawBezier
+    :: Ptr Curve
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr (Handle (Geom.BezierCurve)))
 
 bezier :: Ptr Curve -> Acquire (Ptr (Handle Geom.BezierCurve))
-bezier theCurve = mkAcquire (rawBezier theCurve) deleteHandleBezierCurve
+bezier theCurve = mkAcquire (wrapException $ rawBezier theCurve) deleteHandleBezierCurve
 
-foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_bspline" rawBSpline :: Ptr Curve -> IO (Ptr (Handle (Geom.BSplineCurve)))
+foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_bspline" rawBSpline
+    :: Ptr Curve
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr (Handle (Geom.BSplineCurve)))
 
 bspline :: Ptr Curve -> Acquire (Ptr (Handle Geom.BSplineCurve))
-bspline theCurve = mkAcquire (rawBSpline theCurve) deleteHandleBSplineCurve
+bspline theCurve = mkAcquire (wrapException $ rawBSpline theCurve) deleteHandleBSplineCurve
 
 
-foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_curve" rawCurve :: Ptr Curve -> IO (Ptr GeomAdaptor.Curve)
+foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_curve" rawCurve
+    :: Ptr Curve
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr GeomAdaptor.Curve)
 
 curve :: Ptr Curve -> Acquire (Ptr GeomAdaptor.Curve)
-curve theCurve = mkAcquire (rawCurve theCurve) GeomAdaptor.Destructors.deleteCurve
+curve theCurve = mkAcquire (wrapException $ rawCurve theCurve) GeomAdaptor.Destructors.deleteCurve
 
 foreign import capi unsafe "hs_BRepAdaptor_Curve.h hs_BRepAdaptor_Curve_firstParameter" rawFirstParameter :: Ptr Curve -> IO CDouble
 
