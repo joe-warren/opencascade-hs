@@ -19,7 +19,7 @@ void hs_gp_Trsf2d_SetMirrorAboutAx2d(gp_Trsf2d * trsf, gp_Ax2d * ax);
 
 void hs_gp_Trsf2d_SetRotation(gp_Trsf2d * trsf, gp_Pnt2d * ax, double angle);
 
-void hs_gp_Trsf2d_SetScale(gp_Trsf2d * trsf, gp_Pnt2d * origin, double factor);
+void hs_gp_Trsf2d_SetScale(gp_Trsf2d * trsf, gp_Pnt2d * origin, double factor, HSExceptionType* exType, void ** exPtr);
 
 void hs_gp_Trsf2d_SetTransformation(gp_Trsf2d * trsf, gp_Ax2d * to);
 
@@ -31,21 +31,22 @@ void hs_gp_Trsf2d_SetTranslationRelative(gp_Trsf2d * trsf, gp_Pnt2d * from, gp_P
 
 void hs_gp_Trsf2d_SetTranslationPart(gp_Trsf2d * trsf, gp_Vec2d * trans);
 
-void hs_gp_Trsf2d_SetScaleFactor(gp_Trsf2d * trsf, double s);
+void hs_gp_Trsf2d_SetScaleFactor(gp_Trsf2d * trsf, double s, HSExceptionType* exType, void ** exPtr);
 
-void hs_gp_Trsf2d_SetValues(gp_Trsf2d * trsf, 
-        double a11, double a12, double a13, 
-        double a21, double a22, double a23);
+void hs_gp_Trsf2d_SetValues(gp_Trsf2d * trsf,
+        double a11, double a12, double a13,
+        double a21, double a22, double a23,
+        HSExceptionType* exType, void ** exPtr);
 
 bool hs_gp_Trsf2d_IsNegative(gp_Trsf2d * trsf);
 
 double hs_gp_Trsf2d_ScaleFactor(gp_Trsf2d * trsf);
 
-double hs_gp_Trsf2d_Value(gp_Trsf2d* trsf, int row, int col);
+double hs_gp_Trsf2d_Value(gp_Trsf2d* trsf, int row, int col, HSExceptionType* exType, void ** exPtr);
 
-void hs_gp_Trsf2d_Invert(gp_Trsf2d* trsf);
+void hs_gp_Trsf2d_Invert(gp_Trsf2d* trsf, HSExceptionType* exType, void ** exPtr);
 
-gp_Trsf2d * hs_gp_Trsf2d_Inverted(gp_Trsf2d* trsf);
+gp_Trsf2d * hs_gp_Trsf2d_Inverted(gp_Trsf2d* trsf, HSExceptionType* exType, void ** exPtr);
 
 void hs_gp_Trsf2d_Multiply(gp_Trsf2d * trsf, gp_Trsf2d* b);
 
@@ -53,9 +54,9 @@ gp_Trsf2d * hs_gp_Trsf2d_Multiplied(gp_Trsf2d* a, gp_Trsf2d* b);
 
 void hs_gp_Trsf2d_PreMultiply(gp_Trsf2d * trsf, gp_Trsf2d* b);
 
-void hs_gp_Trsf2d_Power(gp_Trsf2d * trsf, int b);
+void hs_gp_Trsf2d_Power(gp_Trsf2d * trsf, int b, HSExceptionType* exType, void ** exPtr);
 
-gp_Trsf2d * hs_gp_Trsf2d_Powered(gp_Trsf2d* a, int b);
+gp_Trsf2d * hs_gp_Trsf2d_Powered(gp_Trsf2d* a, int b, HSExceptionType* exType, void ** exPtr);
 
 #ifdef __cplusplus
 }

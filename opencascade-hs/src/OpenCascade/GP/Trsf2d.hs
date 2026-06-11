@@ -28,10 +28,11 @@ module OpenCascade.GP.Trsf2d
 
 import OpenCascade.GP.Types
 import OpenCascade.GP.Internal.Destructors
+import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C
 import Foreign.Ptr
 import Data.Coerce (coerce)
-import Data.Acquire 
+import Data.Acquire
 
 
 -- new
@@ -61,10 +62,10 @@ setRotation = coerce rawSetRotation
 
 -- scale
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetScale" rawSetScale :: Ptr Trsf2d -> Ptr Pnt2d -> CDouble -> IO ()
+foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetScale" rawSetScale :: Ptr Trsf2d -> Ptr Pnt2d -> CDouble -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
 
 setScale :: Ptr Trsf2d -> Ptr Pnt2d -> Double -> IO ()
-setScale = coerce rawSetScale
+setScale trsf origin factor = wrapException $ rawSetScale trsf origin (coerce factor)
 
 -- transformation
 
@@ -82,17 +83,20 @@ foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetTranslationRelative" 
 
 -- scaleFactor
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetScaleFactor" rawSetScaleFactor :: Ptr Trsf2d -> CDouble -> IO ()
+foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetScaleFactor" rawSetScaleFactor :: Ptr Trsf2d -> CDouble -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
 
 setScaleFactor :: Ptr Trsf2d -> Double -> IO ()
-setScaleFactor = coerce rawSetScaleFactor
+setScaleFactor trsf s = wrapException $ rawSetScaleFactor trsf (coerce s)
 
 -- setValues
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetValues" rawSetValues :: Ptr Trsf2d -> CDouble -> CDouble-> CDouble-> CDouble-> CDouble-> CDouble-> IO ()
+foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_SetValues" rawSetValues :: Ptr Trsf2d -> CDouble -> CDouble-> CDouble-> CDouble-> CDouble-> CDouble-> Ptr CInt -> Ptr (Ptr ()) -> IO ()
 
 setValues :: Ptr Trsf2d -> Double -> Double -> Double -> Double-> Double -> Double -> IO ()
-setValues = coerce rawSetValues
+setValues trsf a11 a12 a13 a21 a22 a23 =
+    wrapException $ rawSetValues trsf
+        (coerce a11) (coerce a12) (coerce a13)
+        (coerce a21) (coerce a22) (coerce a23)
 
 -- tests 
 
@@ -106,19 +110,22 @@ foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_ScaleFactor" rawScaleFac
 scaleFactor :: Ptr Trsf2d -> IO Double
 scaleFactor = coerce rawScaleFactor
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Value" rawValue :: Ptr Trsf2d -> CInt -> CInt -> IO CDouble
+foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Value" rawValue :: Ptr Trsf2d -> CInt -> CInt -> Ptr CInt -> Ptr (Ptr ()) -> IO CDouble
 
 value :: Ptr Trsf2d -> Int -> Int -> IO Double
-value t row col = coerce $ rawValue t (fromIntegral row) (fromIntegral col)
+value t row col = coerce <$> wrapException (rawValue t (fromIntegral row) (fromIntegral col))
 
 -- invert/inverted
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Invert" invert :: Ptr Trsf2d-> IO ()
+foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Invert" rawInvert :: Ptr Trsf2d -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Inverted" rawInverted :: Ptr Trsf2d-> IO (Ptr Trsf2d)
+invert :: Ptr Trsf2d -> IO ()
+invert t = wrapException $ rawInvert t
+
+foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Inverted" rawInverted :: Ptr Trsf2d -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Trsf2d)
 
 inverted :: Ptr Trsf2d -> Acquire (Ptr Trsf2d)
-inverted t = mkAcquire (rawInverted t) deleteTrsf2d
+inverted t = mkAcquire (wrapException $ rawInverted t) deleteTrsf2d
 
 -- multiply/multiplied
 
@@ -135,12 +142,12 @@ foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_PreMultiply" preMultiply
 
 -- power/powered
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Power" rawPower :: Ptr Trsf2d -> CInt -> IO ()
+foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Power" rawPower :: Ptr Trsf2d -> CInt -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
 
 power :: Ptr Trsf2d -> Int -> IO ()
-power trsf times = rawPower trsf (fromIntegral times)
+power trsf times = wrapException $ rawPower trsf (fromIntegral times)
 
-foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Powered" rawPowered :: Ptr Trsf2d -> CInt -> IO (Ptr Trsf2d)
+foreign import capi unsafe "hs_gp_Trsf2d.h hs_gp_Trsf2d_Powered" rawPowered :: Ptr Trsf2d -> CInt -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Trsf2d)
 
 powered :: Ptr Trsf2d -> Int -> Acquire (Ptr Trsf2d)
-powered trsf times = mkAcquire (rawPowered trsf (fromIntegral times)) deleteTrsf2d
+powered trsf times = mkAcquire (wrapException $ rawPowered trsf (fromIntegral times)) deleteTrsf2d
