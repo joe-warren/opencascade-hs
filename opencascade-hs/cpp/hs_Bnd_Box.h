@@ -11,9 +11,15 @@ Bnd_Box * hs_new_Bnd_Box();
 
 void hs_delete_Bnd_Box(Bnd_Box * box);
 
-gp_Pnt * hs_Bnd_Box_cornerMin(Bnd_Box * box);
+gp_Pnt * hs_Bnd_Box_cornerMin(
+    Bnd_Box * box,
+    HSExceptionType* exType, void ** exPtr
+);
 
-gp_Pnt * hs_Bnd_Box_cornerMax(Bnd_Box * box);
+gp_Pnt * hs_Bnd_Box_cornerMax(
+    Bnd_Box * box,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }
