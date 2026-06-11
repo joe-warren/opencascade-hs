@@ -35,6 +35,8 @@ module OpenCascade.TopoDS.Shape
 , reversed
 , complement
 , complemented
+, compose
+, composed
 , isEqual
 , isPartner
 , isSame
@@ -306,6 +308,22 @@ foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Complemented" rawC
 
 complemented :: Ptr Shape -> Acquire (Ptr Shape)
 complemented s = mkAcquire (wrapException $ rawComplemented s) deleteShape
+
+-- compose
+--
+
+foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Compose" rawCompose :: Ptr Shape -> CInt -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
+
+compose :: Ptr Shape -> TopAbs.Orientation -> IO ()
+compose s o = wrapException $ rawCompose s (fromIntegral . fromEnum $ o)
+
+-- composed
+--
+
+foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_Composed" rawComposed :: Ptr Shape -> CInt -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Shape)
+
+composed :: Ptr Shape -> TopAbs.Orientation -> Acquire (Ptr Shape)
+composed s o = mkAcquire (wrapException $ rawComposed s (fromIntegral . fromEnum $ o)) deleteShape
 
 -- isEqual
 
