@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Add `normalized` and `normalize` to `OpenCascade.GP.Vec` and `OpenCascade.GP.Vec2d`
+
 ## 0.6.2.1
 
 ## 0.6.2.0

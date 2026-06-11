@@ -25,6 +25,8 @@ module OpenCascade.GP.Vec2d
 , crossMagnitude
 , crossSquareMagnitude
 , dot
+, normalize
+, normalized
 , reverse
 , reversed
 , mirror
@@ -205,6 +207,18 @@ foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Dot" rawDot :: Ptr Vec2d -
 
 dot :: Ptr Vec2d -> Ptr Vec2d -> IO Double
 dot = coerce rawDot
+
+-- normalize/normalized
+
+foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Normalize" rawNormalize :: Ptr Vec2d -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
+
+normalize :: Ptr Vec2d -> IO ()
+normalize a = wrapException $ rawNormalize a
+
+foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Normalized" rawNormalized :: Ptr Vec2d -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Vec2d)
+
+normalized :: Ptr Vec2d -> Acquire (Ptr Vec2d)
+normalized a = mkAcquire (wrapException $ rawNormalized a) deleteVec2d
 
 -- reverse/reversed
 

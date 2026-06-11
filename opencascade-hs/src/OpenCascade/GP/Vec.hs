@@ -32,6 +32,8 @@ module OpenCascade.GP.Vec
 , crossSquareMagnitude
 , dot
 , dotCross
+, normalize
+, normalized
 , reverse
 , reversed
 , mirror
@@ -251,6 +253,19 @@ foreign import capi unsafe "hs_gp_Vec.h hs_gp_Vec_DotCross" rawDotCross :: Ptr V
 
 dotCross :: Ptr Vec -> Ptr Vec -> Ptr Vec -> IO Double
 dotCross = coerce rawDotCross
+
+
+-- normalize/normalized
+
+foreign import capi unsafe "hs_gp_Vec.h hs_gp_Vec_Normalize" rawNormalize :: Ptr Vec -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
+
+normalize :: Ptr Vec -> IO ()
+normalize a = wrapException $ rawNormalize a
+
+foreign import capi unsafe "hs_gp_Vec.h hs_gp_Vec_Normalized" rawNormalized :: Ptr Vec -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Vec)
+
+normalized :: Ptr Vec -> Acquire (Ptr Vec)
+normalized a = mkAcquire (wrapException $ rawNormalized a) deleteVec
 
 
 -- reverse/reversed
