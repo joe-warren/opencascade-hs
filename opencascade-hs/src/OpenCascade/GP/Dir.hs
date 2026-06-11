@@ -38,17 +38,18 @@ module OpenCascade.GP.Dir
 import Prelude hiding (reverse)
 import OpenCascade.GP.Types
 import OpenCascade.GP.Internal.Destructors
+import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C
 import Foreign.Ptr
 import Data.Coerce (coerce)
-import Data.Acquire 
+import Data.Acquire
 
 -- new
 
-foreign import capi unsafe "hs_gp_Dir.h hs_new_gp_Dir" rawNew :: CDouble -> CDouble -> CDouble -> IO (Ptr Dir)
+foreign import capi unsafe "hs_gp_Dir.h hs_new_gp_Dir" rawNew :: CDouble -> CDouble -> CDouble -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Dir)
 
 new :: Double -> Double -> Double -> Acquire (Ptr Dir)
-new x y z = mkAcquire (rawNew (CDouble x) (CDouble y) (CDouble z)) deleteDir
+new x y z = mkAcquire (wrapException $ rawNew (CDouble x) (CDouble y) (CDouble z)) deleteDir
 
 -- getters
 
@@ -126,29 +127,35 @@ angle = coerce rawAngle
 
 -- angleWithRef
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_AngleWithRef" rawAngleWithRef :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO CDouble
+foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_AngleWithRef" rawAngleWithRef :: Ptr Dir -> Ptr Dir -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO CDouble
 
 angleWithRef :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO Double
-angleWithRef = coerce rawAngleWithRef
+angleWithRef a b vref = coerce <$> wrapException (rawAngleWithRef a b vref)
 
 -- cross/crossed
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Cross" cross :: Ptr Dir -> Ptr Dir -> IO ()
+foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Cross" rawCross :: Ptr Dir -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Crossed" rawCrossed :: Ptr Dir -> Ptr Dir -> IO (Ptr Dir)
+cross :: Ptr Dir -> Ptr Dir -> IO ()
+cross a b = wrapException $ rawCross a b
+
+foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_Crossed" rawCrossed :: Ptr Dir -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Dir)
 
 crossed :: Ptr Dir -> Ptr Dir -> Acquire (Ptr Dir)
-crossed a b = mkAcquire (rawCrossed a b) deleteDir
+crossed a b = mkAcquire (wrapException $ rawCrossed a b) deleteDir
 
 
 -- crossCross/crossCrossed
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_CrossCross" crossCross :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO ()
+foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_CrossCross" rawCrossCross :: Ptr Dir -> Ptr Dir -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
 
-foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_CrossCrossed" rawCrossCrossed :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO (Ptr Dir)
+crossCross :: Ptr Dir -> Ptr Dir -> Ptr Dir -> IO ()
+crossCross a b c = wrapException $ rawCrossCross a b c
+
+foreign import capi unsafe "hs_gp_Dir.h hs_gp_Dir_CrossCrossed" rawCrossCrossed :: Ptr Dir -> Ptr Dir -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Dir)
 
 crossCrossed :: Ptr Dir -> Ptr Dir -> Ptr Dir -> Acquire (Ptr Dir)
-crossCrossed a b c = mkAcquire (rawCrossCrossed a b c) deleteDir
+crossCrossed a b c = mkAcquire (wrapException $ rawCrossCrossed a b c) deleteDir
 
 
 -- dot
