@@ -12,9 +12,9 @@ gp_GTrsf * hs_new_gp_GTrsf();
 
 void hs_delete_gp_GTrsf(gp_GTrsf * t);
 
-void hs_gp_GTrsf_setValue(gp_GTrsf * trsf, int row, int col, double value);
+void hs_gp_GTrsf_setValue(gp_GTrsf * trsf, int row, int col, double value, HSExceptionType* exType, void ** exPtr);
 
-void hs_gp_GTrsf_setForm(gp_GTrsf * trsf);
+void hs_gp_GTrsf_setForm(gp_GTrsf * trsf, HSExceptionType* exType, void ** exPtr);
 
 #ifdef __cplusplus
 }
