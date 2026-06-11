@@ -7,11 +7,17 @@
 extern "C" {
 #endif
 
-Handle(TDocStd_Document) * hs_new_TDocStd_Document(char * storageFormat);
+Handle(TDocStd_Document) * hs_new_TDocStd_Document(
+    char * storageFormat,
+    HSExceptionType* exType, void ** exPtr
+);
 
 void hs_delete_TDocStd_Document(Handle(TDocStd_Document) * theDocument);
 
-TDF_Label * hs_TDocStd_Document_main(Handle(TDocStd_Document) *theDocument);
+TDF_Label * hs_TDocStd_Document_main(
+    Handle(TDocStd_Document) *theDocument,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }
