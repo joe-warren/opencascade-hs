@@ -43,10 +43,11 @@ module OpenCascade.GP.Vec2d
 import Prelude hiding (reverse, subtract)
 import OpenCascade.GP.Types
 import OpenCascade.GP.Internal.Destructors
+import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C
 import Foreign.Ptr
 import Data.Coerce (coerce)
-import Data.Acquire 
+import Data.Acquire
 
 -- new
 
@@ -91,31 +92,31 @@ isEqual a b linearTolerance angularTolerance = (/= 0) <$> rawIsEqual a b (CDoubl
 
 -- isNormal
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_IsNormal" rawIsNormal :: Ptr Vec2d -> Ptr Vec2d -> CDouble -> IO CBool
+foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_IsNormal" rawIsNormal :: Ptr Vec2d -> Ptr Vec2d -> CDouble -> Ptr CInt -> Ptr (Ptr ()) -> IO CBool
 
 isNormal :: Ptr Vec2d -> Ptr Vec2d -> Double -> IO Bool
-isNormal a b tolerance = (/= 0) <$> rawIsNormal a b (CDouble tolerance)
+isNormal a b tolerance = (/= 0) <$> wrapException (rawIsNormal a b (CDouble tolerance))
 
 -- isOpposite
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_IsOpposite" rawIsOpposite :: Ptr Vec2d -> Ptr Vec2d -> CDouble -> IO CBool
+foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_IsOpposite" rawIsOpposite :: Ptr Vec2d -> Ptr Vec2d -> CDouble -> Ptr CInt -> Ptr (Ptr ()) -> IO CBool
 
 isOpposite :: Ptr Vec2d -> Ptr Vec2d -> Double -> IO Bool
-isOpposite a b tolerance = (/= 0) <$> rawIsOpposite a b (CDouble tolerance)
+isOpposite a b tolerance = (/= 0) <$> wrapException (rawIsOpposite a b (CDouble tolerance))
 
 -- isParallel
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_IsParallel" rawIsParallel :: Ptr Vec2d -> Ptr Vec2d -> CDouble -> IO CBool
+foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_IsParallel" rawIsParallel :: Ptr Vec2d -> Ptr Vec2d -> CDouble -> Ptr CInt -> Ptr (Ptr ()) -> IO CBool
 
 isParallel :: Ptr Vec2d -> Ptr Vec2d -> Double -> IO Bool
-isParallel a b tolerance = (/= 0) <$> rawIsParallel a b (CDouble tolerance)
+isParallel a b tolerance = (/= 0) <$> wrapException (rawIsParallel a b (CDouble tolerance))
 
 -- angle
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Angle" rawAngle :: Ptr Vec2d -> Ptr Vec2d -> IO CDouble
+foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Angle" rawAngle :: Ptr Vec2d -> Ptr Vec2d -> Ptr CInt -> Ptr (Ptr ()) -> IO CDouble
 
 angle :: Ptr Vec2d -> Ptr Vec2d -> IO Double
-angle = coerce rawAngle
+angle a b = coerce <$> wrapException (rawAngle a b)
 
 
 -- magnitude

@@ -21,13 +21,13 @@ void hs_gp_Vec2d_SetY(gp_Vec2d * vec, double y);
 
 bool hs_gp_Vec2d_IsEqual(gp_Vec2d * a, gp_Vec2d * b, double linearTolerance, double angularTolerance);
 
-bool hs_gp_Vec2d_IsNormal(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance);
+bool hs_gp_Vec2d_IsNormal(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance, HSExceptionType* exType, void ** exPtr);
 
-bool hs_gp_Vec2d_IsOpposite(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance);
+bool hs_gp_Vec2d_IsOpposite(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance, HSExceptionType* exType, void ** exPtr);
 
-bool hs_gp_Vec2d_IsParallel(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance);
+bool hs_gp_Vec2d_IsParallel(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance, HSExceptionType* exType, void ** exPtr);
 
-double hs_gp_Vec2d_Angle(gp_Vec2d * a, gp_Vec2d * b);
+double hs_gp_Vec2d_Angle(gp_Vec2d * a, gp_Vec2d * b, HSExceptionType* exType, void ** exPtr);
 
 double hs_gp_Vec2d_Magnitude(gp_Vec2d * a);
 
@@ -58,9 +58,9 @@ double hs_gp_Vec2d_CrossSquareMagnitude(gp_Vec2d * a, gp_Vec2d * b);
 
 double hs_gp_Vec2d_Dot(gp_Vec2d * a, gp_Vec2d * b);
 
-void hs_gp_Vec2d_Normalize(gp_Vec2d * a);
+void hs_gp_Vec2d_Normalize(gp_Vec2d * a, HSExceptionType* exType, void ** exPtr);
 
-gp_Vec2d * hs_gp_Vec2d_Normalized(gp_Vec2d * a);
+gp_Vec2d * hs_gp_Vec2d_Normalized(gp_Vec2d * a, HSExceptionType* exType, void ** exPtr);
 
 void hs_gp_Vec2d_Reverse(gp_Vec2d* a);
 

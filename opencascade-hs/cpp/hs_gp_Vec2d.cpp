@@ -1,4 +1,5 @@
 #include <gp_Vec2d.hxx>
+#include "hs_Exception.h"
 #include "hs_gp_Vec2d.h"
 
 gp_Vec2d * hs_new_gp_Vec2d(double x, double y) {
@@ -29,20 +30,28 @@ bool hs_gp_Vec2d_IsEqual(gp_Vec2d * a, gp_Vec2d * b, double linearTolerance, dou
     return a->IsEqual(*b, linearTolerance, angularTolerance);
 }
 
-bool hs_gp_Vec2d_IsNormal(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance){
-    return a->IsNormal(*b, angularTolerance);
+bool hs_gp_Vec2d_IsNormal(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance, HSExceptionType* exType, void ** exPtr){
+    return hs_handleExWithDefault(exType, exPtr, [a, b, angularTolerance]{
+        return a->IsNormal(*b, angularTolerance);
+    }, false);
 }
 
-bool hs_gp_Vec2d_IsOpposite(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance){
-    return a->IsOpposite(*b, angularTolerance);
+bool hs_gp_Vec2d_IsOpposite(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance, HSExceptionType* exType, void ** exPtr){
+    return hs_handleExWithDefault(exType, exPtr, [a, b, angularTolerance]{
+        return a->IsOpposite(*b, angularTolerance);
+    }, false);
 }
 
-bool hs_gp_Vec2d_IsParallel(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance){
-    return a->IsParallel(*b, angularTolerance);
+bool hs_gp_Vec2d_IsParallel(gp_Vec2d * a, gp_Vec2d * b, double angularTolerance, HSExceptionType* exType, void ** exPtr){
+    return hs_handleExWithDefault(exType, exPtr, [a, b, angularTolerance]{
+        return a->IsParallel(*b, angularTolerance);
+    }, false);
 }
 
-double hs_gp_Vec2d_Angle(gp_Vec2d * a, gp_Vec2d * b){
-    return a->Angle(*b);
+double hs_gp_Vec2d_Angle(gp_Vec2d * a, gp_Vec2d * b, HSExceptionType* exType, void ** exPtr){
+    return hs_handleExWithDefault(exType, exPtr, [a, b]{
+        return a->Angle(*b);
+    }, 0.0);
 }
 
 double hs_gp_Vec2d_Magnitude(gp_Vec2d * a){
@@ -102,12 +111,16 @@ double hs_gp_Vec2d_Dot(gp_Vec2d * a, gp_Vec2d * b){
     return a->Dot(*b);
 }
 
-void hs_gp_Vec2d_Normalize(gp_Vec2d * a){
-    a->Normalize();
+void hs_gp_Vec2d_Normalize(gp_Vec2d * a, HSExceptionType* exType, void ** exPtr){
+    hs_handleExVoid(exType, exPtr, [a]{
+        a->Normalize();
+    });
 }
 
-gp_Vec2d * hs_gp_Vec2d_Normalized(gp_Vec2d * a){
-    return new gp_Vec2d(a->Normalized());
+gp_Vec2d * hs_gp_Vec2d_Normalized(gp_Vec2d * a, HSExceptionType* exType, void ** exPtr){
+    return hs_handleEx(exType, exPtr, [a]{
+        return new gp_Vec2d(a->Normalized());
+    });
 }
 
 void hs_gp_Vec2d_Reverse(gp_Vec2d* a){
