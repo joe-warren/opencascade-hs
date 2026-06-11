@@ -36,17 +36,18 @@ module OpenCascade.GP.Ax2
 import Prelude hiding (reverse)
 import OpenCascade.GP.Types
 import OpenCascade.GP.Internal.Destructors
+import OpenCascade.Internal.Exception (wrapException)
 import Foreign.Ptr
 import Foreign.C.Types
-import Data.Acquire 
+import Data.Acquire
 import Data.Coerce (coerce)
 
 -- new and delete
 
-foreign import capi unsafe "hs_gp_Ax2.h hs_new_gp_Ax2" rawNew :: Ptr Pnt -> Ptr Dir -> Ptr Dir -> IO (Ptr Ax2)
+foreign import capi unsafe "hs_gp_Ax2.h hs_new_gp_Ax2" rawNew :: Ptr Pnt -> Ptr Dir -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Ax2)
 
 new :: Ptr Pnt -> Ptr Dir -> Ptr Dir -> Acquire (Ptr Ax2)
-new origin vAxis vX = mkAcquire (rawNew origin vAxis vX) deleteAx2
+new origin vAxis vX = mkAcquire (wrapException $ rawNew origin vAxis vX) deleteAx2
 
 foreign import capi unsafe "hs_gp_Ax2.h hs_new_gp_Ax2_autoX" rawNewAutoX :: Ptr Pnt -> Ptr Dir -> IO (Ptr Ax2)
 
@@ -83,15 +84,27 @@ axis ax2 = mkAcquire (rawAxis ax2) deleteAx1
 
 -- setters
 
-foreign import capi unsafe "hs_gp_Ax2.h hs_gp_Ax2_SetDirection" setDirection :: Ptr Ax2 -> Ptr Dir -> IO ()
+foreign import capi unsafe "hs_gp_Ax2.h hs_gp_Ax2_SetDirection" rawSetDirection :: Ptr Ax2 -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
+
+setDirection :: Ptr Ax2 -> Ptr Dir -> IO ()
+setDirection ax2 dir = wrapException $ rawSetDirection ax2 dir
 
 foreign import capi unsafe "hs_gp_Ax2.h hs_gp_Ax2_SetLocation" setLocation :: Ptr Ax2 -> Ptr Pnt -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax2.h hs_gp_Ax2_SetXDirection" setXDirection :: Ptr Ax2 -> Ptr Dir -> IO ()
+foreign import capi unsafe "hs_gp_Ax2.h hs_gp_Ax2_SetXDirection" rawSetXDirection :: Ptr Ax2 -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax2.h hs_gp_Ax2_SetYDirection" setYDirection :: Ptr Ax2 -> Ptr Dir -> IO ()
+setXDirection :: Ptr Ax2 -> Ptr Dir -> IO ()
+setXDirection ax2 dir = wrapException $ rawSetXDirection ax2 dir
 
-foreign import capi unsafe "hs_gp_Ax2.h hs_gp_Ax2_SetAxis" setAxis :: Ptr Ax2 -> Ptr Ax1 -> IO ()
+foreign import capi unsafe "hs_gp_Ax2.h hs_gp_Ax2_SetYDirection" rawSetYDirection :: Ptr Ax2 -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
+
+setYDirection :: Ptr Ax2 -> Ptr Dir -> IO ()
+setYDirection ax2 dir = wrapException $ rawSetYDirection ax2 dir
+
+foreign import capi unsafe "hs_gp_Ax2.h hs_gp_Ax2_SetAxis" rawSetAxis :: Ptr Ax2 -> Ptr Ax1 -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
+
+setAxis :: Ptr Ax2 -> Ptr Ax1 -> IO ()
+setAxis ax2 ax1 = wrapException $ rawSetAxis ax2 ax1
 
 -- isCoplanar
 
