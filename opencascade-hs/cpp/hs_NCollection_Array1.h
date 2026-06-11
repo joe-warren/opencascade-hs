@@ -7,9 +7,15 @@
 extern "C" {
 #endif
 
-ARRAY_1(gp_Pnt) * hs_new_NCollection_Array1_gp_Pnt(int lower, int upper);
+ARRAY_1(gp_Pnt) * hs_new_NCollection_Array1_gp_Pnt(
+    int lower, int upper,
+    HSExceptionType* exType, void ** exPtr
+);
 
-void hs_NCollection_Array1_gp_Pnt_setValue(ARRAY_1(gp_Pnt) * arr, int index, gp_Pnt * value);
+void hs_NCollection_Array1_gp_Pnt_setValue(
+    ARRAY_1(gp_Pnt) * arr, int index, gp_Pnt * value,
+    HSExceptionType* exType, void ** exPtr
+);
 
 void hs_delete_NCollection_Array1_gp_Pnt(ARRAY_1(gp_Pnt) * arr);
 
