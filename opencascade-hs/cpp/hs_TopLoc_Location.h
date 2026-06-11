@@ -17,17 +17,35 @@ bool hs_TopLoc_Location_IsIdentity(TopLoc_Location * l);
 
 int hs_TopLoc_Location_FirstPower(TopLoc_Location * l);
 
-TopLoc_Location * hs_TopLoc_Location_NextLocation(TopLoc_Location * l);
+TopLoc_Location * hs_TopLoc_Location_NextLocation(
+    TopLoc_Location * l,
+    HSExceptionType* exType, void ** exPtr
+);
 
-TopLoc_Location * hs_TopLoc_Location_Inverted(TopLoc_Location * l);
+TopLoc_Location * hs_TopLoc_Location_Inverted(
+    TopLoc_Location * l,
+    HSExceptionType* exType, void ** exPtr
+);
 
-TopLoc_Location * hs_TopLoc_Location_Multiplied(TopLoc_Location * a, TopLoc_Location * b);
+TopLoc_Location * hs_TopLoc_Location_Multiplied(
+    TopLoc_Location * a, TopLoc_Location * b,
+    HSExceptionType* exType, void ** exPtr
+);
 
-TopLoc_Location * hs_TopLoc_Location_Divided(TopLoc_Location * a, TopLoc_Location * b);
+TopLoc_Location * hs_TopLoc_Location_Divided(
+    TopLoc_Location * a, TopLoc_Location * b,
+    HSExceptionType* exType, void ** exPtr
+);
 
-TopLoc_Location * hs_TopLoc_Location_Predivided(TopLoc_Location * a, TopLoc_Location * b);
+TopLoc_Location * hs_TopLoc_Location_Predivided(
+    TopLoc_Location * a, TopLoc_Location * b,
+    HSExceptionType* exType, void ** exPtr
+);
 
-TopLoc_Location * hs_TopLoc_Location_Powered(TopLoc_Location * l, int p);
+TopLoc_Location * hs_TopLoc_Location_Powered(
+    TopLoc_Location * l, int p,
+    HSExceptionType* exType, void ** exPtr
+);
 
 gp_Trsf * hs_TopLoc_Location_toGPTrsf(TopLoc_Location * l);
 
