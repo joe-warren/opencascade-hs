@@ -11,7 +11,7 @@ gp_Ax3 * hs_new_gp_Ax3();
 
 gp_Ax3 * hs_new_gp_Ax3_fromAx2(gp_Ax2 * ax);
 
-gp_Ax3 * hs_new_gp_Ax3_fromPntDirAndDir(gp_Pnt * pnt, gp_Dir *n, gp_Dir *v);
+gp_Ax3 * hs_new_gp_Ax3_fromPntDirAndDir(gp_Pnt * pnt, gp_Dir *n, gp_Dir *v, HSExceptionType* exType, void ** exPtr);
 
 gp_Ax3 * hs_new_gp_Ax3_fromPntAndDir(gp_Pnt * pnt, gp_Dir *n);
 
@@ -23,15 +23,15 @@ void hs_gp_Ax3_yReverse(gp_Ax3 * axis);
 
 void hs_gp_Ax3_zReverse(gp_Ax3 * axis);
 
-void hs_gp_Ax3_setAxis(gp_Ax3 * axis, gp_Ax1 * mainAxis);
+void hs_gp_Ax3_setAxis(gp_Ax3 * axis, gp_Ax1 * mainAxis, HSExceptionType* exType, void ** exPtr);
 
-void hs_gp_Ax3_setDirection(gp_Ax3 * axis, gp_Dir * dir);
+void hs_gp_Ax3_setDirection(gp_Ax3 * axis, gp_Dir * dir, HSExceptionType* exType, void ** exPtr);
 
 void hs_gp_Ax3_setLocation(gp_Ax3 * axis, gp_Pnt * loc);
 
-void hs_gp_Ax3_setXDirection(gp_Ax3 * axis, gp_Dir * dir);
+void hs_gp_Ax3_setXDirection(gp_Ax3 * axis, gp_Dir * dir, HSExceptionType* exType, void ** exPtr);
 
-void hs_gp_Ax3_setYDirection(gp_Ax3 * axis, gp_Dir * dir);
+void hs_gp_Ax3_setYDirection(gp_Ax3 * axis, gp_Dir * dir, HSExceptionType* exType, void ** exPtr);
 
 double hs_gp_Ax3_angle(gp_Ax3 *axis, gp_Ax3 *other);
 
