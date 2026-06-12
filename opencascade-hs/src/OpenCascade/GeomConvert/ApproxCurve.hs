@@ -18,25 +18,38 @@ import Data.Acquire (Acquire, mkAcquire)
 import OpenCascade.Handle (Handle)
 import OpenCascade.Geom.Types as Geom
 import OpenCascade.Internal.Bool (cBoolToBool)
+import OpenCascade.Internal.Exception (wrapException)
 
-foreign import capi unsafe "hs_GeomConvert_ApproxCurve.h hs_new_GeomConvert_ApproxCurve_fromCurveToleranceOrderSegmentsAndDegree" rawFromCurveToleranceOrderSegmentsAndDegree :: Ptr (Handle Geom.Curve) -> CDouble -> CInt -> CInt -> CInt -> IO (Ptr ApproxCurve)
+foreign import capi unsafe "hs_GeomConvert_ApproxCurve.h hs_new_GeomConvert_ApproxCurve_fromCurveToleranceOrderSegmentsAndDegree" rawFromCurveToleranceOrderSegmentsAndDegree
+    :: Ptr (Handle Geom.Curve)
+    -> CDouble
+    -> CInt
+    -> CInt
+    -> CInt
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr ApproxCurve)
 
 fromCurveToleranceOrderSegmentsAndDegree :: Ptr (Handle Geom.Curve) -> Double -> GeomAbs.Shape.Shape -> Int -> Int -> Acquire (Ptr ApproxCurve)
-fromCurveToleranceOrderSegmentsAndDegree theCurve tolerance order maxSegments maxDegree = 
-    mkAcquire 
-        (rawFromCurveToleranceOrderSegmentsAndDegree 
+fromCurveToleranceOrderSegmentsAndDegree theCurve tolerance order maxSegments maxDegree =
+    mkAcquire
+        (wrapException $ rawFromCurveToleranceOrderSegmentsAndDegree
             theCurve
             (coerce tolerance)
             (fromIntegral . fromEnum $ order)
             (fromIntegral maxSegments)
-            (fromIntegral maxDegree)) 
+            (fromIntegral maxDegree))
         deleteApproxCurve
 
 
-foreign import capi unsafe "hs_GeomConvert_ApproxCurve.h hs_GeomConvert_ApproxCurve_curve" rawCurve :: Ptr ApproxCurve -> IO (Ptr (Handle Geom.BSplineCurve))
+foreign import capi unsafe "hs_GeomConvert_ApproxCurve.h hs_GeomConvert_ApproxCurve_curve" rawCurve
+    :: Ptr ApproxCurve
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr (Handle Geom.BSplineCurve))
 
 curve :: Ptr ApproxCurve -> Acquire (Ptr (Handle Geom.BSplineCurve))
-curve approxCurve = mkAcquire (rawCurve approxCurve) deleteHandleBSplineCurve
+curve approxCurve = mkAcquire (wrapException $ rawCurve approxCurve) deleteHandleBSplineCurve
 
 foreign import capi unsafe "hs_GeomConvert_ApproxCurve.h hs_GeomConvert_ApproxCurve_isDone" rawIsDone :: Ptr ApproxCurve -> IO (CBool)
 

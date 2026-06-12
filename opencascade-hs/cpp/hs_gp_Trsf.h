@@ -22,18 +22,19 @@ void hs_gp_Trsf_SetMirrorAboutAx2(gp_Trsf * trsf, gp_Ax2 * ax);
 
 void hs_gp_Trsf_SetRotationAboutAxisAngle(gp_Trsf * trsf, gp_Ax1 * ax, double angle);
 
-void hs_gp_Trsf_SetScale(gp_Trsf * trsf, gp_Pnt * origin, double factor);
+void hs_gp_Trsf_SetScale(gp_Trsf * trsf, gp_Pnt * origin, double factor, HSExceptionType* exType, void ** exPtr);
 
 void hs_gp_Trsf_SetTranslation(gp_Trsf * trsf, gp_Vec * trans);
 
 void hs_gp_Trsf_SetTranslationPart(gp_Trsf * trsf, gp_Vec * trans);
 
-void hs_gp_Trsf_SetScaleFactor(gp_Trsf * trsf, double s);
+void hs_gp_Trsf_SetScaleFactor(gp_Trsf * trsf, double s, HSExceptionType* exType, void ** exPtr);
 
-void hs_gp_Trsf_SetValues(gp_Trsf * trsf, 
+void hs_gp_Trsf_SetValues(gp_Trsf * trsf,
         double a11, double a12, double a13, double a14,
         double a21, double a22, double a23, double a24,
-        double a31, double a32, double a33, double a34);
+        double a31, double a32, double a33, double a34,
+        HSExceptionType* exType, void ** exPtr);
 
 bool hs_gp_Trsf_IsNegative(gp_Trsf * trsf);
 
@@ -41,11 +42,11 @@ double hs_gp_Trsf_ScaleFactor(gp_Trsf * trsf);
 
 void hs_gp_Trsf_SetDisplacement(gp_Trsf * trsf, gp_Ax3 *from, gp_Ax3 * to);
 
-double hs_gp_Trsf_Value(gp_Trsf* trsf, int row, int col);
+double hs_gp_Trsf_Value(gp_Trsf* trsf, int row, int col, HSExceptionType* exType, void ** exPtr);
 
-void hs_gp_Trsf_Invert(gp_Trsf* trsf);
+void hs_gp_Trsf_Invert(gp_Trsf* trsf, HSExceptionType* exType, void ** exPtr);
 
-gp_Trsf * hs_gp_Trsf_Inverted(gp_Trsf* trsf);
+gp_Trsf * hs_gp_Trsf_Inverted(gp_Trsf* trsf, HSExceptionType* exType, void ** exPtr);
 
 void hs_gp_Trsf_Multiply(gp_Trsf * trsf, gp_Trsf* b);
 
@@ -53,9 +54,9 @@ gp_Trsf * hs_gp_Trsf_Multiplied(gp_Trsf* a, gp_Trsf* b);
 
 void hs_gp_Trsf_PreMultiply(gp_Trsf * trsf, gp_Trsf* b);
 
-void hs_gp_Trsf_Power(gp_Trsf * trsf, int b);
+void hs_gp_Trsf_Power(gp_Trsf * trsf, int b, HSExceptionType* exType, void ** exPtr);
 
-gp_Trsf * hs_gp_Trsf_Powered(gp_Trsf* a, int b);
+gp_Trsf * hs_gp_Trsf_Powered(gp_Trsf* a, int b, HSExceptionType* exType, void ** exPtr);
 
 #ifdef __cplusplus
 }

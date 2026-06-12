@@ -7,11 +7,17 @@
 extern "C" {
 #endif
 
-BRepMesh_IncrementalMesh * hs_BRepMesh_IncrementalMesh_fromShapeAndLinDeflection(TopoDS_Shape *shape, double theLinDeflection);
+BRepMesh_IncrementalMesh * hs_BRepMesh_IncrementalMesh_fromShapeAndLinDeflection(
+    TopoDS_Shape *shape, double theLinDeflection,
+    HSExceptionType* exType, void ** exPtr
+);
 
 void hs_delete_BRepMesh_IncrementalMesh(BRepMesh_IncrementalMesh * mesh);
 
-void hs_BRepMesh_IncrementalMesh_Perform(BRepMesh_IncrementalMesh * mesh);
+void hs_BRepMesh_IncrementalMesh_Perform(
+    BRepMesh_IncrementalMesh * mesh,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }

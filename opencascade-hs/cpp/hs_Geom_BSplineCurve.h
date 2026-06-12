@@ -16,11 +16,17 @@ void hs_delete_Geom_BSplineCurve(Geom_BSplineCurve * curve);
 
 int hs_Geom_BSplineCurve_nbPoles(Handle(Geom_BSplineCurve)* h);
 
-gp_Pnt * hs_Geom_BSplineCurve_pole(Handle(Geom_BSplineCurve)* h, int index);
+gp_Pnt * hs_Geom_BSplineCurve_pole(
+    Handle(Geom_BSplineCurve)* h, int index,
+    HSExceptionType* exType, void ** exPtr
+);
 
 bool hs_Geom_BSplineCurve_isRational(Handle(Geom_BSplineCurve) *h);
 
-void hs_Geom_BSplineCurve_segment(Handle(Geom_BSplineCurve) *h, double u1, double u2, double confusion);
+void hs_Geom_BSplineCurve_segment(
+    Handle(Geom_BSplineCurve) *h, double u1, double u2, double confusion,
+    HSExceptionType* exType, void ** exPtr
+);
 
 
 #ifdef __cplusplus

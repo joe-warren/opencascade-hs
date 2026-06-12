@@ -1,8 +1,14 @@
 #include <gp_Ax2.hxx>
+#include "hs_Exception.h"
 #include "hs_gp_Ax2.h"
 
-gp_Ax2 * hs_new_gp_Ax2(gp_Pnt * origin, gp_Dir * north, gp_Dir * vX){
-    return new gp_Ax2(*origin, *north, *vX);
+gp_Ax2 * hs_new_gp_Ax2(
+        gp_Pnt * origin, gp_Dir * north, gp_Dir * vX,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(exType, exPtr, [origin, north, vX]{
+        return new gp_Ax2(*origin, *north, *vX);
+    });
 }
 
 void hs_delete_gp_Ax2(gp_Ax2* ax2){
@@ -33,24 +39,32 @@ gp_Ax1 * hs_gp_Ax2_Axis(gp_Ax2* ax2){
     return new gp_Ax1(ax2->Axis());
 }
 
-void hs_gp_Ax2_SetDirection(gp_Ax2* ax2, gp_Dir* direction){
-    ax2->SetDirection(*direction);
+void hs_gp_Ax2_SetDirection(gp_Ax2* ax2, gp_Dir* direction, HSExceptionType* exType, void ** exPtr){
+    hs_handleExVoid(exType, exPtr, [ax2, direction]{
+        ax2->SetDirection(*direction);
+    });
 }
 
 void hs_gp_Ax2_SetLocation(gp_Ax2* ax2, gp_Pnt* origin){
     ax2->SetLocation(*origin);
 }
 
-void hs_gp_Ax2_SetXDirection(gp_Ax2* ax2, gp_Dir* direction){
-    ax2->SetXDirection(*direction);
+void hs_gp_Ax2_SetXDirection(gp_Ax2* ax2, gp_Dir* direction, HSExceptionType* exType, void ** exPtr){
+    hs_handleExVoid(exType, exPtr, [ax2, direction]{
+        ax2->SetXDirection(*direction);
+    });
 }
 
-void hs_gp_Ax2_SetYDirection(gp_Ax2* ax2, gp_Dir* direction){
-    ax2->SetYDirection(*direction);
+void hs_gp_Ax2_SetYDirection(gp_Ax2* ax2, gp_Dir* direction, HSExceptionType* exType, void ** exPtr){
+    hs_handleExVoid(exType, exPtr, [ax2, direction]{
+        ax2->SetYDirection(*direction);
+    });
 }
 
-void hs_gp_Ax2_SetAxis(gp_Ax2* ax2, gp_Ax1* ax1){
-    ax2->SetAxis(*ax1);
+void hs_gp_Ax2_SetAxis(gp_Ax2* ax2, gp_Ax1* ax1, HSExceptionType* exType, void ** exPtr){
+    hs_handleExVoid(exType, exPtr, [ax2, ax1]{
+        ax2->SetAxis(*ax1);
+    });
 }
 
 bool hs_gp_Ax2_IsCoplanar(gp_Ax2* axis1, gp_Ax2* axis2, double linearTolerance, double angularTolerance){

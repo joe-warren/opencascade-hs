@@ -12,12 +12,13 @@ Font_BRepTextBuilder * hs_new_Font_BRepTextBuilder();
 void hs_delete_Font_BRepTextBuilder(Font_BRepTextBuilder * builder);
 
 TopoDS_Shape * hs_Font_BRepTextBuilder_perform(
-        Font_BRepTextBuilder * builder, 
+        Font_BRepTextBuilder * builder,
         Font_BRepFont * font,
-        char * theString, 
+        char * theString,
         gp_Ax3 * thePenLoc,
         Graphic3d_HorizontalTextAlignment theHAlign,
-        Graphic3d_VerticalTextAlignment theVAlign
+        Graphic3d_VerticalTextAlignment theVAlign,
+        HSExceptionType* exType, void ** exPtr
     );
 #ifdef __cplusplus
 }

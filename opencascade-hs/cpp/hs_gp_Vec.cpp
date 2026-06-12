@@ -1,4 +1,5 @@
 #include <gp_Vec.hxx>
+#include "hs_Exception.h"
 #include "hs_gp_Vec.h"
 
 gp_Vec * hs_new_gp_Vec(double x, double y, double z) {
@@ -38,24 +39,34 @@ bool hs_gp_Vec_IsEqual(gp_Vec * a, gp_Vec * b, double linearTolerance, double an
     return a->IsEqual(*b, linearTolerance, angularTolerance);
 }
 
-bool hs_gp_Vec_IsNormal(gp_Vec * a, gp_Vec * b, double angularTolerance){
-    return a->IsNormal(*b, angularTolerance);
+bool hs_gp_Vec_IsNormal(gp_Vec * a, gp_Vec * b, double angularTolerance, HSExceptionType* exType, void ** exPtr){
+    return hs_handleExWithDefault(exType, exPtr, [a, b, angularTolerance]{
+        return a->IsNormal(*b, angularTolerance);
+    }, false);
 }
 
-bool hs_gp_Vec_IsOpposite(gp_Vec * a, gp_Vec * b, double angularTolerance){
-    return a->IsOpposite(*b, angularTolerance);
+bool hs_gp_Vec_IsOpposite(gp_Vec * a, gp_Vec * b, double angularTolerance, HSExceptionType* exType, void ** exPtr){
+    return hs_handleExWithDefault(exType, exPtr, [a, b, angularTolerance]{
+        return a->IsOpposite(*b, angularTolerance);
+    }, false);
 }
 
-bool hs_gp_Vec_IsParallel(gp_Vec * a, gp_Vec * b, double angularTolerance){
-    return a->IsParallel(*b, angularTolerance);
+bool hs_gp_Vec_IsParallel(gp_Vec * a, gp_Vec * b, double angularTolerance, HSExceptionType* exType, void ** exPtr){
+    return hs_handleExWithDefault(exType, exPtr, [a, b, angularTolerance]{
+        return a->IsParallel(*b, angularTolerance);
+    }, false);
 }
 
-double hs_gp_Vec_Angle(gp_Vec * a, gp_Vec * b){
-    return a->Angle(*b);
+double hs_gp_Vec_Angle(gp_Vec * a, gp_Vec * b, HSExceptionType* exType, void ** exPtr){
+    return hs_handleExWithDefault(exType, exPtr, [a, b]{
+        return a->Angle(*b);
+    }, 0.0);
 }
 
-double hs_gp_Vec_AngleWithRef(gp_Vec * a, gp_Vec * b, gp_Vec* theVRef){
-    return a->AngleWithRef(*b, *theVRef);
+double hs_gp_Vec_AngleWithRef(gp_Vec * a, gp_Vec * b, gp_Vec* theVRef, HSExceptionType* exType, void ** exPtr){
+    return hs_handleExWithDefault(exType, exPtr, [a, b, theVRef]{
+        return a->AngleWithRef(*b, *theVRef);
+    }, 0.0);
 }
 
 double hs_gp_Vec_Magnitude(gp_Vec * a){
@@ -132,12 +143,16 @@ double hs_gp_Vec_DotCross(gp_Vec * a, gp_Vec * b, gp_Vec * c){
     return a->DotCross(*b, *c);
 }
 
-void hs_gp_Vec_Normalize(gp_Vec * a){
-    a->Normalize();
+void hs_gp_Vec_Normalize(gp_Vec * a, HSExceptionType* exType, void ** exPtr){
+    hs_handleExVoid(exType, exPtr, [a]{
+        a->Normalize();
+    });
 }
 
-gp_Vec * hs_gp_Vec_Normalized(gp_Vec * a){
-    return new gp_Vec(a->Normalized());
+gp_Vec * hs_gp_Vec_Normalized(gp_Vec * a, HSExceptionType* exType, void ** exPtr){
+    return hs_handleEx(exType, exPtr, [a]{
+        return new gp_Vec(a->Normalized());
+    });
 }
 
 void hs_gp_Vec_Reverse(gp_Vec* a){

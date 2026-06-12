@@ -7,7 +7,10 @@
 extern "C" {
 #endif
 
-Handle (XCAFDoc_ShapeTool) * hs_XCAFDoc_DocumentTool_shapeTool(TDF_Label * label);
+Handle (XCAFDoc_ShapeTool) * hs_XCAFDoc_DocumentTool_shapeTool(
+    TDF_Label * label,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }

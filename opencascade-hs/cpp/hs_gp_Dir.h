@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-gp_Dir * hs_new_gp_Dir(double x, double y, double z);
+gp_Dir * hs_new_gp_Dir(double x, double y, double z, HSExceptionType* exType, void ** exPtr);
 
 void hs_delete_gp_Dir(gp_Dir* dir);
 
@@ -33,15 +33,15 @@ bool hs_gp_Dir_IsParallel(gp_Dir * a, gp_Dir * b, double angularTolerance);
 
 double hs_gp_Dir_Angle(gp_Dir * a, gp_Dir * b);
 
-double hs_gp_Dir_AngleWithRef(gp_Dir * a, gp_Dir * b, gp_Dir* theVRef);
+double hs_gp_Dir_AngleWithRef(gp_Dir * a, gp_Dir * b, gp_Dir* theVRef, HSExceptionType* exType, void ** exPtr);
 
-void hs_gp_Dir_Cross(gp_Dir * a, gp_Dir * b);
+void hs_gp_Dir_Cross(gp_Dir * a, gp_Dir * b, HSExceptionType* exType, void ** exPtr);
 
-gp_Dir * hs_gp_Dir_Crossed(gp_Dir * a, gp_Dir * b);
+gp_Dir * hs_gp_Dir_Crossed(gp_Dir * a, gp_Dir * b, HSExceptionType* exType, void ** exPtr);
 
-void hs_gp_Dir_CrossCross(gp_Dir * a, gp_Dir * b, gp_Dir * c);
+void hs_gp_Dir_CrossCross(gp_Dir * a, gp_Dir * b, gp_Dir * c, HSExceptionType* exType, void ** exPtr);
 
-gp_Dir * hs_gp_Dir_CrossCrossed(gp_Dir * a, gp_Dir * b, gp_Dir * c);
+gp_Dir * hs_gp_Dir_CrossCrossed(gp_Dir * a, gp_Dir * b, gp_Dir * c, HSExceptionType* exType, void ** exPtr);
 
 double hs_gp_Dir_Dot(gp_Dir * a, gp_Dir * b);
 

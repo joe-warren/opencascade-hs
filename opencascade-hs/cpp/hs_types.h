@@ -106,11 +106,21 @@ typedef void BOPAlgo_Builder;
 typedef void BOPAlgo_BOP;
 typedef int BOPAlgo_Operation;
 typedef void GCPnts_AbscissaPoint;
+typedef void Standard_Failure;
+typedef void STD_EXCEPTION;
+typedef void STD_RUNTIME_ERROR;
+
+typedef int HSExceptionType;
 
 #define Handle(X) void
 #define ARRAY_1(X) void
 #else // __cplusplus
+#include <exception>
+#include <stdexcept>
+
 #define ARRAY_1(X) NCollection_Array1<X>
+typedef std::exception STD_EXCEPTION;
+typedef std::runtime_error STD_RUNTIME_ERROR;
 #endif // __cplusplus
 #endif // HS_TYPES_H
 

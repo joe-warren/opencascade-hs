@@ -7,17 +7,27 @@ module OpenCascade.BRepPrimAPI.MakeSphere
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Internal.Destructors as TopoDS.Destructors
+import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C
 import Foreign.Ptr
-import Data.Acquire 
+import Data.Acquire
 import Data.Coerce (coerce)
 
-foreign import capi unsafe "hs_BRepPrimAPI_MakeSphere.h hs_BRepPrimAPI_MakeSphere_fromRadius" rawFromRadius :: CDouble -> IO (Ptr TopoDS.Solid)
+foreign import capi unsafe "hs_BRepPrimAPI_MakeSphere.h hs_BRepPrimAPI_MakeSphere_fromRadius" rawFromRadius
+    :: CDouble
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr TopoDS.Solid)
 
 fromRadius :: Double -> Acquire (Ptr TopoDS.Solid)
-fromRadius r = mkAcquire (rawFromRadius (coerce r)) (TopoDS.Destructors.deleteShape . castPtr)
+fromRadius r = mkAcquire (wrapException $ rawFromRadius (coerce r)) (TopoDS.Destructors.deleteShape . castPtr)
 
-foreign import capi unsafe "hs_BRepPrimAPI_MakeSphere.h hs_BRepPrimAPI_MakeSphere_fromPntAndRadius" rawFromPntAndRadius :: Ptr GP.Pnt -> CDouble -> IO (Ptr TopoDS.Solid)
+foreign import capi unsafe "hs_BRepPrimAPI_MakeSphere.h hs_BRepPrimAPI_MakeSphere_fromPntAndRadius" rawFromPntAndRadius
+    :: Ptr GP.Pnt
+    -> CDouble
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr TopoDS.Solid)
 
 fromPntAndRadius :: Ptr GP.Pnt -> Double -> Acquire (Ptr TopoDS.Solid)
-fromPntAndRadius center radius = mkAcquire (rawFromPntAndRadius center (coerce radius)) (TopoDS.Destructors.deleteShape . castPtr)
+fromPntAndRadius center radius = mkAcquire (wrapException $ rawFromPntAndRadius center (coerce radius)) (TopoDS.Destructors.deleteShape . castPtr)

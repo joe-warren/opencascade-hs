@@ -1,4 +1,5 @@
 #include <TopLoc_Location.hxx>
+#include "hs_Exception.h"
 #include "hs_TopLoc_Location.h"
 
 TopLoc_Location * hs_new_TopLoc_Location(){
@@ -21,28 +22,58 @@ int hs_TopLoc_Location_FirstPower(TopLoc_Location * l){
     return l->FirstPower();
 }
 
-TopLoc_Location * hs_TopLoc_Location_NextLocation(TopLoc_Location * l){
-    return new TopLoc_Location(l->NextLocation());
+TopLoc_Location * hs_TopLoc_Location_NextLocation(
+        TopLoc_Location * l,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(exType, exPtr, [l]{
+        return new TopLoc_Location(l->NextLocation());
+    });
 }
 
-TopLoc_Location * hs_TopLoc_Location_Inverted(TopLoc_Location * l){
-    return new TopLoc_Location(l->Inverted());
+TopLoc_Location * hs_TopLoc_Location_Inverted(
+        TopLoc_Location * l,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(exType, exPtr, [l]{
+        return new TopLoc_Location(l->Inverted());
+    });
 }
 
-TopLoc_Location * hs_TopLoc_Location_Multiplied(TopLoc_Location * a, TopLoc_Location * b){
-    return new TopLoc_Location(a->Multiplied(*b));
+TopLoc_Location * hs_TopLoc_Location_Multiplied(
+        TopLoc_Location * a, TopLoc_Location * b,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(exType, exPtr, [a, b]{
+        return new TopLoc_Location(a->Multiplied(*b));
+    });
 }
 
-TopLoc_Location * hs_TopLoc_Location_Divided(TopLoc_Location * a, TopLoc_Location * b){
-    return new TopLoc_Location(a->Divided(*b));
+TopLoc_Location * hs_TopLoc_Location_Divided(
+        TopLoc_Location * a, TopLoc_Location * b,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(exType, exPtr, [a, b]{
+        return new TopLoc_Location(a->Divided(*b));
+    });
 }
 
-TopLoc_Location * hs_TopLoc_Location_Predivided(TopLoc_Location * a, TopLoc_Location * b){
-    return new TopLoc_Location(a->Predivided(*b));
+TopLoc_Location * hs_TopLoc_Location_Predivided(
+        TopLoc_Location * a, TopLoc_Location * b,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(exType, exPtr, [a, b]{
+        return new TopLoc_Location(a->Predivided(*b));
+    });
 }
 
-TopLoc_Location * hs_TopLoc_Location_Powered(TopLoc_Location * l, int p){
-    return new TopLoc_Location(l->Powered(p));
+TopLoc_Location * hs_TopLoc_Location_Powered(
+        TopLoc_Location * l, int p,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(exType, exPtr, [l, p]{
+        return new TopLoc_Location(l->Powered(p));
+    });
 }
 
 gp_Trsf * hs_TopLoc_Location_toGPTrsf(TopLoc_Location * l){

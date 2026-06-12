@@ -18,6 +18,7 @@ where
 
 
 import OpenCascade.Inheritance
+import OpenCascade.Internal.Exception (wrapException)
 import OpenCascade.TopAbs.ShapeEnum
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import Foreign.Ptr
@@ -38,10 +39,10 @@ data Builder
 
 -- duplicate definition of shape type from TopoDS.Shape
 -- to simultaniously avoid Orphan Instances + circular dependencies
-foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_ShapeType" rawShapeType :: Ptr Shape -> IO CInt
+foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_ShapeType" rawShapeType :: Ptr Shape -> Ptr CInt -> Ptr (Ptr ()) -> IO CInt
 
 shapeType :: Ptr Shape -> IO ShapeEnum
-shapeType s = toEnum . fromIntegral <$> rawShapeType s
+shapeType s = toEnum . fromIntegral <$> wrapException (rawShapeType s)
 
 enumDowncast :: ShapeEnum -> Ptr Shape -> IO (Maybe (Ptr t))
 enumDowncast enum p = do

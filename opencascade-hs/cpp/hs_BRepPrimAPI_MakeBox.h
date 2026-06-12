@@ -7,13 +7,25 @@
 extern "C" {
 #endif
 
-BRepPrimAPI_MakeBox * hs_new_BRepPrimAPI_MakeBox_fromPnts(gp_Pnt * a, gp_Pnt * b);
+BRepPrimAPI_MakeBox * hs_new_BRepPrimAPI_MakeBox_fromPnts(
+    gp_Pnt * a, gp_Pnt * b,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 void hs_delete_BRepPrimAPI_MakeBox(BRepPrimAPI_MakeBox* builder);
 
-TopoDS_Shape * hs_BRepPrimAPI_MakeBox_Solid(BRepPrimAPI_MakeBox* builder);
+TopoDS_Shape * hs_BRepPrimAPI_MakeBox_Solid(
+    BRepPrimAPI_MakeBox* builder,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
-TopoDS_Shell * hs_BRepPrimAPI_MakeBox_Shell(BRepPrimAPI_MakeBox* builder);
+TopoDS_Shell * hs_BRepPrimAPI_MakeBox_Shell(
+    BRepPrimAPI_MakeBox* builder,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 
 #ifdef __cplusplus

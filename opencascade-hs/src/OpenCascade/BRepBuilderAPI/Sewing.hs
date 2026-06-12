@@ -15,6 +15,7 @@ import qualified OpenCascade.TopoDS.Types as TopoDS
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
 import OpenCascade.BRepBuilderAPI.Internal.Destructors (deleteSewing)
 import OpenCascade.BRepBuilderAPI.Types (Sewing)
+import OpenCascade.Internal.Exception (wrapException)
 import Foreign.Ptr (Ptr)
 import Foreign.C (CBool (..), CDouble (..), CInt (..))
 import OpenCascade.Internal.Bool (boolToCBool)
@@ -26,16 +27,43 @@ foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_new_BRepBuilderAPI_Sew
 new :: Double -> Bool -> Bool -> Bool -> Bool -> Acquire (Ptr Sewing)
 new tolerance opt1 opt2 opt3 opt4 = mkAcquire (rawNew (coerce tolerance) (boolToCBool opt1) (boolToCBool opt2) (boolToCBool opt3) (boolToCBool opt4)) deleteSewing
 
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_load" load :: Ptr Sewing -> Ptr TopoDS.Shape -> IO ()
+foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_load" rawLoad
+    :: Ptr Sewing
+    -> Ptr TopoDS.Shape
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO ()
 
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_add" add :: Ptr Sewing -> Ptr TopoDS.Shape -> IO ()
+load :: Ptr Sewing -> Ptr TopoDS.Shape -> IO ()
+load sewing shape = wrapException $ rawLoad sewing shape
 
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_perform" perform :: Ptr Sewing -> IO ()
+foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_add" rawAdd
+    :: Ptr Sewing
+    -> Ptr TopoDS.Shape
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO ()
 
-foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_sewedShape" rawSewedShape :: Ptr Sewing -> IO (Ptr TopoDS.Shape)
+add :: Ptr Sewing -> Ptr TopoDS.Shape -> IO ()
+add sewing shape = wrapException $ rawAdd sewing shape
+
+foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_perform" rawPerform
+    :: Ptr Sewing
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO ()
+
+perform :: Ptr Sewing -> IO ()
+perform sewing = wrapException $ rawPerform sewing
+
+foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_sewedShape" rawSewedShape
+    :: Ptr Sewing
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr TopoDS.Shape)
 
 sewedShape :: Ptr Sewing -> Acquire (Ptr TopoDS.Shape)
-sewedShape sewing = mkAcquire (rawSewedShape sewing) (deleteShape)
+sewedShape sewing = mkAcquire (wrapException $ rawSewedShape sewing) (deleteShape)
 
 foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_BRepBuilderAPI_Sewing_nbFreeEdges" rawNbFreeEdges:: Ptr Sewing -> IO (CInt)
 

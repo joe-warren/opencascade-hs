@@ -42,10 +42,11 @@ module OpenCascade.GP.Ax3
 
 import OpenCascade.GP.Types
 import OpenCascade.GP.Internal.Destructors
+import OpenCascade.Internal.Exception (wrapException)
 import Foreign.Ptr
 import Foreign.C.Types
 import OpenCascade.Internal.Bool (cBoolToBool)
-import Data.Acquire 
+import Data.Acquire
 import Data.Coerce (coerce)
 
 foreign import capi unsafe "hs_gp_Ax3.h hs_new_gp_Ax3" rawNew :: IO (Ptr Ax3)
@@ -58,10 +59,10 @@ foreign import capi unsafe "hs_gp_Ax3.h hs_new_gp_Ax3_fromAx2" rawFromAx2 :: Ptr
 fromAx2 :: Ptr Ax2 -> Acquire (Ptr Ax3)
 fromAx2 ax = mkAcquire (rawFromAx2 ax) deleteAx3
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_new_gp_Ax3_fromPntDirAndDir" rawFromPntDirAndDir :: Ptr Pnt -> Ptr Dir -> Ptr Dir -> IO (Ptr Ax3)
+foreign import capi unsafe "hs_gp_Ax3.h hs_new_gp_Ax3_fromPntDirAndDir" rawFromPntDirAndDir :: Ptr Pnt -> Ptr Dir -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Ax3)
 
 fromPntDirAndDir :: Ptr Pnt -> Ptr Dir -> Ptr Dir -> Acquire (Ptr Ax3)
-fromPntDirAndDir pnt u v = mkAcquire (rawFromPntDirAndDir pnt u v) deleteAx3 
+fromPntDirAndDir pnt u v = mkAcquire (wrapException $ rawFromPntDirAndDir pnt u v) deleteAx3
 
 foreign import capi unsafe "hs_gp_Ax3.h hs_new_gp_Ax3_fromPntAndDir" rawFromPntAndDir :: Ptr Pnt -> Ptr Dir -> IO (Ptr Ax3)
 
@@ -74,15 +75,27 @@ foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_yReverse" yReverse :: Ptr Ax3 
 
 foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_zReverse" zReverse :: Ptr Ax3 -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setAxis" setAxis :: Ptr Ax3 -> Ptr Ax1 -> IO ()
+foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setAxis" rawSetAxis :: Ptr Ax3 -> Ptr Ax1 -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setDirection" setDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+setAxis :: Ptr Ax3 -> Ptr Ax1 -> IO ()
+setAxis ax mainAxis = wrapException $ rawSetAxis ax mainAxis
+
+foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setDirection" rawSetDirection :: Ptr Ax3 -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
+
+setDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+setDirection ax dir = wrapException $ rawSetDirection ax dir
 
 foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setLocation" setLocation :: Ptr Ax3 -> Ptr Pnt -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setXDirection" setXDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setXDirection" rawSetXDirection :: Ptr Ax3 -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
 
-foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setYDirection" setYDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+setXDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+setXDirection ax dir = wrapException $ rawSetXDirection ax dir
+
+foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_setYDirection" rawSetYDirection :: Ptr Ax3 -> Ptr Dir -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
+
+setYDirection :: Ptr Ax3 -> Ptr Dir -> IO ()
+setYDirection ax dir = wrapException $ rawSetYDirection ax dir
 
 foreign import capi unsafe "hs_gp_Ax3.h hs_gp_Ax3_angle" rawAngle :: Ptr Ax3 -> Ptr Ax3 -> IO CDouble 
 

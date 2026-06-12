@@ -1,4 +1,5 @@
 #include <RWMesh_CafReader.hxx>
+#include "hs_Exception.h"
 #include "hs_RWMesh_CafReader.h"
 
 void hs_RWMesh_CafReader_setDocument(RWMesh_CafReader * reader, Handle(TDocStd_Document) * document){
@@ -9,10 +10,29 @@ void hs_RWMesh_CafReader_setFileLengthUnit(RWMesh_CafReader * reader, double sca
     reader->SetFileLengthUnit(scale);
 }
 
-TopoDS_Shape * hs_RWMesh_CafReader_singleShape(RWMesh_CafReader * reader){
-    return new TopoDS_Shape(reader->SingleShape());
+TopoDS_Shape * hs_RWMesh_CafReader_singleShape(
+    RWMesh_CafReader * reader,
+    HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [reader]{
+            return new TopoDS_Shape(reader->SingleShape());
+        }
+    );
 }
 
-bool hs_RWMesh_CafReader_perform(RWMesh_CafReader * reader, char * filename, Message_ProgressRange * progress){
-    return reader->Perform(filename, *progress);
+bool hs_RWMesh_CafReader_perform(
+    RWMesh_CafReader * reader, char * filename, Message_ProgressRange * progress,
+    HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleExWithDefault(
+        exType,
+        exPtr,
+        [reader, filename, progress]{
+            return reader->Perform(filename, *progress);
+        },
+        false
+    );
 }

@@ -1,5 +1,6 @@
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <TopoDS_Wire.hxx>
+#include "hs_Exception.h"
 #include "hs_BRepBuilderAPI_MakeWire.h"
 
 BRepBuilderAPI_MakeWire * hs_new_BRepBuilderAPI_MakeWire(){
@@ -10,24 +11,69 @@ void hs_delete_BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeWire* builder){
     delete builder;
 }
 
-void hs_BRepBuilderAPI_MakeWire_AddEdge(BRepBuilderAPI_MakeWire* builder, TopoDS_Edge* edge){
-    builder->Add(*edge);
+void hs_BRepBuilderAPI_MakeWire_AddEdge(
+        BRepBuilderAPI_MakeWire* builder, TopoDS_Edge* edge,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [builder, edge]{
+        builder->Add(*edge);
+    });
 }
 
-void hs_BRepBuilderAPI_MakeWire_AddWire(BRepBuilderAPI_MakeWire* builder, TopoDS_Wire* wire){
-    builder->Add(*wire);
+void hs_BRepBuilderAPI_MakeWire_AddWire(
+        BRepBuilderAPI_MakeWire* builder, TopoDS_Wire* wire,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [builder, wire]{
+        builder->Add(*wire);
+    });
 }
 
-void hs_BRepBuilderAPI_MakeWire_AddListOfShape(BRepBuilderAPI_MakeWire* builder, TopTools_ListOfShape *list){
-    builder->Add(*list);
+void hs_BRepBuilderAPI_MakeWire_AddListOfShape(
+        BRepBuilderAPI_MakeWire* builder, TopTools_ListOfShape *list,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [builder, list]{
+        builder->Add(*list);
+    });
 }
 
-TopoDS_Wire * hs_BRepBuilderAPI_MakeWire_Wire(BRepBuilderAPI_MakeWire* builder){
-    return new TopoDS_Wire(builder->Wire());
+TopoDS_Wire * hs_BRepBuilderAPI_MakeWire_Wire(
+        BRepBuilderAPI_MakeWire* builder,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [builder]{
+        return new TopoDS_Wire(builder->Wire());
+    });
 }
 
-TopoDS_Vertex * hs_BRepBuilderAPI_MakeWire_Vertex(BRepBuilderAPI_MakeWire* builder){
-    return new TopoDS_Vertex(builder->Vertex());
+TopoDS_Vertex * hs_BRepBuilderAPI_MakeWire_Vertex(
+        BRepBuilderAPI_MakeWire* builder,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [builder]{
+        return new TopoDS_Vertex(builder->Vertex());
+    });
 }
 
 bool hs_BRepBuilderAPI_MakeWire_IsDone(BRepBuilderAPI_MakeWire* builder){

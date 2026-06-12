@@ -13,10 +13,11 @@ void hs_delete_ShapeConstruct_Curve(ShapeConstruct_Curve* shapeConstruct);
 
 Handle(Geom_BSplineCurve) * hs_ShapeConstruct_Curve_convertToBSpline(
         ShapeConstruct_Curve* shapeConstruct,
-        Handle(Geom_Curve)* curve, 
+        Handle(Geom_Curve)* curve,
         double first,
         double last,
-        double precision
+        double precision,
+        HSExceptionType* exType, void ** exPtr
     );
 
 #ifdef __cplusplus

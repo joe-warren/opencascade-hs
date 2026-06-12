@@ -1,4 +1,5 @@
 #include <BOPAlgo_Builder.hxx>
+#include "hs_Exception.h"
 #include "hs_BOPAlgo_Builder.h"
 
 BOPAlgo_Builder * hs_new_BOPAlgo_Builder(){
@@ -9,19 +10,46 @@ void hs_delete_BOPAlgo_Builder(BOPAlgo_Builder * builder){
     delete builder;
 }
 
-void hs_BOPAlgo_Builder_AddArgument(BOPAlgo_Builder * builder, TopoDS_Shape * shape){
-    builder->AddArgument(*shape);
+void hs_BOPAlgo_Builder_AddArgument(
+        BOPAlgo_Builder * builder, TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [builder, shape]{
+        builder->AddArgument(*shape);
+    });
 }
 
-TopoDS_Shape * hs_BOPAlgo_Builder_Shape(BOPAlgo_Builder * builder){
-    return new TopoDS_Shape(builder->Shape());
+TopoDS_Shape * hs_BOPAlgo_Builder_Shape(
+        BOPAlgo_Builder * builder,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [builder]{
+        return new TopoDS_Shape(builder->Shape());
+    });
 }
 
 void hs_BOPAlgo_Builder_SetRunParallel(BOPAlgo_Builder * builder, bool runParallel){
     builder->SetRunParallel(runParallel);
 }
 
-void hs_BOPAlgo_Builder_Perform(BOPAlgo_Builder * builder){
-    builder->Perform();
+void hs_BOPAlgo_Builder_Perform(
+        BOPAlgo_Builder * builder,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [builder]{
+        builder->Perform();
+    });
 }
 

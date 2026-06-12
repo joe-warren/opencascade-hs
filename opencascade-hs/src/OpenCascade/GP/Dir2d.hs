@@ -29,17 +29,18 @@ module OpenCascade.GP.Dir2d
 import Prelude hiding (reverse)
 import OpenCascade.GP.Types
 import OpenCascade.GP.Internal.Destructors
+import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C
 import Foreign.Ptr
 import Data.Coerce (coerce)
-import Data.Acquire 
+import Data.Acquire
 
 -- new
 
-foreign import capi unsafe "hs_gp_Dir2d.h hs_new_gp_Dir2d" rawNew :: CDouble -> CDouble -> IO (Ptr Dir2d)
+foreign import capi unsafe "hs_gp_Dir2d.h hs_new_gp_Dir2d" rawNew :: CDouble -> CDouble -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Dir2d)
 
 new :: Double -> Double -> Acquire (Ptr Dir2d)
-new x y = mkAcquire (rawNew (CDouble x) (CDouble y)) deleteDir2d
+new x y = mkAcquire (wrapException $ rawNew (CDouble x) (CDouble y)) deleteDir2d
 
 -- getters
 

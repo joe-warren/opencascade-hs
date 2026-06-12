@@ -18,6 +18,7 @@ import Foreign.Ptr
 import OpenCascade.Font.Internal.Destructors (deleteBRepFont)
 import Data.Coerce
 import OpenCascade.Internal.Bool (cBoolToBool)
+import OpenCascade.Internal.Exception (wrapException)
 import OpenCascade.Font.FontAspect (FontAspect)
 
 
@@ -26,21 +27,39 @@ foreign import capi unsafe "hs_Font_BRepFont.h hs_new_Font_BRepFont" rawNew :: I
 new :: Acquire (Ptr BRepFont)
 new  = mkAcquire rawNew deleteBRepFont
 
-foreign import capi unsafe "hs_Font_BRepFont.h hs_new_Font_BRepFont_fromStringAndSize" rawFromPathAndSize :: CString -> CDouble -> IO (Ptr BRepFont)
+foreign import capi unsafe "hs_Font_BRepFont.h hs_new_Font_BRepFont_fromStringAndSize" rawFromPathAndSize
+    :: CString
+    -> CDouble
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr BRepFont)
 
 fromPathAndSize :: FilePath -> Double -> Acquire (Ptr BRepFont)
-fromPathAndSize path size = mkAcquire (withCString path $ \str -> rawFromPathAndSize str (coerce size)) deleteBRepFont
+fromPathAndSize path size = mkAcquire (withCString path $ \str -> wrapException $ rawFromPathAndSize str (coerce size)) deleteBRepFont
 
-foreign import capi unsafe "hs_Font_BRepFont.h hs_Font_BRepFont_initPathAndSize" rawInitFromPathAndSize :: Ptr BRepFont ->  CString -> CDouble -> IO CBool
+foreign import capi unsafe "hs_Font_BRepFont.h hs_Font_BRepFont_initPathAndSize" rawInitFromPathAndSize
+    :: Ptr BRepFont
+    -> CString
+    -> CDouble
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO CBool
 
 initFromPathAndSize :: Ptr BRepFont -> FilePath -> Double -> IO Bool
-initFromPathAndSize font fontPath size = withCString fontPath $ \str -> cBoolToBool <$> rawInitFromPathAndSize font str (coerce size)
+initFromPathAndSize font fontPath size = withCString fontPath $ \str -> cBoolToBool <$> wrapException (rawInitFromPathAndSize font str (coerce size))
 
-foreign import capi unsafe "hs_Font_BRepFont.h hs_Font_BRepFont_initNameAspectAndSize" rawInitFromNameAspectAndSize :: Ptr BRepFont ->  CString -> CInt -> CDouble -> IO CBool
+foreign import capi unsafe "hs_Font_BRepFont.h hs_Font_BRepFont_initNameAspectAndSize" rawInitFromNameAspectAndSize
+    :: Ptr BRepFont
+    -> CString
+    -> CInt
+    -> CDouble
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO CBool
 
 initFromNameAspectAndSize :: Ptr BRepFont -> String -> FontAspect -> Double -> IO Bool
-initFromNameAspectAndSize font fontname aspect size = 
-    withCString fontname $ \str -> cBoolToBool <$> rawInitFromNameAspectAndSize font str (fromIntegral . fromEnum $ aspect) (coerce size)
+initFromNameAspectAndSize font fontname aspect size =
+    withCString fontname $ \str -> cBoolToBool <$> wrapException (rawInitFromNameAspectAndSize font str (fromIntegral . fromEnum $ aspect) (coerce size))
 
 
 foreign import capi unsafe "hs_Font_BRepFont.h hs_Font_BRepFont_ascender" rawAscender :: Ptr BRepFont -> IO CDouble

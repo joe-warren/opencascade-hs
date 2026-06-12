@@ -13,13 +13,20 @@ import Foreign.C
 import Foreign.Ptr
 import Data.Acquire
 import OpenCascade.Internal.Bool (cBoolToBool)
+import OpenCascade.Internal.Exception (wrapException)
 
 foreign import capi unsafe "hs_StlAPI_Reader.h hs_new_StlAPI_Reader" rawNew :: IO (Ptr Reader)
 
 new :: Acquire (Ptr Reader)
 new = mkAcquire rawNew deleteReader
 
-foreign import capi unsafe "hs_StlAPI_Reader.h hs_StlAPI_Reader_read" rawRead :: Ptr Reader -> Ptr TopoDS.Shape -> CString -> IO (CBool)
+foreign import capi unsafe "hs_StlAPI_Reader.h hs_StlAPI_Reader_read" rawRead
+    :: Ptr Reader
+    -> Ptr TopoDS.Shape
+    -> CString
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (CBool)
 
 read :: Ptr Reader -> Ptr TopoDS.Shape -> String -> IO (Bool)
-read reader shape filename = cBoolToBool <$> withCString filename (rawRead reader shape)
+read reader shape filename = cBoolToBool <$> withCString filename (wrapException . rawRead reader shape)

@@ -25,15 +25,15 @@ void hs_gp_Vec_SetZ(gp_Vec * vec, double z);
 
 bool hs_gp_Vec_IsEqual(gp_Vec * a, gp_Vec * b, double linearTolerance, double angularTolerance);
 
-bool hs_gp_Vec_IsNormal(gp_Vec * a, gp_Vec * b, double angularTolerance);
+bool hs_gp_Vec_IsNormal(gp_Vec * a, gp_Vec * b, double angularTolerance, HSExceptionType* exType, void ** exPtr);
 
-bool hs_gp_Vec_IsOpposite(gp_Vec * a, gp_Vec * b, double angularTolerance);
+bool hs_gp_Vec_IsOpposite(gp_Vec * a, gp_Vec * b, double angularTolerance, HSExceptionType* exType, void ** exPtr);
 
-bool hs_gp_Vec_IsParallel(gp_Vec * a, gp_Vec * b, double angularTolerance);
+bool hs_gp_Vec_IsParallel(gp_Vec * a, gp_Vec * b, double angularTolerance, HSExceptionType* exType, void ** exPtr);
 
-double hs_gp_Vec_Angle(gp_Vec * a, gp_Vec * b);
+double hs_gp_Vec_Angle(gp_Vec * a, gp_Vec * b, HSExceptionType* exType, void ** exPtr);
 
-double hs_gp_Vec_AngleWithRef(gp_Vec * a, gp_Vec * b, gp_Vec* theVRef);
+double hs_gp_Vec_AngleWithRef(gp_Vec * a, gp_Vec * b, gp_Vec* theVRef, HSExceptionType* exType, void ** exPtr);
 
 double hs_gp_Vec_Magnitude(gp_Vec * a);
 
@@ -72,9 +72,9 @@ double hs_gp_Vec_Dot(gp_Vec * a, gp_Vec * b);
 
 double hs_gp_Vec_DotCross(gp_Vec * a, gp_Vec * b, gp_Vec * c);
 
-void hs_gp_Vec_Normalize(gp_Vec * a);
+void hs_gp_Vec_Normalize(gp_Vec * a, HSExceptionType* exType, void ** exPtr);
 
-gp_Vec * hs_gp_Vec_Normalized(gp_Vec * a);
+gp_Vec * hs_gp_Vec_Normalized(gp_Vec * a, HSExceptionType* exType, void ** exPtr);
 
 void hs_gp_Vec_Reverse(gp_Vec* a);
 

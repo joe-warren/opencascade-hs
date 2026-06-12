@@ -1,5 +1,6 @@
 #include <ShapeConstruct_Curve.hxx>
 #include <Geom_Curve.hxx>
+#include "hs_Exception.h"
 #include "hs_ShapeConstruct_Curve.h"
 
 ShapeConstruct_Curve * hs_new_ShapeConstruct_Curve(){
@@ -12,10 +13,17 @@ void hs_delete_ShapeConstruct_Curve(ShapeConstruct_Curve* shapeConstruct){
 
 Handle(Geom_BSplineCurve) * hs_ShapeConstruct_Curve_convertToBSpline(
         ShapeConstruct_Curve* shapeConstruct,
-        Handle(Geom_Curve)* curve, 
+        Handle(Geom_Curve)* curve,
         double first,
         double last,
-        double precision
+        double precision,
+        HSExceptionType* exType, void ** exPtr
     ){
-        return new opencascade::handle(shapeConstruct->ConvertToBSpline(*curve, first, last, precision));
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [shapeConstruct, curve, first, last, precision]{
+            return new opencascade::handle(shapeConstruct->ConvertToBSpline(*curve, first, last, precision));
+        }
+    );
 }

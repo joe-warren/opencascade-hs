@@ -9,7 +9,10 @@ extern "C" {
 
 void hs_delete_XCAFDoc_ShapeTool(Handle(XCAFDoc_ShapeTool) * shapeTool);
 
-TDF_Label * hs_XCAFDoc_ShapeTool_addShape(Handle(XCAFDoc_ShapeTool) *shapeTool, TopoDS_Shape *theShape, bool makeAssembly, bool makePrepare);
+TDF_Label * hs_XCAFDoc_ShapeTool_addShape(
+    Handle(XCAFDoc_ShapeTool) *shapeTool, TopoDS_Shape *theShape, bool makeAssembly, bool makePrepare,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }

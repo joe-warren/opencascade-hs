@@ -7,11 +7,17 @@
 extern "C" {
 #endif
 
-GCPnts_AbscissaPoint * hs_new_GCPnts_AbscissaPoint(BRepAdaptor_Curve * curve, double abscissa, double u0);
+GCPnts_AbscissaPoint * hs_new_GCPnts_AbscissaPoint(
+    BRepAdaptor_Curve * curve, double abscissa, double u0,
+    HSExceptionType* exType, void ** exPtr
+);
 
 void hs_delete_GCPnts_AbscissaPoint(GCPnts_AbscissaPoint * abscissaPoint);
 
-double hs_GCPnts_AbscissaPoint_parameter(GCPnts_AbscissaPoint * abscissaPoint);
+double hs_GCPnts_AbscissaPoint_parameter(
+    GCPnts_AbscissaPoint * abscissaPoint,
+    HSExceptionType* exType, void ** exPtr
+);
 
 bool hs_GCPnts_AbscissaPoint_isDone(GCPnts_AbscissaPoint * abscissaPoint);
 

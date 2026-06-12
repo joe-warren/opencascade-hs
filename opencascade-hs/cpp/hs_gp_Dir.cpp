@@ -1,8 +1,14 @@
 #include <gp_Dir.hxx>
+#include "hs_Exception.h"
 #include "hs_gp_Dir.h"
 
-gp_Dir * hs_new_gp_Dir(double x, double y, double z) {
-    return new gp_Dir(x, y, z);
+gp_Dir * hs_new_gp_Dir(
+        double x, double y, double z,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(exType, exPtr, [x, y, z]{
+        return new gp_Dir(x, y, z);
+    });
 }
 
 void hs_delete_gp_Dir(gp_Dir* dir){
@@ -53,24 +59,49 @@ double hs_gp_Dir_Angle(gp_Dir * a, gp_Dir * b){
     return a->Angle(*b);
 }
 
-double hs_gp_Dir_AngleWithRef(gp_Dir * a, gp_Dir * b, gp_Dir* theVRef){
-    return a->AngleWithRef(*b, *theVRef);
+double hs_gp_Dir_AngleWithRef(
+        gp_Dir * a, gp_Dir * b, gp_Dir* theVRef,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleExWithDefault(exType, exPtr, [a, b, theVRef]{
+        return a->AngleWithRef(*b, *theVRef);
+    }, 0.0);
 }
 
-void hs_gp_Dir_Cross(gp_Dir * a, gp_Dir * b){
-    a->Cross(*b);
+void hs_gp_Dir_Cross(
+        gp_Dir * a, gp_Dir * b,
+        HSExceptionType* exType, void ** exPtr
+){
+    hs_handleExVoid(exType, exPtr, [a, b]{
+        a->Cross(*b);
+    });
 }
 
-gp_Dir * hs_gp_Dir_Crossed(gp_Dir * a, gp_Dir * b){
-    return new gp_Dir(a->Crossed(*b));
+gp_Dir * hs_gp_Dir_Crossed(
+        gp_Dir * a, gp_Dir * b,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(exType, exPtr, [a, b]{
+        return new gp_Dir(a->Crossed(*b));
+    });
 }
 
-void hs_gp_Dir_CrossCross(gp_Dir * a, gp_Dir * b, gp_Dir * c){
-    return a->CrossCross(*b, *c);
+void hs_gp_Dir_CrossCross(
+        gp_Dir * a, gp_Dir * b, gp_Dir * c,
+        HSExceptionType* exType, void ** exPtr
+){
+    hs_handleExVoid(exType, exPtr, [a, b, c]{
+        a->CrossCross(*b, *c);
+    });
 }
 
-gp_Dir * hs_gp_Dir_CrossCrossed(gp_Dir * a, gp_Dir * b, gp_Dir * c){
-    return new gp_Dir(a->CrossCrossed(*b, *c));
+gp_Dir * hs_gp_Dir_CrossCrossed(
+        gp_Dir * a, gp_Dir * b, gp_Dir * c,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(exType, exPtr, [a, b, c]{
+        return new gp_Dir(a->CrossCrossed(*b, *c));
+    });
 }
 
 double hs_gp_Dir_Dot(gp_Dir * a, gp_Dir * b){

@@ -11,7 +11,10 @@ RWObj_CafWriter * hs_new_RWObj_CafWriter(char * theFile);
 
 void hs_delete_RWObj_CafWriter(RWObj_CafWriter * theWriter);
 
-void hs_RWObj_CafWriter_Perform(RWObj_CafWriter * theWriter, Handle(TDocStd_Document) * theDocument, TColStd_IndexedDataMapOfStringString * theFileInfo, Message_ProgressRange * theProgress);
+void hs_RWObj_CafWriter_Perform(
+    RWObj_CafWriter * theWriter, Handle(TDocStd_Document) * theDocument, TColStd_IndexedDataMapOfStringString * theFileInfo, Message_ProgressRange * theProgress,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
     }

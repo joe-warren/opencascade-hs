@@ -1,8 +1,14 @@
 #include <gp_Dir2d.hxx>
+#include "hs_Exception.h"
 #include "hs_gp_Dir2d.h"
 
-gp_Dir2d * hs_new_gp_Dir2d(double x, double y) {
-    return new gp_Dir2d(x, y);
+gp_Dir2d * hs_new_gp_Dir2d(
+        double x, double y,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleEx(exType, exPtr, [x, y]{
+        return new gp_Dir2d(x, y);
+    });
 }
 
 void hs_delete_gp_Dir2d(gp_Dir2d* dir){

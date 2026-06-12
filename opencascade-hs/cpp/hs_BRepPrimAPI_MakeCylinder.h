@@ -7,7 +7,11 @@
 extern "C" {
 #endif
 
-TopoDS_Solid * hs_BRepPrimAPI_MakeCylinder_fromRadiusAndHeight(double r, double h);
+TopoDS_Solid * hs_BRepPrimAPI_MakeCylinder_fromRadiusAndHeight(
+    double r, double h,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 #ifdef __cplusplus
 }

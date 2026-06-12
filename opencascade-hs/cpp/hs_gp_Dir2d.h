@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-gp_Dir2d * hs_new_gp_Dir2d(double x, double y);
+gp_Dir2d * hs_new_gp_Dir2d(double x, double y, HSExceptionType* exType, void ** exPtr);
 
 void hs_delete_gp_Dir2d(gp_Dir2d* dir);
 

@@ -7,7 +7,10 @@
 extern "C" {
 #endif
 
-Handle(Poly_Triangulation) * hs_new_Poly_Triangulation(int nbNodes, int nbTriangles, bool hasUVNodes, bool hasNormals);
+Handle(Poly_Triangulation) * hs_new_Poly_Triangulation(
+    int nbNodes, int nbTriangles, bool hasUVNodes, bool hasNormals,
+    HSExceptionType* exType, void ** exPtr
+);
 
 void hs_delete_Poly_Triangulation(Handle(Poly_Triangulation) * triangulation);
 
@@ -15,13 +18,25 @@ int hs_Poly_Triangulation_nbNodes(Handle(Poly_Triangulation) * triangulation);
 
 int hs_Poly_Triangulation_nbTriangles(Handle(Poly_Triangulation) * triangulation);
 
-gp_Pnt * hs_Poly_Triangulation_node(Handle(Poly_Triangulation) * triangulation, int index);
+gp_Pnt * hs_Poly_Triangulation_node(
+    Handle(Poly_Triangulation) * triangulation, int index,
+    HSExceptionType* exType, void ** exPtr
+);
 
-void hs_Poly_Triangulation_setNode(Handle(Poly_Triangulation) * triangulation, int index, gp_Pnt * pnt);
+void hs_Poly_Triangulation_setNode(
+    Handle(Poly_Triangulation) * triangulation, int index, gp_Pnt * pnt,
+    HSExceptionType* exType, void ** exPtr
+);
 
-Poly_Triangle * hs_Poly_Triangulation_triangle(Handle(Poly_Triangulation) * triangulation, int index);
+Poly_Triangle * hs_Poly_Triangulation_triangle(
+    Handle(Poly_Triangulation) * triangulation, int index,
+    HSExceptionType* exType, void ** exPtr
+);
 
-void hs_Poly_Triangulation_setTriangle(Handle(Poly_Triangulation) * triangulation, int index, Poly_Triangle * triangle);
+void hs_Poly_Triangulation_setTriangle(
+    Handle(Poly_Triangulation) * triangulation, int index, Poly_Triangle * triangle,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }

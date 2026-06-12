@@ -1,5 +1,6 @@
 #include <BRepOffsetAPI_MakeOffsetShape.hxx>
 #include "hs_BRepOffsetAPI_MakeOffsetShape.h"
+#include "hs_Exception.h"
 
 BRepOffsetAPI_MakeOffsetShape * hs_new_BRepOffsetAPI_MakeOffsetShape(){
     return new BRepOffsetAPI_MakeOffsetShape();
@@ -9,8 +10,21 @@ void hs_delete_BRepOffsetAPI_MakeOffsetShape(BRepOffsetAPI_MakeOffsetShape * bui
     delete builder;
 }
 
-void hs_BRepOffsetAPI_MakeOffsetShape_performBySimple(BRepOffsetAPI_MakeOffsetShape * builder, TopoDS_Shape * shape, double value){
-    builder->PerformBySimple(*shape, value);
+void hs_BRepOffsetAPI_MakeOffsetShape_performBySimple(
+    BRepOffsetAPI_MakeOffsetShape * builder,
+    TopoDS_Shape * shape,
+    double value, 
+    HSExceptionType* exType,
+    void** exPtr
+    ){
+        
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [builder, shape, value]{
+            builder->PerformBySimple(*shape, value);
+        }
+    );
 }
 
 void hs_BRepOffsetAPI_MakeOffsetShape_performByJoin(
@@ -22,7 +36,24 @@ void hs_BRepOffsetAPI_MakeOffsetShape_performByJoin(
     bool intersection,
     bool selfInter,
     GeomAbs_JoinType join,
-    bool removeIntEdges
+    bool removeIntEdges,
+    HSExceptionType* exType,
+    void** exPtr
      ){
-    builder->PerformByJoin(*shape, value, tol, mode, intersection, selfInter, join, removeIntEdges);
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [builder, shape, value, tol, mode, intersection, selfInter, join, removeIntEdges]{
+            builder->PerformByJoin(
+                *shape,
+                value,
+                tol,
+                mode,
+                intersection,
+                selfInter,
+                join,
+                removeIntEdges
+            );
+        }
+    );
 }

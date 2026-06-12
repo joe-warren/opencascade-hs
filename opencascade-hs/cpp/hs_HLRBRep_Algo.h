@@ -13,11 +13,20 @@ void hs_delete_HLRBRep_Algo(Handle(HLRBRep_Algo) * algo);
 
 void hs_HLRBRep_Algo_projector(Handle(HLRBRep_Algo) * algo, HLRAlgo_Projector * projector);
 
-void hs_HLRBRep_Algo_update(Handle(HLRBRep_Algo) * algo);
+void hs_HLRBRep_Algo_update(
+    Handle(HLRBRep_Algo) * algo,
+    HSExceptionType* exType, void ** exPtr
+);
 
-void hs_HLRBRep_Algo_hide(Handle(HLRBRep_Algo) * algo);
+void hs_HLRBRep_Algo_hide(
+    Handle(HLRBRep_Algo) * algo,
+    HSExceptionType* exType, void ** exPtr
+);
 
-void hs_HLRBRep_Algo_add(Handle(HLRBRep_Algo) * algo, TopoDS_Shape * shape);
+void hs_HLRBRep_Algo_add(
+    Handle(HLRBRep_Algo) * algo, TopoDS_Shape * shape,
+    HSExceptionType* exType, void ** exPtr
+);
 
 #ifdef __cplusplus
 }

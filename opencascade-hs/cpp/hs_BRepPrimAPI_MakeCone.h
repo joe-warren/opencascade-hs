@@ -7,7 +7,11 @@
 extern "C" {
 #endif
 
-TopoDS_Solid * hs_BRepPrimAPI_MakeCone_fromTwoRadiiAndHeight(double r1, double r2, double h);
+TopoDS_Solid * hs_BRepPrimAPI_MakeCone_fromTwoRadiiAndHeight(
+    double r1, double r2, double h,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 #ifdef __cplusplus
 }

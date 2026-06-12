@@ -7,15 +7,24 @@
 extern "C" {
 #endif
 
-TopExp_Explorer * hs_new_TopExp_Explorer(TopoDS_Shape * shape, TopAbs_ShapeEnum toFind);
+TopExp_Explorer * hs_new_TopExp_Explorer(
+    TopoDS_Shape * shape, TopAbs_ShapeEnum toFind,
+    HSExceptionType* exType, void ** exPtr
+);
 
 void hs_delete_TopExp_Explorer(TopExp_Explorer * explorer);
 
 bool hs_TopExp_Explorer_more(TopExp_Explorer * explorer);
 
-void hs_TopExp_Explorer_next(TopExp_Explorer * explorer);
+void hs_TopExp_Explorer_next(
+    TopExp_Explorer * explorer,
+    HSExceptionType* exType, void ** exPtr
+);
 
-TopoDS_Shape * hs_TopExp_Explorer_value(TopExp_Explorer * explorer);
+TopoDS_Shape * hs_TopExp_Explorer_value(
+    TopExp_Explorer * explorer,
+    HSExceptionType* exType, void ** exPtr
+);
 #ifdef __cplusplus
 }
 #endif

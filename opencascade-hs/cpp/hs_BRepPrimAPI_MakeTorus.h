@@ -7,7 +7,11 @@
 extern "C" {
 #endif
 
-BRepPrimAPI_MakeTorus * hs_new_BRepPrimAPI_MakeTorus_fromRadii(double major, double minor);
+BRepPrimAPI_MakeTorus * hs_new_BRepPrimAPI_MakeTorus_fromRadii(
+    double major, double minor,
+    HSExceptionType* exType,
+    void** exPtr
+);
 
 void hs_delete_BRepPrimAPI_MakeTorus(BRepPrimAPI_MakeTorus * makeTorus);
 

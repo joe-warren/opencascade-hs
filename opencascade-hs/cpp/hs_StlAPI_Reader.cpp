@@ -1,4 +1,5 @@
 #include <StlAPI_Writer.hxx>
+#include "hs_Exception.h"
 #include "hs_StlAPI_Writer.h"
 
 StlAPI_Writer * hs_new_StlAPI_Writer(){
@@ -13,6 +14,16 @@ void hs_StlAPI_Writer_setAsciiMode(StlAPI_Writer * writer, bool asciiMode){
     writer->ASCIIMode() = asciiMode;
 }
 
-bool hs_StlAPI_Writer_write(StlAPI_Writer * writer, TopoDS_Shape * shape, char* filename){
-    return writer->Write(*shape, filename);
+bool hs_StlAPI_Writer_write(
+    StlAPI_Writer * writer, TopoDS_Shape * shape, char* filename,
+    HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleExWithDefault(
+        exType,
+        exPtr,
+        [writer, shape, filename]{
+            return writer->Write(*shape, filename);
+        },
+        false
+    );
 } 

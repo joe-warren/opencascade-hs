@@ -60,10 +60,13 @@ tests:
     - waterfall-cad-examples
     - tasty
     - tasty-golden
+    - tasty-hunit
     - rasterific-svg
     - mtl
     - bytestring
     - JuicyPixels
     - FontyFruity
     - filepath
+    - temporary
+    - resourcet
 

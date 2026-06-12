@@ -20,9 +20,10 @@ module OpenCascade.TopLoc.Location
 import OpenCascade.TopLoc.Types
 import OpenCascade.TopLoc.Internal.Destructors
 import OpenCascade.GP.Internal.Destructors (deleteTrsf)
+import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C
 import Foreign.Ptr
-import Data.Acquire 
+import Data.Acquire
 import qualified OpenCascade.GP as GP
 
 -- new 
@@ -55,47 +56,53 @@ firstPower l = fromIntegral <$> rawFirstPower l
 
 -- nextLocation
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_NextLocation" rawNextLocation :: Ptr Location -> IO (Ptr Location)
+foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_NextLocation" rawNextLocation
+    :: Ptr Location -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Location)
 
 nextLocation :: Ptr Location -> Acquire (Ptr Location)
-nextLocation l = mkAcquire (rawNextLocation l) deleteLocation
+nextLocation l = mkAcquire (wrapException $ rawNextLocation l) deleteLocation
 
 -- inverted
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Inverted" rawInverted :: Ptr Location -> IO (Ptr Location)
+foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Inverted" rawInverted
+    :: Ptr Location -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Location)
 
 inverted :: Ptr Location -> Acquire (Ptr Location)
-inverted l = mkAcquire (rawInverted l) deleteLocation
+inverted l = mkAcquire (wrapException $ rawInverted l) deleteLocation
 
 -- multiplied
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Multiplied" rawMultiplied :: Ptr Location -> Ptr Location -> IO (Ptr Location)
+foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Multiplied" rawMultiplied
+    :: Ptr Location -> Ptr Location -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Location)
 
 multiplied :: Ptr Location -> Ptr Location -> Acquire (Ptr Location)
-multiplied a b = mkAcquire (rawMultiplied a b) deleteLocation
+multiplied a b = mkAcquire (wrapException $ rawMultiplied a b) deleteLocation
 
 
 -- divided
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Divided" rawDivided :: Ptr Location -> Ptr Location -> IO (Ptr Location)
+foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Divided" rawDivided
+    :: Ptr Location -> Ptr Location -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Location)
 
 divided :: Ptr Location -> Ptr Location -> Acquire (Ptr Location)
-divided a b = mkAcquire (rawDivided a b) deleteLocation
+divided a b = mkAcquire (wrapException $ rawDivided a b) deleteLocation
 
 
 -- predivided
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Predivided" rawPredivided :: Ptr Location -> Ptr Location -> IO (Ptr Location)
+foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Predivided" rawPredivided
+    :: Ptr Location -> Ptr Location -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Location)
 
 predivided :: Ptr Location -> Ptr Location -> Acquire (Ptr Location)
-predivided a b = mkAcquire (rawPredivided a b) deleteLocation
+predivided a b = mkAcquire (wrapException $ rawPredivided a b) deleteLocation
 
 -- powered
 
-foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Powered" rawPowered :: Ptr Location -> CInt -> IO (Ptr Location)
+foreign import capi unsafe "hs_TopLoc_Location.h hs_TopLoc_Location_Powered" rawPowered
+    :: Ptr Location -> CInt -> Ptr CInt -> Ptr (Ptr ()) -> IO (Ptr Location)
 
 powered :: Ptr Location -> Int -> Acquire (Ptr Location)
-powered l p = mkAcquire (rawPowered l (fromIntegral p)) deleteLocation
+powered l p = mkAcquire (wrapException $ rawPowered l (fromIntegral p)) deleteLocation
 
 -- isEqual
 

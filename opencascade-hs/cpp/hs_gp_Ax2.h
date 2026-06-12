@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-gp_Ax2 * hs_new_gp_Ax2(gp_Pnt * origin, gp_Dir * north, gp_Dir * vX);
+gp_Ax2 * hs_new_gp_Ax2(gp_Pnt * origin, gp_Dir * north, gp_Dir * vX, HSExceptionType* exType, void ** exPtr);
 
 void hs_delete_gp_Ax2(gp_Ax2* ax2);
 
@@ -23,15 +23,15 @@ gp_Dir * hs_gp_Ax2_YDirection(gp_Ax2* ax2);
 
 gp_Ax1 * hs_gp_Ax2_Axis(gp_Ax2* ax2);
 
-void hs_gp_Ax2_SetDirection(gp_Ax2* ax2, gp_Dir* direction);
+void hs_gp_Ax2_SetDirection(gp_Ax2* ax2, gp_Dir* direction, HSExceptionType* exType, void ** exPtr);
 
 void hs_gp_Ax2_SetLocation(gp_Ax2* ax2, gp_Pnt* origin);
 
-void hs_gp_Ax2_SetXDirection(gp_Ax2* ax2, gp_Dir* direction);
+void hs_gp_Ax2_SetXDirection(gp_Ax2* ax2, gp_Dir* direction, HSExceptionType* exType, void ** exPtr);
 
-void hs_gp_Ax2_SetYDirection(gp_Ax2* ax2, gp_Dir* direction);
+void hs_gp_Ax2_SetYDirection(gp_Ax2* ax2, gp_Dir* direction, HSExceptionType* exType, void ** exPtr);
 
-void hs_gp_Ax2_SetAxis(gp_Ax2* ax2, gp_Ax1* ax1);
+void hs_gp_Ax2_SetAxis(gp_Ax2* ax2, gp_Ax1* ax1, HSExceptionType* exType, void ** exPtr);
 
 bool hs_gp_Ax2_IsCoplanar(gp_Ax2* axis1, gp_Ax2* axis2, double linearTolerance, double angularTolerance);
 
