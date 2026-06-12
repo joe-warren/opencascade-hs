@@ -2,6 +2,14 @@
 
 The wasm build works end-to-end but relies on several workarounds. This document tracks what's cursed and what the ideal fix would be.
 
+## Pinned versions
+
+The Dockerfile pins OCCT, freetype and rapidjson to their master commits as of
+2026-04-01 (the era this recipe was last verified against), ghc-wasm-meta to
+commit `61a4baf7` (GHC 9.14.1.20260213 - later snapshots regressed wasm
+exception handling), and `cabal.project` pins `index-state` to the same date.
+Bump these deliberately, one at a time.
+
 ## Workarounds in use
 
 ### Pretending to be Emscripten (`-D__EMSCRIPTEN__`)
@@ -71,6 +79,61 @@ Several `opencascade-hs` C++ wrapper files were missing explicit includes (`TopT
 **Status:** Fixed in the source. Not a workaround, just bugs that the wasm build exposed.
 
 ## Known issues
+
+### Catching OCCT exception types crashes in the playground (`volume`, booleans, STL/SVG export)
+
+The browser test suite passes 3/4 (`hello`, `solidDiagram`/HLR, `MakeBox::Shell`); the
+`volume`/boolean test fails because OCCT internally throws exception types like
+`Standard_DomainError`, and catching those types crashes. Investigated June 2026,
+the root cause is a chain of dynamic-linking problems with weakly-defined RTTI
+symbols (typeinfo/vtable/typename for header-only classes defined via
+`DEFINE_STANDARD_EXCEPTION`, which have C++ vague linkage and so are emitted weak
+in every translation unit):
+
+1. **wasm-ld does not export weakly-defined symbols** - neither `--export-all` nor
+   the dylib default export them, although references to them still go through
+   `GOT.mem`/`GOT.func` imports (weak symbols stay preemptible, even under
+   `--Bsymbolic`). `--export-if-defined=<sym>` *does* export them, when the symbol
+   is not preempted (see 3). Verified unfixed in upstream LLD 22.1.0 (wasi-sdk-33).
+2. **dyld.mjs applied data relocations too early** - each module ran its
+   `__wasm_apply_data_relocs` at instantiation time, against GOT entries that were
+   still poisoned if the defining module loads later in the same plan. The GOT got
+   healed afterwards, but the already-relocated data words (typeinfo vtable/base
+   pointers) kept the poison value (`0xfffeffff` and `poison+8`), crashing
+   `scan_eh_tab` on catch. **Fixed** by patch 2 in `scripts/patch_dyld.js`, which
+   defers `__wasm_apply_data_relocs` + `_initialize` until the whole plan is
+   loaded (eager only for libc, since dyld needs `aligned_alloc` while loading).
+3. **Shared-library preemption breaks typeinfo identity** - linking
+   `libplayground.so` against the cabal-built `libHSopencascade-hs-*.so` makes the
+   weak RTTI definitions in the playground resolve to the shared lib's symbol, so
+   `--export-if-defined` on the playground link no longer fires (symbol counts as
+   imported, not defined).
+4. With (2) fixed, the crash moves one layer deeper: `can_catch` ->
+   `__dynamic_cast` -> `type_info::operator==` does a name comparison between the
+   throw-site and catch-site typeinfo copies, and reads a corrupted `__name`
+   pointer. Experiments that force-exported the weak RTTI data symbols from
+   `libHSopencascade-hs.so` (via a generated `--export-if-defined` response file,
+   `_ZTI*`/`_ZTS*`/`_ZTV*` only) produced a resolvable GOT but the *contents* of
+   the exported typeinfo in that module were still mis-relocated
+   (`name_ptr=0x0`, vtable pointer pointing at another module's base). Exporting
+   *all* weak symbols (including functions) regressed other tests with
+   "function signature mismatch", so any fix must stick to data symbols.
+
+**Status:** the dyld relocation-ordering fix (patch 2) is included since it is
+strictly more correct and keeps the suite at 3/4. The remaining mis-relocation of
+weak typeinfo *contents* inside the cabal-built shared libraries is unsolved -
+likely an interaction between wasm-ld's relocation emission for preempted weak
+data and dyld.mjs, and worth an upstream report (LLVM and/or ghc-wasm).
+Reproduce with `scripts/test_exceptions.sh` inside the Docker image (throws and
+catches `Standard_DomainError` in a wasm shared library under Node).
+
+**Possible ways forward:**
+- Upstream: make wasm-ld export weakly-defined data symbols from shared
+  libraries (or at least honour `--export-all` for them), and check how its
+  `__wasm_apply_data_relocs` is generated for preempted weak data.
+- Patch OCCT's `DEFINE_STANDARD_EXCEPTION` to anchor each exception class
+  (non-inline key function) so the RTTI symbols become strong, sidestepping all
+  weak-symbol handling. Strong RTTI (e.g. `Standard_Failure`) works correctly.
 
 ### STL meshing produces corrupted output
 
