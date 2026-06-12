@@ -7,9 +7,9 @@
 extern "C" {
 #endif
 
-int hs_TopTools_ShapeMapHasher_hash(TopoDS_Shape * shape);
+int hs_TopTools_ShapeMapHasher_hash(TopoDS_Shape * shape, HSExceptionType* exType, void ** exPtr);
 
-bool hs_TopTools_ShapeMapHasher_isEqual(TopoDS_Shape * shapeA, TopoDS_Shape * shapeB);
+bool hs_TopTools_ShapeMapHasher_isEqual(TopoDS_Shape * shapeA, TopoDS_Shape * shapeB, HSExceptionType* exType, void ** exPtr);
 
 #ifdef __cplusplus
 }
