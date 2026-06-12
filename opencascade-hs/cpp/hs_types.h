@@ -43,6 +43,7 @@ typedef int BRepBuilderAPI_FaceError;
 typedef void BRepFilletAPI_MakeFillet;
 typedef void BRepFilletAPI_MakeChamfer;
 typedef void BRepPrimAPI_MakeBox;
+typedef void BRepPrimAPI_MakeTorus;
 typedef void TopExp_Explorer;
 typedef void BRepPrimAPI_MakeCylinder;
 typedef void BRepPrimAPI_MakeRevol;
@@ -104,6 +105,7 @@ typedef int HLRBRep_TypeOfResultingEdge;
 typedef void BOPAlgo_Builder;
 typedef void BOPAlgo_BOP;
 typedef int BOPAlgo_Operation;
+typedef void GCPnts_AbscissaPoint;
 
 #define Handle(X) void
 #define ARRAY_1(X) void

@@ -7,7 +7,11 @@
 extern "C" {
 #endif
 
-void hs_BRepGProp_VolumeProperties(TopoDS_Shape * shape, GProp_GProps * props, bool onlyClosed, bool skipShared, bool useTriangulation );
+void hs_BRepGProp_VolumeProperties(TopoDS_Shape * shape, GProp_GProps * props, bool onlyClosed, bool skipShared, bool useTriangulation);
+
+void hs_BRepGProp_SurfaceProperties(TopoDS_Shape *shape, GProp_GProps *props, bool skipShared, bool useTriangulation);
+
+void hs_BRepGProp_LinearProperties(TopoDS_Shape *shape, GProp_GProps *props, bool skipShared, bool useTriangulation);
 
 #ifdef __cplusplus
 }

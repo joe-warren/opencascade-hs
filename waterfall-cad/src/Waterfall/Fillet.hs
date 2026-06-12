@@ -1,11 +1,20 @@
 {-# LANGUAGE RankNTypes #-}
 module Waterfall.Fillet
-( roundFillet
+(
+ -- * Rounds
+-- | Fillet that adds radiused faces that are tangent to the two faces either side of an edge.
+-- 
+-- Sometimes, it may not be possible to construct a fillet because there is not enough space next to one of the fillet edges,
+-- Or because the geometry is too complicated for the fillet algorithm.
+  roundFillet
 , roundConditionalFillet
 , roundIndexedConditionalFillet
+-- * Chamfers
+-- | Adds flat faces at a constant angle to the two faces either side of an edge.
 , chamfer
 , conditionalChamfer
 , indexedConditionalChamfer
+-- * Utility Methods
 , whenNearlyEqual
 ) where
 

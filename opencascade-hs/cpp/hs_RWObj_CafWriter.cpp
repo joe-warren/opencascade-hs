@@ -1,4 +1,5 @@
 #include <RWObj_CafWriter.hxx>
+#include <TColStd_IndexedDataMapOfStringString.hxx>
 #include "hs_RWObj_CafWriter.h"
 
 RWObj_CafWriter * hs_new_RWObj_CafWriter(char * filename){

@@ -13,6 +13,11 @@ extra-source-files:
 - README.md
 - CHANGELOG.md
 
+data-files: 
+  - test-data/*
+  - test-data/**/*
+  - test-results/.keep
+
 synopsis:            Examples for Waterfall CAD, a Declarative CAD/Solid Modeling Library
 category:            Graphics
 description:         Please see the README on GitHub at <https://github.com/joe-warren/opencascade-hs#readme>
@@ -28,7 +33,7 @@ dependencies:
 - parsec >= 3.1 && < 3.2
 - parser-combinators >= 1.2 && < 1.4
 - xml >= 1 && <2 
-- svg-tree >= 0.6 && < 1.0
+- svg-tree >= 0.6 && < 1
 - raw-strings-qq >= 1.1 && < 2
 
 ghc-options: *ghc-options
@@ -40,8 +45,25 @@ executables:
       waterfall-cad-examples
     source-dirs:         app
     ghc-options:
+    - -threaded
     - -rtsopts
     - -with-rtsopts=-N
 
 library:
   source-dirs: src
+
+tests:
+  waterfall-cad-tests:
+    main: Main.hs
+    source-dirs: test
+    dependencies:
+    - waterfall-cad-examples
+    - tasty
+    - tasty-golden
+    - rasterific-svg
+    - mtl
+    - bytestring
+    - JuicyPixels
+    - FontyFruity
+    - filepath
+

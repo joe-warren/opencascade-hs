@@ -15,35 +15,57 @@ extra-source-files:
 
 include-dirs:
 - cpp
-- /usr/include/opencascade
 
-extra-libraries:
-- stdc++
-- TKGeomBase 
-- TKStd 
-- TKG3d 
-- TKG2d 
-- TKHLR
-- TKMath 
-- TKernel 
-- TKBRep 
-- TKOffset 
-- TKFillet 
-- TKBO 
-- TKPrim 
-- TKTopAlgo 
-- TKDESTL
-- TKDESTEP
-- TKDEGLTF
-- TKDEOBJ
-- TKV3d 
-- TKMesh
-- TKRWMesh
-- TKLCAF
-- TKXCAF
-- TKService
-- TKShHealing
-- TKXSBase
+# The wasm build (see Dockerfile / WASM_BUILD_NOTES.md) compiles against an
+# OCCT tree built with wasi-sdk at /OCCT, with C++ wasm-native exceptions.
+# OCCT libraries can't be listed in extra-libraries on wasm32, because GHC's
+# wasm backend tries to dynamically load them at compile time; they're passed
+# as linker flags on the final link instead (see cabal.project, playground/).
+when:
+- condition: arch(wasm32)
+  then:
+    include-dirs:
+    - /OCCT/wasi_stubs
+    - /OCCT/work/wasm/inc
+    cxx-options:
+    - "-Wno-#pragma-messages"
+    - -fexceptions
+    - -fwasm-exceptions
+    - -mllvm
+    - -wasm-use-legacy-eh=false
+    - -DNo_Exception
+    ghc-options:
+    - -Wwarn=redundant-constraints
+  else:
+    include-dirs:
+    - /usr/include/opencascade
+    extra-libraries:
+    - stdc++
+    - TKGeomBase
+    - TKStd
+    - TKG3d
+    - TKG2d
+    - TKHLR
+    - TKMath
+    - TKernel
+    - TKBRep
+    - TKOffset
+    - TKFillet
+    - TKBO
+    - TKPrim
+    - TKTopAlgo
+    - TKDESTL
+    - TKDESTEP
+    - TKDEGLTF
+    - TKDEOBJ
+    - TKV3d
+    - TKMesh
+    - TKRWMesh
+    - TKLCAF
+    - TKXCAF
+    - TKService
+    - TKShHealing
+    - TKXSBase
 
 synopsis:            Thin Wrapper for the OpenCASCADE CAD Kernel
 category:            Graphics,FFI
@@ -61,7 +83,7 @@ cxx-options:
   - -Wall
   - -Werror
   - -Wno-deprecated
-  
+
 library:
   source-dirs: src
   cxx-sources:

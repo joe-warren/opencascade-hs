@@ -155,7 +155,9 @@ diagramToSvg diagram =
                 styles = 
                     [ Svg.Css.CssRule 
                         [[Svg.Css.AllOf [Svg.Css.OfClass "edge"]]]
-                        [Svg.Css.CssDeclaration "fill" [[Svg.Css.CssIdent "None"]]]
+                        [ Svg.Css.CssDeclaration "fill" [[Svg.Css.CssIdent "None"]]
+                        , Svg.Css.CssDeclaration "fill-opacity" [[Svg.Css.CssNumber (Svg.Num 0)]]
+                        ]
                     , Svg.Css.CssRule
                         [[Svg.Css.AllOf [Svg.Css.OfClass "edge", Svg.Css.OfClass "visible"]]]
                         [Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor $ PixelRGBA8 0 0 0 255]]]

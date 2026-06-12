@@ -55,13 +55,11 @@ fromTrsfSolid mkTrsf s = solidFromAcquire $ do
     trsf <- mkTrsf 
     BRepBuilderAPI.Transform.transform solid trsf True 
 
-fromGTrsfSolid :: Acquire (Maybe (Ptr GP.GTrsf)) -> Solid -> Solid
+fromGTrsfSolid :: Acquire (Ptr GP.GTrsf) -> Solid -> Solid
 fromGTrsfSolid mkTrsf s = solidFromAcquire $ do 
     solid <- acquireSolid s
-    trsfMay <- mkTrsf 
-    case trsfMay of
-        Just trsf -> BRepBuilderAPI.GTransform.gtransform solid trsf True 
-        Nothing -> pure solid
+    trsf <- mkTrsf 
+    BRepBuilderAPI.GTransform.gtransform solid trsf True 
 
 fromTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.Trsf) -> Path -> Path
 fromTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquire $ do 
@@ -71,29 +69,29 @@ fromTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafe
 fromTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
 fromTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 
-fromGTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Maybe (Ptr GP.GTrsf)) -> Path -> Path
+fromGTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.GTrsf) -> Path -> Path
 fromGTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquire $ do 
     path <- toAcquire p
-    trsfMay <- mkTrsf 
-    case trsfMay of
-        Just trsf -> (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
-        Nothing -> pure path
+    trsf <- mkTrsf 
+    (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
 fromGTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
 fromGTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 
-
-scaleTrsf :: V3 Double -> Acquire (Maybe (Ptr GP.GTrsf))
+scaleTrsf :: V3 Double -> Maybe (Either (Acquire (Ptr GP.Trsf)) (Acquire (Ptr GP.GTrsf)))
 scaleTrsf v@(V3 x y z ) = 
     if v == V3 1 1 1 
-        then pure Nothing
-        else do
-            trsf <- GP.GTrsf.new 
-            liftIO $ do
-                GP.GTrsf.setValue trsf 1 1 x
-                GP.GTrsf.setValue trsf 2 2 y
-                GP.GTrsf.setValue trsf 3 3 z
-                GP.GTrsf.setForm trsf
-                return . Just $ trsf
+        then Nothing
+        else 
+            if x == y && y == z
+                then Just . Left $ uScaleTrsf x
+                else Just . Right $ do
+                    trsf <- GP.GTrsf.new 
+                    liftIO $ do
+                        GP.GTrsf.setValue trsf 1 1 x
+                        GP.GTrsf.setValue trsf 2 2 y
+                        GP.GTrsf.setValue trsf 3 3 z
+                        GP.GTrsf.setForm trsf
+                        return trsf
 
 uScaleTrsf :: Double -> Acquire (Ptr GP.Trsf)
 uScaleTrsf factor = do
@@ -128,9 +126,10 @@ mirrorTrsf (V3 x y z) = do
         GP.Trsf.setMirrorAboutAx2 trsf axis
     return trsf
 
-matrixGTrsf :: M34 Double -> Acquire (Maybe (Ptr GP.GTrsf))
-matrixGTrsf (V3 (V4 1 0 0 0) (V4 0 1 0 0) (V4 0 0 1 0)) = pure Nothing
-matrixGTrsf (V3 (V4 v11 v12 v13 v14) (V4 v21 v22 v23 v24) (V4 v31 v32 v33 v34)) = do
+matrixGTrsf :: M34 Double -> Maybe (Either (Acquire (Ptr GP.Trsf)) (Acquire (Ptr GP.GTrsf)))
+matrixGTrsf (V3 (V4 1 0 0 0) (V4 0 1 0 0) (V4 0 0 1 0)) = Nothing
+matrixGTrsf (V3 (V4 x 0 0 0) (V4 0 y 0 0) (V4 0 0 z 0)) | x == y && y == z = Just . Left . uScaleTrsf $ x
+matrixGTrsf (V3 (V4 v11 v12 v13 v14) (V4 v21 v22 v23 v24) (V4 v31 v32 v33 v34)) = Just . Right $ do
     trsf <- GP.GTrsf.new
     liftIO $ do  
         GP.GTrsf.setValue trsf 1 1 v11
@@ -146,14 +145,14 @@ matrixGTrsf (V3 (V4 v11 v12 v13 v14) (V4 v21 v22 v23 v24) (V4 v31 v32 v33 v34)) 
         GP.GTrsf.setValue trsf 3 3 v33
         GP.GTrsf.setValue trsf 3 4 v34
         GP.GTrsf.setForm trsf
-        return . pure $ trsf
+        return trsf
     
 instance Transformable Solid where
     matTransform :: M34 Double -> Solid -> Solid
-    matTransform = fromGTrsfSolid . matrixGTrsf 
+    matTransform = maybe id (either fromTrsfSolid fromGTrsfSolid) . matrixGTrsf 
     
     scale :: V3 Double -> Solid -> Solid
-    scale = fromGTrsfSolid . scaleTrsf
+    scale = maybe id (either fromTrsfSolid fromGTrsfSolid) . scaleTrsf
 
     uScale :: Double -> Solid -> Solid
     uScale = fromTrsfSolid . uScaleTrsf
@@ -169,10 +168,14 @@ instance Transformable Solid where
 
 instance Transformable Path where
     matTransform :: M34 Double -> Path -> Path
-    matTransform m = fromGTrsfPath (matTransform m) (matrixGTrsf m)
+    matTransform m = 
+        let transformPnt = matTransform m
+        in maybe id (either (fromTrsfPath transformPnt) (fromGTrsfPath transformPnt)) $ matrixGTrsf m
     
     scale :: V3 Double -> Path -> Path
-    scale s = fromGTrsfPath (scale s) (scaleTrsf s)
+    scale s = 
+        let transformPnt = scale s 
+        in maybe id (either (fromTrsfPath transformPnt) (fromGTrsfPath transformPnt)) $ scaleTrsf s
 
     uScale :: Double -> Path -> Path
     uScale s = fromTrsfPath (uScale s) (uScaleTrsf s)

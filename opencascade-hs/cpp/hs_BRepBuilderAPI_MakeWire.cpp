@@ -1,4 +1,5 @@
 #include <BRepBuilderAPI_MakeWire.hxx>
+#include <TopTools_ListOfShape.hxx>
 #include <TopoDS_Wire.hxx>
 #include "hs_BRepBuilderAPI_MakeWire.h"
 

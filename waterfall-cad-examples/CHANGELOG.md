@@ -8,6 +8,20 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.6.2.1
+
+## 0.6.2.0
+
+- Added `TakePathFractionExample`, demonstrating `takePathFraction`
+
+## 0.6.1.0
+
+### Added 
+
+- Added `PlatonicSolidsExample`, demonstrating `tetrahedron`, `centeredCube`, `octahedron`, `dodecahedron` and `icosahedron`
+
+## 0.6.0.1
+
 - Adjusted `CsgExample` to use `centeredCylinder`, and removed use of `Booleans.Operators` 
 - Use `whenNearlyEqual` in `FilletExample`
 

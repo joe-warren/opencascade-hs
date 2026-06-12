@@ -1,4 +1,5 @@
 #include <RWGltf_CafWriter.hxx>
+#include <TColStd_IndexedDataMapOfStringString.hxx>
 #include "hs_RWGltf_CafWriter.h"
 
 RWGltf_CafWriter * hs_new_RWGltf_CafWriter(char * theFile, bool isBinary){

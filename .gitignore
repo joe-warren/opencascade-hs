@@ -1,2 +1,5 @@
 .stack-work/
+dist-newstyle/
+waterfall-cad-examples/test-results/*
+playground/dist/
 *~

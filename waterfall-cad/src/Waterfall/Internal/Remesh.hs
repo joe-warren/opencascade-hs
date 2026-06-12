@@ -20,6 +20,7 @@ In this way, the `remesh` function produces a new Boundary Represenation from th
 -}
 module Waterfall.Internal.Remesh 
 ( remesh 
+, makeSolidFromShell
 ) where
 
 import qualified OpenCascade.GP.Pnt as GP.Pnt

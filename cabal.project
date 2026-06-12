@@ -11,3 +11,23 @@ package *
 allow-newer: all:base
 allow-newer: all:template-haskell
 allow-newer: all:ghc-bignum
+
+-- Pin the package set to the era the wasm build was last verified against
+index-state: 2026-04-01T00:00:00Z
+
+-- OCCT and system libraries for wasm linking (specified here rather than in
+-- opencascade-hs extra-libraries, because GHC wasm can't load .a at compile time)
+package waterfall-cad-examples
+  ghc-options: -optl-Wl,-z,stack-size=8388608
+    -optl-Wl,--whole-archive
+    -optl-lTKGeomAlgo -optl-lTKGeomBase -optl-lTKStd -optl-lTKG3d -optl-lTKG2d
+    -optl-lTKHLR -optl-lTKMath -optl-lTKernel -optl-lTKBRep -optl-lTKOffset
+    -optl-lTKFillet -optl-lTKBO -optl-lTKBool -optl-lTKPrim -optl-lTKTopAlgo
+    -optl-lTKDESTL -optl-lTKDESTEP -optl-lTKDEGLTF -optl-lTKDEOBJ -optl-lTKDE
+    -optl-lTKV3d -optl-lTKMesh -optl-lTKRWMesh -optl-lTKLCAF -optl-lTKCAF
+    -optl-lTKCDF -optl-lTKXCAF -optl-lTKService -optl-lTKShHealing -optl-lTKXSBase
+    -optl-lfreetype
+    -optl-Wl,--no-whole-archive
+    -optl-lc++ -optl-lc++abi -optl-lunwind
+    -optl-lwasi-emulated-process-clocks -optl-lwasi-emulated-signal
+    -optl-lwasi-emulated-mman -optl-lwasi-emulated-getpid

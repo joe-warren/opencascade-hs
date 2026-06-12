@@ -6,10 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to the
 [Haskell Package Versioning Policy](https://pvp.haskell.org/).
 
-
 ## Unreleased
 
+## 0.6.2.1
+
+- Fixed an off by one error in `Waterfall.TwoD.repeatLooping` that would produce overlapping wire segments in `repeatLooping`
+
+## 0.6.2.0
+
+- Added `Waterfall.Path.Common.pathLength`, `Waterfall.Path.pathLength3D` and `Waterfall.TwoD.Path2D.pathLength2D`
+- Added `Waterfall.Path.Common.takePathFraction`, `Waterfall.Path.takePathFraction3D` and `Waterfall.TwoD.Path2D.takePathFraction2D`
+
+## 0.6.1.0
+
+### Added 
+
+- Added `Waterfall.Solids.torus`
+- Added Platonic Solids:
+    - `Waterfall.Solids.tetrahedron`
+    - `Waterfall.Solids.octahedron`
+    - `Waterfall.Solids.icosahedron`
+    - `Waterfall.Solids.dodecahedron`
+
+## 0.6.0.1
+
+### Added
+
 - Added `whenNearlyEqual` to `Waterfall.Fillet` to make writing conditional Fillets easier
+
+### Fixed
+
+- Workaround for an issue where calling `scale` with a uniform scale vector produced invalid geometry
 
 ## 0.6.0.0
 
