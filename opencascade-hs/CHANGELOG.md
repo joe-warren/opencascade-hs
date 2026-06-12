@@ -10,6 +10,7 @@ and this project adheres to the
 
 - Add `compose` and `composed` to `OpenCascade.TopoDS.Shape`
 - Add `normalized` and `normalize` to `OpenCascade.GP.Vec` and `OpenCascade.GP.Vec2d`
+- Convert most FFI functions such that C++ exceptions thrown within them are converted into Haskell Exceptions
 
 ## 0.6.2.1
 
