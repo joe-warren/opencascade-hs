@@ -62,8 +62,13 @@
       }
       .stderr { color: #fee2e2; }
       #status { font-size: 0.85rem; opacity: 0.7; margin: 0.5rem 0; }
+      #viewer {
+        display: none; width: 100%; height: 38vh;
+        background: #0b1020; border: 1px solid #223; border-radius: 8px;
+      }
     </style>
 
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4/dist/model-viewer.min.js"></script>
     <script async type="module">
       import * as monaco from "https://cdn.jsdelivr.net/npm/monaco-editor/+esm";
       import {
@@ -109,16 +114,14 @@
       }
 
       window.editor = monaco.editor.create(document.getElementById("editor"), {
-        value: `import Waterfall.Solids (unitCube)
-import Waterfall.Diagram (solidDiagram)
-import Linear (V3(..))
-import System.IO (hFlush, stdout)
+        value: `import Waterfall.Solids (centeredCube, unitSphere)
+import Waterfall.Booleans (difference)
+import Waterfall.Transforms (uScale)
+import Waterfall.IO (writeGLB)
 
 main :: IO ()
-main = do
-  let solid = unitCube
-      diagram = solidDiagram (V3 2 3 1) solid
-  diagram \`seq\` putStrLn "diagram created!" >> hFlush stdout
+main = writeGLB 0.01 "/out.glb" $
+  difference centeredCube (uScale 0.65 unitSphere)
 `,
         language: "haskell",
         automaticLayout: true,
@@ -153,6 +156,48 @@ main = do
       setStatus("Ready!");
       document.getElementById("runBtn").disabled = false;
 
+      // --- 3D preview: show the first .glb file found in the wasm filesystem ---
+      // User code writes glTF binary files via Waterfall.IO.writeGLB; after each
+      // run we scan the in-memory rootfs and display the result in <model-viewer>.
+      const VIEWER_SKIP_DIRS = new Set(["root", "opencascade-hs"]);
+      window.__lastModel = null;
+      function findGlbFiles(node, prefix, depth, out) {
+        if (!(node.contents instanceof Map)) return;
+        for (const [name, child] of node.contents) {
+          const path = `${prefix}/${name}`;
+          if (child.contents instanceof Map) {
+            if (depth === 0 && VIEWER_SKIP_DIRS.has(name)) continue;
+            if (depth < 6) findGlbFiles(child, path, depth + 1, out);
+          } else if (name.toLowerCase().endsWith(".glb") && child.data) {
+            out.push([path, child.data]);
+          }
+        }
+      }
+      function updateViewer() {
+        const viewer = document.getElementById("viewer");
+        const found = [];
+        try {
+          findGlbFiles(rootfs.dir ?? rootfs, "", 0, found);
+        } catch (e) {
+          console.warn("model scan failed:", e);
+        }
+        if (!found.length) {
+          viewer.style.display = "none";
+          window.__lastModel = null;
+          return;
+        }
+        found.sort((a, b) => a[0].length - b[0].length || a[0].localeCompare(b[0]));
+        const [path, data] = found[0];
+        if (viewer.dataset.url) URL.revokeObjectURL(viewer.dataset.url);
+        const url = URL.createObjectURL(
+          new Blob([data], { type: "model/gltf-binary" })
+        );
+        viewer.dataset.url = url;
+        viewer.setAttribute("src", url);
+        viewer.style.display = "block";
+        window.__lastModel = path;
+      }
+
       document.getElementById("runBtn").addEventListener("click", async () => {
         document.getElementById("runBtn").disabled = true;
         setStatus("Running...");
@@ -166,6 +211,7 @@ main = do
             editor.getValue()
           );
 
+          updateViewer();
           setStatus("Done!");
         } catch (e) {
           setStatus(`Error: ${e.message}`);
@@ -193,6 +239,13 @@ main = do
           <button id="runBtn" disabled>Run</button>
         </div>
         <div id="status">Loading...</div>
+        <model-viewer
+          id="viewer"
+          camera-controls
+          auto-rotate
+          exposure="0.9"
+          alt="rendered model"
+        ></model-viewer>
         <div class="outputs">
           <div class="label">stdout</div>
           <textarea id="stdout" readonly></textarea>

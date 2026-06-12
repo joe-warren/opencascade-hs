@@ -2,6 +2,7 @@
 // Loads the playground, types Haskell code, clicks Run, checks output.
 
 import { createRequire } from 'module';
+import fs from 'node:fs';
 const require = createRequire('/opt/puppeteer/');
 const puppeteer = require('puppeteer');
 
@@ -46,9 +47,19 @@ main = withAcquire go $ \\_ -> pure ()
       liftIO $ putStrLn "about to call shell" >> hFlush stdout
       sh <- MakeBox.shell box
       liftIO $ putStrLn "shell extracted!" >> hFlush stdout`, 'shell extracted!', true],
+  ['glb_viewer', `import Waterfall.Solids (centeredCube, unitSphere)
+import Waterfall.Booleans (difference)
+import Waterfall.Transforms (uScale)
+import Waterfall.IO (writeGLB)
+import System.IO (hFlush, stdout)
+
+main :: IO ()
+main = do
+  writeGLB 0.01 "/out.glb" (difference centeredCube (uScale 0.65 unitSphere))
+  putStrLn "glb written" >> hFlush stdout`, 'glb written', true, true],
 ];
 
-async function runTest(page, name, code, expectedStdout, shouldSucceed) {
+async function runTest(page, name, code, expectedStdout, shouldSucceed, checkModel) {
   console.log(`\n=== Test: ${name} ===`);
 
   // Wait for the editor and status to be ready
@@ -105,13 +116,39 @@ async function runTest(page, name, code, expectedStdout, shouldSucceed) {
   }
 
   if (shouldSucceed) {
-    if (stdout.includes(expectedStdout)) {
-      console.log(`  PASS ✓`);
-      return true;
-    } else {
+    if (!stdout.includes(expectedStdout)) {
       console.log(`  FAIL ✗ - expected stdout to contain "${expectedStdout}"`);
       return false;
     }
+    if (checkModel) {
+      // The viewer should pick up the .glb from the wasm filesystem and
+      // model-viewer should actually parse and load it.
+      await page.waitForFunction(
+        () =>
+          window.__lastModel &&
+          document.getElementById('viewer')?.loaded === true,
+        { timeout: 60000 }
+      );
+      const modelPath = await page.evaluate(() => window.__lastModel);
+      const b64 = await page.evaluate(async () => {
+        const v = document.getElementById('viewer');
+        const buf = await fetch(v.dataset.url).then((r) => r.arrayBuffer());
+        const bytes = new Uint8Array(buf);
+        let s = '';
+        for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+        return btoa(s);
+      });
+      const glb = Buffer.from(b64, 'base64');
+      fs.writeFileSync('/tmp/extracted-model.glb', glb);
+      const magic = glb.subarray(0, 4).toString();
+      console.log(`  Model: ${modelPath} (${glb.length} bytes, magic=${magic})`);
+      if (magic !== 'glTF' || glb.length < 1000) {
+        console.log('  FAIL ✗ - extracted glb looks invalid');
+        return false;
+      }
+    }
+    console.log(`  PASS ✓`);
+    return true;
   } else {
     console.log(`  (expected failure)`);
     return true;
@@ -147,9 +184,9 @@ async function main() {
   let passed = 0;
   let failed = 0;
 
-  for (const [name, code, expected, shouldSucceed] of TESTS) {
+  for (const [name, code, expected, shouldSucceed, checkModel] of TESTS) {
     try {
-      const ok = await runTest(page, name, code, expected, shouldSucceed);
+      const ok = await runTest(page, name, code, expected, shouldSucceed, checkModel);
       if (ok) passed++; else failed++;
     } catch (e) {
       console.log(`  ERROR: ${e.message.substring(0, 200)}`);

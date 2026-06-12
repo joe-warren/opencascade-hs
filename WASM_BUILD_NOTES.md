@@ -145,13 +145,44 @@ The wasm-ld weak-data export behaviour is still worth an upstream report
 a standalone reproduction (throws and catches `Standard_DomainError` in a wasm
 shared library under Node).
 
-### STL meshing produces corrupted output
+### Meshing output (previously corrupted) looks healthy now
 
-STL files have missing faces and garbage triangles. SVG output (which uses HLR, not meshing) is correct. Was likely caused by `__cxa_throw` abort stubs corrupting OCCT data structures. May be fixed now that real wasm exception handling is enabled - needs retesting.
+Older builds produced STL files with missing faces and garbage triangles -
+likely the `__cxa_throw` abort stubs corrupting OCCT state. Retested June 2026
+via glTF export in the playground: the wasm-generated `.glb` for a CSG model
+has the same primitive structure and bounding box as a native build and
+renders correctly in model-viewer. Triangle counts differ (268 wasm vs 464
+native at the same deflection), but the wasm build uses OCCT 8.x master while
+native is OCCT 7.x, whose mesher differs - so not in itself a red flag. A
+side-by-side visual comparison of more complex models would settle it fully.
 
-### OpenGL/Visualization disabled
+## Visualization
 
-`USE_OPENGL=OFF` and `USE_GLES2=OFF` in the OCCT build. Re-enabling with WebGL support would be needed for browser-based 3D rendering.
+The playground shows a 3D preview using
+[`<model-viewer>`](https://modelviewer.dev): user code writes a glTF binary
+file (`Waterfall.IO.writeGLB`) into the in-browser WASI filesystem, and after
+each run the page scans the filesystem for `.glb` files and displays the first
+one found via a Blob URL. The default example does exactly that with
+`/out.glb`. The browser test suite covers this end-to-end (writes a CSG model,
+asserts `model-viewer` actually parsed and loaded it).
+
+Two cosmetic issues:
+- OCCT's glTF writer warns `Unable to remove temporary glTF content file
+  '/out.bin.tmp'` - file removal isn't supported by the WASI shim setup, so a
+  stray `.tmp` file stays in the in-memory filesystem. Harmless.
+- In headless Chromium (`--disable-gpu`), model-viewer logs
+  `Cannot read properties of null (reading 'isPresenting')` from its XR probe.
+  Doesn't happen in a normal browser, doesn't affect rendering.
+
+### OCCT native visualization (OpenGL) still disabled
+
+`USE_OPENGL=OFF` and `USE_GLES2=OFF` in the OCCT build. OCCT's own wasm
+visualization (`OpenGl_GraphicDriver` + `Wasm_Window`) assumes the Emscripten
+runtime: EGL/GLES2 emulation and `emscripten_webgl_*` html5 APIs, which are
+no-op stubs in this wasi-sdk build. Making it work would mean implementing a
+GLES-to-WebGL shim for the dyld runtime (the equivalent of Emscripten's
+`library_webgl.js`) - a substantial project, tracked as possible future work.
+The model-viewer approach above is the practical alternative.
 
 ### `-with-rtsopts=-N` incompatible with wasm
 
