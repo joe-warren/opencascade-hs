@@ -145,16 +145,36 @@ The wasm-ld weak-data export behaviour is still worth an upstream report
 a standalone reproduction (throws and catches `Standard_DomainError` in a wasm
 shared library under Node).
 
-### Meshing output (previously corrupted) looks healthy now
+### Mangled meshes: an upstream OCCT 8.0-dev Watson mesher bug (worked around)
 
-Older builds produced STL files with missing faces and garbage triangles -
-likely the `__cxa_throw` abort stubs corrupting OCCT state. Retested June 2026
-via glTF export in the playground: the wasm-generated `.glb` for a CSG model
-has the same primitive structure and bounding box as a native build and
-renders correctly in model-viewer. Triangle counts differ (268 wasm vs 464
-native at the same deflection), but the wasm build uses OCCT 8.x master while
-native is OCCT 7.x, whose mesher differs - so not in itself a red flag. A
-side-by-side visual comparison of more complex models would settle it fully.
+Boolean results rendered with mangled geometry: boolean-cut faces with
+internal boundaries got fan-shaped garbage triangles. Diagnosed June 2026:
+
+- The boolean/BRep itself is correct on wasm (analytic `volume` matches a
+  native OCCT 7.x build to 11 decimal places), and the triangulation *nodes*
+  are correct too. Plain (untrimmed) faces mesh fine.
+- The trimmed, REVERSED spherical face of a cut gets interior nodes that are
+  generated but never inserted into the triangulation; the node-index
+  compaction then maps triangle indices onto wrong/uninitialised nodes.
+  Signed mesh volume of the result: 0.66 instead of the analytic 0.10.
+- **This is not a wasm bug**: building the same pinned OCCT commit natively
+  (gcc, Debian arm64) reproduces it bit-for-bit. It is the same family as
+  OCCT issue #929 ("Internal vertices not bound in output triangulation");
+  PR #940 (merged 2026-04-24) fixed one binding path but the boolean-result
+  case is still broken at master `d3056ef8` (2026-06-12). Worth a new
+  upstream report - `/tmp/meshdump.cpp`-style repro: mesh
+  `BRepAlgoAPI_Cut(box, sphere)` at deflection 0.01 and compare per-face
+  node/triangle counts.
+- **Workaround:** OCCT's alternative Delabella mesh algorithm
+  (`CSF_MeshAlgo=delabella`) triangulates these faces correctly (verified:
+  signed mesh volume 0.1104 vs 0.1097 for the native mesh, holes render
+  properly). The playground defaults to it via a C constructor in
+  `playground/wasm_mesh_default.cpp` (`setenv` with overwrite=0, so it stays
+  user-overridable). Native builds against OCCT 7.x are unaffected; native
+  OCCT 8.x users would hit the same Watson bug.
+
+The browser test suite asserts the signed mesh volume of an exported CSG
+model against its analytic volume, which catches this whole class of bug.
 
 ## Visualization
 

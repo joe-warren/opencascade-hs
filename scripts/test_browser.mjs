@@ -59,6 +59,53 @@ main = do
   putStrLn "glb written" >> hFlush stdout`, 'glb written', true, true],
 ];
 
+function glbSignedVolume(glb) {
+  const jlen = glb.readUInt32LE(12);
+  const doc = JSON.parse(glb.subarray(20, 20 + jlen).toString());
+  const binOff = 20 + jlen + 8;
+  const bin = glb.subarray(binOff);
+  const compSize = { 5126: 4, 5123: 2, 5125: 4 };
+  const readAcc = (idx) => {
+    const acc = doc.accessors[idx];
+    const bv = doc.bufferViews[acc.bufferView];
+    const start = (bv.byteOffset || 0) + (acc.byteOffset || 0);
+    const per = acc.type === 'VEC3' ? 3 : 1;
+    const size = compSize[acc.componentType];
+    const out = [];
+    for (let i = 0; i < acc.count; i++) {
+      const o = start + i * per * size;
+      const v = [];
+      for (let k = 0; k < per; k++) {
+        v.push(
+          acc.componentType === 5126
+            ? bin.readFloatLE(o + k * size)
+            : acc.componentType === 5123
+              ? bin.readUInt16LE(o + k * size)
+              : bin.readUInt32LE(o + k * size)
+        );
+      }
+      out.push(v);
+    }
+    return out;
+  };
+  let vol = 0;
+  for (const m of doc.meshes || []) {
+    for (const pr of m.primitives) {
+      const pos = readAcc(pr.attributes.POSITION);
+      const idx = readAcc(pr.indices).map((x) => x[0]);
+      for (let t = 0; t < idx.length; t += 3) {
+        const [a, b, c] = [pos[idx[t]], pos[idx[t + 1]], pos[idx[t + 2]]];
+        vol +=
+          (a[0] * (b[1] * c[2] - b[2] * c[1]) -
+            a[1] * (b[0] * c[2] - b[2] * c[0]) +
+            a[2] * (b[0] * c[1] - b[1] * c[0])) /
+          6;
+      }
+    }
+  }
+  return vol;
+}
+
 async function runTest(page, name, code, expectedStdout, shouldSucceed, checkModel) {
   console.log(`\n=== Test: ${name} ===`);
 
@@ -144,6 +191,15 @@ async function runTest(page, name, code, expectedStdout, shouldSucceed, checkMod
       console.log(`  Model: ${modelPath} (${glb.length} bytes, magic=${magic})`);
       if (magic !== 'glTF' || glb.length < 1000) {
         console.log('  FAIL ✗ - extracted glb looks invalid');
+        return false;
+      }
+      // Signed mesh volume sanity check: catches mangled triangulation
+      // (e.g. boolean-cut holes meshed as filled faces) that structural
+      // checks miss. Expected analytic volume of the test CSG is ~0.11.
+      const vol = glbSignedVolume(glb);
+      console.log(`  Mesh volume: ${vol.toFixed(4)} (expected ~0.11)`);
+      if (!(Math.abs(vol - 0.11) < 0.03)) {
+        console.log('  FAIL ✗ - mesh volume far from analytic volume, triangulation is mangled');
         return false;
       }
     }
