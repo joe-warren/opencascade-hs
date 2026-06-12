@@ -36,11 +36,9 @@ We `sed` patch several OCCT source files to add stubs for `getuid`, `umask`, `mk
 
 OCCT is compiled with `-fwasm-exceptions` for real wasm-native exception handling. We build `libunwind` and `libc++abi` from the ghc-wasm LLVM fork with `-fwasm-exceptions -fPIC` to provide the runtime (`__cxa_throw`, `__cxa_begin_catch`, etc.).
 
-We still define `-DNo_Exception` because OCCT headers rely on it for various macro guards (not just exception behavior). With `No_Exception`, OCCT's own `Standard_Failure::Raise()` calls `abort()` instead of throwing, but raw C++ `throw` statements (e.g. in `BRep_Tool::Parameter`) still work and are caught by `try/catch` blocks higher up the call stack.
-
 **Why this matters:** Without real exception handling, the `__cxa_*` stubs called `abort()`, leaving OCCT data structures corrupt. This caused `TopoDS_Iterator::updateCurrentShape()` to crash with "memory access out of bounds" when iterating over shapes built by `BRepPrimAPI_MakeBox`.
 
-**Note:** `No_Exception` should eventually be removed if we can fix the `__declspec`/header compatibility issues it works around. That would let `Standard_Failure::Raise()` throw properly too.
+**History:** the build used to define `-DNo_Exception` (a legacy OCCT switch that turned `Standard_Failure::Raise()` into `abort()`), originally to work around header issues from the abort-stub era. OCCT 8 removed the machinery behind that define entirely - rebuilding without it produces byte-identical libraries - so it has been stripped from all build flags. Exceptions are simply on, everywhere.
 
 ### `setjmp.h` stub
 
@@ -76,7 +74,7 @@ The wasm build uses OCCT `main` (8.x) which deprecates `TopTools_ListOfShape.hxx
 
 ### Missing C++ `#include` directives
 
-Several `opencascade-hs` C++ wrapper files were missing explicit includes (`TopTools_ListOfShape.hxx`, `TColStd_IndexedDataMapOfStringString.hxx`). These worked on native builds due to transitive includes but failed with `-DNo_Exception` changing the include graph.
+Several `opencascade-hs` C++ wrapper files were missing explicit includes (`TopTools_ListOfShape.hxx`, `TColStd_IndexedDataMapOfStringString.hxx`). These worked on native builds due to transitive includes but failed on the wasm build, whose OCCT version has a different include graph.
 
 **Status:** Fixed in the source. Not a workaround, just bugs that the wasm build exposed.
 

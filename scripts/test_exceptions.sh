@@ -40,7 +40,7 @@ int test_catch_base() {
 CPPEOF
 
 wasm32-wasi-clang++ -fPIC -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false \
-  -I/OCCT/work/wasm/inc -D__EMSCRIPTEN__ -DNo_Exception \
+  -I/OCCT/work/wasm/inc -D__EMSCRIPTEN__ \
   -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_PROCESS_CLOCKS \
   -D_WASI_EMULATED_MMAN -D_WASI_EMULATED_GETPID -I/OCCT/wasi_stubs \
   -c /tmp/throwtest.cpp -o /tmp/throwtest.o

@@ -32,7 +32,7 @@ export aToolchain=~/.ghc-wasm/wasi-sdk/share/cmake/wasi-sdk.cmake
 # WASI emulation flags needed for OCCT's POSIX dependencies
 # Define __EMSCRIPTEN__ to trigger OCCT's existing wasm code paths (no X11, no fontconfig, etc.)
 # The wasi_stubs directory provides any Emscripten-specific headers that OCCT may reference.
-export aWasiCFlags="-fPIC -D__EMSCRIPTEN__ -DNo_Exception -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_PROCESS_CLOCKS -D_WASI_EMULATED_MMAN -D_WASI_EMULATED_GETPID -I${aSrcRoot}/wasi_stubs"
+export aWasiCFlags="-fPIC -D__EMSCRIPTEN__ -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_PROCESS_CLOCKS -D_WASI_EMULATED_MMAN -D_WASI_EMULATED_GETPID -I${aSrcRoot}/wasi_stubs"
 export aWasiLinkFlags="-lwasi-emulated-signal -lwasi-emulated-process-clocks -lwasi-emulated-mman -lwasi-emulated-getpid"
 
 export aGitBranch=`git symbolic-ref --short HEAD`

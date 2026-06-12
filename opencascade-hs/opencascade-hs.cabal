@@ -359,7 +359,7 @@ library
   default-language: Haskell2010
   if arch(wasm32)
     ghc-options: -Wwarn=redundant-constraints
-    cxx-options: -Wno-#pragma-messages -fexceptions -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false -DNo_Exception
+    cxx-options: -Wno-#pragma-messages -fexceptions -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false
     include-dirs:
         /OCCT/wasi_stubs
         /OCCT/work/wasm/inc

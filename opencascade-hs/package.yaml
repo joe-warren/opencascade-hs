@@ -36,7 +36,6 @@ when:
     - -fwasm-exceptions
     - -mllvm
     - -wasm-use-legacy-eh=false
-    - -DNo_Exception
     ghc-options:
     - -Wwarn=redundant-constraints
   else:
