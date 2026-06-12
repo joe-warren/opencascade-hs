@@ -1,6 +1,8 @@
+{-# LANGUAGE CApiFFI #-}
 module OpenCascade.Internal.Exception 
 ( OpenCascadeException (..)
 , wrapException
+, testThrow
 ) where
 
 import Foreign.C
@@ -10,6 +12,7 @@ import Control.Exception (Exception, throw)
 import Data.Data (Typeable)
 import Foreign.Storable (peek)
 import qualified OpenCascade.Standard.Failure as Standard.Failure
+import qualified OpenCascade.Std.Types as Std
 import qualified OpenCascade.Std.Exception as Std.Exception
 import OpenCascade.Standard.Internal.Destructors (deleteFailure)
 import OpenCascade.Std.Internal.Destructors (deleteException)
@@ -56,3 +59,9 @@ wrapException f =
     alloca $ \flagPtr -> 
         alloca $ \exPtr -> do
             f flagPtr exPtr <* handleError flagPtr exPtr
+
+foreign import capi unsafe "hs_Exception.h hs_throw_std_exception" rawThrow :: Ptr Std.Exception -> Ptr CInt -> Ptr (Ptr ())-> IO ()
+
+-- | This is exposed in order to write tests for the Std.Exception catching path
+testThrow :: Ptr Std.Exception -> IO ()
+testThrow ex = wrapException (rawThrow ex)

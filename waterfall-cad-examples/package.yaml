@@ -68,4 +68,5 @@ tests:
     - FontyFruity
     - filepath
     - temporary
+    - resourcet
 

@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.38.1.
+-- This file has been generated from package.yaml by hpack version 0.39.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -299,6 +299,7 @@ library
       OpenCascade.Standard.Types
       OpenCascade.Std.Exception
       OpenCascade.Std.Internal.Destructors
+      OpenCascade.Std.RuntimeError
       OpenCascade.Std.Types
       OpenCascade.STEPControl
       OpenCascade.STEPControl.Internal.Destructors
