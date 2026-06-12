@@ -48,9 +48,11 @@ WASI's `setjmp.h` requires wasm exception handling support (`-mllvm -wasm-enable
 
 **Risk:** Any OCCT code that uses `setjmp`/`longjmp` for error recovery will crash instead of recovering. This may be related to the meshing bug (corrupted STL output).
 
-### No `extra-libraries` on the library package
+### No `extra-libraries` and no `cxx-sources` on the library package
 
-GHC's wasm backend tries to dynamically load `extra-libraries` at compile time via Node.js/dyld.mjs, which can't handle OCCT's static archives. We moved all library references to linker flags in `cabal.project` instead.
+GHC's wasm backend tries to dynamically load `extra-libraries` at compile time via Node.js/dyld.mjs, which can't handle OCCT's static archives. We moved all library references to linker flags instead.
+
+On top of that, the wasm build of `opencascade-hs` doesn't compile `cxx-sources` either: all C++ (the wrappers, OCCT, libc++abi) must live in a single wasm module for exception handling to work (see "C++ exception handling across wasm shared libraries" below). The wrappers are compiled by `playground/build_playground.sh` into `libplayground.so`, and the package's `hs_*` FFI imports are bound to that module by dyld at load time.
 
 **Ideal fix:** GHC wasm should support static-only `extra-libraries` without trying to load them at compile time. This may be worth raising as a ghc-wasm issue.
 
@@ -78,15 +80,13 @@ Several `opencascade-hs` C++ wrapper files were missing explicit includes (`TopT
 
 **Status:** Fixed in the source. Not a workaround, just bugs that the wasm build exposed.
 
-## Known issues
+## C++ exception handling across wasm shared libraries (SOLVED)
 
-### Catching OCCT exception types crashes in the playground (`volume`, booleans, STL/SVG export)
-
-The browser test suite passes 3/4 (`hello`, `solidDiagram`/HLR, `MakeBox::Shell`); the
-`volume`/boolean test fails because OCCT internally throws exception types like
-`Standard_DomainError`, and catching those types crashes. Investigated June 2026,
-the root cause is a chain of dynamic-linking problems with weakly-defined RTTI
-symbols (typeinfo/vtable/typename for header-only classes defined via
+OCCT throws exception types like `Standard_DomainError` internally as part of
+normal control flow, so catching them has to work. It now does - the browser
+test suite passes 4/4, including the `volume`/boolean test. Getting there
+required understanding a chain of dynamic-linking problems with weakly-defined
+RTTI symbols (typeinfo/vtable/typename for header-only classes defined via
 `DEFINE_STANDARD_EXCEPTION`, which have C++ vague linkage and so are emitted weak
 in every translation unit):
 
@@ -119,21 +119,31 @@ in every translation unit):
    *all* weak symbols (including functions) regressed other tests with
    "function signature mismatch", so any fix must stick to data symbols.
 
-**Status:** the dyld relocation-ordering fix (patch 2) is included since it is
-strictly more correct and keeps the suite at 3/4. The remaining mis-relocation of
-weak typeinfo *contents* inside the cabal-built shared libraries is unsolved -
-likely an interaction between wasm-ld's relocation emission for preempted weak
-data and dyld.mjs, and worth an upstream report (LLVM and/or ghc-wasm).
-Reproduce with `scripts/test_exceptions.sh` inside the Docker image (throws and
-catches `Standard_DomainError` in a wasm shared library under Node).
+**The solution: keep all C++ in a single wasm module.** Splitting the C++
+between `libHSopencascade-hs.so` (which compiled the wrapper `cxx-sources`) and
+`libplayground.so` (which statically links OCCT) meant duplicate RTTI, GOT
+preemption, and exceptions crossing module boundaries - an endless source of
+the problems above. Instead:
 
-**Possible ways forward:**
-- Upstream: make wasm-ld export weakly-defined data symbols from shared
-  libraries (or at least honour `--export-all` for them), and check how its
-  `__wasm_apply_data_relocs` is generated for preempted weak data.
-- Patch OCCT's `DEFINE_STANDARD_EXCEPTION` to anchor each exception class
-  (non-inline key function) so the RTTI symbols become strong, sidestepping all
-  weak-symbol handling. Strong RTTI (e.g. `Standard_Failure`) works correctly.
+- On wasm32, the `opencascade-hs` package ships **no C++ at all**
+  (`cxx-sources` is native-only in `package.yaml`). Its `hs_*` FFI imports are
+  left undefined (`--unresolved-symbols=import-dynamic`) and bound by dyld at
+  load time.
+- `playground/build_playground.sh` compiles the wrapper `cpp/*.cpp` files
+  itself and links them, OCCT, freetype and libc++abi into `libplayground.so`.
+  All throws and catches are now module-internal, like the (working) static
+  executable case.
+- The weak RTTI/guard data of that module is force-exported via a generated
+  `--export-if-defined` response file (data symbols only - `_ZT[ISV]*`,
+  `_ZGV*`, `_ZZ*` - exporting weak *functions* broke dyld's function bindings
+  with "function signature mismatch"), so the module satisfies its own GOT.
+  Together with the dyld relocation-ordering fix (patch 2) this makes the
+  typeinfo objects fully and consistently relocated.
+
+The wasm-ld weak-data export behaviour is still worth an upstream report
+(LLVM and/or ghc-wasm); `scripts/test_exceptions.sh` inside the Docker image is
+a standalone reproduction (throws and catches `Standard_DomainError` in a wasm
+shared library under Node).
 
 ### STL meshing produces corrupted output
 

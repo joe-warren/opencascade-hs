@@ -57,6 +57,26 @@ for obj in /tmp/cxxabi_objs/*.obj; do
   CXX_ABI_OBJS="$CXX_ABI_OBJS -optl$obj"
 done
 
+# Compile the opencascade-hs C++ wrappers directly into libplayground.so.
+# On wasm the cabal package does not compile them; keeping all C++ (wrappers,
+# OCCT, libc++abi) in one module makes exception handling module-internal.
+WRAP_DIR=/tmp/wrapper_objs
+rm -rf "$WRAP_DIR"; mkdir -p "$WRAP_DIR"
+WRAP_FLAGS="-fPIC --std=c++17 -O2 -Wno-deprecated -Wno-#pragma-messages -fexceptions -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false -DNo_Exception -D__EMSCRIPTEN__ -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_PROCESS_CLOCKS -D_WASI_EMULATED_MMAN -D_WASI_EMULATED_GETPID -I$OPENCASCADE_HS_DIR/opencascade-hs/cpp -I/OCCT/work/wasm/inc -I/OCCT/wasi_stubs"
+ls "$OPENCASCADE_HS_DIR"/opencascade-hs/cpp/*.cpp | \
+  xargs -P"$(nproc)" -I{} sh -c "wasm32-wasi-clang++ $WRAP_FLAGS -c {} -o $WRAP_DIR/\$(basename {} .cpp).o"
+WRAPPER_OBJS=""
+for obj in "$WRAP_DIR"/*.o; do WRAPPER_OBJS="$WRAPPER_OBJS -optl$obj"; done
+
+# Weak C++ data (typeinfo/typename/vtable/guard variables) is never exported
+# by wasm-ld, but references to it still go through GOT imports; force-export
+# it so the module resolves its own GOT entries (dyld defers relocations
+# until exports are processed - see scripts/patch_dyld.js).
+{ llvm-nm "$SYSROOT"/libTK*.a "$SYSROOT/libfreetype.a" "$SYSROOT/libc++abi.a" "$WRAP_DIR"/*.o 2>/dev/null; } | \
+  awk '($2=="W"||$2=="V"||$2=="w") && $3 ~ /^_Z(T[ISV]|GV|Z)/ {print "--export-if-defined="$3}' | \
+  sort -u > /tmp/rtti_exports.rsp
+echo "  $(wc -l < /tmp/rtti_exports.rsp) weak data exports"
+
 OCCT_LINK_FLAGS="-optl-fwasm-exceptions -optl-Wl,-z,stack-size=8388608 -optl-Wl,--export-all -optl-Wl,--whole-archive"
 for lib in "${OCCT_LIBS[@]}"; do
   OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-l$lib"
@@ -64,6 +84,7 @@ done
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-Wl,--no-whole-archive"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lfreetype -optl-lc++ -optl-lunwind"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS $CXX_ABI_OBJS"
+OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS $WRAPPER_OBJS -optl-Wl,@/tmp/rtti_exports.rsp"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lwasi-emulated-process-clocks -optl-lwasi-emulated-signal"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lwasi-emulated-mman -optl-lwasi-emulated-getpid"
 
@@ -75,6 +96,7 @@ for pkg in "${LOCAL_PKGS[@]}"; do
 done
 
 PLAYGROUND_SO="/tmp/libplayground.so"
+rm -f "$PLAYGROUND_SO"
 cd "$OPENCASCADE_HS_DIR"
 wasm32-wasi-ghc \
   -v0 \

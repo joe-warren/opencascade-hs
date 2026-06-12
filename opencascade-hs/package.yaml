@@ -18,9 +18,12 @@ include-dirs:
 
 # The wasm build (see Dockerfile / WASM_BUILD_NOTES.md) compiles against an
 # OCCT tree built with wasi-sdk at /OCCT, with C++ wasm-native exceptions.
-# OCCT libraries can't be listed in extra-libraries on wasm32, because GHC's
-# wasm backend tries to dynamically load them at compile time; they're passed
-# as linker flags on the final link instead (see cabal.project, playground/).
+# On wasm32 this package ships no C++ at all: the wrappers can't go in
+# extra-libraries or cxx-sources because GHC's wasm backend would have to
+# load them at compile time, and C++ exception handling only works when all
+# C++ (wrappers, OCCT, libc++abi) is linked into a single wasm module. The
+# hs_* FFI imports are left undefined and bound by the dynamic loader to the
+# module that does contain them (see playground/build_playground.sh).
 when:
 - condition: arch(wasm32)
   then:
@@ -39,6 +42,8 @@ when:
   else:
     include-dirs:
     - /usr/include/opencascade
+    cxx-sources:
+    - cpp/*.cpp
     extra-libraries:
     - stdc++
     - TKGeomBase
@@ -86,5 +91,3 @@ cxx-options:
 
 library:
   source-dirs: src
-  cxx-sources:
-    - cpp/*.cpp
