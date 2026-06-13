@@ -54,11 +54,29 @@ On top of that, the wasm build of `opencascade-hs` doesn't compile `cxx-sources`
 
 **Ideal fix:** GHC wasm should support static-only `extra-libraries` without trying to load them at compile time. This may be worth raising as a ghc-wasm issue.
 
-### `--whole-archive` for OCCT libraries
+### OCCT linked as plain archives (was `--whole-archive`), to fit Firefox
 
-Static linking is order-dependent. Rather than figuring out the correct topological ordering of ~30 OCCT libraries, we use `--whole-archive` to include all symbols.
+`libplayground.so` links the ~30 OCCT static libraries plainly and lets `wasm-ld`
+pull in only the archive members actually referenced by the wrappers (it resolves
+OCCT's circular inter-library dependencies with a fixpoint, so no `--start-group`
+is needed — and `wasm-ld` rejects that flag anyway). `--export-all` is kept so the
+in-browser GHC interpreter and the dynamic loader can still resolve every
+waterfall-cad / wrapper / lifecycle symbol at runtime.
 
-**Downside:** Larger binary (33MB). With proper link ordering, unused code could be dead-stripped.
+This replaced an earlier `--whole-archive` that forced *all* of OCCT into the
+module. That was fine in Chrome, but once main's exception-handling migration
+wrapped every call in `try/catch` (a `try_table` landing pad in every function),
+the compiled machine code overran **Firefox/SpiderMonkey's wasm executable-memory
+ceiling** — the playground stalled at "Initialising GHC..." with `failed to
+allocate executable memory for module` → `InternalError: out of memory`. Dropping
+the unreferenced OCCT trimmed `libplayground.so` from ~57MB to ~52MB, just enough
+to clear the limit. Both Chrome and Firefox now load and pass the suite.
+
+**Note:** the margin is thin — the in-browser GHC API and OCCT are both large. If
+future growth pushes Firefox back over the ceiling, the next lever is function-
+level `--gc-sections` with an explicit export list (export the waterfall-cad /
+wrapper / lifecycle symbols the interpreter needs, let unused OCCT functions be
+garbage-collected) rather than archive-member selection alone.
 
 ### Stale `.cabal` files and Docker layer caching
 
