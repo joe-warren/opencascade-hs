@@ -77,12 +77,23 @@ for obj in "$WRAP_DIR"/*.o; do WRAPPER_OBJS="$WRAPPER_OBJS -optl$obj"; done
   sort -u > /tmp/rtti_exports.rsp
 echo "  $(wc -l < /tmp/rtti_exports.rsp) weak data exports"
 
-OCCT_LINK_FLAGS="-optl-fwasm-exceptions -optl-Wl,-z,stack-size=8388608 -optl-Wl,--export-all -optl-Wl,--whole-archive"
+# Link OCCT as plain archives (not --whole-archive). --whole-archive forced
+# *all* of OCCT into the module; combined with OCCT's wasm-native exception code
+# (a try_table landing pad in every function) the compiled machine code overran
+# Firefox/SpiderMonkey's wasm executable-memory ceiling ("failed to allocate
+# executable memory for module"). Listing the libraries plainly makes wasm-ld
+# pull in only the archive members actually referenced by the wrappers and dead-
+# drop the unused majority of OCCT, which keeps the module under Firefox's limit.
+# wasm-ld resolves OCCT's circular inter-library dependencies with a fixpoint, so
+# no --start-group is needed (it rejects that flag anyway). --export-all is kept
+# so the dynamic loader still finds every symbol it needs (myMain, _initialize,
+# __wasm_apply_data_relocs, jsffi init, ...).
+OCCT_LINK_FLAGS="-optl-fwasm-exceptions -optl-Wl,-z,stack-size=8388608 -optl-Wl,--export-all"
 for lib in "${OCCT_LIBS[@]}"; do
   OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-l$lib"
 done
-OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-Wl,--no-whole-archive"
-OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lfreetype -optl-lc++ -optl-lunwind"
+OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lfreetype"
+OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lc++ -optl-lunwind"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS $CXX_ABI_OBJS"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS $WRAPPER_OBJS -optl-Wl,@/tmp/rtti_exports.rsp"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lwasi-emulated-process-clocks -optl-lwasi-emulated-signal"
