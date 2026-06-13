@@ -1,4 +1,5 @@
 #include <RWObj_CafWriter.hxx>
+#include <TColStd_IndexedDataMapOfStringString.hxx>
 #include "hs_Exception.h"
 #include "hs_RWObj_CafWriter.h"
 
