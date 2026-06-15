@@ -171,10 +171,14 @@ The wasm-ld weak-data export behaviour is still worth an upstream report
 a standalone reproduction (throws and catches `Standard_DomainError` in a wasm
 shared library under Node).
 
-### Mangled meshes: an upstream OCCT 8.0-dev Watson mesher bug (worked around)
+### Mangled meshes: an upstream OCCT 8.0-dev Watson mesher bug (fixed by pinning 7.9)
 
 Boolean results rendered with mangled geometry: boolean-cut faces with
-internal boundaries got fan-shaped garbage triangles. Diagnosed June 2026:
+internal boundaries got fan-shaped garbage triangles. Diagnosed June 2026 on
+the original 8.0-dev pin; **no longer reproduces now that the build is pinned
+to OCCT 7.9.3** (its default Watson mesher meshes the test CSG correctly -
+signed mesh volume 0.1097, matching native). The history is kept here because
+it explains the version pin and would resurface for anyone building on 8.0.
 
 - The boolean/BRep itself is correct on wasm (analytic `volume` matches a
   native OCCT 7.x build to 11 decimal places), and the triangulation *nodes*
@@ -191,18 +195,15 @@ internal boundaries got fan-shaped garbage triangles. Diagnosed June 2026:
   upstream report - `/tmp/meshdump.cpp`-style repro: mesh
   `BRepAlgoAPI_Cut(box, sphere)` at deflection 0.01 and compare per-face
   node/triangle counts.
-- **Workaround:** OCCT's alternative Delabella mesh algorithm
-  (`CSF_MeshAlgo=delabella`) triangulates these faces correctly (verified:
-  signed mesh volume 0.1104 vs 0.1097 for the native mesh, holes render
-  properly). The playground defaults to it via a C constructor in
-  `playground/wasm_mesh_default.cpp` (`setenv` with overwrite=0, so it stays
-  user-overridable). Native builds against OCCT 7.x are unaffected; native
-  OCCT 8.x users would hit the same Watson bug.
-- **Note:** the wasm build is now pinned to OCCT 7.9.3, where this Watson bug
-  may well not exist (it was diagnosed on 8.0-dev). The Delabella default is
-  still in place, so 7.9's Watson mesher has not actually been re-tested here.
-  Dropping the workaround (and confirming Watson is clean on 7.9) is a
-  worthwhile follow-up.
+- **Past workaround (removed):** while on 8.0-dev the playground forced OCCT's
+  alternative Delabella algorithm (`CSF_MeshAlgo=delabella`) via a constructor
+  in `playground/wasm_mesh_default.cpp`. That file was deleted once 7.9.3 was
+  confirmed to mesh correctly with the default Watson algorithm. If the pin is
+  ever moved back to 8.x, reinstating that one-file `setenv` is the fix.
+- If you suspect a meshing regression, the diagnostic was a `meshdump.cpp` that
+  meshes `BRepAlgoAPI_Cut(box, sphere)` at deflection 0.01 and compares per-face
+  node/triangle counts; the bug is the same family as OCCT issue #929
+  ("Internal vertices not bound in output triangulation").
 
 The browser test suite asserts the signed mesh volume of an exported CSG
 model against its analytic volume, which catches this whole class of bug.

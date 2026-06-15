@@ -60,10 +60,12 @@ done
 # Compile the opencascade-hs C++ wrappers directly into libplayground.so.
 # On wasm the cabal package does not compile them; keeping all C++ (wrappers,
 # OCCT, libc++abi) in one module makes exception handling module-internal.
+# Any extra .cpp sitting next to this script is also compiled in; find tolerates
+# the playground dir having none (unlike a glob, which errors on no match).
 WRAP_DIR=/tmp/wrapper_objs
 rm -rf "$WRAP_DIR"; mkdir -p "$WRAP_DIR"
 WRAP_FLAGS="-fPIC --std=c++17 -O2 -Wno-deprecated -Wno-#pragma-messages -fexceptions -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false -D__EMSCRIPTEN__ -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_PROCESS_CLOCKS -D_WASI_EMULATED_MMAN -D_WASI_EMULATED_GETPID -I$OPENCASCADE_HS_DIR/opencascade-hs/cpp -I/OCCT/work/wasm/inc -I/OCCT/wasi_stubs"
-ls "$OPENCASCADE_HS_DIR"/opencascade-hs/cpp/*.cpp "$SCRIPT_DIR"/*.cpp | \
+find "$OPENCASCADE_HS_DIR"/opencascade-hs/cpp "$SCRIPT_DIR" -maxdepth 1 -name '*.cpp' | \
   xargs -P"$(nproc)" -I{} sh -c "wasm32-wasi-clang++ $WRAP_FLAGS -c {} -o $WRAP_DIR/\$(basename {} .cpp).o"
 WRAPPER_OBJS=""
 for obj in "$WRAP_DIR"/*.o; do WRAPPER_OBJS="$WRAPPER_OBJS -optl$obj"; done

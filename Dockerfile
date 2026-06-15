@@ -17,9 +17,10 @@ ENV NODE_PATH=/opt/puppeteer/node_modules
 # clone source dependencies, pinned to known-good refs.
 # OCCT is pinned to the 7.9.3 release tag -- the stable series the native build
 # targets (see README) rather than 8.0-dev master. 7.9 uses the flat src/<Package>/
-# layout, so wasm_patch.sh locates files by name to stay layout-agnostic. The
-# playground keeps selecting the Delabella mesher (playground/wasm_mesh_default.cpp)
-# as belt-and-braces. freetype/rapidjson masters as of 2026-04-01.
+# layout, so wasm_patch.sh locates files by name to stay layout-agnostic. 7.9's
+# default Watson mesher is correct (the 8.0-dev triangulation bug that needed a
+# Delabella workaround does not occur), so no mesh override is needed.
+# freetype/rapidjson masters as of 2026-04-01.
 ENV OCCT_COMMIT=V7_9_3 \
     FREETYPE_COMMIT=07d8d50a63a45a7446b2fc44732baecc685f3e4c \
     RAPIDJSON_COMMIT=24b5e7a8b27f42fa16b96fc70aade9106cf7102f
