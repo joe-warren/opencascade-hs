@@ -33,7 +33,14 @@ export aToolchain=~/.ghc-wasm/wasi-sdk/share/cmake/wasi-sdk.cmake
 # Define __EMSCRIPTEN__ to trigger OCCT's existing wasm code paths (no X11, no fontconfig, etc.)
 # The wasi_stubs directory provides any Emscripten-specific headers that OCCT may reference.
 export aWasiCFlags="-fPIC -D__EMSCRIPTEN__ -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_PROCESS_CLOCKS -D_WASI_EMULATED_MMAN -D_WASI_EMULATED_GETPID -I${aSrcRoot}/wasi_stubs"
-export aWasiLinkFlags="-lwasi-emulated-signal -lwasi-emulated-process-clocks -lwasi-emulated-mman -lwasi-emulated-getpid"
+# Exe link flags: OCCT 7.9 builds host tools (e.g. ExpToCasExe) as wasm executables.
+# Everything is compiled -fPIC + -fwasm-exceptions, which makes C++ exceptions
+# *import* the __cpp_exception tag (the playground's dynamic loader supplies it at
+# runtime; a standalone executable has nothing to). -lc++abi/-lunwind resolve the
+# _Unwind_* / cxa symbols, and --allow-undefined lets the unsatisfiable tag become
+# a harmless import so the tool links. Only the static libraries are consumed
+# downstream -- these executables are built but never run.
+export aWasiLinkFlags="-Wl,--allow-undefined -lc++abi -lunwind -lwasi-emulated-signal -lwasi-emulated-process-clocks -lwasi-emulated-mman -lwasi-emulated-getpid"
 
 export aGitBranch=`git symbolic-ref --short HEAD`
 
