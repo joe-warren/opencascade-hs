@@ -4,11 +4,21 @@ The wasm build works end-to-end but relies on several workarounds. This document
 
 ## Pinned versions
 
-The Dockerfile pins OCCT, freetype and rapidjson to their master commits as of
-2026-04-01 (the era this recipe was last verified against), ghc-wasm-meta to
+The Dockerfile pins OCCT to the **7.9.3 release tag** (`V7_9_3`) — the stable
+series the native build targets, rather than 8.0-dev master. freetype and
+rapidjson are pinned to their master commits as of 2026-04-01, ghc-wasm-meta to
 commit `61a4baf7` (GHC 9.14.1.20260213 - later snapshots regressed wasm
-exception handling), and `cabal.project` pins `index-state` to the same date.
+exception handling), and `cabal.project` pins `index-state` to 2026-04-01.
 Bump these deliberately, one at a time.
+
+Because 7.9 uses the flat `src/<Package>/` source layout (8.0 reorganised into
+`src/<Module>/<Toolkit>/<Package>/`), `scripts/occt/wasm_patch.sh` locates the
+files it patches by name, so it works against either layout. 7.9 also builds a
+host tool (`ExpToCasExe`) as a wasm executable; since everything is compiled
+`-fPIC -fwasm-exceptions` the C++ exception tag is an import the playground's
+loader would normally supply, so `scripts/occt/wasm_build.sh` links executables
+with `--allow-undefined` (the tool links but is never run; only the static
+libraries are consumed).
 
 ## Workarounds in use
 
@@ -188,6 +198,11 @@ internal boundaries got fan-shaped garbage triangles. Diagnosed June 2026:
   `playground/wasm_mesh_default.cpp` (`setenv` with overwrite=0, so it stays
   user-overridable). Native builds against OCCT 7.x are unaffected; native
   OCCT 8.x users would hit the same Watson bug.
+- **Note:** the wasm build is now pinned to OCCT 7.9.3, where this Watson bug
+  may well not exist (it was diagnosed on 8.0-dev). The Delabella default is
+  still in place, so 7.9's Watson mesher has not actually been re-tested here.
+  Dropping the workaround (and confirming Watson is clean on 7.9) is a
+  worthwhile follow-up.
 
 The browser test suite asserts the signed mesh volume of an exported CSG
 model against its analytic volume, which catches this whole class of bug.
