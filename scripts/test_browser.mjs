@@ -127,7 +127,7 @@ async function runTest(page, name, code, expectedStdout, shouldSucceed, checkMod
 
   // Set the editor content
   await page.evaluate((c) => {
-    window.editor.setValue(c);
+    window.editor.dispatch({ changes: { from: 0, to: window.editor.state.doc.length, insert: c } });
   }, code);
   console.log('  Code entered');
 

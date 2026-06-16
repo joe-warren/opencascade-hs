@@ -21,7 +21,7 @@ await page.waitForFunction(
   () => document.getElementById('status')?.textContent === 'Ready!',
   { timeout: TIMEOUT }
 );
-await page.evaluate((c) => window.editor.setValue(c), code);
+await page.evaluate((c) => window.editor.dispatch({ changes: { from: 0, to: window.editor.state.doc.length, insert: c } }), code);
 await page.click('#runBtn');
 await page.waitForFunction(
   () => {
