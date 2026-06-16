@@ -37,7 +37,9 @@
         border-bottom: 1px solid #1f2937;
         font-weight: 600;
       }
-      #editor { flex: 1; min-height: 0; }
+      #editor { flex: 1; min-height: 0; overflow: hidden; }
+      .cm-editor { height: 100%; }
+      .cm-editor .cm-scroller { font-family: ui-monospace, Menlo, Consolas, monospace; }
       .right { padding: 0.6rem; gap: 0.6rem; }
       .controls { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
       .controls input[type="text"] {
@@ -70,7 +72,10 @@
 
     <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4/dist/model-viewer.min.js"></script>
     <script async type="module">
-      import * as monaco from "https://cdn.jsdelivr.net/npm/monaco-editor/+esm";
+      import { EditorView, basicSetup } from "https://esm.sh/codemirror@6.0.1";
+      import { StreamLanguage } from "https://esm.sh/@codemirror/language@6";
+      import { haskell } from "https://esm.sh/@codemirror/legacy-modes@6/mode/haskell";
+      import { oneDark } from "https://esm.sh/@codemirror/theme-one-dark@6";
       import {
         ConsoleStdout, File, OpenFile, PreopenDirectory, WASI,
       } from "https://esm.sh/gh/haskell-wasm/browser_wasi_shim";
@@ -113,8 +118,8 @@
         );
       }
 
-      window.editor = monaco.editor.create(document.getElementById("editor"), {
-        value: `import Waterfall.Solids (centeredCube, unitSphere)
+      window.editor = new EditorView({
+        doc: `import Waterfall.Solids (centeredCube, unitSphere)
 import Waterfall.Booleans (difference)
 import Waterfall.Transforms (uScale)
 import Waterfall.IO (writeGLB)
@@ -123,11 +128,8 @@ main :: IO ()
 main = writeGLB 0.01 "/out.glb" $
   difference centeredCube (uScale 0.65 unitSphere)
 `,
-        language: "haskell",
-        automaticLayout: true,
-        minimap: { enabled: false },
-        theme: "vs-dark",
-        fontSize: 14,
+        parent: document.getElementById("editor"),
+        extensions: [basicSetup, StreamLanguage.define(haskell), oneDark],
       });
 
       setStatus("Initialising GHC...");
@@ -208,7 +210,7 @@ main = writeGLB 0.01 "/out.glb" $
 
           await main_func(
             document.getElementById("ghcArgs").value,
-            editor.getValue()
+            editor.state.doc.toString()
           );
 
           updateViewer();
