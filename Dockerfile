@@ -82,11 +82,6 @@ RUN source ~/.ghc-wasm/env && \
     cp /tmp/build-unwind/lib/libunwind.a "$SYSROOT/lib/wasm32-wasi/" && \
     ls -lh "$SYSROOT/lib/wasm32-wasi/libunwind.a"
 
-# Patch cxa_personality.cpp to use __memory_base for DW_EH_PE_datarel on wasm.
-# Without this, scan_eh_tab uses base=0 for typeinfo lookup, causing OOB when
-# catching derived exception types in PIC shared libraries.
-RUN python3 /OCCT/wasi_stubs/cxa_personality_patch.py /tmp/llvm/libcxxabi/src/cxa_personality.cpp
-
 RUN source ~/.ghc-wasm/env && \
     SYSROOT=~/.ghc-wasm/wasi-sdk/share/wasi-sysroot && \
     CXX_INC1="$SYSROOT/include/wasm32-wasi/c++/v1" && \
