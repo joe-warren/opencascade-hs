@@ -14,18 +14,12 @@ RUN apt-get update && \
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV NODE_PATH=/opt/puppeteer/node_modules
 
+WORKDIR /
+
 # clone source dependencies, pinned to known-good refs.
-# OCCT is pinned to the 7.9.3 release tag -- the stable series the native build
-# targets (see README) rather than 8.0-dev master. 7.9 uses the flat src/<Package>/
-# layout, so wasm_patch.sh locates files by name to stay layout-agnostic. 7.9's
-# default Watson mesher is correct (the 8.0-dev triangulation bug that needed a
-# Delabella workaround does not occur), so no mesh override is needed.
-# freetype/rapidjson masters as of 2026-04-01.
-ENV OCCT_COMMIT=V7_9_3 \
-    FREETYPE_COMMIT=07d8d50a63a45a7446b2fc44732baecc685f3e4c \
+ENV FREETYPE_COMMIT=07d8d50a63a45a7446b2fc44732baecc685f3e4c \
     RAPIDJSON_COMMIT=24b5e7a8b27f42fa16b96fc70aade9106cf7102f
-RUN git clone --filter=tree:0 https://github.com/Open-Cascade-SAS/OCCT.git && \
-    git -C OCCT checkout "$OCCT_COMMIT" && \
+RUN git clone --filter=tree:0 https://github.com/joe-warren/OCCT-Wasi-Fork.git OCCT && \
     git clone --filter=tree:0 https://github.com/freetype/freetype.git && \
     git -C freetype checkout "$FREETYPE_COMMIT" && \
     git clone --filter=tree:0 https://github.com/Tencent/rapidjson.git && \
@@ -40,12 +34,7 @@ RUN cd /tmp && \
     curl -f -L --retry 5 "https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta/-/archive/${GHC_WASM_META_COMMIT}/ghc-wasm-meta.tar.gz" | tar xz --strip-components=1 && \
     ./setup.sh
 
-# copy WASI stubs and OCCT build scripts (needed by freetype and OCCT builds)
 WORKDIR /
-COPY scripts/occt/wasi_stubs OCCT/wasi_stubs
-COPY scripts/occt/wasm_build.sh OCCT/adm/scripts/wasm_build.sh
-COPY scripts/occt/wasm_custom.sh OCCT/adm/scripts/wasm_custom.sh
-COPY scripts/occt/wasm_patch.sh OCCT/adm/scripts/wasm_patch.sh
 
 # build freetype for wasm
 RUN source ~/.ghc-wasm/env && \
@@ -58,9 +47,6 @@ RUN source ~/.ghc-wasm/env && \
       .. && \
     make -j4 && make install && \
     cp /freetype/install/lib/*.a ~/.ghc-wasm/wasi-sdk/share/wasi-sysroot/lib/wasm32-wasi/
-
-# patch OCCT source for WASI compatibility (stub headers + source patches)
-RUN chmod +x ./OCCT/adm/scripts/wasm_patch.sh && ./OCCT/adm/scripts/wasm_patch.sh /OCCT
 
 # build OCCT for wasm (with -fwasm-exceptions for real C++ exception handling)
 RUN chmod +x ./OCCT/adm/scripts/wasm_build.sh && \
