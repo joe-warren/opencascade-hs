@@ -44,19 +44,6 @@ mkdir -p "$ROOTFS"
 # --- 1. Build libplayground.so with OCCT statically linked ---
 echo "[1/6] Building libplayground.so..."
 
-# Extract all libc++abi objects and link them directly into libplayground.so.
-# This ensures __cxa_throw etc. are IN the same module as the OCCT catch blocks,
-# which is required for wasm exception handling to work across call boundaries.
-# We can't use -lc++abi with --whole-archive because wasm-ld -shared treats
-# __cxa_* as imports regardless. Direct .o linking forces definitions.
-SYSROOT_LIB="$SYSROOT"
-mkdir -p /tmp/cxxabi_objs && cd /tmp/cxxabi_objs && llvm-ar x "$SYSROOT_LIB/libc++abi.a"
-cd "$OPENCASCADE_HS_DIR"
-CXX_ABI_OBJS=""
-for obj in /tmp/cxxabi_objs/*.obj; do
-  CXX_ABI_OBJS="$CXX_ABI_OBJS -optl$obj"
-done
-
 # Compile the opencascade-hs C++ wrappers directly into libplayground.so.
 # On wasm the cabal package does not compile them; keeping all C++ (wrappers,
 # OCCT, libc++abi) in one module makes exception handling module-internal.
@@ -95,8 +82,7 @@ for lib in "${OCCT_LIBS[@]}"; do
   OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-l$lib"
 done
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lfreetype"
-OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lc++ -optl-lunwind"
-OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS $CXX_ABI_OBJS"
+OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lc++"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS $WRAPPER_OBJS -optl-Wl,@/tmp/rtti_exports.rsp"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lwasi-emulated-process-clocks -optl-lwasi-emulated-signal"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lwasi-emulated-mman -optl-lwasi-emulated-getpid"
