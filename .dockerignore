@@ -1,5 +1,6 @@
 .git
 .claude
+.devcontainer
 .DS_Store
 **/.stack-work
 dist-newstyle

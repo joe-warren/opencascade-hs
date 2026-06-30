@@ -1,7 +1,6 @@
-FROM debian:testing-slim
-# Dockerized wasm build of opencascade-hs using wasi-sdk and ghc-wasm.
-# Not intended as a reusable build environment - more to document the build
-# process in a reproducible way.
+FROM debian:testing-slim AS toolchain
+# Dockerized wasm build of opencascade-hs
+# Only recommended for building the wasm playground
 
 SHELL ["/bin/bash", "-c"]
 
@@ -56,6 +55,8 @@ RUN chmod +x ./OCCT/adm/scripts/wasm_build.sh && \
 RUN source ~/.ghc-wasm/env && \
     SYSROOT=~/.ghc-wasm/wasi-sdk/share/wasi-sysroot/lib/wasm32-wasi && \
     cp /OCCT/work/wasm/lib/*.a "$SYSROOT/"
+
+FROM toolchain AS playground
 
 # copy in opencascade-hs source and build
 COPY . /opencascade-hs
