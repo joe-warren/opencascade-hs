@@ -97,6 +97,24 @@ header .logo { height: 3rem; width: auto; }
   padding: 1rem; min-width: min(90vw, 32rem);
 }
 #loadDialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+#aboutDialog {
+  background: #111827; color: #e5e7eb;
+  border: 1px solid #1f2937; border-radius: 12px;
+  padding: 1.25rem; max-width: min(90vw, 34rem);
+}
+#aboutDialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+#aboutDialog h2 { margin: 0.25rem 0 0.75rem; }
+#aboutDialog p { line-height: 1.5; }
+#aboutDialog a { color: #22c55e; }
+#aboutDialog .about-logo { height: 3rem; width: auto; }
+#aboutDialog .dialog-buttons { margin-top: 0.5rem; }
+#aboutDialog .about-links { list-style: none; margin: 0.75rem 0; padding: 0; }
+#aboutDialog .about-links li {
+  display: flex; align-items: center; gap: 0.6rem; margin: 0.6rem 0;
+}
+#aboutDialog .about-links .icon {
+  width: 1.4rem; height: 1.4rem; flex: 0 0 auto;
+}
 #loadDialog form { display: flex; flex-direction: column; gap: 0.6rem; }
 #loadDialog label { font-weight: 600; }
 #loadDialog input {

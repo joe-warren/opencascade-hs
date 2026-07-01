@@ -261,6 +261,11 @@ loadDialog.addEventListener("close", () => {
   if (url) loadFromUrl(url);
 });
 
+// --- About modal ---
+document.getElementById("aboutBtn").addEventListener("click", () => {
+  document.getElementById("aboutDialog").showModal();
+});
+
 // --- Examples menu: curated waterfall-cad-examples modules that work in the
 // playground (each defines a top-level Solid and needs no fonts/files/SVG). ---
 const EXAMPLES_BASE =
