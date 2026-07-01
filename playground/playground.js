@@ -2,6 +2,7 @@ import { EditorView, basicSetup } from "https://esm.sh/codemirror@6.0.1";
 import { StreamLanguage } from "https://esm.sh/@codemirror/language@6";
 import { haskell } from "https://esm.sh/@codemirror/legacy-modes@6/mode/haskell";
 import { oneDark } from "https://esm.sh/@codemirror/theme-one-dark@6";
+import { Compartment } from "https://esm.sh/@codemirror/state@6";
 import {
   ConsoleStdout, File, OpenFile, PreopenDirectory, WASI,
 } from "https://esm.sh/gh/haskell-wasm/browser_wasi_shim";
@@ -9,6 +10,12 @@ import { DyLDBrowserHost, main } from "./dyld.mjs";
 
 const statusEl = document.getElementById("status");
 const setStatus = (msg) => { statusEl.textContent = msg; };
+
+// Editor colour scheme follows the OS light/dark preference. The theme lives in
+// a Compartment so it can be swapped live when the preference changes.
+const themeCompartment = new Compartment();
+const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+const editorTheme = () => (darkQuery.matches ? oneDark : []);
 
 // Full-page spinner overlay, shown while loading/compiling/rendering. Counted so
 // nested busy sections (load -> run -> render) don't hide it prematurely. Starts
@@ -95,7 +102,15 @@ try {
   window.editor = new EditorView({
     doc: programResult.text ?? "",
     parent: document.getElementById("editor"),
-    extensions: [basicSetup, StreamLanguage.define(haskell), oneDark],
+    extensions: [
+      basicSetup,
+      StreamLanguage.define(haskell),
+      themeCompartment.of(editorTheme()),
+    ],
+  });
+  // Swap the editor theme live if the OS light/dark preference changes.
+  darkQuery.addEventListener("change", () => {
+    editor.dispatch({ effects: themeCompartment.reconfigure(editorTheme()) });
   });
   // Loading a program only touches the editor, so enable it before GHC is ready.
   document.getElementById("loadBtn").disabled = false;

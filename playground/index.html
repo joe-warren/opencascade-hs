@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Waterfall CAD Playground</title>
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400..900&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./styles.css" />
 
     <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4/dist/model-viewer.min.js"></script>
@@ -32,8 +38,9 @@
         />
         <div class="controls">
           <div id="status">Loading...</div>
-          <button id="runBtn" disabled>Run</button>
-          <button id="loadBtn" disabled>Load…</button>
+          <button id="runBtn" disabled>Reload</button>
+          <button id="aboutBtn">About</button>
+          <button id="loadBtn" disabled>Load URL</button>
           <div class="split" id="exampleSplit">
             <button type="button" class="split-main" id="exampleMain" disabled>
               Examples
@@ -64,7 +71,6 @@
               <li data-value="glb">GLB</li>
             </ul>
           </div>
-          <button id="aboutBtn">About</button>
         </div>
         <div class="controls" id="solidControls" style="display: none">
           <label for="solidSelect">Solid</label>
@@ -121,31 +127,37 @@
         <ul class="about-links">
           <li>
             <img class="icon" src="./haskell.svg" alt="" />
-            <a
-              href="https://hackage.haskell.org/package/waterfall-cad"
-              target="_blank"
-              rel="noopener"
-              >Waterfall CAD API docs on Hackage</a
+            <span
+              ><a
+                href="https://hackage.haskell.org/package/waterfall-cad"
+                target="_blank"
+                rel="noopener"
+                >Waterfall CAD API docs on Hackage</a
+              ></span
             >
           </li>
           <li>
             <img class="icon" src="./github.svg" alt="" />
-            <a
-              href="https://github.com/joe-warren/opencascade-hs"
-              target="_blank"
-              rel="noopener"
-              >Source on GitHub</a
+            <span
+              ><a
+                href="https://github.com/joe-warren/opencascade-hs"
+                target="_blank"
+                rel="noopener"
+                >Source on GitHub</a
+              ></span
             >
           </li>
           <li>
             <img class="icon" src="./wasm.svg" alt="" />
-            Made possible by the
-            <a
-              href="https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta"
-              target="_blank"
-              rel="noopener"
-              >GHC WASM backend</a
-            >, by Cheng Shao et al.
+            <span
+              >Made possible by the
+              <a
+                href="https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta"
+                target="_blank"
+                rel="noopener"
+                >GHC WASM backend</a
+              >, by Cheng Shao et al.</span
+            >
           </li>
         </ul>
       </div>

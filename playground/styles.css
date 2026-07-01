@@ -1,22 +1,63 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  color-scheme: light dark;
+  --font-sans: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Share Tech Mono", ui-monospace, Menlo, Consolas, monospace;
+  --bg: #e9e9e2;
+  --panel: #ffffff;
+  --fg: #141414;
+  --muted: #565656;
+  --ink: #141414; /* borders */
+  --shadow: #141414; /* hard offset shadows — kept dark in both themes */
+  --field: #ffffff;
+  --menu: #ffffff;
+  --disabled-bg: #cfcfcf;
+  --disabled-fg: #7a7a7a;
+  --err: #d61f1f;
+  --btn-fg: #141414;
+  /* Bright button fills (kept vivid in both light and dark). */
+  --c-run: #6ee7a8;
+  --c-load: #59d3ff;
+  --c-examples: #ffd23f;
+  --c-download: #ff6faf;
+  --c-about: #ff9d47;
+  --radius: 5px;
+  --bw: 3px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Lightened slightly from near-black so the black shadow reads as depth. */
+    --bg: #2a2a2a;
+    --panel: #363636;
+    --fg: #ededed;
+    --muted: #a8a8a8;
+    --ink: #ededed;
+    --shadow: #000000;
+    --field: #161616;
+    --menu: #363636;
+    --disabled-bg: #484848;
+    --disabled-fg: #8a8a8a;
+    --err: #ff6b6b;
+  }
+}
+
 html, body { height: 100%; }
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background: #0f172a;
-  color: #e5e7eb;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--fg);
 }
-.app {
-  height: 100vh;
-  display: grid;
-  gap: 0.5rem;
-  padding: 0.5rem;
-}
+
+.app { height: 100vh; display: grid; gap: 0.75rem; padding: 0.75rem; }
 @media (min-width: 800px) { .app { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 799.98px) { .app { grid-template-rows: 1fr 1fr; } }
+
 .pane {
-  background: #111827;
-  border: 1px solid #1f2937;
-  border-radius: 12px;
+  background: var(--panel);
+  border: var(--bw) solid var(--ink);
+  border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -24,130 +65,158 @@ body {
      column and blow out the layout. Let the pane shrink and scroll instead. */
   min-width: 0;
 }
+
 header {
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #1f2937;
-  font-weight: 600;
+  border-bottom: var(--bw) solid var(--ink);
+  font-weight: 800;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 24px;
 }
 header .logo { height: 3rem; width: auto; }
+
 #editor { flex: 1; min-height: 0; min-width: 0; overflow: hidden; }
 .cm-editor { height: 100%; }
-.cm-editor .cm-scroller { font-family: ui-monospace, Menlo, Consolas, monospace; }
+.cm-editor .cm-scroller { font-family: var(--font-mono); }
+
 .right { padding: 0.6rem; gap: 0.6rem; }
-.controls { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
-.controls input[type="text"] {
-  flex: 1; min-width: 200px;
-  background: #0b1020; color: #e5e7eb;
-  border: 1px solid #223; border-radius: 8px; padding: 0.55rem;
-  font-family: ui-monospace, Menlo, Consolas, monospace;
+.controls {
+  display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;
+  margin-bottom: 0.4rem;
 }
-.controls button {
-  background: #22c55e; border: none; border-radius: 8px;
-  padding: 0.55rem 0.85rem; font-weight: 600; cursor: pointer;
+
+/* --- Neobrutalist buttons: bright fill, hard border, offset shadow --- */
+.controls > button,
+.split > button,
+.dialog-buttons button {
+  font: inherit; font-weight: 700; cursor: pointer;
+  color: var(--btn-fg);
+  border: var(--bw) solid var(--ink);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.8rem;
 }
-.controls button:disabled { background: #374151; cursor: not-allowed; }
-/* Split button: a main action segment + a dropdown toggle sharing one shape. */
-.split { position: relative; display: inline-flex; }
-.split > button {
-  background: #22c55e; border: none;
-  padding: 0.55rem 0.85rem; font-weight: 600; cursor: pointer;
+.controls > button,
+.dialog-buttons button { box-shadow: 3px 3px 0 var(--shadow); }
+.controls > button:active,
+.dialog-buttons button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--shadow);
 }
-.split .split-main { border-radius: 8px 0 0 8px; }
-.split .split-toggle {
-  border-radius: 0 8px 8px 0; padding: 0.55rem 0.5rem;
-  border-left: 1px solid rgba(0, 0, 0, 0.25);
+.controls > button:disabled {
+  background: var(--disabled-bg); color: var(--disabled-fg);
+  box-shadow: none; cursor: not-allowed;
 }
-.split > button:disabled { background: #374151; cursor: not-allowed; }
+
+#runBtn { background: var(--c-run); }
+#loadBtn { background: var(--c-load); }
+#aboutBtn { background: var(--c-about); }
+#exampleSplit > button { background: var(--c-examples); }
+#downloadSplit > button { background: var(--c-download); }
+
+/* --- Split button: shadow on the container so the two segments read as one --- */
+.split {
+  position: relative; display: inline-flex;
+  border-radius: var(--radius); box-shadow: 3px 3px 0 var(--shadow);
+}
+.split:has(> button:active) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
+.split:has(> button:disabled) { box-shadow: none; }
+.split > button { box-shadow: none; }
+.split .split-main { border-radius: var(--radius) 0 0 var(--radius); border-right-width: 0; }
+.split .split-toggle { border-radius: 0 var(--radius) var(--radius) 0; padding: 0.5rem 0.5rem; }
+.split > button:disabled { background: var(--disabled-bg); color: var(--disabled-fg); cursor: not-allowed; }
+
+/* --- Dropdown menus --- */
 .split-menu {
-  position: absolute; top: calc(100% + 0.25rem); left: 0; z-index: 500;
+  position: absolute; top: calc(100% + 0.4rem); left: 0; z-index: 500;
   margin: 0; padding: 0.25rem; list-style: none;
-  background: #0b1020; border: 1px solid #223; border-radius: 8px;
+  background: var(--menu); color: var(--fg);
+  border: var(--bw) solid var(--ink); border-radius: var(--radius);
+  box-shadow: 4px 4px 0 var(--shadow);
   min-width: 100%; max-height: 50vh; overflow: auto;
 }
 .split-menu[hidden] { display: none; }
 .split-menu li {
-  padding: 0.4rem 0.6rem; border-radius: 6px; cursor: pointer; white-space: nowrap;
+  padding: 0.4rem 0.6rem; border-radius: 3px; cursor: pointer;
+  white-space: nowrap; font-weight: 600;
 }
-.split-menu li:hover { background: #1f2937; }
-.controls label { align-self: center; font-size: 0.85rem; opacity: 0.8; }
+.split-menu li:hover { background: var(--fg); color: var(--panel); }
+
+.controls label { align-self: center; font-size: 0.85rem; color: var(--muted); }
 .controls select {
   flex: 1; min-width: 200px;
-  background: #0b1020; color: #e5e7eb;
-  border: 1px solid #223; border-radius: 8px; padding: 0.55rem;
-  font-family: ui-monospace, Menlo, Consolas, monospace;
+  background: var(--field); color: var(--fg);
+  border: var(--bw) solid var(--ink); border-radius: var(--radius); padding: 0.5rem;
+  font-family: var(--font-mono);
 }
 .controls select:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .outputs { display: block; flex: 1; overflow: auto; }
-.outputs .label { font-size: 0.85rem; opacity: 0.8; margin: 0.35rem 0; }
+.outputs .label { font-size: 0.85rem; color: var(--muted); margin: 0.35rem 0; font-weight: 700; }
 .outputs textarea {
   display: block; width: 100%; min-height: 20vh;
-  background: #0b1020; color: #d1fae5;
-  border: 1px solid #223; border-radius: 8px; padding: 0.6rem;
+  background: var(--field); color: var(--fg);
+  border: var(--bw) solid var(--ink); border-radius: var(--radius); padding: 0.6rem;
   resize: vertical;
-  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
 }
-.stderr { color: #fee2e2; }
-#loadDialog {
-  background: #111827; color: #e5e7eb;
-  border: 1px solid #1f2937; border-radius: 12px;
-  padding: 1rem; min-width: min(90vw, 32rem);
+.stderr { color: var(--err); }
+
+#status { font-size: 0.85rem; color: var(--muted); margin-right: auto; align-self: center; }
+
+#viewer {
+  display: none; width: 100%; flex: 1; min-height: 0;
+  background: var(--field);
+  border: var(--bw) solid var(--ink); border-radius: var(--radius);
 }
-#loadDialog::backdrop { background: rgba(0, 0, 0, 0.5); }
-#aboutDialog {
-  background: #111827; color: #e5e7eb;
-  border: 1px solid #1f2937; border-radius: 12px;
-  padding: 1.25rem; max-width: min(90vw, 34rem);
+
+/* --- Dialogs --- */
+#loadDialog, #aboutDialog {
+  background: var(--panel); color: var(--fg);
+  border: var(--bw) solid var(--ink); border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--shadow);
+  padding: 1.25rem;
 }
-#aboutDialog::backdrop { background: rgba(0, 0, 0, 0.5); }
-#aboutDialog h2 { margin: 0.25rem 0 0.75rem; }
-#aboutDialog p { line-height: 1.5; }
-#aboutDialog a { color: #22c55e; }
-#aboutDialog .about-logo { height: 3rem; width: auto; }
-#aboutDialog .dialog-buttons { margin-top: 0.5rem; }
-#aboutDialog .about-links { list-style: none; margin: 0.75rem 0; padding: 0; }
-#aboutDialog .about-links li {
-  display: flex; align-items: center; gap: 0.6rem; margin: 0.6rem 0;
-}
-#aboutDialog .about-links .icon {
-  width: 1.4rem; height: 1.4rem; flex: 0 0 auto;
-}
+#loadDialog { min-width: min(90vw, 32rem); }
+#aboutDialog { max-width: min(90vw, 34rem); }
+#loadDialog::backdrop, #aboutDialog::backdrop { background: rgba(0, 0, 0, 0.5); }
 #loadDialog form { display: flex; flex-direction: column; gap: 0.6rem; }
-#loadDialog label { font-weight: 600; }
+#loadDialog label { font-weight: 700; }
 #loadDialog input {
-  background: #0b1020; color: #e5e7eb;
-  border: 1px solid #223; border-radius: 8px; padding: 0.55rem;
-  font-family: ui-monospace, Menlo, Consolas, monospace;
+  background: var(--field); color: var(--fg);
+  border: var(--bw) solid var(--ink); border-radius: var(--radius); padding: 0.5rem;
+  font-family: var(--font-mono);
 }
-/* Load is first in the DOM so Enter submits it; row-reverse keeps it on the right. */
+#aboutDialog h2 { margin: 0 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+#aboutDialog .about-logo { height: 3rem; width: auto; }
+#aboutDialog p { line-height: 1.5; }
+#aboutDialog a {
+  color: inherit; font-weight: 700;
+  text-decoration: underline; text-decoration-thickness: 2px;
+}
+#aboutDialog a:hover { background: var(--c-examples); color: #141414; }
+#aboutDialog .about-links { list-style: none; margin: 0.75rem 0; padding: 0; }
+#aboutDialog .about-links li { display: flex; align-items: center; gap: 0.6rem; margin: 0.6rem 0; }
+#aboutDialog .about-links .icon { width: 1.4rem; height: 1.4rem; flex: 0 0 auto; }
+#aboutDialog .about-links li span { min-width: 0; }
+#aboutDialog .dialog-buttons { margin-top: 0.75rem; }
+
 .dialog-buttons { display: flex; flex-direction: row-reverse; justify-content: flex-start; gap: 0.5rem; }
-.dialog-buttons button {
-  border: none; border-radius: 8px;
-  padding: 0.55rem 0.85rem; font-weight: 600; cursor: pointer;
-}
-.dialog-buttons button[value="ok"] { background: #22c55e; }
-.dialog-buttons button[value="cancel"] { background: #374151; color: #e5e7eb; }
+.dialog-buttons button[value="ok"] { background: var(--c-run); }
+.dialog-buttons button[value="cancel"] { background: var(--panel); color: var(--fg); }
+
+/* --- Spinner --- */
 .spinner-overlay {
   position: fixed; inset: 0; z-index: 1000;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(0, 0, 0, 0.5);
 }
 .spinner-overlay.hidden { display: none; }
 .spinner {
   width: 3rem; height: 3rem;
-  border: 4px solid #223; border-top-color: #22c55e;
+  border: 5px solid var(--panel); border-top-color: var(--c-download);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-#status {
-  font-size: 0.85rem; opacity: 0.7;
-  margin-right: auto; align-self: center;
-}
-#viewer {
-  display: none; width: 100%; flex: 1; min-height: 0;
-  background: #0b1020; border: 1px solid #223; border-radius: 8px;
-}
