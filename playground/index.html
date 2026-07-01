@@ -28,6 +28,7 @@
             type="text"
             value="-package waterfall-cad -package waterfall-cad-svg -package linear -v0"
           />
+          <button id="loadBtn" disabled>Load…</button>
           <button id="runBtn" disabled>Run</button>
         </div>
         <div class="controls">
@@ -50,5 +51,20 @@
         </div>
       </section>
     </div>
+
+    <dialog id="loadDialog">
+      <form method="dialog">
+        <label for="loadUrl">Load program from URL</label>
+        <input
+          id="loadUrl"
+          type="text"
+          placeholder="https://…/Example.hs"
+        />
+        <div class="dialog-buttons">
+          <button value="ok">Load</button>
+          <button value="cancel" formnovalidate>Cancel</button>
+        </div>
+      </form>
+    </dialog>
   </body>
 </html>
