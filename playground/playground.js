@@ -10,6 +10,16 @@ import { DyLDBrowserHost, main } from "./dyld.mjs";
 const statusEl = document.getElementById("status");
 const setStatus = (msg) => { statusEl.textContent = msg; };
 
+// Full-page spinner overlay, shown while loading/compiling/rendering. Counted so
+// nested busy sections (load -> run -> render) don't hide it prematurely. Starts
+// at 1 because the page begins in the loading state (overlay visible by default).
+const spinner = document.getElementById("spinner");
+let busyCount = 1;
+function setBusy(on) {
+  busyCount = Math.max(0, busyCount + (on ? 1 : -1));
+  spinner.classList.toggle("hidden", busyCount === 0);
+}
+
 setStatus("Downloading rootfs...");
 const rootfs = new PreopenDirectory("/", []);
 
@@ -104,7 +114,9 @@ try {
 
   setStatus("Ready!");
   document.getElementById("runBtn").disabled = false;
+  setBusy(false);
 } catch (e) {
+  setBusy(false);
   const msg = e && e.message ? e.message : String(e);
   console.error("Playground initialisation failed:", e);
   setStatus(`Initialisation failed: ${msg}`);
@@ -171,6 +183,7 @@ const solidSelect = document.getElementById("solidSelect");
 async function showSelected() {
   const name = solidSelect.value;
   if (!name) { updateViewer(); return; }
+  setBusy(true);
   setStatus(`Rendering ${name}...`);
   try { (rootfs.dir ?? rootfs).contents.delete("out.glb"); } catch (_) {}
   try {
@@ -179,6 +192,8 @@ async function showSelected() {
     setStatus("Done!");
   } catch (e) {
     setStatus(`Error: ${e.message}`);
+  } finally {
+    setBusy(false);
   }
 }
 solidSelect.addEventListener("change", showSelected);
@@ -197,6 +212,7 @@ function applyProgram(url, text) {
 }
 
 async function loadFromUrl(url) {
+  setBusy(true);
   setStatus(`Loading ${url}...`);
   try {
     const r = await fetch(url);
@@ -210,6 +226,8 @@ async function loadFromUrl(url) {
     setStatus("Failed to load program");
     document.getElementById("stderr").value +=
       `Failed to load program from ${url}: ${e.message}\n`;
+  } finally {
+    setBusy(false);
   }
 }
 
@@ -267,6 +285,7 @@ exampleSelect.addEventListener("change", () => {
 
 async function run() {
   document.getElementById("runBtn").disabled = true;
+  setBusy(true);
   setStatus("Compiling...");
 
   try {
@@ -306,6 +325,7 @@ async function run() {
     setStatus(`Error: ${e.message}`);
   } finally {
     document.getElementById("runBtn").disabled = false;
+    setBusy(false);
   }
 }
 
