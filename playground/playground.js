@@ -20,6 +20,18 @@ function setBusy(on) {
   spinner.classList.toggle("hidden", busyCount === 0);
 }
 
+// Keep the console hidden unless there's an error (stderr output). stdout on its
+// own (e.g. the "Rendering: …" line) isn't worth showing; when there is an error
+// we reveal stdout too, but only if it actually has content.
+function refreshOutputs() {
+  const hasErr = document.getElementById("stderr").value.trim() !== "";
+  const hasOut = document.getElementById("stdout").value.trim() !== "";
+  document.getElementById("outputs").style.display = hasErr ? "block" : "none";
+  document.getElementById("stderrPanel").style.display = hasErr ? "block" : "none";
+  document.getElementById("stdoutPanel").style.display =
+    hasErr && hasOut ? "block" : "none";
+}
+
 setStatus("Downloading rootfs...");
 const rootfs = new PreopenDirectory("/", []);
 
@@ -77,6 +89,7 @@ try {
   if (programResult.error) {
     document.getElementById("stderr").value +=
       `Failed to load program from ${programUrl}: ${programResult.error.message}\n`;
+    refreshOutputs();
   }
 
   window.editor = new EditorView({
@@ -131,6 +144,7 @@ try {
         `In Firefox, open about:config and set ` +
         `javascript.options.wasm_exnref to true, then reload.\n`;
     }
+    refreshOutputs();
   }
 }
 
@@ -194,6 +208,7 @@ async function showSelected() {
     setStatus(`Error: ${e.message}`);
   } finally {
     setBusy(false);
+    refreshOutputs();
   }
 }
 solidSelect.addEventListener("change", showSelected);
@@ -228,6 +243,7 @@ async function loadFromUrl(url) {
       `Failed to load program from ${url}: ${e.message}\n`;
   } finally {
     setBusy(false);
+    refreshOutputs();
   }
 }
 
@@ -309,6 +325,9 @@ async function run() {
       opt.textContent = n;
       solidSelect.appendChild(opt);
     }
+    // Only show the picker when there's an actual choice to make.
+    document.getElementById("solidControls").style.display =
+      names.length > 1 ? "flex" : "none";
 
     if (names.length === 0) {
       solidSelect.disabled = true;
@@ -325,6 +344,7 @@ async function run() {
   } finally {
     document.getElementById("runBtn").disabled = false;
     setBusy(false);
+    refreshOutputs();
   }
 }
 

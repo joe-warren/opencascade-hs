@@ -38,7 +38,7 @@
           <label for="exampleSelect">Examples</label>
           <select id="exampleSelect" disabled></select>
         </div>
-        <div class="controls">
+        <div class="controls" id="solidControls" style="display: none">
           <label for="solidSelect">Solid</label>
           <select id="solidSelect" disabled></select>
         </div>
@@ -50,11 +50,15 @@
           exposure="0.9"
           alt="rendered model"
         ></model-viewer>
-        <div class="outputs">
-          <div class="label">stdout</div>
-          <textarea id="stdout" readonly></textarea>
-          <div class="label">stderr</div>
-          <textarea id="stderr" class="stderr" readonly></textarea>
+        <div class="outputs" id="outputs" style="display: none">
+          <div id="stdoutPanel">
+            <div class="label">stdout</div>
+            <textarea id="stdout" readonly></textarea>
+          </div>
+          <div id="stderrPanel">
+            <div class="label">stderr</div>
+            <textarea id="stderr" class="stderr" readonly></textarea>
+          </div>
         </div>
       </section>
     </div>
