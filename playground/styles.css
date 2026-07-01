@@ -28,7 +28,11 @@ header {
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid #1f2937;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
+header .logo { height: 1.5rem; width: auto; }
 #editor { flex: 1; min-height: 0; min-width: 0; overflow: hidden; }
 .cm-editor { height: 100%; }
 .cm-editor .cm-scroller { font-family: ui-monospace, Menlo, Consolas, monospace; }
