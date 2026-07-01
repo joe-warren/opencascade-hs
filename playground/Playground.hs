@@ -19,6 +19,8 @@ import GHC.Driver.Monad
 import GHC.Plugins
 import GHC.Runtime.Interpreter
 import GHC.Types.Name (getSrcSpan)
+import GHC.Unit.Module.Graph (mgModSummaries)
+import GHC.Unit.Module.ModSummary (ms_mod)
 import GHC.Types.SrcLoc (SrcSpan (..), srcSpanStartCol, srcSpanStartLine)
 import GHC.Utils.Exception
 import GHC.Wasm.Prim
@@ -71,6 +73,10 @@ myMain js_libdir js_pkg_dbs =
           }
       getSessionDynFlags
 
+    -- The name the user's module compiled to (Main when there's no header),
+    -- shared from `run` to `render` so qualified references resolve.
+    modNameRef <- newIORef "Main"
+
     runFn <- toRunFunc $ \js_args js_src ->
       defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
         args <- evaluate $ words $ fromJSString js_args
@@ -94,9 +100,18 @@ myMain js_libdir js_pkg_dbs =
           setTargets =<< (: []) <$> guessTarget f Nothing Nothing
           r <- load LoadAllTargets
           when (failed r) $ fail "load returned Failed"
-          mainMod <- findModule (mkModuleName "Main") Nothing
+          -- The user's module may or may not carry a `module ... where` header,
+          -- so use whatever name it actually compiled to rather than assuming
+          -- Main. Package deps aren't in the graph, so the single home module
+          -- is the user's.
+          graph <- getModuleGraph
+          userMod <- case mgModSummaries graph of
+            (ms : _) -> pure (ms_mod ms)
+            [] -> fail "no module was loaded"
+          let modName = moduleName userMod
+          liftIO $ writeIORef modNameRef (moduleNameString modName)
           setContext
-            [ IIDecl $ simpleImportDecl $ mkModuleName "Main",
+            [ IIDecl $ simpleImportDecl modName,
               IIDecl $ simpleImportDecl $ mkModuleName "Waterfall.Solids",
               IIDecl $ simpleImportDecl $ mkModuleName "Waterfall.IO"
             ]
@@ -104,13 +119,13 @@ myMain js_libdir js_pkg_dbs =
           -- avoid depending on how (or whether) the user imported the type.
           solidTy <- GHC.exprType TM_Inst "Waterfall.Solids.unitSphere"
           let solidTyCon = tyConAppTyCon_maybe solidTy
-          mbModInfo <- getModuleInfo mainMod
-          modInfo <- maybe (fail "could not get module info for Main") pure mbModInfo
+          mbModInfo <- getModuleInfo userMod
+          modInfo <- maybe (fail "could not get module info") pure mbModInfo
           things <- catMaybes <$> mapM lookupName (modInfoExports modInfo)
           let solidIds =
                 [ i
                   | AnId i <- things,
-                    nameModule (getName i) == mainMod,
+                    nameModule (getName i) == userMod,
                     tyConAppTyCon_maybe (idType i) == solidTyCon
                 ]
               ordered = sortBy (comparing (spanKey . getSrcSpan)) solidIds
@@ -121,11 +136,12 @@ myMain js_libdir js_pkg_dbs =
       defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
         name <- evaluate $ fromJSString js_name
         freeJSVal $ coerce js_name
+        modNm <- readIORef modNameRef
         flip reflectGhc session $ do
           liftIO $ putStrLn $ "Rendering: " ++ name
           fhv <-
             compileExprRemote $
-              "Waterfall.IO.writeGLB 0.01 \"/out.glb\" (Main." ++ name ++ ")"
+              "Waterfall.IO.writeGLB 0.01 \"/out.glb\" (" ++ modNm ++ "." ++ name ++ ")"
           hsc_env <- getSession
           liftIO $ evalIO (hscInterp hsc_env) fhv
 
