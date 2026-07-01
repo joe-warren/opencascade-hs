@@ -31,8 +31,9 @@ header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 24px;
 }
-header .logo { height: 1.5rem; width: auto; }
+header .logo { height: 3rem; width: auto; }
 #editor { flex: 1; min-height: 0; min-width: 0; overflow: hidden; }
 .cm-editor { height: 100%; }
 .cm-editor .cm-scroller { font-family: ui-monospace, Menlo, Consolas, monospace; }
