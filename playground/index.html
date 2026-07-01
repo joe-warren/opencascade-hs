@@ -46,6 +46,14 @@
           <label for="solidSelect">Solid</label>
           <select id="solidSelect" disabled></select>
         </div>
+        <div class="controls">
+          <button id="downloadBtn" disabled>Download</button>
+          <select id="downloadFormat">
+            <option value="stl">STL</option>
+            <option value="step">STEP</option>
+            <option value="glb">GLB</option>
+          </select>
+        </div>
         <div id="status">Loading...</div>
         <model-viewer
           id="viewer"

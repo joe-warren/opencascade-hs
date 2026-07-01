@@ -53,7 +53,7 @@ const programUrl =
 
 // Assigned during init below; referenced by the event handlers. Kept at module
 // scope (rather than inside the try) so the handlers can see them.
-let dyld, runProgram, renderSolid;
+let dyld, runProgram, renderSolid, exportSolid;
 
 try {
   const [{ instance }, rootfs_bytes, programResult] = await Promise.all([
@@ -123,7 +123,7 @@ try {
   // OCCT's Standard::Allocate; growing by 256MB fixes it.
   dyld.exportFuncs.memory.grow(4096);
 
-  [runProgram, renderSolid] = await dyld.exportFuncs.myMain("GHC_LIBDIR", "PLAYGROUND_PKG_DBS");
+  [runProgram, renderSolid, exportSolid] = await dyld.exportFuncs.myMain("GHC_LIBDIR", "PLAYGROUND_PKG_DBS");
 
   setStatus("Ready!");
   document.getElementById("runBtn").disabled = false;
@@ -298,6 +298,43 @@ exampleSelect.addEventListener("change", () => {
   if (url) loadFromUrl(url);
 });
 
+// --- Download the current solid. Only single-file formats are offered (STL,
+// STEP, GLB); writeSolid on the Haskell side picks the writer by extension. ---
+const downloadFormat = document.getElementById("downloadFormat");
+
+async function downloadModel() {
+  const name = solidSelect.value;
+  if (!name) return;
+  const ext = downloadFormat.value;
+  const file = `${name}.${ext}`;
+  setBusy(true);
+  setStatus(`Exporting ${ext.toUpperCase()}…`);
+  try {
+    const dir = (rootfs.dir ?? rootfs).contents;
+    try { dir.delete(file); } catch (_) {}
+    await exportSolid(name, `/${file}`);
+    const node = dir.get(file);
+    if (!node || !node.data) throw new Error("export produced no output");
+    const url = URL.createObjectURL(
+      new Blob([node.data], { type: "application/octet-stream" })
+    );
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setStatus("Done!");
+  } catch (e) {
+    setStatus(`Error: ${e.message}`);
+  } finally {
+    setBusy(false);
+    refreshOutputs();
+  }
+}
+document.getElementById("downloadBtn").addEventListener("click", downloadModel);
+
 async function run() {
   document.getElementById("runBtn").disabled = true;
   setBusy(true);
@@ -328,6 +365,8 @@ async function run() {
     // Only show the picker when there's an actual choice to make.
     document.getElementById("solidControls").style.display =
       names.length > 1 ? "flex" : "none";
+    // Download is possible whenever there's at least one solid.
+    document.getElementById("downloadBtn").disabled = names.length === 0;
 
     if (names.length === 0) {
       solidSelect.disabled = true;

@@ -33,6 +33,10 @@ type RunFunction = JSString -> JSString -> IO JSString
 -- | Render a named top-level Solid binding to /out.glb.
 type RenderFunction = JSString -> IO ()
 
+-- | Write a named top-level Solid binding to a path; the format is chosen from
+-- the file extension by @Waterfall.IO.writeSolid@ (.stl/.step/.gltf/.glb/.obj).
+type ExportFunction = JSString -> JSString -> IO ()
+
 -- | Sortable start position for a binding's source span. Bindings without a
 -- real span (which shouldn't happen for top-level definitions) sort first.
 spanKey :: SrcSpan -> (Int, Int)
@@ -60,11 +64,12 @@ namesToJson ns = "[" ++ intercalate "," (map quote ns) ++ "]"
     quote s = "\"" ++ s ++ "\""
 
 -- | Main entry point. Takes the GHC libdir path and a space-separated list of
--- extra package DB paths, and returns a JS array @[run, render]@:
+-- extra package DB paths, and returns a JS array @[run, render, export]@:
 --
 --   * @run(args, src)@ compiles the module and returns the JSON list of
 --     top-level bindings whose type is @Waterfall.Solids.Solid@.
 --   * @render(name)@ writes the chosen binding out as /out.glb for the viewer.
+--   * @export(name, path)@ writes the binding to @path@, format by extension.
 myMain :: JSString -> JSString -> IO JSVal
 myMain js_libdir js_pkg_dbs =
   defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
@@ -151,7 +156,22 @@ myMain js_libdir js_pkg_dbs =
           hsc_env <- getSession
           liftIO $ evalIO (hscInterp hsc_env) fhv
 
-    mkPair runFn renderFn
+    exportFn <- toExportFunc $ \js_name js_path ->
+      defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
+        name <- evaluate $ fromJSString js_name
+        freeJSVal $ coerce js_name
+        path <- evaluate $ fromJSString js_path
+        freeJSVal $ coerce js_path
+        flip reflectGhc session $ do
+          -- writeSolid picks the writer from the file extension. `name` is in
+          -- scope unqualified via the IIModule context set in `run`.
+          fhv <-
+            compileExprRemote $
+              "Waterfall.IO.writeSolid 0.01 \"" ++ path ++ "\" (" ++ name ++ ")"
+          hsc_env <- getSession
+          liftIO $ evalIO (hscInterp hsc_env) fhv
+
+    mkTriple runFn renderFn exportFn
   where
     f = "/tmp/Main.hs"
 
@@ -161,8 +181,11 @@ foreign import javascript "wrapper"
 foreign import javascript "wrapper"
   toRenderFunc :: RenderFunction -> IO JSVal
 
-foreign import javascript unsafe "[$1, $2]"
-  mkPair :: JSVal -> JSVal -> IO JSVal
+foreign import javascript "wrapper"
+  toExportFunc :: ExportFunction -> IO JSVal
+
+foreign import javascript unsafe "[$1, $2, $3]"
+  mkTriple :: JSVal -> JSVal -> JSVal -> IO JSVal
 
 foreign export javascript "myMain"
   myMain :: JSString -> JSString -> IO JSVal
