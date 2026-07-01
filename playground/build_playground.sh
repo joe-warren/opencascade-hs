@@ -231,6 +231,7 @@ cp "$GHC_LIBDIR/dyld.mjs" "$GHC_LIBDIR/prelude.mjs" "$GHC_LIBDIR/post-link.mjs" 
 node "$SCRIPT_DIR/../scripts/patch_dyld.js" "$DIST_DIR/dyld.mjs"
 cp "$SCRIPT_DIR/index.html" "$SCRIPT_DIR/styles.css" \
    "$SCRIPT_DIR/playground.js" "$SCRIPT_DIR/example.hs" \
+   "$SCRIPT_DIR/environment.hdr" \
    "$SCRIPT_DIR/logo.svg" "$DIST_DIR/"
 
 # Fix paths in playground.js (the placeholder tokens live in the JS)
