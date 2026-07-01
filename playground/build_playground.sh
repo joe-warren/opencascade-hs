@@ -229,18 +229,19 @@ cp "$GHC_LIBDIR/dyld.mjs" "$GHC_LIBDIR/prelude.mjs" "$GHC_LIBDIR/post-link.mjs" 
 
 # Patch dyld.mjs for wasm exception tags and duplicate symbol handling
 node "$SCRIPT_DIR/../scripts/patch_dyld.js" "$DIST_DIR/dyld.mjs"
-cp "$SCRIPT_DIR/index.html" "$DIST_DIR/"
+cp "$SCRIPT_DIR/index.html" "$SCRIPT_DIR/styles.css" \
+   "$SCRIPT_DIR/playground.js" "$SCRIPT_DIR/example.hs" "$DIST_DIR/"
 
-# Fix paths in index.html
-sed -i "s|HSLIB_SEARCH_DIR|$GHC_VERSION_DIR|g" "$DIST_DIR/index.html"
-sed -i "s|GHC_LIBDIR|$GHC_LIBDIR|g" "$DIST_DIR/index.html"
+# Fix paths in playground.js (the placeholder tokens live in the JS)
+sed -i "s|HSLIB_SEARCH_DIR|$GHC_VERSION_DIR|g" "$DIST_DIR/playground.js"
+sed -i "s|GHC_LIBDIR|$GHC_LIBDIR|g" "$DIST_DIR/playground.js"
 
 # Build the package DB paths string (space-separated)
 PKG_DBS="$CABAL_STORE/package.db"
 for pkg in "${LOCAL_PKGS[@]}"; do
   PKG_DBS="$PKG_DBS $BUILD_DIR/$pkg/package.conf.inplace"
 done
-sed -i "s|PLAYGROUND_PKG_DBS|$PKG_DBS|g" "$DIST_DIR/index.html"
+sed -i "s|PLAYGROUND_PKG_DBS|$PKG_DBS|g" "$DIST_DIR/playground.js"
 
 # Build search dirs list for dyld.mjs
 # It needs to find .so files for: C stdlib, GHC packages, cabal store packages, local packages
@@ -255,7 +256,7 @@ for pkg in "${LOCAL_PKGS[@]}"; do
   SEARCH_DIRS="$SEARCH_DIRS, \"$BUILD_DIR/$pkg/build\""
 done
 SEARCH_DIRS="$SEARCH_DIRS]"
-sed -i "s|SEARCH_DIRS_JSON|$SEARCH_DIRS|g" "$DIST_DIR/index.html"
+sed -i "s|SEARCH_DIRS_JSON|$SEARCH_DIRS|g" "$DIST_DIR/playground.js"
 
 # Cleanup
 rm -rf "$ROOTFS"
