@@ -49,6 +49,29 @@ header .logo { height: 1.5rem; width: auto; }
   padding: 0.55rem 0.85rem; font-weight: 600; cursor: pointer;
 }
 .controls button:disabled { background: #374151; cursor: not-allowed; }
+/* Split button: a main action segment + a dropdown toggle sharing one shape. */
+.split { position: relative; display: inline-flex; }
+.split > button {
+  background: #22c55e; border: none;
+  padding: 0.55rem 0.85rem; font-weight: 600; cursor: pointer;
+}
+.split .split-main { border-radius: 8px 0 0 8px; }
+.split .split-toggle {
+  border-radius: 0 8px 8px 0; padding: 0.55rem 0.5rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.25);
+}
+.split > button:disabled { background: #374151; cursor: not-allowed; }
+.split-menu {
+  position: absolute; top: calc(100% + 0.25rem); left: 0; z-index: 500;
+  margin: 0; padding: 0.25rem; list-style: none;
+  background: #0b1020; border: 1px solid #223; border-radius: 8px;
+  min-width: 100%; max-height: 50vh; overflow: auto;
+}
+.split-menu[hidden] { display: none; }
+.split-menu li {
+  padding: 0.4rem 0.6rem; border-radius: 6px; cursor: pointer; white-space: nowrap;
+}
+.split-menu li:hover { background: #1f2937; }
 .controls label { align-self: center; font-size: 0.85rem; opacity: 0.8; }
 .controls select {
   flex: 1; min-width: 200px;
@@ -101,7 +124,10 @@ header .logo { height: 1.5rem; width: auto; }
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-#status { font-size: 0.85rem; opacity: 0.7; margin: 0.5rem 0; }
+#status {
+  font-size: 0.85rem; opacity: 0.7;
+  margin-right: auto; align-self: center;
+}
 #viewer {
   display: none; width: 100%; flex: 1; min-height: 0;
   background: #0b1020; border: 1px solid #223; border-radius: 8px;

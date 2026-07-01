@@ -99,7 +99,8 @@ try {
   });
   // Loading a program only touches the editor, so enable it before GHC is ready.
   document.getElementById("loadBtn").disabled = false;
-  document.getElementById("exampleSelect").disabled = false;
+  document.getElementById("exampleMain").disabled = false;
+  document.getElementById("exampleToggle").disabled = false;
 
   setStatus("Initialising GHC...");
   dyld = await main({
@@ -277,35 +278,54 @@ const EXAMPLES = [
   ["2D booleans", "TwoDBooleansExample"],
 ];
 
-const exampleSelect = document.getElementById("exampleSelect");
-{
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "Load an example…";
-  exampleSelect.appendChild(placeholder);
-  for (const [label, mod] of EXAMPLES) {
-    const opt = document.createElement("option");
-    opt.value = `${EXAMPLES_BASE}${mod}.hs`;
-    opt.textContent = label;
-    exampleSelect.appendChild(opt);
-  }
+// --- Split-button dropdown menus (Examples, Download format) ---
+function closeAllMenus() {
+  document.querySelectorAll(".split-menu").forEach((m) => (m.hidden = true));
+}
+// Clicking anywhere else dismisses any open menu.
+document.addEventListener("click", closeAllMenus);
+
+// Wire an element to toggle a menu (stopping the click from immediately
+// closing it again via the document handler).
+function wireMenuToggle(triggerEl, menuEl) {
+  triggerEl.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const willOpen = menuEl.hidden;
+    closeAllMenus();
+    menuEl.hidden = !willOpen;
+  });
 }
 
-// Acts as a launcher: pick an example, it loads (and runs), then resets.
-exampleSelect.addEventListener("change", () => {
-  const url = exampleSelect.value;
-  exampleSelect.value = "";
-  if (url) loadFromUrl(url);
-});
+// Examples: both segments just open the menu (there's no default action).
+const exampleMenu = document.getElementById("exampleMenu");
+for (const [label, mod] of EXAMPLES) {
+  const li = document.createElement("li");
+  li.textContent = label;
+  li.addEventListener("click", () => {
+    closeAllMenus();
+    loadFromUrl(`${EXAMPLES_BASE}${mod}.hs`);
+  });
+  exampleMenu.appendChild(li);
+}
+exampleMenu.addEventListener("click", (e) => e.stopPropagation());
+wireMenuToggle(document.getElementById("exampleMain"), exampleMenu);
+wireMenuToggle(document.getElementById("exampleToggle"), exampleMenu);
 
 // --- Download the current solid. Only single-file formats are offered (STL,
 // STEP, GLB); writeSolid on the Haskell side picks the writer by extension. ---
-const downloadFormat = document.getElementById("downloadFormat");
+const downloadMain = document.getElementById("downloadMain");
+const downloadMenu = document.getElementById("downloadMenu");
+let downloadExt = "stl";
+
+function setDownloadFormat(ext) {
+  downloadExt = ext;
+  downloadMain.textContent = `Download ${ext.toUpperCase()}`;
+}
 
 async function downloadModel() {
   const name = solidSelect.value;
   if (!name) return;
-  const ext = downloadFormat.value;
+  const ext = downloadExt;
   const file = `${name}.${ext}`;
   setBusy(true);
   setStatus(`Exporting ${ext.toUpperCase()}…`);
@@ -333,7 +353,19 @@ async function downloadModel() {
     refreshOutputs();
   }
 }
-document.getElementById("downloadBtn").addEventListener("click", downloadModel);
+
+// Main segment downloads in the current format; the menu picks a format and
+// downloads immediately (and remembers it for the main segment).
+downloadMain.addEventListener("click", downloadModel);
+wireMenuToggle(document.getElementById("downloadToggle"), downloadMenu);
+downloadMenu.addEventListener("click", (e) => e.stopPropagation());
+downloadMenu.querySelectorAll("li").forEach((li) => {
+  li.addEventListener("click", () => {
+    closeAllMenus();
+    setDownloadFormat(li.dataset.value);
+    downloadModel();
+  });
+});
 
 async function run() {
   document.getElementById("runBtn").disabled = true;
@@ -366,7 +398,8 @@ async function run() {
     document.getElementById("solidControls").style.display =
       names.length > 1 ? "flex" : "none";
     // Download is possible whenever there's at least one solid.
-    document.getElementById("downloadBtn").disabled = names.length === 0;
+    document.getElementById("downloadMain").disabled = names.length === 0;
+    document.getElementById("downloadToggle").disabled = names.length === 0;
 
     if (names.length === 0) {
       solidSelect.disabled = true;
