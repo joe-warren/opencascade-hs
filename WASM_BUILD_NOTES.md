@@ -4,21 +4,52 @@ The wasm build works end-to-end but relies on several workarounds. This document
 
 ## Pinned versions
 
-The Dockerfile pins OCCT to the **7.9.3 release tag** (`V7_9_3`) — the stable
-series the native build targets, rather than 8.0-dev master. freetype and
-rapidjson are pinned to their master commits as of 2026-04-01, ghc-wasm-meta to
-commit `61a4baf7` (GHC 9.14.1.20260213 - later snapshots regressed wasm
-exception handling), and `cabal.project` pins `index-state` to 2026-04-01.
-Bump these deliberately, one at a time.
+OCCT comes from a fork,
+[`joe-warren/OCCT-Wasi-Fork`](https://github.com/joe-warren/OCCT-Wasi-Fork),
+based on the **7.9.3 release** (`V7_9_3`) — the stable series the native build
+targets, rather than 8.0-dev master — with the wasi support committed on top.
+**The Dockerfile clones the fork's `main` at HEAD; it is not pinned to a
+commit.** Any push to the fork changes the build; pinning a commit (as is
+already done for freetype and rapidjson) would close that reproducibility gap.
 
-Because 7.9 uses the flat `src/<Package>/` source layout (8.0 reorganised into
-`src/<Module>/<Toolkit>/<Package>/`), `scripts/occt/wasm_patch.sh` locates the
-files it patches by name, so it works against either layout. 7.9 also builds a
-host tool (`ExpToCasExe`) as a wasm executable; since everything is compiled
-`-fPIC -fwasm-exceptions` the C++ exception tag is an import the playground's
-loader would normally supply, so `scripts/occt/wasm_build.sh` links executables
-with `--allow-undefined` (the tool links but is never run; only the static
-libraries are consumed).
+freetype and rapidjson are pinned to their master commits as of 2026-04-01,
+ghc-wasm-meta to commit `61a4baf7` (GHC 9.14.1.20260213), and `cabal.project`
+pins `index-state` to 2026-04-01. Bump these deliberately, one at a time.
+
+The ghc-wasm-meta pin exists because the GHC 9.14.1.20260330 snapshot (from an
+April 2026 bump) broke wasm exception handling in shared libraries, while
+9.14.1.20260213 works. The exact failure mode was never recorded (the
+unsquashed history on `wasm-build-dirty` only says "the test works with GHC
+9.14.1.20260213 but crashes with 20260330").
+`scripts/test_node.sh` was the canary that distinguished the two versions at
+the time (it exercises OCCT exception handling via Node/dyld.mjs);
+`scripts/test_exceptions.sh` and the browser suite (`scripts/test_browser.sh`)
+are the fuller checks.
+
+What is known about the regression (investigated 2026-07-01):
+
+- The wasi-sdk tarball (`20251219T213239`, LLVM 21) is **identical** in both
+  ghc-wasm-meta states, so clang/lld/libc++abi behaviour for
+  `-fwasm-exceptions` did not change. The regression is inside GHC itself.
+- The 9.14 flavour is built from the haskell-wasm fork's backport branch
+  (https://gitlab.haskell.org/haskell-wasm/ghc, branch `ghc-9.14`). The delta
+  is `3e0db874ab57...05e0ef08e100`. Nothing in it touches wasm EH codegen,
+  linker flags, or dyld loader logic; the plausible indirect culprits are the
+  ResolvedBCO/BCOByteArray bytecode-serialisation overhaul ("bytecode
+  improvements", 2026-03-30 batch), the `tryPutMVar#` ccall lowering (JSFFI
+  async completion is MVar-based), or the ghci JSFFI-export check change in
+  `Tc/Gen/Foreign.hs` (all in the 2026-03-10 batch).
+- No upstream GHC issue reports this; it is not known-fixed. As of 2026-07-01,
+  **ghc-wasm-meta master still ships 9.14.1.20260330** as the 9.14 flavour
+  (last GHC bump 2026-04-04), so unpinning alone changes nothing — moving
+  forward means re-testing a newer flavour (master ships 9.15.20260331) or
+  bisecting/reporting the 9.14 delta upstream.
+
+7.9 builds a host tool (`ExpToCasExe`) as a wasm executable; since everything
+is compiled `-fPIC -fwasm-exceptions` the C++ exception tag is an import the
+playground's loader would normally supply, so the fork's
+`adm/scripts/wasm_build.sh` links with `--allow-undefined` (the tool links but
+is never run; only the static libraries are consumed).
 
 ## Workarounds in use
 
@@ -28,23 +59,23 @@ We define `__EMSCRIPTEN__` when building OCCT so it takes its existing wasm code
 
 **Ideal fix:** Add proper `__wasi__` platform guards to OCCT (fork or upstream). OCCT already has `__EMSCRIPTEN__` guards everywhere - adding `|| defined(__wasi__)` alongside them would be straightforward.
 
-### Stub POSIX headers (`scripts/occt/wasi_stubs/`)
+### Stub POSIX headers (`wasi_stubs/` in the OCCT fork)
 
-WASI lacks many POSIX features that OCCT expects. We provide stub headers for: `syslog.h`, `netdb.h`, `pwd.h`, `execinfo.h`, `sys/utsname.h`, `setjmp.h`, `malloc.h`.
+WASI lacks many POSIX features that OCCT expects. The fork provides stub headers for: `syslog.h`, `netdb.h`, `pwd.h`, `execinfo.h`, `sys/utsname.h`, `setjmp.h`, `malloc.h`, plus `wasi_signal_ext.h` and `wasi_fcntl_ext.h`.
 
-We also provide stub Emscripten headers: `emscripten.h`, `emscripten/html5.h`, `emscripten/key_codes.h`, `emscripten/dom_pk_codes.h`.
+It also provides stub Emscripten headers: `emscripten.h`, `emscripten/html5.h`, `emscripten/key_codes.h`, `emscripten/dom_pk_codes.h`.
 
-**Ideal fix:** A proper OCCT fork with `__wasi__` guards would eliminate most of these. The Emscripten stubs would be unnecessary if we weren't pretending to be Emscripten.
+**Ideal fix:** proper `__wasi__` guards (in the fork, ideally upstreamed) would eliminate most of these. The Emscripten stubs would be unnecessary if we weren't pretending to be Emscripten.
 
-### OCCT source patches (`scripts/occt/wasm_patch.sh`)
+### OCCT source changes (the fork; formerly `sed` patches)
 
-We `sed` patch several OCCT source files to add stubs for `getuid`, `umask`, `mkstemp`, `mkdtemp`, `timezone`, and signal extensions.
+The build used to `sed`-patch OCCT sources at image-build time to stub `getuid`, `umask`, `mkstemp`, `mkdtemp`, `timezone`, and signal extensions. Those changes now live as commits in `OCCT-Wasi-Fork` instead ("Add fake stub system calls to support wasi target"), which is far less fragile against upstream drift.
 
 **Ideal fix:** Same as above - upstream WASI support in OCCT.
 
 ### C++ exception handling
 
-OCCT is compiled with `-fwasm-exceptions` for real wasm-native exception handling. We build `libunwind` and `libc++abi` from the ghc-wasm LLVM fork with `-fwasm-exceptions -fPIC` to provide the runtime (`__cxa_throw`, `__cxa_begin_catch`, etc.).
+OCCT is compiled with `-fwasm-exceptions` for real wasm-native exception handling. The runtime (`__cxa_throw`, `__cxa_begin_catch`, etc.) comes from the stock `libc++abi` shipped in ghc-wasm's wasi-sdk sysroot. (Earlier iterations built `libunwind` and `libc++abi` from the ghc-wasm LLVM fork with `-fwasm-exceptions -fPIC`; those build steps were removed once the sysroot copies proved sufficient.)
 
 **Why this matters:** Without real exception handling, the `__cxa_*` stubs called `abort()`, leaving OCCT data structures corrupt. This caused `TopoDS_Iterator::updateCurrentShape()` to crash with "memory access out of bounds" when iterating over shapes built by `BRepPrimAPI_MakeBox`.
 
@@ -54,7 +85,7 @@ OCCT is compiled with `-fwasm-exceptions` for real wasm-native exception handlin
 
 WASI's `setjmp.h` requires wasm exception handling support (`-mllvm -wasm-enable-sjlj`), but enabling that produces `__cpp_exception` imports. Our stub provides a no-op `setjmp` that always returns 0 and a `longjmp` that traps.
 
-**Risk:** Any OCCT code that uses `setjmp`/`longjmp` for error recovery will crash instead of recovering. This may be related to the meshing bug (corrupted STL output).
+**Risk:** Any OCCT code that uses `setjmp`/`longjmp` for error recovery will crash instead of recovering. (The corrupted-STL meshing bug was once suspected to be related; it turned out to be an unrelated upstream OCCT 8.0-dev mesher bug — see below.)
 
 ### No `extra-libraries` and no `cxx-sources` on the library package
 
@@ -94,9 +125,9 @@ The `.cabal` files are generated by hpack from `package.yaml`. Docker's `COPY . 
 
 **Workaround:** Edit both `package.yaml` and `.cabal` when changing build options, or run `hpack` locally before building Docker.
 
-### OCCT 8.0 deprecation warnings (`-Wno-#pragma-messages`)
+### OCCT deprecation warnings (`-Wno-#pragma-messages`)
 
-The wasm build uses OCCT `main` (8.x) which deprecates `TopTools_ListOfShape.hxx` and other convenience headers in favor of using `NCollection` types directly. The `opencascade-hs` wrappers still use the deprecated headers. We suppress the warnings with `-Wno-#pragma-messages` in `cxx-options`.
+Introduced while the wasm build was on OCCT `main` (8.x), which deprecates `TopTools_ListOfShape.hxx` and other convenience headers in favour of using `NCollection` types directly; the `opencascade-hs` wrappers still use the deprecated headers. The flag is still passed (in `package.yaml` `cxx-options` and in `build_playground.sh`) — harmless on 7.9.3, and only really matters if the pin ever moves back to 8.x.
 
 **Ideal fix:** Update `opencascade-hs` C++ wrappers to use the non-deprecated OCCT APIs. This would also be needed for native builds once OCCT 8.x becomes standard in distro packages.
 
@@ -170,6 +201,45 @@ The wasm-ld weak-data export behaviour is still worth an upstream report
 (LLVM and/or ghc-wasm); `scripts/test_exceptions.sh` inside the Docker image is
 a standalone reproduction (throws and catches `Standard_DomainError` in a wasm
 shared library under Node).
+
+### Upstream status of the `patch_dyld.js` patches (checked 2026-07-01)
+
+Neither patch has an upstream issue or MR, and GHC master's `dyld.mjs`
+(last touched 2026-04-08) still needs both. There is no stated upstream
+position on C++/foreign exceptions through the wasm dynamic linker at all —
+the users guide and the dyld design note simply never mention EH tags — so
+this is unexplored territory, which favours filing both as first-of-their-kind
+issues with MRs attached.
+
+**Patch 1 (shared `WebAssembly.Tag` for tag imports).** Upstream's import
+loop handles exactly `env`+function, `GOT.mem` and `GOT.func` globals, then
+throws `cannot handle import`; the export loop has the mirror gap (a tag
+*export* also throws), so an upstream fix should cover both sides. Emscripten
+precedent: it defines `__cpp_exception` once, in assembly inside libc++abi
+(`system/lib/libcxxabi/src/__cpp_exception.S`); the main module exports it and
+`libdylink.js` hands every side module the same Tag object by identity. The
+principled upstream shape is a tag symbol table keyed by import name
+(`__cpp_exception`, `__c_longjmp`, ...), fulfilled from a module's tag export
+when one exists and synthesised otherwise — rather than our name-blind single
+`i32` tag. Likely to be accepted: small, self-contained, turns a hard crash
+into working `-fwasm-exceptions` support.
+
+**Patch 2 (defer `__wasm_apply_data_relocs`/`_initialize` to end of plan).**
+Upstream still relocates and initialises each module immediately after
+instantiation; GOT.mem entries for not-yet-defined symbols hold a poison
+value, and a data reloc *copies* that poison into linear memory where the
+later GOT healing never reaches it — exactly the typeinfo-corruption
+mechanism. Emscripten does structurally what our patch does: every startup
+module's `__wasm_apply_data_relocs` goes into a `__RELOC_FUNCS__` queue
+drained only in `initRuntime()`, after all startup modules are instantiated
+(only post-startup `dlopen` relocates eagerly, when all symbols already
+resolve). Two things upstream will push back on: our libc carve-out keys on
+"exports `aligned_alloc`" where they'd prefer `soname === "libc.so"` (dyld
+already special-cases that name), and deferring `_initialize` needs arguing
+against upstream commit `0c9032a0`, which deliberately simplified that
+ordering. The bug is latent upstream today only because pure-Haskell `.so`
+chains rarely carry cross-module data relocs against forward symbols; C++
+vtables/typeinfo make them inevitable.
 
 ### Mangled meshes: an upstream OCCT 8.0-dev Watson mesher bug (fixed by pinning 7.9)
 
