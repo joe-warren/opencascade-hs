@@ -76,6 +76,7 @@ try {
   });
   // Loading a program only touches the editor, so enable it before GHC is ready.
   document.getElementById("loadBtn").disabled = false;
+  document.getElementById("exampleSelect").disabled = false;
 
   setStatus("Initialising GHC...");
   dyld = await main({
@@ -222,6 +223,45 @@ document.getElementById("loadBtn").addEventListener("click", () => {
 loadDialog.addEventListener("close", () => {
   if (loadDialog.returnValue !== "ok") return;
   const url = loadUrlInput.value.trim();
+  if (url) loadFromUrl(url);
+});
+
+// --- Examples menu: curated waterfall-cad-examples modules that work in the
+// playground (each defines a top-level Solid and needs no fonts/files/SVG). ---
+const EXAMPLES_BASE =
+  "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/main/waterfall-cad-examples/src/";
+const EXAMPLES = [
+  ["CSG", "CsgExample"],
+  ["Bounding boxes", "BoundingBoxExample"],
+  ["Fillet", "FilletExample"],
+  ["Loft", "LoftExample"],
+  ["Offset", "OffsetExample"],
+  ["Platonic solids", "PlatonicSolidsExample"],
+  ["Prism", "PrismExample"],
+  ["Revolution", "RevolutionExample"],
+  ["Sweep", "SweepExample"],
+  ["Take path fraction", "TakePathFractionExample"],
+  ["2D booleans", "TwoDBooleansExample"],
+];
+
+const exampleSelect = document.getElementById("exampleSelect");
+{
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Load an example…";
+  exampleSelect.appendChild(placeholder);
+  for (const [label, mod] of EXAMPLES) {
+    const opt = document.createElement("option");
+    opt.value = `${EXAMPLES_BASE}${mod}.hs`;
+    opt.textContent = label;
+    exampleSelect.appendChild(opt);
+  }
+}
+
+// Acts as a launcher: pick an example, it loads (and runs), then resets.
+exampleSelect.addEventListener("change", () => {
+  const url = exampleSelect.value;
+  exampleSelect.value = "";
   if (url) loadFromUrl(url);
 });
 
