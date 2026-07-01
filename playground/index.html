@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Waterfall CAD Playground</title>
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.min.css"
-    />
     <link rel="stylesheet" href="./styles.css" />
 
     <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4/dist/model-viewer.min.js"></script>
@@ -68,6 +64,7 @@
               <li data-value="glb">GLB</li>
             </ul>
           </div>
+          <button id="aboutBtn">About</button>
         </div>
         <div class="controls" id="solidControls" style="display: none">
           <label for="solidSelect">Solid</label>
@@ -107,6 +104,53 @@
           <button value="ok">Load</button>
           <button value="cancel" formnovalidate>Cancel</button>
         </div>
+      </form>
+    </dialog>
+
+    <dialog id="aboutDialog">
+      <div class="about-body">
+        <h2>
+          <img src="./logo.svg" alt="" class="about-logo" />
+          Waterfall CAD Playground
+        </h2>
+        <p>
+          An in-browser playground for <strong>Waterfall CAD</strong>, a
+          declarative Haskell CAD library built on OpenCASCADE.
+          Code is compiled and run entirely in your browser in WASM.
+        </p>
+        <ul class="about-links">
+          <li>
+            <img class="icon" src="./haskell.svg" alt="" />
+            <a
+              href="https://hackage.haskell.org/package/waterfall-cad"
+              target="_blank"
+              rel="noopener"
+              >Waterfall CAD API docs on Hackage</a
+            >
+          </li>
+          <li>
+            <img class="icon" src="./github.svg" alt="" />
+            <a
+              href="https://github.com/joe-warren/opencascade-hs"
+              target="_blank"
+              rel="noopener"
+              >Source on GitHub</a
+            >
+          </li>
+          <li>
+            <img class="icon" src="./wasm.svg" alt="" />
+            Made possible by the
+            <a
+              href="https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta"
+              target="_blank"
+              rel="noopener"
+              >GHC WASM backend</a
+            >, by Cheng Shao et al.
+          </li>
+        </ul>
+      </div>
+      <form method="dialog" class="dialog-buttons">
+        <button value="ok">Close</button>
       </form>
     </dialog>
   </body>
