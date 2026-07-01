@@ -72,7 +72,7 @@ const dyld = await main({
 // insufficient for OCCT's Standard::Allocate. Growing by 256MB fixes it.
 dyld.exportFuncs.memory.grow(4096);
 
-const main_func = await dyld.exportFuncs.myMain("GHC_LIBDIR", "PLAYGROUND_PKG_DBS");
+const [runProgram, renderSolid] = await dyld.exportFuncs.myMain("GHC_LIBDIR", "PLAYGROUND_PKG_DBS");
 
 setStatus("Ready!");
 document.getElementById("runBtn").disabled = false;
@@ -119,25 +119,62 @@ function updateViewer() {
   window.__lastModel = path;
 }
 
+const solidSelect = document.getElementById("solidSelect");
+
+// Render the Solid currently chosen in the dropdown, reusing the already-loaded
+// module. Deletes any previous model first so the viewer reflects only this one.
+async function showSelected() {
+  const name = solidSelect.value;
+  if (!name) { updateViewer(); return; }
+  setStatus(`Rendering ${name}...`);
+  try { (rootfs.dir ?? rootfs).contents.delete("out.glb"); } catch (_) {}
+  try {
+    await renderSolid(name);
+    updateViewer();
+    setStatus("Done!");
+  } catch (e) {
+    setStatus(`Error: ${e.message}`);
+  }
+}
+solidSelect.addEventListener("change", showSelected);
+
 document.getElementById("runBtn").addEventListener("click", async () => {
   document.getElementById("runBtn").disabled = true;
-  setStatus("Running...");
+  setStatus("Compiling...");
 
   try {
     document.getElementById("stdout").value = "";
     document.getElementById("stderr").value = "";
 
-    // Drop any model from a previous run so the viewer reflects only this run
-    // (e.g. clears the preview if the new code defines no Solid).
+    // Drop any model from a previous run so the viewer reflects only this run.
     try { (rootfs.dir ?? rootfs).contents.delete("out.glb"); } catch (_) {}
 
-    await main_func(
-      document.getElementById("ghcArgs").value,
-      editor.state.doc.toString()
+    const names = JSON.parse(
+      await runProgram(
+        document.getElementById("ghcArgs").value,
+        editor.state.doc.toString()
+      )
     );
 
-    updateViewer();
-    setStatus("Done!");
+    // Repopulate the dropdown with this run's Solid-valued bindings.
+    solidSelect.innerHTML = "";
+    for (const n of names) {
+      const opt = document.createElement("option");
+      opt.value = n;
+      opt.textContent = n;
+      solidSelect.appendChild(opt);
+    }
+
+    if (names.length === 0) {
+      solidSelect.disabled = true;
+      updateViewer();
+      setStatus("No top-level values of type Solid found.");
+    } else {
+      solidSelect.disabled = false;
+      // Default to the last-defined Solid.
+      solidSelect.value = names[names.length - 1];
+      await showSelected();
+    }
   } catch (e) {
     setStatus(`Error: ${e.message}`);
   } finally {
