@@ -252,7 +252,6 @@ const EXAMPLES = [
   ["CSG", "CsgExample"],
   ["Bounding boxes", "BoundingBoxExample"],
   ["Fillet", "FilletExample"],
-  ["Loft", "LoftExample"],
   ["Offset", "OffsetExample"],
   ["Platonic solids", "PlatonicSolidsExample"],
   ["Prism", "PrismExample"],
