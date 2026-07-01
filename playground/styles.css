@@ -42,6 +42,14 @@ header {
   padding: 0.55rem 0.85rem; font-weight: 600; cursor: pointer;
 }
 .controls button:disabled { background: #374151; cursor: not-allowed; }
+.controls label { align-self: center; font-size: 0.85rem; opacity: 0.8; }
+.controls select {
+  flex: 1; min-width: 200px;
+  background: #0b1020; color: #e5e7eb;
+  border: 1px solid #223; border-radius: 8px; padding: 0.55rem;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.controls select:disabled { opacity: 0.5; cursor: not-allowed; }
 .outputs { display: block; flex: 1; overflow: auto; }
 .outputs .label { font-size: 0.85rem; opacity: 0.8; margin: 0.35rem 0; }
 .outputs textarea {
