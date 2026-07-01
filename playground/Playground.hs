@@ -10,6 +10,7 @@ import Data.List (intercalate, sortBy)
 import Data.Maybe (catMaybes)
 import Data.Ord (comparing)
 import GHC
+import GHC.Core.TyCon (tyConName)
 import GHC.Core.Type (tyConAppTyCon_maybe)
 import GHC.Driver.Backend (interpreterBackend)
 import GHC.Driver.Config.Diagnostic
@@ -18,7 +19,7 @@ import GHC.Driver.Errors.Types
 import GHC.Driver.Monad
 import GHC.Plugins
 import GHC.Runtime.Interpreter
-import GHC.Types.Name (getSrcSpan)
+import GHC.Types.Name (getSrcSpan, nameModule_maybe)
 import GHC.Unit.Module.Graph (mgModSummaries)
 import GHC.Unit.Module.ModSummary (ms_mod)
 import GHC.Types.SrcLoc (SrcSpan (..), srcSpanStartCol, srcSpanStartLine)
@@ -37,6 +38,19 @@ type RenderFunction = JSString -> IO ()
 spanKey :: SrcSpan -> (Int, Int)
 spanKey (RealSrcSpan s _) = (srcSpanStartLine s, srcSpanStartCol s)
 spanKey _ = (minBound, minBound)
+
+-- | True when the type's head is Waterfall's Solid newtype. Checked by the
+-- TyCon's original name so we don't need Solid in the interactive scope.
+isSolidType :: Type -> Bool
+isSolidType ty = case tyConAppTyCon_maybe ty of
+  Just tc ->
+    let n = tyConName tc
+     in occNameString (nameOccName n) == "Solid"
+          && maybe
+            False
+            ((== "Waterfall.Internal.Solid") . moduleNameString . moduleName)
+            (nameModule_maybe n)
+  Nothing -> False
 
 -- | Encode a list of identifier names as a JSON array. Names are Haskell
 -- identifiers, so no escaping beyond the surrounding quotes is required.
@@ -73,10 +87,6 @@ myMain js_libdir js_pkg_dbs =
           }
       getSessionDynFlags
 
-    -- The name the user's module compiled to (Main when there's no header),
-    -- shared from `run` to `render` so qualified references resolve.
-    modNameRef <- newIORef "Main"
-
     runFn <- toRunFunc $ \js_args js_src ->
       defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
         args <- evaluate $ words $ fromJSString js_args
@@ -108,26 +118,21 @@ myMain js_libdir js_pkg_dbs =
           userMod <- case mgModSummaries graph of
             (ms : _) -> pure (ms_mod ms)
             [] -> fail "no module was loaded"
-          let modName = moduleName userMod
-          liftIO $ writeIORef modNameRef (moduleNameString modName)
+          -- Bring the module's *full* top-level scope into the interactive
+          -- context (like GHCi's `*Module`), so we see every top-level binding
+          -- regardless of the export list. This covers a headerless file, which
+          -- GHC treats as `module Main (main) where` -- an export list of just
+          -- `main` -- as well as any explicit export list that omits solids.
           setContext
-            [ IIDecl $ simpleImportDecl modName,
-              IIDecl $ simpleImportDecl $ mkModuleName "Waterfall.Solids",
+            [ IIModule userMod,
               IIDecl $ simpleImportDecl $ mkModuleName "Waterfall.IO"
             ]
-          -- Identify the Solid TyCon from a value known to be a Solid, so we
-          -- avoid depending on how (or whether) the user imported the type.
-          solidTy <- GHC.exprType TM_Inst "Waterfall.Solids.unitSphere"
-          let solidTyCon = tyConAppTyCon_maybe solidTy
-          mbModInfo <- getModuleInfo userMod
-          modInfo <- maybe (fail "could not get module info") pure mbModInfo
-          things <- catMaybes <$> mapM lookupName (modInfoExports modInfo)
-          let solidIds =
-                [ i
-                  | AnId i <- things,
-                    nameModule (getName i) == userMod,
-                    tyConAppTyCon_maybe (idType i) == solidTyCon
-                ]
+          inScope <- getNamesInScope
+          things <-
+            catMaybes
+              <$> mapM lookupName
+                (filter ((== Just userMod) . nameModule_maybe) inScope)
+          let solidIds = [i | AnId i <- things, isSolidType (idType i)]
               ordered = sortBy (comparing (spanKey . getSrcSpan)) solidIds
           pure $ map (getOccString . getName) ordered
         pure $ toJSString $ namesToJson names
@@ -136,12 +141,13 @@ myMain js_libdir js_pkg_dbs =
       defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
         name <- evaluate $ fromJSString js_name
         freeJSVal $ coerce js_name
-        modNm <- readIORef modNameRef
         flip reflectGhc session $ do
           liftIO $ putStrLn $ "Rendering: " ++ name
+          -- `name` is in scope unqualified via the IIModule context set in `run`
+          -- (so this also reaches bindings the module doesn't export).
           fhv <-
             compileExprRemote $
-              "Waterfall.IO.writeGLB 0.01 \"/out.glb\" (" ++ modNm ++ "." ++ name ++ ")"
+              "Waterfall.IO.writeGLB 0.01 \"/out.glb\" (" ++ name ++ ")"
           hsc_env <- getSession
           liftIO $ evalIO (hscInterp hsc_env) fhv
 
