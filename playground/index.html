@@ -28,33 +28,51 @@
       </section>
 
       <section class="pane right">
-        <header>Controls / Output</header>
+        <input
+          id="ghcArgs"
+          type="text"
+          hidden
+          value="-package waterfall-cad -package waterfall-cad-svg -package linear -v0"
+        />
         <div class="controls">
-          <input
-            id="ghcArgs"
-            type="text"
-            value="-package waterfall-cad -package waterfall-cad-svg -package linear -v0"
-          />
-          <button id="loadBtn" disabled>Load…</button>
+          <div id="status">Loading...</div>
           <button id="runBtn" disabled>Run</button>
-        </div>
-        <div class="controls">
-          <label for="exampleSelect">Examples</label>
-          <select id="exampleSelect" disabled></select>
+          <button id="loadBtn" disabled>Load…</button>
+          <div class="split" id="exampleSplit">
+            <button type="button" class="split-main" id="exampleMain" disabled>
+              Examples
+            </button>
+            <button
+              type="button"
+              class="split-toggle"
+              id="exampleToggle"
+              disabled
+              aria-label="Choose an example"
+            >▾</button>
+            <ul class="split-menu" id="exampleMenu" hidden></ul>
+          </div>
+          <div class="split" id="downloadSplit">
+            <button type="button" class="split-main" id="downloadMain" disabled>
+              Download STL
+            </button>
+            <button
+              type="button"
+              class="split-toggle"
+              id="downloadToggle"
+              disabled
+              aria-label="Choose format"
+            >▾</button>
+            <ul class="split-menu" id="downloadMenu" hidden>
+              <li data-value="stl">STL</li>
+              <li data-value="step">STEP</li>
+              <li data-value="glb">GLB</li>
+            </ul>
+          </div>
         </div>
         <div class="controls" id="solidControls" style="display: none">
           <label for="solidSelect">Solid</label>
           <select id="solidSelect" disabled></select>
         </div>
-        <div class="controls">
-          <button id="downloadBtn" disabled>Download</button>
-          <select id="downloadFormat">
-            <option value="stl">STL</option>
-            <option value="step">STEP</option>
-            <option value="glb">GLB</option>
-          </select>
-        </div>
-        <div id="status">Loading...</div>
         <model-viewer
           id="viewer"
           camera-controls
