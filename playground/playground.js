@@ -127,6 +127,10 @@ document.getElementById("runBtn").addEventListener("click", async () => {
     document.getElementById("stdout").value = "";
     document.getElementById("stderr").value = "";
 
+    // Drop any model from a previous run so the viewer reflects only this run
+    // (e.g. clears the preview if the new code defines no Solid).
+    try { (rootfs.dir ?? rootfs).contents.delete("out.glb"); } catch (_) {}
+
     await main_func(
       document.getElementById("ghcArgs").value,
       editor.state.doc.toString()
