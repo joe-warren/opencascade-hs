@@ -22,6 +22,11 @@
   --c-examples: #ffd23f;
   --c-download: #ff6faf;
   --c-about: #ff9d47;
+
+  /* spinner colours */
+  --c-spinner-a: #59d3ff;
+  --c-spinner-b: #ff6faf;
+  --c-spinner-c: #ffd23f;
   --radius: 5px;
   --bw: 3px;
 }
@@ -213,10 +218,36 @@ header .logo { height: 3rem; width: auto; }
   background: rgba(0, 0, 0, 0.5);
 }
 .spinner-overlay.hidden { display: none; }
-.spinner {
+.spinner-box {
   width: 3rem; height: 3rem;
-  border: 5px solid var(--panel); border-top-color: var(--c-download);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  margin: 1rem;
+  border: var(--bw) solid var(--ink); border-radius: var(--radius);
+  box-shadow: 3px 3px 0 var(--shadow);
+  animation: bounce 1s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .spinner-box { animation: none; }
+}
+.spinner-box-a {
+  animation-delay: 0ms;
+  background-color: var(--c-spinner-a);
+}
+.spinner-box-b {
+  animation-delay: 150ms;
+  background-color: var(--c-spinner-b);
+}
+.spinner-box-c {
+  animation-delay: 300ms;
+  background-color: var(--c-spinner-c);
+}
+@keyframes bounce {
+  0%,
+  to {
+    transform:translateY(-75%);
+    animation-timing-function:cubic-bezier(.8,0,1,1)
+  }
+  50% {
+    transform:none;
+    animation-timing-function:cubic-bezier(0,0,.2,1)
+  }
+}
