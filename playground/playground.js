@@ -156,9 +156,10 @@ try {
     // module's exception-handling opcodes (this build uses the newer wasm EH).
     if (e instanceof WebAssembly.CompileError) {
       stderrEl.value +=
-        `This build needs WebAssembly exception-handling support. ` +
+        `\nThis build may need WebAssembly exception-handling support.\n ` +
         `In Firefox, open about:config and set ` +
-        `javascript.options.wasm_exnref to true, then reload.\n`;
+        `javascript.options.wasm_exnref to true, then reload.\n` + 
+        `Also, it's a little temperamental, it may help to reload even if that is set.\n`;
     }
     refreshOutputs();
   }
