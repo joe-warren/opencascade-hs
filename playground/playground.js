@@ -53,13 +53,11 @@ const bsdtar_wasi = new WASI(
   { debug: false }
 );
 
-// The initial editor program is loaded from the `program` query parameter
-// (a relative or absolute URL), falling back to the bundled example.
 const programUrl =
   new URLSearchParams(window.location.search).get("program") ?? "./example.hs";
 
 // Assigned during init below; referenced by the event handlers. Kept at module
-// scope (rather than inside the try) so the handlers can see them.
+// scope so the handlers can see them.
 let dyld, runProgram, renderSolid, exportSolid;
 
 try {
@@ -69,8 +67,6 @@ try {
       { wasi_snapshot_preview1: bsdtar_wasi.wasiImport }
     ),
     fetch("./rootfs.tar.zst").then((r) => r.bytes()),
-    // A failed program fetch shouldn't brick the playground, so capture the
-    // error rather than rejecting the whole init; it's surfaced below.
     fetch(programUrl)
       .then(async (r) => {
         if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
@@ -91,8 +87,6 @@ try {
     );
   }
 
-  // Surface a program-load failure in the stderr console rather than silently
-  // starting from a blank (or wrong) editor.
   if (programResult.error) {
     document.getElementById("stderr").value +=
       `Failed to load program from ${programUrl}: ${programResult.error.message}\n`;
@@ -152,7 +146,7 @@ try {
   const stderrEl = document.getElementById("stderr");
   if (stderrEl) {
     stderrEl.value += `Initialisation failed: ${msg}\n`;
-    // A wasm CompileError here almost always means the browser can't decode the
+    // A wasm CompileError here might mean the browser can't decode the
     // module's exception-handling opcodes (this build uses the newer wasm EH).
     if (e instanceof WebAssembly.CompileError) {
       stderrEl.value +=
@@ -166,8 +160,6 @@ try {
 }
 
 // --- 3D preview: show the first .glb file found in the wasm filesystem ---
-// User code writes glTF binary files via Waterfall.IO.writeGLB; after each
-// run we scan the in-memory rootfs and display the result in <model-viewer>.
 const VIEWER_SKIP_DIRS = new Set(["root", "opencascade-hs"]);
 window.__lastModel = null;
 function findGlbFiles(node, prefix, depth, out) {
@@ -289,13 +281,10 @@ loadDialog.addEventListener("close", () => {
   if (url) loadFromUrl(url);
 });
 
-// --- About modal ---
 document.getElementById("aboutBtn").addEventListener("click", () => {
   document.getElementById("aboutDialog").showModal();
 });
 
-// --- Examples menu: curated waterfall-cad-examples modules that work in the
-// playground (each defines a top-level Solid and needs no fonts/files/SVG). ---
 const EXAMPLES_BASE =
   "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/main/waterfall-cad-examples/src/";
 const EXAMPLES = [
@@ -344,8 +333,8 @@ exampleMenu.addEventListener("click", (e) => e.stopPropagation());
 wireMenuToggle(document.getElementById("exampleMain"), exampleMenu);
 wireMenuToggle(document.getElementById("exampleToggle"), exampleMenu);
 
-// --- Download the current solid. Only single-file formats are offered (STL,
-// STEP, GLB); writeSolid on the Haskell side picks the writer by extension. ---
+// Download the current solid, (STL, STEP, GLB); 
+// writeSolid on the Haskell side picks the writer by extension.
 const downloadMain = document.getElementById("downloadMain");
 const downloadMenu = document.getElementById("downloadMenu");
 let downloadExt = "stl";
