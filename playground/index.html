@@ -18,10 +18,13 @@
   </head>
   <body>
     <div id="spinner" class="spinner-overlay">
-      <div class="spinner-box spinner-box-a"></div>
-      <div class="spinner-box spinner-box-b"></div>
-      <div class="spinner-box spinner-box-c"></div>
-      <div class="spinner-box spinner-box-d"></div>
+      <div class="spinner-box-container">
+       <div class="spinner-box spinner-box-a"></div>
+       <div class="spinner-box spinner-box-b"></div>
+       <div class="spinner-box spinner-box-c"></div>
+       <div class="spinner-box spinner-box-d"></div>
+      </div>
+      <div id="status">Loading...</div>
     </div>
     <div class="app">
       <section class="pane">
@@ -40,7 +43,6 @@
           value="-package waterfall-cad -package waterfall-cad-svg -package linear -v0"
         />
         <div class="controls">
-          <div id="status">Loading...</div>
           <button id="runBtn" disabled>Reload</button>
           <button id="aboutBtn">About</button>
           <button id="loadBtn" disabled>Load URL</button>
