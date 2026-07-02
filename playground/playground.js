@@ -57,6 +57,34 @@ function clearProgramParam() {
   }
 }
 
+// Fetch a URL, streaming the body so we can report download progress (the
+// rootfs is large; slow connections should see how much is left). Falls back to
+// a plain read if the body isn't a readable stream.
+const fmtBytes = (n) => `${(n / 1048576).toFixed(1)} MB`;
+async function fetchWithProgress(url, onProgress) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  if (!r.body) return new Uint8Array(await r.arrayBuffer());
+  const total = Number(r.headers.get("content-length")) || 0;
+  const reader = r.body.getReader();
+  const chunks = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    onProgress(received, total);
+  }
+  const out = new Uint8Array(received);
+  let offset = 0;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.length;
+  }
+  return out;
+}
+
 setStatus("Downloading rootfs...");
 const rootfs = new PreopenDirectory("/", []);
 
@@ -89,7 +117,12 @@ try {
     ),
     // ROOTFS_URL is substituted by build_playground.sh; defaults to
     // "./rootfs.tar.zst" but can point at another host for deployment.
-    fetch("ROOTFS_URL").then((r) => r.bytes()),
+    fetchWithProgress("ROOTFS_URL", (received, total) => {
+      setStatus(
+        `Downloading rootfs… ${fmtBytes(received)}` +
+          (total ? ` / ${fmtBytes(total)}` : "")
+      );
+    }),
     programUrl
       ? fetch(programUrl)
           .then(async (r) => {
