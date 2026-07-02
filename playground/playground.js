@@ -1,4 +1,5 @@
 import { EditorView, basicSetup } from "https://esm.sh/codemirror@6.0.1";
+import { keymap } from "https://esm.sh/@codemirror/view@6";
 import { StreamLanguage } from "https://esm.sh/@codemirror/language@6";
 import { haskell } from "https://esm.sh/@codemirror/legacy-modes@6/mode/haskell";
 import { oneDark } from "https://esm.sh/@codemirror/theme-one-dark@6";
@@ -99,6 +100,16 @@ try {
     doc: programResult.text ?? "",
     parent: document.getElementById("editor"),
     extensions: [
+      keymap.of([
+        {
+          key: "Mod-Enter",
+          preventDefault: true,
+          run: () => {
+            if (runProgram) run();
+            return true;
+          },
+        },
+      ]),
       basicSetup,
       StreamLanguage.define(haskell),
       themeCompartment.of(editorTheme()),
