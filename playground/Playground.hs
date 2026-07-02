@@ -30,12 +30,14 @@ import GHC.Wasm.Prim
 -- Solid-valued bindings (JSON array, source order).
 type RunFunction = JSString -> JSString -> IO JSString
 
--- | Render a named top-level Solid binding to /out.glb.
-type RenderFunction = JSString -> IO ()
+-- | Render a named top-level Solid binding to /out.glb, at a given mesh
+-- deflection (resolution; smaller = finer). Args: name, deflection.
+type RenderFunction = JSString -> JSString -> IO ()
 
 -- | Write a named top-level Solid binding to a path; the format is chosen from
 -- the file extension by @Waterfall.IO.writeSolid@ (.stl/.step/.gltf/.glb/.obj).
-type ExportFunction = JSString -> JSString -> IO ()
+-- Args: name, path, deflection (resolution).
+type ExportFunction = JSString -> JSString -> JSString -> IO ()
 
 -- | Sortable start position for a binding's source span. Bindings without a
 -- real span (which shouldn't happen for top-level definitions) sort first.
@@ -67,8 +69,8 @@ namesToJson ns = "[" ++ intercalate "," (map quote ns) ++ "]"
 --
 --   * @run(args, src)@ compiles the module and returns the JSON list of
 --     top-level bindings whose type is @Waterfall.Solids.Solid@.
---   * @render(name)@ writes the chosen binding out as /out.glb for the viewer.
---   * @export(name, path)@ writes the binding to @path@, format by extension.
+--   * @render(name, res)@ writes the binding to /out.glb at deflection @res@.
+--   * @export(name, path, res)@ writes to @path@ (format by extension) at @res@.
 myMain :: JSString -> JSString -> IO JSVal
 myMain js_libdir js_pkg_dbs =
   defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
@@ -141,32 +143,37 @@ myMain js_libdir js_pkg_dbs =
           pure $ map (getOccString . getName) ordered
         pure $ toJSString $ namesToJson names
 
-    renderFn <- toRenderFunc $ \js_name ->
+    renderFn <- toRenderFunc $ \js_name js_res ->
       defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
         name <- evaluate $ fromJSString js_name
         freeJSVal $ coerce js_name
+        res <- evaluate $ fromJSString js_res
+        freeJSVal $ coerce js_res
         flip reflectGhc session $ do
           liftIO $ putStrLn $ "Rendering: " ++ name
           -- `name` is in scope unqualified via the IIModule context set in `run`
-          -- (so this also reaches bindings the module doesn't export).
+          -- (so this also reaches bindings the module doesn't export). `res` is a
+          -- numeric literal (mesh deflection) supplied by the resolution setting.
           fhv <-
             compileExprRemote $
-              "Waterfall.IO.writeGLB 0.01 \"/out.glb\" (" ++ name ++ ")"
+              "Waterfall.IO.writeGLB " ++ res ++ " \"/out.glb\" (" ++ name ++ ")"
           hsc_env <- getSession
           liftIO $ evalIO (hscInterp hsc_env) fhv
 
-    exportFn <- toExportFunc $ \js_name js_path ->
+    exportFn <- toExportFunc $ \js_name js_path js_res ->
       defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
         name <- evaluate $ fromJSString js_name
         freeJSVal $ coerce js_name
         path <- evaluate $ fromJSString js_path
         freeJSVal $ coerce js_path
+        res <- evaluate $ fromJSString js_res
+        freeJSVal $ coerce js_res
         flip reflectGhc session $ do
           -- writeSolid picks the writer from the file extension. `name` is in
           -- scope unqualified via the IIModule context set in `run`.
           fhv <-
             compileExprRemote $
-              "Waterfall.IO.writeSolid 0.01 \"" ++ path ++ "\" (" ++ name ++ ")"
+              "Waterfall.IO.writeSolid " ++ res ++ " \"" ++ path ++ "\" (" ++ name ++ ")"
           hsc_env <- getSession
           liftIO $ evalIO (hscInterp hsc_env) fhv
 

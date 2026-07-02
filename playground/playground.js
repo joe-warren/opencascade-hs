@@ -223,7 +223,7 @@ async function showSelected() {
   setStatus(`Rendering ${name}...`);
   try { (rootfs.dir ?? rootfs).contents.delete("out.glb"); } catch (_) {}
   try {
-    await renderSolid(name);
+    await renderSolid(name, resolution());
     updateViewer();
     setStatus("Done!");
   } catch (e) {
@@ -285,6 +285,61 @@ loadDialog.addEventListener("close", () => {
 
 document.getElementById("aboutBtn").addEventListener("click", () => {
   document.getElementById("aboutDialog").showModal();
+});
+
+// --- Settings modal ---
+document.getElementById("settingsBtn").addEventListener("click", () => {
+  document.getElementById("settingsDialog").showModal();
+});
+
+const rotateToggle = document.getElementById("rotateToggle");
+const resolutionInput = document.getElementById("resolutionInput");
+
+// Persist settings across refreshes (localStorage; ignored if unavailable,
+// e.g. private mode).
+const SETTINGS_KEY = "waterfall-playground-settings";
+function saveSettings() {
+  try {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({
+        autoRotate: rotateToggle.checked,
+        resolution: resolutionInput.value,
+      })
+    );
+  } catch (_) {}
+}
+// Restore before wiring handlers, so the startup render picks up the stored
+// resolution and the viewer starts with the stored rotate state.
+try {
+  const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+  if (typeof s.autoRotate === "boolean") rotateToggle.checked = s.autoRotate;
+  if (s.resolution) resolutionInput.value = s.resolution;
+} catch (_) {}
+
+// Auto-rotate toggle for the model viewer.
+function applyRotate() {
+  const viewer = document.getElementById("viewer");
+  if (rotateToggle.checked) viewer.setAttribute("auto-rotate", "");
+  else viewer.removeAttribute("auto-rotate");
+}
+applyRotate();
+rotateToggle.addEventListener("change", () => {
+  applyRotate();
+  saveSettings();
+});
+
+// Mesh resolution (deflection) passed to render/export. Falls back to a sane
+// default if the field is blank or non-positive; returned as a string so it
+// drops straight into the compiled Haskell expression.
+function resolution() {
+  const v = parseFloat(resolutionInput.value);
+  return Number.isFinite(v) && v > 0 ? String(v) : "0.01";
+}
+// Re-render the current solid when the resolution changes.
+resolutionInput.addEventListener("change", () => {
+  saveSettings();
+  if (runProgram && solidSelect.value) showSelected();
 });
 
 const EXAMPLES_BASE =
@@ -356,7 +411,7 @@ async function downloadModel() {
   try {
     const dir = (rootfs.dir ?? rootfs).contents;
     try { dir.delete(file); } catch (_) {}
-    await exportSolid(name, `/${file}`);
+    await exportSolid(name, `/${file}`, resolution());
     const node = dir.get(file);
     if (!node || !node.data) throw new Error("export produced no output");
     const url = URL.createObjectURL(

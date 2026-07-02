@@ -17,18 +17,26 @@
   --err: #d61f1f;
   --btn-fg: #141414;
   --status-fg: #ffffff;
+  
+  --c-mint: #6ee7a8;
+  --c-teal: #59d3ff;
+  --c-yellow: #ffd23f;
+  --c-pink: #ff6faf;
+  --c-violet: #af6fff;
+  --c-orange: #ff9d47;
   /* Bright button fills (kept vivid in both light and dark). */
-  --c-run: #6ee7a8;
-  --c-load: #59d3ff;
-  --c-examples: #ffd23f;
-  --c-download: #ff6faf;
-  --c-about: #ff9d47;
+  --c-run: var(--c-mint);
+  --c-load: var(--c-teal);
+  --c-examples: var(--c-yellow);
+  --c-settings: var(--c-violet);
+  --c-download: var(--c-pink);
+  --c-about: var(--c-orange);
 
   /* spinner colours */
-  --c-spinner-a: #59d3ff;
-  --c-spinner-b: #ff6faf;
-  --c-spinner-c: #6ee7a8;
-  --c-spinner-d: #ffd23f;
+  --c-spinner-a: var(--c-teal);
+  --c-spinner-b: var(--c-pink);
+  --c-spinner-c: var(--c-mint);
+  --c-spinner-d: var(--c-orange);
   --radius: 5px;
   --bw: 3px;
 }
@@ -118,6 +126,7 @@ header .logo { height: 3rem; width: auto; }
 }
 
 #runBtn { background: var(--c-run); }
+#settingsBtn { background: var(--c-settings); }
 #loadBtn { background: var(--c-load); }
 #aboutBtn { background: var(--c-about); }
 #exampleSplit > button { background: var(--c-examples); }
@@ -179,7 +188,7 @@ header .logo { height: 3rem; width: auto; }
 }
 
 /* --- Dialogs --- */
-#loadDialog, #aboutDialog {
+#loadDialog, #aboutDialog, #settingsDialog {
   background: var(--panel); color: var(--fg);
   border: var(--bw) solid var(--ink); border-radius: var(--radius);
   box-shadow: 6px 6px 0 var(--shadow);
@@ -187,7 +196,38 @@ header .logo { height: 3rem; width: auto; }
 }
 #loadDialog { min-width: min(90vw, 32rem); }
 #aboutDialog { max-width: min(90vw, 34rem); }
-#loadDialog::backdrop, #aboutDialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+#settingsDialog { min-width: min(90vw, 24rem); }
+#loadDialog::backdrop, #aboutDialog::backdrop, #settingsDialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+#settingsDialog h2 { margin: 0 0 0.75rem; }
+#settingsDialog .settings-body { display: flex; flex-direction: column; gap: 0.75rem; }
+#settingsDialog .setting-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  font-weight: 700;
+}
+#settingsDialog .setting-row input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 1.4rem; height: 1.4rem; margin: 0; cursor: pointer;
+  background: var(--field);
+  border: var(--bw) solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+#settingsDialog .setting-row input[type="checkbox"]:checked {
+  background: var(--c-yellow)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23141414' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13l4 4 10-12'/%3E%3C/svg%3E")
+    center / 75% no-repeat;
+}
+#settingsDialog .setting-row input[type="checkbox"]:active {
+  transform: translate(2px, 2px); box-shadow: 0 0 0 var(--shadow);
+}
+#settingsDialog .setting-row input[type="number"] {
+  width: 8rem;
+  background: var(--field); color: var(--fg);
+  border: var(--bw) solid var(--ink); border-radius: var(--radius); padding: 0.4rem;
+  font-family: var(--font-mono);
+}
 #loadDialog form { display: flex; flex-direction: column; gap: 0.6rem; }
 #loadDialog label { font-weight: 700; }
 #loadDialog input {
