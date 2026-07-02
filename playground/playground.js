@@ -40,6 +40,23 @@ function refreshOutputs() {
     hasErr && hasOut ? "block" : "none";
 }
 
+// --- Editor content persistence ---
+// The editor is saved to localStorage so its contents survive refreshes. A
+// ?program= deeplink takes priority on load; once the user edits, we clear
+// ?program so a reload keeps their edits instead of re-fetching the program.
+const EDITOR_KEY = "waterfall-playground-program";
+let suppressProgramClear = false; // true while the doc is set programmatically
+function persistEditor() {
+  try { localStorage.setItem(EDITOR_KEY, editor.state.doc.toString()); } catch (_) {}
+}
+function clearProgramParam() {
+  const u = new URL(window.location.href);
+  if (u.searchParams.has("program")) {
+    u.searchParams.delete("program");
+    history.replaceState(null, "", u);
+  }
+}
+
 setStatus("Downloading rootfs...");
 const rootfs = new PreopenDirectory("/", []);
 
@@ -54,8 +71,11 @@ const bsdtar_wasi = new WASI(
   { debug: false }
 );
 
-const programUrl =
-  new URLSearchParams(window.location.search).get("program") ?? "./example.hs";
+// Program source precedence: ?program= deeplink > saved edits > bundled example.
+const programParam = new URLSearchParams(window.location.search).get("program");
+let savedProgram = null;
+try { savedProgram = localStorage.getItem(EDITOR_KEY); } catch (_) {}
+const programUrl = programParam ?? (savedProgram != null ? null : "./example.hs");
 
 // Assigned during init below; referenced by the event handlers. Kept at module
 // scope so the handlers can see them.
@@ -70,12 +90,14 @@ try {
     // ROOTFS_URL is substituted by build_playground.sh; defaults to
     // "./rootfs.tar.zst" but can point at another host for deployment.
     fetch("ROOTFS_URL").then((r) => r.bytes()),
-    fetch(programUrl)
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-        return { text: await r.text() };
-      })
-      .catch((e) => ({ error: e })),
+    programUrl
+      ? fetch(programUrl)
+          .then(async (r) => {
+            if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+            return { text: await r.text() };
+          })
+          .catch((e) => ({ error: e }))
+      : Promise.resolve({ text: savedProgram }),
   ]);
 
   setStatus("Extracting rootfs...");
@@ -110,6 +132,13 @@ try {
           },
         },
       ]),
+      // Persist on every edit; a genuine user edit also drops the ?program
+      // deeplink (programmatic loads set suppressProgramClear to keep it).
+      EditorView.updateListener.of((update) => {
+        if (!update.docChanged) return;
+        persistEditor();
+        if (!suppressProgramClear) clearProgramParam();
+      }),
       basicSetup,
       StreamLanguage.define(haskell),
       themeCompartment.of(editorTheme()),
@@ -257,9 +286,12 @@ const loadDialog = document.getElementById("loadDialog");
 const loadUrlInput = document.getElementById("loadUrl");
 
 function applyProgram(url, text) {
+  // Programmatic load: persist the content but keep the ?program deeplink.
+  suppressProgramClear = true;
   editor.dispatch({
     changes: { from: 0, to: editor.state.doc.length, insert: text },
   });
+  suppressProgramClear = false;
   const u = new URL(window.location.href);
   u.searchParams.set("program", url);
   history.replaceState(null, "", u);
