@@ -56,8 +56,7 @@ isSolidType ty = case tyConAppTyCon_maybe ty of
             (nameModule_maybe n)
   Nothing -> False
 
--- | Encode a list of identifier names as a JSON array. Names are Haskell
--- identifiers, so no escaping beyond the surrounding quotes is required.
+-- | Encode a list of identifier names as a JSON array.
 namesToJson :: [String] -> String
 namesToJson ns = "[" ++ intercalate "," (map quote ns) ++ "]"
   where
