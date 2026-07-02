@@ -66,7 +66,9 @@ try {
       fetch("https://haskell-wasm.github.io/bsdtar-wasm/bsdtar.wasm"),
       { wasi_snapshot_preview1: bsdtar_wasi.wasiImport }
     ),
-    fetch("./rootfs.tar.zst").then((r) => r.bytes()),
+    // ROOTFS_URL is substituted by build_playground.sh; defaults to
+    // "./rootfs.tar.zst" but can point at another host for deployment.
+    fetch("ROOTFS_URL").then((r) => r.bytes()),
     fetch(programUrl)
       .then(async (r) => {
         if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
