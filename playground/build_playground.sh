@@ -9,6 +9,13 @@ source ~/.ghc-wasm/env
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DIST_DIR="${SCRIPT_DIR}/dist"
+
+# Optional URL prefix for the (large) rootfs bundle, so it can be served from a
+# different host/CDN than the playground itself. Defaults to "./" (same origin).
+# A trailing slash is added if missing. Usage: build_playground.sh [url-prefix]
+#   e.g. build_playground.sh https://cdn.example.com/waterfall/
+ROOTFS_PREFIX="${1:-./}"
+[[ "$ROOTFS_PREFIX" == */ ]] || ROOTFS_PREFIX="$ROOTFS_PREFIX/"
 SYSROOT=~/.ghc-wasm/wasi-sdk/share/wasi-sysroot/lib/wasm32-wasi
 GHC_LIBDIR="$(wasm32-wasi-ghc --print-libdir)"
 GHC_VERSION_DIR="$(find "$GHC_LIBDIR" -maxdepth 1 -type d -name 'wasm32-wasi-ghc-*' | head -1)"
@@ -247,6 +254,8 @@ cp "$SCRIPT_DIR/assets/"* "$DIST_DIR/assets/"
 # Fix paths in playground.js (the placeholder tokens live in the JS)
 sed -i "s|HSLIB_SEARCH_DIR|$GHC_VERSION_DIR|g" "$DIST_DIR/playground.js"
 sed -i "s|GHC_LIBDIR|$GHC_LIBDIR|g" "$DIST_DIR/playground.js"
+# Point the rootfs fetch at the (optionally external) bundle host.
+sed -i "s|ROOTFS_URL|${ROOTFS_PREFIX}rootfs.tar.zst|g" "$DIST_DIR/playground.js"
 
 # Build the package DB paths string (space-separated)
 PKG_DBS="$CABAL_STORE/package.db"
