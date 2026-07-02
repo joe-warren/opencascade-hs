@@ -3,7 +3,7 @@ set -euxo pipefail
 
 # Build the waterfall-cad browser playground.
 # Must be run inside the Docker container after wasm32-wasi-cabal build all.
-# Produces: playground/dist/ containing index.html, rootfs.tar.zst, dyld.mjs
+# Produces: playground/dist/ containing index.html, rootfs.<hash>.tar.zst, dyld.mjs
 
 source ~/.ghc-wasm/env
 
@@ -238,8 +238,19 @@ echo "  $(du -sh "$ROOTFS/$BUILD_DIR" | cut -f1)"
 # --- 6. Create rootfs tarball ---
 echo "[6/6] Creating rootfs.tar.zst..."
 cd "$ROOTFS"
-tar -cf "$DIST_DIR/rootfs.tar.zst" --zstd .
-echo "  $(du -h "$DIST_DIR/rootfs.tar.zst" | cut -f1)"
+# Deterministic tar (normalise order/mtime/ownership) so an unchanged build
+# produces an identical tarball -> identical content hash -> no needless cache
+# miss / re-upload.
+tar --sort=name --mtime='@0' --owner=0 --group=0 --numeric-owner \
+  -cf "$DIST_DIR/rootfs.tar.zst" --zstd .
+
+# Content-hash the tarball into its filename so it can be cached immutably and
+# can never be served out of sync with the playground.js that references it
+# (the hash is baked into that JS below). Any content change -> new filename.
+ROOTFS_HASH=$(sha256sum "$DIST_DIR/rootfs.tar.zst" | cut -c1-12)
+ROOTFS_NAME="rootfs.${ROOTFS_HASH}.tar.zst"
+mv "$DIST_DIR/rootfs.tar.zst" "$DIST_DIR/$ROOTFS_NAME"
+echo "  $ROOTFS_NAME ($(du -h "$DIST_DIR/$ROOTFS_NAME" | cut -f1))"
 
 # Copy dyld.mjs and index.html, patch dyld.mjs for wasm exception tag support
 cp "$GHC_LIBDIR/dyld.mjs" "$GHC_LIBDIR/prelude.mjs" "$GHC_LIBDIR/post-link.mjs" "$DIST_DIR/"
@@ -254,8 +265,9 @@ cp "$SCRIPT_DIR/assets/"* "$DIST_DIR/assets/"
 # Fix paths in playground.js (the placeholder tokens live in the JS)
 sed -i "s|HSLIB_SEARCH_DIR|$GHC_VERSION_DIR|g" "$DIST_DIR/playground.js"
 sed -i "s|GHC_LIBDIR|$GHC_LIBDIR|g" "$DIST_DIR/playground.js"
-# Point the rootfs fetch at the (optionally external) bundle host.
-sed -i "s|ROOTFS_URL|${ROOTFS_PREFIX}rootfs.tar.zst|g" "$DIST_DIR/playground.js"
+# Point the rootfs fetch at the (optionally external) bundle host, using the
+# content-hashed filename so the JS is version-locked to its own rootfs.
+sed -i "s|ROOTFS_URL|${ROOTFS_PREFIX}${ROOTFS_NAME}|g" "$DIST_DIR/playground.js"
 
 # Build the package DB paths string (space-separated)
 PKG_DBS="$CABAL_STORE/package.db"
@@ -278,6 +290,30 @@ for pkg in "${LOCAL_PKGS[@]}"; do
 done
 SEARCH_DIRS="$SEARCH_DIRS]"
 sed -i "s|SEARCH_DIRS_JSON|$SEARCH_DIRS|g" "$DIST_DIR/playground.js"
+
+# --- Fingerprint the JS module chain for immutable caching ---
+# index.html -> playground.js -> dyld.mjs -> { prelude.mjs, post-link.mjs }.
+# Hash each file's *final* contents into its name and rewrite the importer to
+# match, working leaves-first so a parent's hash reflects its children's names.
+# (index.html stays unhashed -- it's the entry point, served with revalidation.)
+fingerprint() { # fingerprint <basename-in-dist> -> echoes new basename
+  local f="$1" h
+  h=$(sha256sum "$DIST_DIR/$f" | cut -c1-12)
+  local new="${f%.*}.${h}.${f##*.}"
+  mv "$DIST_DIR/$f" "$DIST_DIR/$new"
+  echo "$new"
+}
+
+PRELUDE=$(fingerprint prelude.mjs)
+POSTLINK=$(fingerprint post-link.mjs)
+sed -i "s|\"./prelude.mjs\"|\"./$PRELUDE\"|g; s|\"./post-link.mjs\"|\"./$POSTLINK\"|g" \
+  "$DIST_DIR/dyld.mjs"
+
+DYLD=$(fingerprint dyld.mjs)
+sed -i "s|\"./dyld.mjs\"|\"./$DYLD\"|g" "$DIST_DIR/playground.js"
+
+PLAYGROUND=$(fingerprint playground.js)
+sed -i "s|\"./playground.js\"|\"./$PLAYGROUND\"|g" "$DIST_DIR/index.html"
 
 # Cleanup
 rm -rf "$ROOTFS"
