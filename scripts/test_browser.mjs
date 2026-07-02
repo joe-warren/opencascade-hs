@@ -1,5 +1,10 @@
 // Headless browser test for the waterfall-cad playground.
-// Loads the playground, types Haskell code, clicks Run, checks output.
+// Loads the playground, types Haskell code, clicks Run, checks the result.
+//
+// The playground compiles the module and renders its top-level Solid
+// bindings (it does not run `main`), so tests assert on status, the solid
+// picker, and the rendered glb (validated by signed mesh volume), rather
+// than stdout.
 
 import { createRequire } from 'module';
 import fs from 'node:fs';
@@ -9,54 +14,47 @@ const puppeteer = require('puppeteer');
 const TIMEOUT = 120_000;
 const URL = 'http://localhost:8080';
 
-// Test cases: [name, code, expected stdout substring, should_succeed]
+// Test cases: [name, code, opts]
+// opts.status  — exact expected status, or RegExp
+// opts.solids  — expected entries of the solid picker, in order
+// opts.volume  — expected signed mesh volume of the rendered glb (±opts.tol)
 const TESTS = [
-  ['hello', 'main = putStrLn "hello from playground"', 'hello from playground', true],
-  ['unitcube_diagram', `import Waterfall.Solids (unitCube)
-import Waterfall.Diagram (solidDiagram)
-import Linear (V3(..))
-import System.IO (hFlush, stdout)
-
-main :: IO ()
-main = do
-  let solid = unitCube
-      diagram = solidDiagram (V3 2 3 1) solid
-  diagram \`seq\` putStrLn "diagram created!" >> hFlush stdout`, 'diagram created!', true],
-  ['volume_booleans', `import Waterfall.Solids (unitCube, unitSphere, volume)
-import Waterfall.Booleans (difference)
-import System.IO (hFlush, stdout)
-
-main :: IO ()
-main = do
-  putStrLn ("cube: " ++ show (volume unitCube)) >> hFlush stdout
-  putStrLn ("sphere: " ++ show (volume unitSphere)) >> hFlush stdout
-  putStrLn ("diff: " ++ show (volume (difference unitCube unitSphere))) >> hFlush stdout`, 'cube:', true],
-  ['makebox_shell', `import OpenCascade.GP.Pnt as Pnt
-import OpenCascade.BRepPrimAPI.MakeBox as MakeBox
-import Data.Acquire (withAcquire)
-import Control.Monad.IO.Class (liftIO)
-import System.IO (hFlush, stdout)
-
-main :: IO ()
-main = withAcquire go $ \\_ -> pure ()
-  where
-    go = do
-      p1 <- Pnt.new 0 0 0
-      p2 <- Pnt.new 1 1 1
-      box <- MakeBox.fromPnts p1 p2
-      liftIO $ putStrLn "about to call shell" >> hFlush stdout
-      sh <- MakeBox.shell box
-      liftIO $ putStrLn "shell extracted!" >> hFlush stdout`, 'shell extracted!', true],
-  ['glb_viewer', `import Waterfall.Solids (centeredCube, unitSphere)
+  ['csg_solid', `import Waterfall.Solids (Solid, centeredCube, unitSphere)
 import Waterfall.Booleans (difference)
 import Waterfall.Transforms (uScale)
-import Waterfall.IO (writeGLB)
-import System.IO (hFlush, stdout)
 
-main :: IO ()
-main = do
-  writeGLB 0.01 "/out.glb" (difference centeredCube (uScale 0.65 unitSphere))
-  putStrLn "glb written" >> hFlush stdout`, 'glb written', true, true],
+solid :: Solid
+solid = difference centeredCube (uScale 0.65 unitSphere)`,
+    { status: 'Done!', solids: ['solid'], volume: 0.11, tol: 0.03 }],
+
+  // Wire construction makes OCCT throw and catch Standard_NoSuchObject
+  // internally (BRep_Tool::Parameter inside BRepLib_MakeWire::Add) as part
+  // of normal control flow, so this test fails hard if wasm C++ exception
+  // handling is broken (e.g. missing EH libc++abi - see WASM_BUILD_NOTES.md).
+  ['wire_prism_exceptions', `import Waterfall.Solids (Solid, prism)
+import Waterfall.TwoD.Shape (makeShape)
+import Waterfall.TwoD.Path2D (pathFrom2D, lineTo2D)
+import Linear (V2 (..))
+
+triangle :: Solid
+triangle = prism 1 (makeShape (pathFrom2D (V2 0 0) [lineTo2D (V2 1 0), lineTo2D (V2 1 1), lineTo2D (V2 0 0)]))`,
+    { status: 'Done!', solids: ['triangle'], volume: 0.5, tol: 0.02 }],
+
+  ['multiple_solids', `import Waterfall.Solids (Solid, unitCube, unitSphere)
+
+cube :: Solid
+cube = unitCube
+
+sphere :: Solid
+sphere = unitSphere`,
+    { status: 'Done!', solids: ['cube', 'sphere'], volume: 4.19, tol: 0.15 }],
+
+  ['no_solids', `main :: IO ()
+main = pure ()`,
+    { status: 'No top-level values of type Solid found.' }],
+
+  ['compile_error', `solid = thisIsNotInScope`,
+    { status: /^Error/ }],
 ];
 
 function glbSignedVolume(glb) {
@@ -106,109 +104,104 @@ function glbSignedVolume(glb) {
   return vol;
 }
 
-async function runTest(page, name, code, expectedStdout, shouldSucceed, checkModel) {
+// A status is terminal when neither initialisation nor a run is in flight.
+const TERMINAL_STATUS = `(() => {
+  const t = document.getElementById('status')?.textContent || '';
+  return t === 'Ready!' || t === 'Done!' || t.startsWith('Error') ||
+    t.startsWith('No top-level') || t.startsWith('Failed');
+})()`;
+
+async function runTest(page, name, code, opts) {
   console.log(`\n=== Test: ${name} ===`);
 
-  // Wait for the editor and status to be ready
+  // Wait for initialisation (and the startup auto-run of the default
+  // example) to settle.
   await page.waitForSelector('#status', { timeout: TIMEOUT });
+  await page.waitForFunction(TERMINAL_STATUS, { timeout: TIMEOUT });
+  console.log('  Playground settled');
 
-  // Wait for "Ready!" status
-  await page.waitForFunction(
-    () => document.getElementById('status')?.textContent === 'Ready!',
-    { timeout: TIMEOUT }
-  );
-  console.log('  Playground ready');
-
-  // Clear stdout/stderr
+  // Reset status to a sentinel so we can detect this run's completion,
+  // and clear the output panes.
   await page.evaluate(() => {
+    document.getElementById('status').textContent = '(test pending)';
     document.getElementById('stdout').value = '';
     document.getElementById('stderr').value = '';
   });
 
-  // Set the editor content
+  // Set the editor content and run
   await page.evaluate((c) => {
     window.editor.dispatch({ changes: { from: 0, to: window.editor.state.doc.length, insert: c } });
   }, code);
-  console.log('  Code entered');
-
-  // Click Run
   await page.click('#runBtn');
   console.log('  Run clicked');
 
-  // Wait for the run to complete (button re-enables or status changes)
-  await page.waitForFunction(
-    () => {
-      const status = document.getElementById('status')?.textContent || '';
-      return status.startsWith('Done') || status.startsWith('Error') || status.startsWith('Ready');
-    },
-    { timeout: TIMEOUT }
-  );
-
-  // Small delay for output to flush
+  await page.waitForFunction(TERMINAL_STATUS, { timeout: TIMEOUT });
   await new Promise(r => setTimeout(r, 500));
 
+  const status = await page.evaluate(() => document.getElementById('status').textContent);
   const stdout = await page.evaluate(() => document.getElementById('stdout').value);
   const stderr = await page.evaluate(() => document.getElementById('stderr').value);
-  const status = await page.evaluate(() => document.getElementById('status').textContent);
-
   console.log(`  Status: ${status}`);
   if (stdout.trim()) console.log(`  Stdout: ${stdout.trim().substring(0, 200)}`);
   if (stderr.trim()) console.log(`  Stderr: ${stderr.trim().substring(0, 200)}`);
 
-  // Check console errors
-  const consoleErrors = await page.evaluate(() => window.__testErrors || []);
-  if (consoleErrors.length > 0) {
-    console.log(`  Console errors: ${consoleErrors.length}`);
-    consoleErrors.slice(0, 3).forEach(e => console.log(`    ${e.substring(0, 120)}`));
+  const statusOk = opts.status instanceof RegExp
+    ? opts.status.test(status)
+    : status === opts.status;
+  if (!statusOk) {
+    console.log(`  FAIL ✗ - expected status ${opts.status}, got "${status}"`);
+    return false;
   }
 
-  if (shouldSucceed) {
-    if (!stdout.includes(expectedStdout)) {
-      console.log(`  FAIL ✗ - expected stdout to contain "${expectedStdout}"`);
+  if (opts.solids) {
+    const solids = await page.evaluate(() =>
+      Array.from(document.getElementById('solidSelect').options).map(o => o.value));
+    if (JSON.stringify(solids) !== JSON.stringify(opts.solids)) {
+      console.log(`  FAIL ✗ - expected solids [${opts.solids}], got [${solids}]`);
       return false;
     }
-    if (checkModel) {
-      // The viewer should pick up the .glb from the wasm filesystem and
-      // model-viewer should actually parse and load it.
-      await page.waitForFunction(
-        () =>
-          window.__lastModel &&
-          document.getElementById('viewer')?.loaded === true,
-        { timeout: 60000 }
-      );
-      const modelPath = await page.evaluate(() => window.__lastModel);
-      const b64 = await page.evaluate(async () => {
-        const v = document.getElementById('viewer');
-        const buf = await fetch(v.dataset.url).then((r) => r.arrayBuffer());
-        const bytes = new Uint8Array(buf);
-        let s = '';
-        for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
-        return btoa(s);
-      });
-      const glb = Buffer.from(b64, 'base64');
-      fs.writeFileSync('/tmp/extracted-model.glb', glb);
-      const magic = glb.subarray(0, 4).toString();
-      console.log(`  Model: ${modelPath} (${glb.length} bytes, magic=${magic})`);
-      if (magic !== 'glTF' || glb.length < 1000) {
-        console.log('  FAIL ✗ - extracted glb looks invalid');
-        return false;
-      }
-      // Signed mesh volume sanity check: catches mangled triangulation
-      // (e.g. boolean-cut holes meshed as filled faces) that structural
-      // checks miss. Expected analytic volume of the test CSG is ~0.11.
-      const vol = glbSignedVolume(glb);
-      console.log(`  Mesh volume: ${vol.toFixed(4)} (expected ~0.11)`);
-      if (!(Math.abs(vol - 0.11) < 0.03)) {
-        console.log('  FAIL ✗ - mesh volume far from analytic volume, triangulation is mangled');
-        return false;
-      }
-    }
-    console.log(`  PASS ✓`);
-    return true;
-  } else {
-    console.log(`  (expected failure)`);
-    return true;
+    console.log(`  Solids: [${solids}]`);
   }
+
+  if (opts.volume !== undefined) {
+    // The viewer should pick up the rendered glb and model-viewer should
+    // actually parse and load it.
+    await page.waitForFunction(
+      () =>
+        window.__lastModel &&
+        document.getElementById('viewer')?.loaded === true,
+      { timeout: 60000 }
+    );
+    const modelPath = await page.evaluate(() => window.__lastModel);
+    const b64 = await page.evaluate(async () => {
+      const v = document.getElementById('viewer');
+      const buf = await fetch(v.dataset.url).then((r) => r.arrayBuffer());
+      const bytes = new Uint8Array(buf);
+      let s = '';
+      for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+      return btoa(s);
+    });
+    const glb = Buffer.from(b64, 'base64');
+    fs.writeFileSync(`/tmp/extracted-${name}.glb`, glb);
+    const magic = glb.subarray(0, 4).toString();
+    console.log(`  Model: ${modelPath} (${glb.length} bytes, magic=${magic})`);
+    if (magic !== 'glTF' || glb.length < 1000) {
+      console.log('  FAIL ✗ - extracted glb looks invalid');
+      return false;
+    }
+    // Signed mesh volume sanity check: catches mangled triangulation
+    // (e.g. boolean-cut holes meshed as filled faces) that structural
+    // checks miss.
+    const vol = glbSignedVolume(glb);
+    console.log(`  Mesh volume: ${vol.toFixed(4)} (expected ~${opts.volume})`);
+    if (!(Math.abs(vol - opts.volume) < opts.tol)) {
+      console.log('  FAIL ✗ - mesh volume far from analytic volume');
+      return false;
+    }
+  }
+
+  console.log('  PASS ✓');
+  return true;
 }
 
 async function main() {
@@ -240,9 +233,10 @@ async function main() {
   let passed = 0;
   let failed = 0;
 
-  for (const [name, code, expected, shouldSucceed, checkModel] of TESTS) {
+  for (let i = 0; i < TESTS.length; i++) {
+    const [name, code, opts] = TESTS[i];
     try {
-      const ok = await runTest(page, name, code, expected, shouldSucceed, checkModel);
+      const ok = await runTest(page, name, code, opts);
       if (ok) passed++; else failed++;
     } catch (e) {
       console.log(`  ERROR: ${e.message.substring(0, 200)}`);
@@ -250,7 +244,7 @@ async function main() {
     }
 
     // Reload for next test (clean state)
-    if (TESTS.indexOf(TESTS.find(t => t[0] === name)) < TESTS.length - 1) {
+    if (i < TESTS.length - 1) {
       await page.reload({ waitUntil: 'domcontentloaded', timeout: TIMEOUT });
     }
   }

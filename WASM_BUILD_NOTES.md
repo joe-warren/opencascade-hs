@@ -41,9 +41,21 @@ What is known about the regression (investigated 2026-07-01):
   `Tc/Gen/Foreign.hs` (all in the 2026-03-10 batch).
 - No upstream GHC issue reports this; it is not known-fixed. As of 2026-07-01,
   **ghc-wasm-meta master still ships 9.14.1.20260330** as the 9.14 flavour
-  (last GHC bump 2026-04-04), so unpinning alone changes nothing — moving
-  forward means re-testing a newer flavour (master ships 9.15.20260331) or
-  bisecting/reporting the 9.14 delta upstream.
+  (last GHC bump 2026-04-04).
+- **Re-verified 2026-07-02: the regression does NOT reproduce in the current
+  architecture.** GHC 9.14.1.20260330 (ghc-wasm-meta `a4f5a5f5f1c2`) was
+  installed into the known-good 2026-06-16 image (same wasi-sdk, same
+  EH-enabled libc++abi, OCCT/freetype reused), `opencascade-hs` +
+  `waterfall-cad` + `waterfall-cad-svg` rebuilt, the playground rebuilt, and
+  everything passes: `test_exceptions.sh` (throw/catch of
+  `Standard_DomainError` incl. catch-by-base), `test_node.sh`, and the full
+  browser suite 6/6 including the in-browser-interpreter `cpp_exception_catch`
+  throw test. The April observation ("works with 20260213, crashes with
+  20260330") predates both the dyld relocation-deferral patch and the
+  all-C++-in-one-module redesign — those later fixes evidently also fixed
+  whatever the April crash was. **The pin is obsolete and can be lifted**
+  (keep pinning *some* ghc-wasm-meta commit for reproducibility, just not for
+  this reason).
 
 7.9 builds a host tool (`ExpToCasExe`) as a wasm executable; since everything
 is compiled `-fPIC -fwasm-exceptions` the C++ exception tag is an import the
@@ -75,7 +87,27 @@ The build used to `sed`-patch OCCT sources at image-build time to stub `getuid`,
 
 ### C++ exception handling
 
-OCCT is compiled with `-fwasm-exceptions` for real wasm-native exception handling. The runtime (`__cxa_throw`, `__cxa_begin_catch`, etc.) comes from the stock `libc++abi` shipped in ghc-wasm's wasi-sdk sysroot. (Earlier iterations built `libunwind` and `libc++abi` from the ghc-wasm LLVM fork with `-fwasm-exceptions -fPIC`; those build steps were removed once the sysroot copies proved sufficient.)
+OCCT is compiled with `-fwasm-exceptions` for real wasm-native exception handling. The runtime (`__cxa_throw`, `__cxa_allocate_exception`, etc.) **must** come from a custom build of `libc++abi` (+ `libunwind`) from the ghc-wasm LLVM fork with `-fwasm-exceptions -fPIC`: the stock wasi-sdk sysroot `libc++abi.a` is the no-exceptions variant (it ships `cxa_noexception.cpp.o` and defines none of the EH entry points).
+
+**Breakage found 2026-07-02 (now fixed):** commit `2a73213` ("Quit building
+libunwind when we don't need to", 2026-06-18) removed not just the libunwind
+build but the EH `libc++abi` build too, and the libc++abi object
+force-linking had also been dropped from `build_playground.sh`. Images built
+in that window had no definition of `__cxa_allocate_exception` anywhere —
+any real C++ throw in the playground crashed with `non-existent function
+__cxa_allocate_exception`. The browser suite stayed green because none of
+its tests actually threw. Fixed by restoring the Dockerfile build steps and
+the force-link in `build_playground.sh`; the rebuilt image passes
+`test_exceptions.sh`, `test_node.sh`, and the browser suite, whose
+`wire_prism_exceptions` test now guards this (wire construction makes OCCT
+throw/catch `Standard_NoSuchObject` internally, so broken EH fails hard).
+
+Two load-bearing details of the force-link, from the recovered June history:
+`-lc++abi` does not work (wasm-ld `-shared` treats `__cxa_*` from archives on
+`-l` flags as imports regardless — the objects must be extracted with
+`llvm-ar x` and passed explicitly), and `__cxa_throw` calls
+`_Unwind_RaiseException`, so `-lunwind` (the wasm-exceptions build) is needed
+alongside it.
 
 **Why this matters:** Without real exception handling, the `__cxa_*` stubs called `abort()`, leaving OCCT data structures corrupt. This caused `TopoDS_Iterator::updateCurrentShape()` to crash with "memory access out of bounds" when iterating over shapes built by `BRepPrimAPI_MakeBox`.
 
