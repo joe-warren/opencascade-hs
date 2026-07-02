@@ -11,7 +11,7 @@ import Data.Maybe (catMaybes)
 import Data.Ord (comparing)
 import GHC
 import GHC.Core.TyCon (tyConName)
-import GHC.Core.Type (tyConAppTyCon_maybe)
+import GHC.Core.Type (splitTyConApp_maybe, tyConAppTyCon_maybe)
 import GHC.Driver.Backend (interpreterBackend)
 import GHC.Driver.Config.Diagnostic
 import GHC.Driver.Errors
@@ -30,14 +30,15 @@ import GHC.Wasm.Prim
 -- Solid-valued bindings (JSON array, source order).
 type RunFunction = JSString -> JSString -> IO JSString
 
--- | Render a named top-level Solid binding to /out.glb, at a given mesh
--- deflection (resolution; smaller = finer). Args: name, deflection.
-type RenderFunction = JSString -> JSString -> IO ()
+-- | Render a named top-level binding to /out.glb, at a given mesh deflection
+-- (resolution; smaller = finer). Args: name, deflection, isIO ("true" when the
+-- binding is @IO Solid@ rather than @Solid@).
+type RenderFunction = JSString -> JSString -> JSString -> IO ()
 
--- | Write a named top-level Solid binding to a path; the format is chosen from
--- the file extension by @Waterfall.IO.writeSolid@ (.stl/.step/.gltf/.glb/.obj).
--- Args: name, path, deflection (resolution).
-type ExportFunction = JSString -> JSString -> JSString -> IO ()
+-- | Write a named top-level binding to a path; the format is chosen from the
+-- file extension by @Waterfall.IO.writeSolid@ (.stl/.step/.gltf/.glb/.obj).
+-- Args: name, path, deflection (resolution), isIO.
+type ExportFunction = JSString -> JSString -> JSString -> JSString -> IO ()
 
 -- | Sortable start position for a binding's source span. Bindings without a
 -- real span (which shouldn't happen for top-level definitions) sort first.
@@ -58,19 +59,36 @@ isSolidType ty = case tyConAppTyCon_maybe ty of
             (nameModule_maybe n)
   Nothing -> False
 
--- | Encode a list of identifier names as a JSON array.
-namesToJson :: [String] -> String
-namesToJson ns = "[" ++ intercalate "," (map quote ns) ++ "]"
+-- | True when the TyCon is GHC's @IO@. We match on the OccName only: @IO@'s
+-- defining module moved across GHC versions (GHC.Types -> GHC.Internal.Types
+-- when base was split), so pinning the module is fragile, and no other in-scope
+-- TyCon is realistically named @IO@.
+isIOTyCon :: TyCon -> Bool
+isIOTyCon tc = occNameString (nameOccName (tyConName tc)) == "IO"
+
+-- | Classify a binding's type: @Just False@ for @Solid@, @Just True@ for
+-- @IO Solid@, @Nothing@ otherwise.
+solidKind :: Type -> Maybe Bool
+solidKind ty
+  | isSolidType ty = Just False
+  | otherwise = case splitTyConApp_maybe ty of
+      Just (tc, [arg]) | isIOTyCon tc, isSolidType arg -> Just True
+      _ -> Nothing
+
+-- | Encode the renderable bindings as a JSON array of @{name, io}@ objects.
+entriesToJson :: [(String, Bool)] -> String
+entriesToJson es = "[" ++ intercalate "," (map one es) ++ "]"
   where
-    quote s = "\"" ++ s ++ "\""
+    one (n, io) =
+      "{\"name\":\"" ++ n ++ "\",\"io\":" ++ (if io then "true" else "false") ++ "}"
 
 -- | Main entry point. Takes the GHC libdir path and a space-separated list of
 -- extra package DB paths, and returns a JS array @[run, render, export]@:
 --
---   * @run(args, src)@ compiles the module and returns the JSON list of
---     top-level bindings whose type is @Waterfall.Solids.Solid@.
---   * @render(name, res)@ writes the binding to /out.glb at deflection @res@.
---   * @export(name, path, res)@ writes to @path@ (format by extension) at @res@.
+--   * @run(args, src)@ compiles the module and returns a JSON list of
+--     @{name, io}@ for each top-level binding of type @Solid@ or @IO Solid@.
+--   * @render(name, res, isIO)@ writes the binding to /out.glb at deflection @res@.
+--   * @export(name, path, res, isIO)@ writes to @path@ (format by extension).
 myMain :: JSString -> JSString -> IO JSVal
 myMain js_libdir js_pkg_dbs =
   defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
@@ -138,29 +156,36 @@ myMain js_libdir js_pkg_dbs =
             catMaybes
               <$> mapM lookupName
                 (filter ((== Just userMod) . nameModule_maybe) inScope)
-          let solidIds = [i | AnId i <- things, isSolidType (idType i)]
-              ordered = sortBy (comparing (spanKey . getSrcSpan)) solidIds
-          pure $ map (getOccString . getName) ordered
-        pure $ toJSString $ namesToJson names
+          let solidIds =
+                [ (i, io) | AnId i <- things, Just io <- [solidKind (idType i)] ]
+              ordered = sortBy (comparing (spanKey . getSrcSpan . fst)) solidIds
+          pure [(getOccString (getName i), io) | (i, io) <- ordered]
+        pure $ toJSString $ entriesToJson names
 
-    renderFn <- toRenderFunc $ \js_name js_res ->
+    -- Build the write action: for a Solid, apply the writer directly; for an
+    -- IO Solid, run the action first (>>=) then write. `name` is in scope
+    -- unqualified via the IIModule context set in `run`.
+    let writeExpr writer name isIO
+          | isIO == "true" = "(" ++ name ++ ") >>= " ++ writer
+          | otherwise = writer ++ " (" ++ name ++ ")"
+
+    renderFn <- toRenderFunc $ \js_name js_res js_io ->
       defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
         name <- evaluate $ fromJSString js_name
         freeJSVal $ coerce js_name
         res <- evaluate $ fromJSString js_res
         freeJSVal $ coerce js_res
+        isIO <- evaluate $ fromJSString js_io
+        freeJSVal $ coerce js_io
         flip reflectGhc session $ do
           liftIO $ putStrLn $ "Rendering: " ++ name
-          -- `name` is in scope unqualified via the IIModule context set in `run`
-          -- (so this also reaches bindings the module doesn't export). `res` is a
-          -- numeric literal (mesh deflection) supplied by the resolution setting.
           fhv <-
             compileExprRemote $
-              "Waterfall.IO.writeGLB " ++ res ++ " \"/out.glb\" (" ++ name ++ ")"
+              writeExpr ("Waterfall.IO.writeGLB " ++ res ++ " \"/out.glb\"") name isIO
           hsc_env <- getSession
           liftIO $ evalIO (hscInterp hsc_env) fhv
 
-    exportFn <- toExportFunc $ \js_name js_path js_res ->
+    exportFn <- toExportFunc $ \js_name js_path js_res js_io ->
       defaultErrorHandler defaultFatalMessager defaultFlushOut $ do
         name <- evaluate $ fromJSString js_name
         freeJSVal $ coerce js_name
@@ -168,12 +193,13 @@ myMain js_libdir js_pkg_dbs =
         freeJSVal $ coerce js_path
         res <- evaluate $ fromJSString js_res
         freeJSVal $ coerce js_res
+        isIO <- evaluate $ fromJSString js_io
+        freeJSVal $ coerce js_io
         flip reflectGhc session $ do
-          -- writeSolid picks the writer from the file extension. `name` is in
-          -- scope unqualified via the IIModule context set in `run`.
+          -- writeSolid picks the writer from the file extension.
           fhv <-
             compileExprRemote $
-              "Waterfall.IO.writeSolid " ++ res ++ " \"" ++ path ++ "\" (" ++ name ++ ")"
+              writeExpr ("Waterfall.IO.writeSolid " ++ res ++ " \"" ++ path ++ "\"") name isIO
           hsc_env <- getSession
           liftIO $ evalIO (hscInterp hsc_env) fhv
 

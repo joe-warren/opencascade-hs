@@ -214,6 +214,11 @@ function clearViewer() {
 
 const solidSelect = document.getElementById("solidSelect");
 
+// name -> whether the binding is `IO Solid` (true) or plain `Solid` (false),
+// populated by run(). render/export need this to build the right expression.
+let solidIsIO = {};
+const ioFlag = (name) => (solidIsIO[name] ? "true" : "false");
+
 // Render the Solid currently chosen in the dropdown, reusing the already-loaded
 // module. Deletes any previous model first so the viewer reflects only this one.
 async function showSelected() {
@@ -223,7 +228,7 @@ async function showSelected() {
   setStatus(`Rendering ${name}...`);
   try { (rootfs.dir ?? rootfs).contents.delete("out.glb"); } catch (_) {}
   try {
-    await renderSolid(name, resolution());
+    await renderSolid(name, resolution(), ioFlag(name));
     updateViewer();
     setStatus("Done!");
   } catch (e) {
@@ -291,6 +296,102 @@ document.getElementById("aboutBtn").addEventListener("click", () => {
 document.getElementById("settingsBtn").addEventListener("click", () => {
   document.getElementById("settingsDialog").showModal();
 });
+
+// --- File upload modal: write arbitrary files into the in-memory FS at their
+// own name (/<name>) so user code can read them (fonts, meshes to import, ...).
+// URLs persist across refreshes and are re-fetched on load; uploaded files are
+// session-only. ---
+const filesDialog = document.getElementById("filesDialog");
+const fileUrlInput = document.getElementById("fileUrlInput");
+const fileUploadInput = document.getElementById("fileUploadInput");
+const fileListEl = document.getElementById("fileList");
+const FILES_KEY = "waterfall-playground-files";
+// name -> { url } (url present when the file came from a URL, for persistence).
+const loadedFiles = new Map();
+
+document.getElementById("filesBtn").addEventListener("click", () => {
+  filesDialog.showModal();
+});
+
+function fsWrite(name, bytes) {
+  (rootfs.dir ?? rootfs).contents.set(name, new File(bytes, { readonly: true }));
+}
+function persistFileUrls() {
+  try {
+    const urls = [...loadedFiles.values()].map((v) => v.url).filter(Boolean);
+    localStorage.setItem(FILES_KEY, JSON.stringify(urls));
+  } catch (_) {}
+}
+function reportFileError(where, e) {
+  document.getElementById("stderr").value +=
+    `Failed to load file from ${where}: ${e.message}\n`;
+  refreshOutputs();
+}
+function renderFileList() {
+  fileListEl.innerHTML = "";
+  for (const name of loadedFiles.keys()) {
+    const li = document.createElement("li");
+    const code = document.createElement("code");
+    code.textContent = `/${name}`;
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.textContent = "✕";
+    rm.setAttribute("aria-label", `Remove ${name}`);
+    rm.addEventListener("click", () => {
+      try { (rootfs.dir ?? rootfs).contents.delete(name); } catch (_) {}
+      loadedFiles.delete(name);
+      persistFileUrls();
+      renderFileList();
+    });
+    li.append(code, rm);
+    fileListEl.appendChild(li);
+  }
+}
+function urlBasename(url) {
+  try {
+    const name = new URL(url, window.location.href).pathname.split("/").filter(Boolean).pop();
+    return name || "download";
+  } catch (_) {
+    return "download";
+  }
+}
+async function addFileFromUrl(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  const name = urlBasename(url);
+  fsWrite(name, new Uint8Array(await r.arrayBuffer()));
+  loadedFiles.set(name, { url });
+  persistFileUrls();
+  renderFileList();
+}
+
+document.getElementById("fileUrlAdd").addEventListener("click", async () => {
+  const url = fileUrlInput.value.trim();
+  if (!url) return;
+  try {
+    await addFileFromUrl(url);
+    fileUrlInput.value = "";
+    setStatus("File loaded");
+  } catch (e) {
+    reportFileError(url, e);
+  }
+});
+fileUploadInput.addEventListener("change", async () => {
+  for (const file of fileUploadInput.files) {
+    fsWrite(file.name, new Uint8Array(await file.arrayBuffer()));
+    loadedFiles.set(file.name, {}); // session-only, no URL to persist
+  }
+  fileUploadInput.value = "";
+  renderFileList();
+  setStatus("Files loaded");
+});
+// Re-fetch persisted URLs on startup (fire-and-forget; Reload if a program
+// races ahead of a file it needs).
+try {
+  for (const url of JSON.parse(localStorage.getItem(FILES_KEY) || "[]")) {
+    addFileFromUrl(url).catch((e) => reportFileError(url, e));
+  }
+} catch (_) {}
 
 const rotateToggle = document.getElementById("rotateToggle");
 const resolutionInput = document.getElementById("resolutionInput");
@@ -411,7 +512,7 @@ async function downloadModel() {
   try {
     const dir = (rootfs.dir ?? rootfs).contents;
     try { dir.delete(file); } catch (_) {}
-    await exportSolid(name, `/${file}`, resolution());
+    await exportSolid(name, `/${file}`, resolution(), ioFlag(name));
     const node = dir.get(file);
     if (!node || !node.data) throw new Error("export produced no output");
     const url = URL.createObjectURL(
@@ -458,36 +559,39 @@ async function run() {
     // Drop any model from a previous run so the viewer reflects only this run.
     try { (rootfs.dir ?? rootfs).contents.delete("out.glb"); } catch (_) {}
 
-    const names = JSON.parse(
+    // Each entry is { name, io } — io=true for `IO Solid` bindings.
+    const entries = JSON.parse(
       await runProgram(
         document.getElementById("ghcArgs").value,
         editor.state.doc.toString()
       )
     );
 
-    // Repopulate the dropdown with this run's Solid-valued bindings.
+    // Repopulate the dropdown and remember each binding's kind (pure vs IO).
     solidSelect.innerHTML = "";
-    for (const n of names) {
+    solidIsIO = {};
+    for (const { name, io } of entries) {
+      solidIsIO[name] = io;
       const opt = document.createElement("option");
-      opt.value = n;
-      opt.textContent = n;
+      opt.value = name;
+      opt.textContent = name;
       solidSelect.appendChild(opt);
     }
     // Only show the picker when there's an actual choice to make.
     document.getElementById("solidControls").style.display =
-      names.length > 1 ? "flex" : "none";
+      entries.length > 1 ? "flex" : "none";
     // Download is possible whenever there's at least one solid.
-    document.getElementById("downloadMain").disabled = names.length === 0;
-    document.getElementById("downloadToggle").disabled = names.length === 0;
+    document.getElementById("downloadMain").disabled = entries.length === 0;
+    document.getElementById("downloadToggle").disabled = entries.length === 0;
 
-    if (names.length === 0) {
+    if (entries.length === 0) {
       solidSelect.disabled = true;
       updateViewer();
       setStatus("No top-level values of type Solid found.");
     } else {
       solidSelect.disabled = false;
       // Default to the last-defined Solid.
-      solidSelect.value = names[names.length - 1];
+      solidSelect.value = entries[entries.length - 1].name;
       await showSelected();
     }
   } catch (e) {

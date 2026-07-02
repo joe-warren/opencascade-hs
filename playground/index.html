@@ -75,6 +75,7 @@
             <ul class="split-menu" id="exampleMenu" hidden></ul>
           </div>
           <button id="loadBtn" disabled>Load URL</button>
+          <button id="filesBtn">Files</button>
           <button id="settingsBtn">Settings</button>
           <button id="aboutBtn">About</button>
           <button id="runBtn" disabled>Reload</button>
@@ -142,6 +143,27 @@
           <button value="ok">Close</button>
         </form>
       </div>
+    </dialog>
+
+    <dialog id="filesDialog">
+      <div class="files-body">
+        <h2>File Upload</h2>
+        <p class="dialog-note">
+          Files are written into the in-memory filesystem at
+          <code>/&lt;name&gt;</code>.
+        </p>
+        <div class="files-row">
+          <input type="text" id="fileUrlInput" placeholder="https://…/MyFont.ttf" />
+          <button type="button" id="fileUrlAdd">Add URL</button>
+        </div>
+        <div class="files-row">
+          <input type="file" id="fileUploadInput" multiple />
+        </div>
+        <ul class="file-list" id="fileList"></ul>
+      </div>
+      <form method="dialog" class="dialog-buttons">
+        <button value="ok">Close</button>
+      </form>
     </dialog>
 
     <dialog id="aboutDialog">

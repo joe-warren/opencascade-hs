@@ -188,7 +188,7 @@ header .logo { height: 3rem; width: auto; }
 }
 
 /* --- Dialogs --- */
-#loadDialog, #aboutDialog, #settingsDialog {
+#loadDialog, #aboutDialog, #settingsDialog, #filesDialog {
   background: var(--panel); color: var(--fg);
   border: var(--bw) solid var(--ink); border-radius: var(--radius);
   box-shadow: 6px 6px 0 var(--shadow);
@@ -197,9 +197,40 @@ header .logo { height: 3rem; width: auto; }
 #loadDialog { min-width: min(90vw, 32rem); }
 #aboutDialog { max-width: min(90vw, 34rem); }
 #settingsDialog { min-width: min(90vw, 24rem); }
-#loadDialog::backdrop, #aboutDialog::backdrop, #settingsDialog::backdrop {
-  background: rgba(0, 0, 0, 0.5);
+#filesDialog { min-width: min(90vw, 30rem); }
+#loadDialog::backdrop, #aboutDialog::backdrop, #settingsDialog::backdrop,
+#filesDialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+.dialog-note { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+.dialog-note code { font-family: var(--font-mono); color: var(--fg); }
+
+/* --- File upload modal --- */
+#filesDialog h2 { margin: 0 0 0.5rem; }
+#filesDialog .files-body { display: flex; flex-direction: column; gap: 0.75rem; }
+#filesDialog .files-row { display: flex; gap: 0.5rem; align-items: center; }
+#filesDialog .files-row input[type="text"] {
+  flex: 1; min-width: 0;
+  background: var(--field); color: var(--fg);
+  border: var(--bw) solid var(--ink); border-radius: var(--radius); padding: 0.4rem;
+  font-family: var(--font-mono);
 }
+#filesDialog button:not([value]) {
+  font: inherit; font-weight: 700; cursor: pointer; color: var(--btn-fg);
+  background: var(--c-load);
+  border: var(--bw) solid var(--ink); border-radius: var(--radius);
+  padding: 0.4rem 0.6rem; box-shadow: 2px 2px 0 var(--shadow);
+}
+#filesDialog button:not([value]):active {
+  transform: translate(2px, 2px); box-shadow: 0 0 0 var(--shadow);
+}
+#filesDialog .file-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 0.35rem;
+}
+#filesDialog .file-list li {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+}
+#filesDialog .file-list code { font-family: var(--font-mono); }
+#filesDialog .file-list button { background: var(--c-download); padding: 0.2rem 0.5rem; }
 #settingsDialog h2 { margin: 0 0 0.75rem; }
 #settingsDialog .settings-body { display: flex; flex-direction: column; gap: 0.75rem; }
 #settingsDialog .setting-row {
@@ -223,7 +254,7 @@ header .logo { height: 3rem; width: auto; }
   transform: translate(2px, 2px); box-shadow: 0 0 0 var(--shadow);
 }
 #settingsDialog .setting-row input[type="number"] {
-  width: 8rem;
+  width: 12rem;
   background: var(--field); color: var(--fg);
   border: var(--bw) solid var(--ink); border-radius: var(--radius); padding: 0.4rem;
   font-family: var(--font-mono);
