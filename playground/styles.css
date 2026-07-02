@@ -34,7 +34,7 @@
   :root {
     /* Lightened slightly from near-black so the black shadow reads as depth. */
     --bg: #2a2a2a;
-    --panel: #363636;
+    --panel: #606060;
     --fg: #ededed;
     --muted: #a8a8a8;
     --ink: #ededed;
