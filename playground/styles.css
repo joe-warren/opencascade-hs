@@ -20,6 +20,7 @@
   
   --c-mint: #6ee7a8;
   --c-teal: #59d3ff;
+  --c-blue: #596eff;
   --c-yellow: #ffd23f;
   --c-pink: #ff6faf;
   --c-violet: #af6fff;
@@ -29,6 +30,7 @@
   --c-load: var(--c-teal);
   --c-examples: var(--c-yellow);
   --c-settings: var(--c-violet);
+  --c-files: var(--c-blue);
   --c-download: var(--c-pink);
   --c-about: var(--c-orange);
 
@@ -127,6 +129,7 @@ header .logo { height: 3rem; width: auto; }
 
 #runBtn { background: var(--c-run); }
 #settingsBtn { background: var(--c-settings); }
+#filesBtn { background: var(--c-files); }
 #loadBtn { background: var(--c-load); }
 #aboutBtn { background: var(--c-about); }
 #exampleSplit > button { background: var(--c-examples); }
@@ -220,6 +223,18 @@ header .logo { height: 3rem; width: auto; }
   padding: 0.4rem 0.6rem; box-shadow: 2px 2px 0 var(--shadow);
 }
 #filesDialog button:not([value]):active {
+  transform: translate(2px, 2px); box-shadow: 0 0 0 var(--shadow);
+}
+/* The native file input's "browse" button, styled to match. */
+#filesDialog input[type="file"] { font: inherit; color: var(--muted); min-width: 0; }
+#filesDialog input[type="file"]::file-selector-button {
+  font: inherit; font-weight: 700; cursor: pointer; color: var(--btn-fg);
+  background: var(--c-files);
+  border: var(--bw) solid var(--ink); border-radius: var(--radius);
+  padding: 0.4rem 0.6rem; margin-right: 0.6rem;
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+#filesDialog input[type="file"]::file-selector-button:active {
   transform: translate(2px, 2px); box-shadow: 0 0 0 var(--shadow);
 }
 #filesDialog .file-list {

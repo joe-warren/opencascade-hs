@@ -299,14 +299,13 @@ document.getElementById("settingsBtn").addEventListener("click", () => {
 
 // --- File upload modal: write arbitrary files into the in-memory FS at their
 // own name (/<name>) so user code can read them (fonts, meshes to import, ...).
-// URLs persist across refreshes and are re-fetched on load; uploaded files are
-// session-only. ---
+// URL-loaded files are reflected in the query string (?file=<url>, repeatable)
+// for deeplinking and are re-fetched on load; uploaded files are session-only. ---
 const filesDialog = document.getElementById("filesDialog");
 const fileUrlInput = document.getElementById("fileUrlInput");
 const fileUploadInput = document.getElementById("fileUploadInput");
 const fileListEl = document.getElementById("fileList");
-const FILES_KEY = "waterfall-playground-files";
-// name -> { url } (url present when the file came from a URL, for persistence).
+// name -> { url } (url present when the file came from a URL, for the deeplink).
 const loadedFiles = new Map();
 
 document.getElementById("filesBtn").addEventListener("click", () => {
@@ -316,11 +315,15 @@ document.getElementById("filesBtn").addEventListener("click", () => {
 function fsWrite(name, bytes) {
   (rootfs.dir ?? rootfs).contents.set(name, new File(bytes, { readonly: true }));
 }
-function persistFileUrls() {
-  try {
-    const urls = [...loadedFiles.values()].map((v) => v.url).filter(Boolean);
-    localStorage.setItem(FILES_KEY, JSON.stringify(urls));
-  } catch (_) {}
+// Reflect URL-loaded files in the address bar (?file=<url>, one per file) so the
+// page is shareable. Local uploads have no URL and are omitted.
+function syncFileParams() {
+  const u = new URL(window.location.href);
+  u.searchParams.delete("file");
+  for (const v of loadedFiles.values()) {
+    if (v.url) u.searchParams.append("file", v.url);
+  }
+  history.replaceState(null, "", u);
 }
 function reportFileError(where, e) {
   document.getElementById("stderr").value +=
@@ -340,7 +343,7 @@ function renderFileList() {
     rm.addEventListener("click", () => {
       try { (rootfs.dir ?? rootfs).contents.delete(name); } catch (_) {}
       loadedFiles.delete(name);
-      persistFileUrls();
+      syncFileParams();
       renderFileList();
     });
     li.append(code, rm);
@@ -361,7 +364,7 @@ async function addFileFromUrl(url) {
   const name = urlBasename(url);
   fsWrite(name, new Uint8Array(await r.arrayBuffer()));
   loadedFiles.set(name, { url });
-  persistFileUrls();
+  syncFileParams();
   renderFileList();
 }
 
@@ -385,13 +388,11 @@ fileUploadInput.addEventListener("change", async () => {
   renderFileList();
   setStatus("Files loaded");
 });
-// Re-fetch persisted URLs on startup (fire-and-forget; Reload if a program
-// races ahead of a file it needs).
-try {
-  for (const url of JSON.parse(localStorage.getItem(FILES_KEY) || "[]")) {
-    addFileFromUrl(url).catch((e) => reportFileError(url, e));
-  }
-} catch (_) {}
+// Load files named in the query string (?file=<url>, repeatable) on startup,
+// for deeplinks (fire-and-forget; Reload if a program races ahead of a file).
+for (const url of new URLSearchParams(window.location.search).getAll("file")) {
+  addFileFromUrl(url).catch((e) => reportFileError(url, e));
+}
 
 const rotateToggle = document.getElementById("rotateToggle");
 const resolutionInput = document.getElementById("resolutionInput");
@@ -443,19 +444,28 @@ resolutionInput.addEventListener("change", () => {
   if (runProgram && solidSelect.value) showSelected();
 });
 
+// TEMPORARY: load examples from the current dev branch rather than main, so
+// unmerged example changes (e.g. the Text example) are available. Revert to
+// refs/heads/main once merged.
 const EXAMPLES_BASE =
-  "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/main/waterfall-cad-examples/src/";
+  "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/wasm-build-dirty-rebased/waterfall-cad-examples/src/";
+// Each example may bring files that are loaded into the FS before it runs (e.g.
+// a font for the Text example). Font is on main (it's stable test-data).
+const FONT_VARELA =
+  "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/main/waterfall-cad-examples/test-data/fonts/varela/VarelaRound-Regular.ttf";
 const EXAMPLES = [
-  ["CSG", "CsgExample"],
-  ["Bounding Boxes", "BoundingBoxExample"],
-  ["Fillet", "FilletExample"],
-  ["Offset", "OffsetExample"],
-  ["Platonic Solids", "PlatonicSolidsExample"],
-  ["Prism", "PrismExample"],
-  ["Revolution", "RevolutionExample"],
-  ["Sweep", "SweepExample"],
-  ["Take Path Fraction", "TakePathFractionExample"],
-  ["2D Booleans", "TwoDBooleansExample"],
+  { label: "CSG", mod: "CsgExample", files: [] },
+  { label: "Bounding Boxes", mod: "BoundingBoxExample", files: [] },
+  { label: "Fillet", mod: "FilletExample", files: [] },
+  { label: "Offset", mod: "OffsetExample", files: [] },
+  { label: "Platonic Solids", mod: "PlatonicSolidsExample", files: [] },
+  { label: "Gear", mod: "GearExample", files: [] },
+  { label: "Prism", mod: "PrismExample", files: [] },
+  { label: "Revolution", mod: "RevolutionExample", files: [] },
+  { label: "Sweep", mod: "SweepExample", files: [] },
+  { label: "Take Path Fraction", mod: "TakePathFractionExample", files: [] },
+  { label: "2D Booleans", mod: "TwoDBooleansExample", files: [] },
+  { label: "Text", mod: "TextExample", files: [FONT_VARELA] },
 ];
 
 // --- Split-button dropdown menus (Examples, Download format) ---
@@ -478,11 +488,16 @@ function wireMenuToggle(triggerEl, menuEl) {
 
 // Examples: both segments just open the menu (there's no default action).
 const exampleMenu = document.getElementById("exampleMenu");
-for (const [label, mod] of EXAMPLES) {
+for (const { label, mod, files } of EXAMPLES) {
   const li = document.createElement("li");
   li.textContent = label;
-  li.addEventListener("click", () => {
+  li.addEventListener("click", async () => {
     closeAllMenus();
+    // Load the example's files into the FS first, so the program can read them,
+    // then load + run the program.
+    for (const url of files) {
+      try { await addFileFromUrl(url); } catch (e) { reportFileError(url, e); }
+    }
     loadFromUrl(`${EXAMPLES_BASE}${mod}.hs`);
   });
   exampleMenu.appendChild(li);
