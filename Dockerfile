@@ -47,6 +47,55 @@ RUN source ~/.ghc-wasm/env && \
     make -j4 && make install && \
     cp /freetype/install/lib/*.a ~/.ghc-wasm/wasi-sdk/share/wasi-sysroot/lib/wasm32-wasi/
 
+# build libunwind + libc++abi with wasm exception support
+# These replace the exception-less versions in the sysroot: the stock
+# wasi-sdk libc++abi.a is the no-exceptions variant (cxa_noexception.cpp.o)
+# and defines none of the EH entry points (__cxa_throw,
+# __cxa_allocate_exception, ...), so without this step any real C++ throw
+# in a wasm shared library crashes at runtime. libc++abi is built with
+# LIBCXXABI_USE_LLVM_UNWINDER=OFF, so its __cxa_throw calls
+# _Unwind_RaiseException, which the wasm-exceptions libunwind provides -
+# both libraries are needed together. Guarded by the cpp_exception_catch
+# browser test (scripts/test_browser.mjs).
+RUN source ~/.ghc-wasm/env && \
+    SYSROOT=~/.ghc-wasm/wasi-sdk/share/wasi-sysroot && \
+    git clone --depth 1 --filter=blob:none --sparse \
+      https://gitlab.haskell.org/haskell-wasm/llvm-project.git /tmp/llvm && \
+    cd /tmp/llvm && git sparse-checkout set libunwind libcxx libcxxabi cmake runtimes
+
+RUN source ~/.ghc-wasm/env && \
+    SYSROOT=~/.ghc-wasm/wasi-sdk/share/wasi-sysroot && \
+    BASE="-fPIC -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false -fdeclspec --sysroot=$SYSROOT -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_MMAN -Wno-c23-extensions" && \
+    cmake -G "Unix Makefiles" -B /tmp/build-unwind \
+      -DCMAKE_C_COMPILER=wasm32-wasi-clang -DCMAKE_CXX_COMPILER=wasm32-wasi-clang++ \
+      -DCMAKE_SYSTEM_NAME=WASI -DCMAKE_C_COMPILER_WORKS=ON -DCMAKE_CXX_COMPILER_WORKS=ON \
+      -DCMAKE_C_FLAGS="$BASE" -DCMAKE_CXX_FLAGS="$BASE" \
+      -DLIBUNWIND_ENABLE_SHARED=OFF -DLIBUNWIND_ENABLE_STATIC=ON \
+      -DLIBUNWIND_ENABLE_THREADS=OFF -DLIBUNWIND_USE_COMPILER_RT=ON \
+      -S /tmp/llvm/libunwind && \
+    make -C /tmp/build-unwind -j4 && \
+    cp /tmp/build-unwind/lib/libunwind.a "$SYSROOT/lib/wasm32-wasi/" && \
+    ls -lh "$SYSROOT/lib/wasm32-wasi/libunwind.a"
+
+RUN source ~/.ghc-wasm/env && \
+    SYSROOT=~/.ghc-wasm/wasi-sdk/share/wasi-sysroot && \
+    CXX_INC1="$SYSROOT/include/wasm32-wasi/c++/v1" && \
+    CXX_INC2="$SYSROOT/include/c++/v1" && \
+    BASE="-fPIC -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false -fdeclspec --sysroot=$SYSROOT -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_MMAN -Wno-c23-extensions" && \
+    cmake -G "Unix Makefiles" -B /tmp/build-cxxabi \
+      -DCMAKE_C_COMPILER=wasm32-wasi-clang -DCMAKE_CXX_COMPILER=wasm32-wasi-clang++ \
+      -DCMAKE_SYSTEM_NAME=WASI -DCMAKE_C_COMPILER_WORKS=ON -DCMAKE_CXX_COMPILER_WORKS=ON \
+      -DCMAKE_C_FLAGS="$BASE -I/tmp/llvm/libunwind/include" \
+      -DCMAKE_CXX_FLAGS="$BASE -I/tmp/llvm/libunwind/include -isystem $CXX_INC1 -isystem $CXX_INC2" \
+      -DLIBCXXABI_ENABLE_SHARED=OFF -DLIBCXXABI_ENABLE_STATIC=ON \
+      -DLIBCXXABI_ENABLE_THREADS=OFF -DLIBCXXABI_ENABLE_EXCEPTIONS=ON \
+      -DLIBCXXABI_USE_COMPILER_RT=ON -DLIBCXXABI_USE_LLVM_UNWINDER=OFF \
+      -DLIBCXXABI_LIBCXX_INCLUDES="$CXX_INC1" \
+      -S /tmp/llvm/libcxxabi && \
+    make -C /tmp/build-cxxabi -j4 && \
+    cp /tmp/build-cxxabi/lib/libc++abi.a "$SYSROOT/lib/wasm32-wasi/" && \
+    rm -rf /tmp/llvm /tmp/build-unwind /tmp/build-cxxabi
+
 # build OCCT for wasm (with -fwasm-exceptions for real C++ exception handling)
 RUN chmod +x ./OCCT/adm/scripts/wasm_build.sh && \
     ./OCCT/adm/scripts/wasm_build.sh || (cat /OCCT/work/build-wasm.log && false)

@@ -57,6 +57,14 @@ find "$OPENCASCADE_HS_DIR"/opencascade-hs/cpp "$SCRIPT_DIR" -maxdepth 1 -name '*
 WRAPPER_OBJS=""
 for obj in "$WRAP_DIR"/*.o; do WRAPPER_OBJS="$WRAPPER_OBJS -optl$obj"; done
 
+# Extract all libc++abi objects and link them directly into libplayground.so.
+# This puts __cxa_throw etc. in the same module as the OCCT catch blocks
+# (required for wasm EH) and forces real definitions: the EH entry points only
+# exist in the custom-built libc++abi.a (see Dockerfile), and wasm-ld -shared
+# treats __cxa_* from -lc++abi as imports regardless.
+mkdir -p /tmp/cxxabi_objs && (cd /tmp/cxxabi_objs && llvm-ar x "$SYSROOT/libc++abi.a")
+for obj in /tmp/cxxabi_objs/*.o*; do WRAPPER_OBJS="$WRAPPER_OBJS -optl$obj"; done
+
 # Weak C++ data (typeinfo/typename/vtable/guard variables) is never exported
 # by wasm-ld, but references to it still go through GOT imports; force-export
 # it so the module resolves its own GOT entries (dyld defers relocations
@@ -82,7 +90,9 @@ for lib in "${OCCT_LIBS[@]}"; do
   OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-l$lib"
 done
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lfreetype"
-OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lc++"
+# libunwind provides _Unwind_RaiseException, which the EH libc++abi's
+# __cxa_throw calls (it is built with LIBCXXABI_USE_LLVM_UNWINDER=OFF).
+OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lc++ -optl-lunwind"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS $WRAPPER_OBJS -optl-Wl,@/tmp/rtti_exports.rsp"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lwasi-emulated-process-clocks -optl-lwasi-emulated-signal"
 OCCT_LINK_FLAGS="$OCCT_LINK_FLAGS -optl-lwasi-emulated-mman -optl-lwasi-emulated-getpid"

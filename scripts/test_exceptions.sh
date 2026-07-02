@@ -8,6 +8,7 @@ OCHS_PKG=$(basename "$(find "$BUILD_DIR" -maxdepth 1 -type d -name 'opencascade-
 GHC_LIBDIR=$(wasm32-wasi-ghc --print-libdir)
 GHC_VERSION_DIR=$(find "$GHC_LIBDIR" -maxdepth 1 -type d -name "wasm32-wasi-ghc-*" | head -1)
 SYSROOT=~/.ghc-wasm/wasi-sdk/share/wasi-sysroot/lib/wasm32-wasi
+UNWIND_FLAG=""; [ -f "$SYSROOT/libunwind.a" ] && UNWIND_FLAG="-optl-lunwind"
 cd /opencascade-hs
 
 cat > /tmp/throwtest.cpp << 'CPPEOF'
@@ -18,7 +19,7 @@ cat > /tmp/throwtest.cpp << 'CPPEOF'
 extern "C" {
 int test_no_throw() {
     Standard_DomainError e("test");
-    fprintf(stderr, "construct OK: %s\n", e.what());
+    fprintf(stderr, "construct OK: %s\n", e.GetMessageString());
     return 1;
 }
 int test_catch_all() {
@@ -28,12 +29,12 @@ int test_catch_all() {
 }
 int test_catch_exact() {
     try { throw Standard_DomainError("test"); }
-    catch (Standard_DomainError const& e) { fprintf(stderr, "catch exact OK: %s\n", e.what()); return 1; }
+    catch (Standard_DomainError const& e) { fprintf(stderr, "catch exact OK: %s\n", e.GetMessageString()); return 1; }
     return 0;
 }
 int test_catch_base() {
     try { throw Standard_DomainError("test"); }
-    catch (Standard_Failure const& e) { fprintf(stderr, "catch base OK: %s\n", e.what()); return 1; }
+    catch (Standard_Failure const& e) { fprintf(stderr, "catch base OK: %s\n", e.GetMessageString()); return 1; }
     return 0;
 }
 }
@@ -48,7 +49,7 @@ wasm32-wasi-clang++ -fPIC -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false \
 mkdir -p /tmp/cxxabi_objs && cd /tmp/cxxabi_objs && llvm-ar x "$SYSROOT/libc++abi.a"
 cd /opencascade-hs
 CXX_ABI_OBJS=""
-for obj in /tmp/cxxabi_objs/*.obj; do CXX_ABI_OBJS="$CXX_ABI_OBJS -optl$obj"; done
+for obj in /tmp/cxxabi_objs/*.o*; do CXX_ABI_OBJS="$CXX_ABI_OBJS -optl$obj"; done
 
 cat > /tmp/TestThrow.hs << 'HSEOF'
 {-# LANGUAGE CApiFFI #-}
@@ -83,7 +84,7 @@ wasm32-wasi-ghc -v0 -shared -dynamic \
   -optl-lTKGeomBase -optl-lTKGeomAlgo -optl-lTKBRep -optl-lTKTopAlgo \
   -optl-lTKPrim -optl-lTKBO -optl-lTKBool \
   -optl-Wl,--no-whole-archive \
-  -optl-lc++ -optl-lc++abi -optl-lunwind \
+  -optl-lc++ -optl-lc++abi $UNWIND_FLAG \
   -optl-lwasi-emulated-process-clocks -optl-lwasi-emulated-signal \
   -optl-lwasi-emulated-mman -optl-lwasi-emulated-getpid \
   -optl/tmp/throwtest.o $CXX_ABI_OBJS \
