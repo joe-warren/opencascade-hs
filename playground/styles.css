@@ -16,6 +16,7 @@
   --disabled-fg: #7a7a7a;
   --err: #d61f1f;
   --btn-fg: #141414;
+  --status-fg: #ffffff;
   /* Bright button fills (kept vivid in both light and dark). */
   --c-run: #6ee7a8;
   --c-load: #59d3ff;
@@ -90,6 +91,7 @@ header .logo { height: 3rem; width: auto; }
 .right { padding: 0.6rem; gap: 0.6rem; }
 .controls {
   display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;
+  flex-direction: row-reverse;
   margin-bottom: 0.4rem;
 }
 
@@ -169,7 +171,6 @@ header .logo { height: 3rem; width: auto; }
 }
 .stderr { color: var(--err); }
 
-#status { font-size: 0.85rem; color: var(--muted); margin-right: auto; align-self: center; }
 
 #viewer {
   display: none; width: 100%; flex: 1; min-height: 0;
@@ -213,12 +214,22 @@ header .logo { height: 3rem; width: auto; }
 .dialog-buttons button[value="cancel"] { background: var(--panel); color: var(--fg); }
 
 /* --- Spinner --- */
+#status { 
+  color: var(--status-fg); 
+  align-self: center;
+}
 .spinner-overlay {
   position: fixed; inset: 0; z-index: 1000;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; 
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
   background: rgba(0, 0, 0, 0.5);
 }
 .spinner-overlay.hidden { display: none; }
+.spinner-box-container {
+  display: flex; align-items: center; justify-content: center;
+}
 .spinner-box {
   width: 3rem; height: 3rem;
   margin: 1rem;
