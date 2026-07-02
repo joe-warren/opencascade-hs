@@ -240,10 +240,9 @@ cp "$GHC_LIBDIR/dyld.mjs" "$GHC_LIBDIR/prelude.mjs" "$GHC_LIBDIR/post-link.mjs" 
 # Patch dyld.mjs for wasm exception tags and duplicate symbol handling
 node "$SCRIPT_DIR/../scripts/patch_dyld.js" "$DIST_DIR/dyld.mjs"
 cp "$SCRIPT_DIR/index.html" "$SCRIPT_DIR/styles.css" \
-   "$SCRIPT_DIR/playground.js" "$SCRIPT_DIR/example.hs" \
-   "$SCRIPT_DIR/environment.hdr" \
-   "$SCRIPT_DIR/logo.svg" "$SCRIPT_DIR/github.svg" \
-   "$SCRIPT_DIR/haskell.svg" "$SCRIPT_DIR/wasm.svg" "$DIST_DIR/"
+   "$SCRIPT_DIR/playground.js" "$SCRIPT_DIR/example.hs" "$DIST_DIR/"
+mkdir -p "$DIST_DIR/assets"
+cp "$SCRIPT_DIR/assets/"* "$DIST_DIR/assets/"
 
 # Fix paths in playground.js (the placeholder tokens live in the JS)
 sed -i "s|HSLIB_SEARCH_DIR|$GHC_VERSION_DIR|g" "$DIST_DIR/playground.js"
