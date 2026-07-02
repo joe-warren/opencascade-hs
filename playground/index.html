@@ -43,22 +43,6 @@
           value="-package waterfall-cad -package waterfall-cad-svg -package linear -v0"
         />
         <div class="controls">
-          <button id="runBtn" disabled>Reload</button>
-          <button id="aboutBtn">About</button>
-          <button id="loadBtn" disabled>Load URL</button>
-          <div class="split" id="exampleSplit">
-            <button type="button" class="split-main" id="exampleMain" disabled>
-              Examples
-            </button>
-            <button
-              type="button"
-              class="split-toggle"
-              id="exampleToggle"
-              disabled
-              aria-label="Choose an example"
-            >▾</button>
-            <ul class="split-menu" id="exampleMenu" hidden></ul>
-          </div>
           <div class="split" id="downloadSplit">
             <button type="button" class="split-main" id="downloadMain" disabled>
               Download STL
@@ -76,6 +60,23 @@
               <li data-value="glb">GLB</li>
             </ul>
           </div>
+          
+          <div class="split" id="exampleSplit">
+            <button type="button" class="split-main" id="exampleMain" disabled>
+              Examples
+            </button>
+            <button
+              type="button"
+              class="split-toggle"
+              id="exampleToggle"
+              disabled
+              aria-label="Choose an example"
+            >▾</button>
+            <ul class="split-menu" id="exampleMenu" hidden></ul>
+          </div>
+          <button id="loadBtn" disabled>Load URL</button>
+          <button id="aboutBtn">About</button>
+          <button id="runBtn" disabled>Reload</button>
         </div>
         <div class="controls" id="solidControls" style="display: none">
           <label for="solidSelect">Solid</label>
