@@ -40,7 +40,8 @@ import Waterfall.Internal.Finalizers (unsafeFromAcquire, toAcquire, unsafeFromAc
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Waterfall.Internal.Edges (wireEndpoints, reverseWire, splitWires, wireLength, truncateWire)
 import Control.Arrow (second)
-import Data.Foldable (foldl')
+import Prelude hiding (Foldable(..))
+import Data.Foldable (Foldable(..))
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge

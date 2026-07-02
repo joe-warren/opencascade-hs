@@ -8,7 +8,7 @@ module CsgExample
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.Transforms as Transforms
 import Waterfall.Booleans ( union, intersection, difference )
-import Linear (V3 (..), (^*), unit, _x, _y )
+import Linear (V3 (..), unit, _x, _y )
 import Data.Function ((&))
 
 csgExample :: Solids.Solid

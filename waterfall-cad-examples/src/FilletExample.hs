@@ -16,7 +16,6 @@ import Waterfall.Fillet
     , indexedConditionalChamfer
     , whenNearlyEqual
     )
-import Control.Lens ((^.))
 import Linear (V3 (..), _xy)
 import Control.Monad (guard)
 
