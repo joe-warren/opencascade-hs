@@ -26,7 +26,8 @@
   /* spinner colours */
   --c-spinner-a: #59d3ff;
   --c-spinner-b: #ff6faf;
-  --c-spinner-c: #ffd23f;
+  --c-spinner-c: #6ee7a8;
+  --c-spinner-d: #ffd23f;
   --radius: 5px;
   --bw: 3px;
 }
@@ -240,14 +241,20 @@ header .logo { height: 3rem; width: auto; }
   animation-delay: 300ms;
   background-color: var(--c-spinner-c);
 }
+.spinner-box-d {
+  animation-delay: 450ms;
+  background-color: var(--c-spinner-d);
+}
 @keyframes bounce {
   0%,
   to {
-    transform:translateY(-75%);
+    box-shadow: 3px 3px 0 var(--shadow);
+    transform: none;
     animation-timing-function:cubic-bezier(.8,0,1,1)
   }
   50% {
-    transform:none;
+    transform:translate(3px, 3px);
+    box-shadow: 0px 0px 0 var(--shadow);
     animation-timing-function:cubic-bezier(0,0,.2,1)
   }
 }
