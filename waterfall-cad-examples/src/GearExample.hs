@@ -21,7 +21,7 @@ import qualified Waterfall.TwoD.Path2D as Path2D
 import Waterfall.TwoD.Transforms (rotate2D)
 import Control.Lens ((^.))
 import Linear (V2 (..), _y)
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe, listToMaybe)
 
 
 chebyExpnCoeffs :: Int -> (Double -> Double) -> Double
