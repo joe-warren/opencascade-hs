@@ -299,15 +299,15 @@ const EXAMPLES_BASE =
   "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/main/waterfall-cad-examples/src/";
 const EXAMPLES = [
   ["CSG", "CsgExample"],
-  ["Bounding boxes", "BoundingBoxExample"],
+  ["Bounding Boxes", "BoundingBoxExample"],
   ["Fillet", "FilletExample"],
   ["Offset", "OffsetExample"],
-  ["Platonic solids", "PlatonicSolidsExample"],
+  ["Platonic Solids", "PlatonicSolidsExample"],
   ["Prism", "PrismExample"],
   ["Revolution", "RevolutionExample"],
   ["Sweep", "SweepExample"],
-  ["Take path fraction", "TakePathFractionExample"],
-  ["2D booleans", "TwoDBooleansExample"],
+  ["Take Path Fraction", "TakePathFractionExample"],
+  ["2D Booleans", "TwoDBooleansExample"],
 ];
 
 // --- Split-button dropdown menus (Examples, Download format) ---
