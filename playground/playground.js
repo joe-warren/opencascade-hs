@@ -206,6 +206,17 @@ function updateViewer() {
   window.__lastModel = path;
 }
 
+function clearViewer() {
+  const viewer = document.getElementById("viewer");
+  if (viewer.dataset.url) {
+    URL.revokeObjectURL(viewer.dataset.url);
+    delete viewer.dataset.url;
+  }
+  viewer.removeAttribute("src");
+  viewer.style.display = "none";
+  window.__lastModel = null;
+}
+
 const solidSelect = document.getElementById("solidSelect");
 
 // Render the Solid currently chosen in the dropdown, reusing the already-loaded
@@ -222,6 +233,7 @@ async function showSelected() {
     setStatus("Done!");
   } catch (e) {
     setStatus(`Error: ${e.message}`);
+    clearViewer();
   } finally {
     setBusy(false);
     refreshOutputs();
@@ -433,6 +445,11 @@ async function run() {
     }
   } catch (e) {
     setStatus(`Error: ${e.message}`);
+    // The run failed (e.g. a compile error), so there's no current model.
+    clearViewer();
+    document.getElementById("solidControls").style.display = "none";
+    document.getElementById("downloadMain").disabled = true;
+    document.getElementById("downloadToggle").disabled = true;
   } finally {
     document.getElementById("runBtn").disabled = false;
     setBusy(false);
