@@ -1,18 +1,26 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ImpredicativeTypes #-}
 module Waterfall.TwoD.Transforms
-( Transformable2D
+( -- * Transformations
+ Transformable2D
 , matTransform2D
 , rotate2D
 , scale2D
 , uScale2D
 , translate2D
 , mirror2D
+-- * Optics
+, _translated2D
+, _scaled2D
+, _uScaled2D
+, _rotated2D
+, _mirrored2D
 ) where
 
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
-import Linear ((*^), normalize, dot, V3 (..), V2 (..), (!*), _xy, _z, unit, M23)
+import Linear ((*^), normalize, dot, V3 (..), V2 (..), (!*), _xy, _z, unit, M23, nearZero)
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.GTrsf as GP.GTrsf
@@ -28,7 +36,7 @@ import Data.Acquire
 import Foreign.Ptr
 import Waterfall.TwoD.Internal.Shape (Shape(..))
 import Data.Function ((&))
-import Control.Lens ((.~), (%~))
+import Control.Lens ((.~), (%~), Iso', iso)
 import Control.Monad (forM)
 import Waterfall.Internal.Path.Common (RawPath(..))
 import Waterfall.Internal.Diagram (RawDiagram (..))
@@ -238,3 +246,33 @@ instance Transformable2D (V2 Double) where
     mirror2D mirrorVec toMirror = 
         let nm = normalize mirrorVec
         in toMirror - (2 * (nm `dot` toMirror) *^ nm)
+
+-- | Every translation is an isomorphism
+_translated2D :: Transformable2D t => V2 Double -> Iso' t t
+_translated2D v = iso (translate2D v) (translate2D (negate v))
+
+-- | A scale by @v@ as an isomorphism
+--
+-- Returns 'Nothing' when any component of @v@ is (near) zero,
+-- as a scale that collapses an axis has no inverse.
+_scaled2D :: Transformable2D t => V2 Double -> Maybe (Iso' t t)
+_scaled2D v = if any nearZero v
+    then Nothing
+    else Just $ iso (scale2D v) (scale2D (1/v))
+
+-- | A scale by @s@ as an isomorphism
+--
+-- Returns 'Nothing' when @s@ is (near) zero,
+--  as a scale that collapses everything to the origin has no inverse.
+_uScaled2D :: Transformable2D t => Double -> Maybe (Iso' t t)
+_uScaled2D s = if nearZero s
+    then Nothing
+    else Just $ iso (uScale2D s) (uScale2D (1/s))
+
+-- | Every rotation is an isomorphism
+_rotated2D :: Transformable2D t => Double -> Iso' t t
+_rotated2D angle = iso (rotate2D angle) (rotate2D (negate angle))
+
+-- | Every mirror is an isomorphism
+_mirrored2D :: Transformable2D t => V2 Double -> Iso' t t
+_mirrored2D v = let f = mirror2D v in iso f f
