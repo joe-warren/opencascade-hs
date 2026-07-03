@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-| 
 Module: Waterfall.Internal.Finalizers
 
@@ -9,6 +10,7 @@ However `waterfall-cad` does not (at the highest level) keep values in the `Acqu
 -}
 module Waterfall.Internal.Finalizers 
 ( unsafeFromAcquire
+, unsafeFromAcquireWithCatch
 , unsafeFromAcquireT
 , fromAcquire
 , fromAcquireT
@@ -24,6 +26,8 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (fromMaybe)
 import Control.Monad (forM, when)
 import Data.IORef (newIORef, atomicModifyIORef)
+import Control.Exception (catch)
+import OpenCascade.Internal.Exception (OpenCascadeException)
 
 -- | Convert a resource in the `Data.Acquire.Acquire` monad to a value in IO
 -- the `free` action of the resource is called when the underlying value goes out of scope of the Haskell garbage collection
@@ -63,6 +67,16 @@ fromAcquireT a = runResourceT $ do
 {-# NOINLINE unsafeFromAcquire #-}
 unsafeFromAcquire :: Acquire a -> a 
 unsafeFromAcquire = unsafePerformIO . fromAcquire
+
+opencascadeExceptionToNothing :: OpenCascadeException -> Maybe a
+opencascadeExceptionToNothing _ = Nothing
+
+-- | Version of `unsafeFromAcquire` which returns `Nothing` if the action throws
+{-# NOINLINE unsafeFromAcquireWithCatch #-}
+unsafeFromAcquireWithCatch :: Acquire a -> Maybe a
+unsafeFromAcquireWithCatch = 
+    let handle = (const (pure Nothing)) :: (OpenCascadeException -> IO (Maybe a))
+    in unsafePerformIO . (`catch` handle) . fmap Just . fromAcquire
 
 -- | Version of `unsafeFromAcquire`  which registers the finalizer on the _value_ in a container 
 {-# NOINLINE unsafeFromAcquireT #-}

@@ -50,7 +50,7 @@ writeTmpStl s = do
 exceptionTests :: TestTree
 exceptionTests = testGroup "Exception Tests"
     [ -- It's a little weird that this fails at IO time, whereas _some_ operations will fail with an OpenCascade exception when the operation is performed
-      testCase "Bad Offset" $ checkFailure (writeTmpStl $ Offset.offset (negate 1) Solids.centeredCube) 
+      testCase "Bad Offset" $ checkFailure (writeTmpStl $ Offset.unsafeOffset (negate 1) Solids.centeredCube) 
             $ \case 
                 WaterfallIOException FileError _ -> Nothing
                 e -> Just $ "Expected WaterfallIOException\ngot: " <> show e

@@ -1,9 +1,11 @@
 module Waterfall.Offset 
 ( offset
 , offsetWithTolerance
+, unsafeOffset 
+, unsafeOffsetWithTolerance
 ) where 
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, solidFromAcquireWithCatch)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
@@ -12,6 +14,7 @@ import qualified OpenCascade.BRepOffset.Mode as Mode
 import qualified OpenCascade.GeomAbs.JoinType as GeomAbs.JoinType
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import qualified OpenCascade.TopoDS.Types as TopoDS
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
 import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
 import Control.Monad (when)
@@ -33,21 +36,30 @@ combineShellsToSolid s = do
     go
     upcast <$> MakeSolid.solid makeSolid
 
--- | like `offset`, but allows setting the tolerance parameter used by the algorithm 
-offsetWithTolerance :: 
-    Double       -- ^ Tolerance, this can be relatively small
-    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
-    -> Solid        -- ^ the `Solid` to offset 
-    -> Solid
-offsetWithTolerance tolerance value solid
-    | nearZero value = solid
-    | otherwise = 
-  solidFromAcquire $ do
+rawOffsetWithTolerance :: 
+    Double       
+    -> Double   
+    -> Solid   
+    -> Acquire (Ptr TopoDS.Shape.Shape)
+rawOffsetWithTolerance tolerance value solid
+    | nearZero value = acquireSolid solid
+    | otherwise = do
     builder <- MakeOffsetShape.new
     s <- acquireSolid solid 
     liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False 
     shell <- MakeShape.shape (upcast builder)
     combineShellsToSolid shell
+
+-- | like `offset`, but allows setting the tolerance parameter used by the algorithm 
+offsetWithTolerance :: 
+    Double       -- ^ Tolerance, this can be relatively small
+    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid        -- ^ the `Solid` to offset 
+    -> Maybe Solid
+offsetWithTolerance tolerance value solid = solidFromAcquireWithCatch $ rawOffsetWithTolerance tolerance value solid
+
+defaultTolerance :: Double
+defaultTolerance = 1e-6
 
 -- | Expand or contract a `Solid` by a certain amount.
 -- 
@@ -66,5 +78,22 @@ offsetWithTolerance tolerance value solid
 offset :: 
     Double    -- ^ Amount to offset by, positive values expand, negative values contract
     -> Solid        -- ^ the `Solid` to offset 
+    -> Maybe Solid
+offset = offsetWithTolerance defaultTolerance
+
+
+-- | unsafe version of `offsetWithTolerance`, throws rather than returning a `Maybe` 
+unsafeOffsetWithTolerance :: 
+    Double       -- ^ Tolerance, this can be relatively small
+    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid        -- ^ the `Solid` to offset 
     -> Solid
-offset = offsetWithTolerance 1e-6 
+unsafeOffsetWithTolerance tolerance value solid = solidFromAcquire $ rawOffsetWithTolerance tolerance value solid
+
+
+-- | unsafe version of `offsetWithTolerance`, throws rather than returning a `Maybe` 
+unsafeOffset :: 
+    Double    -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid        -- ^ the `Solid` to offset 
+    -> Solid
+unsafeOffset = unsafeOffsetWithTolerance defaultTolerance
