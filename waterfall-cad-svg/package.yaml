@@ -17,6 +17,9 @@ extra-source-files:
 - README.md
 - CHANGELOG.md
 
+data-files:
+ - test-data/*
+
 dependencies:
 - base >= 4.7 && < 5
 - *waterfall-cad-bound
@@ -33,3 +36,12 @@ ghc-options: *ghc-options
 
 library:
   source-dirs: src
+
+tests:
+  tests:
+    main: Main.hs
+    source-dirs: test
+    dependencies:
+      - tasty
+      - tasty-hunit
+      - waterfall-cad-svg

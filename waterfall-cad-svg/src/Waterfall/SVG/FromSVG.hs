@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 {-|
 Load [SVG Data](https://developer.mozilla.org/en-US/docs/Web/SVG) into `Waterfall.Path2D`
 -}
@@ -21,13 +22,22 @@ import Linear (V3 (..), V2 (..), zero, Metric (norm), normalize, (^*), (*^), _x,
 import Control.Lens ((^.), ala, each)
 import Data.Monoid (Endo (..))
 import Control.Arrow (second)
-import Data.Foldable (foldl')
+import Prelude hiding (Foldable(..))
+import Data.Foldable (Foldable(..))
+import Control.Exception (IOException, try)
 import Control.Monad (join, (<=<))
+import Data.Bifunctor (first)
 import Data.Maybe (catMaybes)
 import Data.Function ((&))
 
 -- | Categories of error that may occur when processing an SVG
-data SVGErrorKind = SVGIOError | SVGParseError | SVGPathError | SVGTransformError | SVGNumberError
+data SVGErrorKind
+    = SVGIOError
+    | SVGTreeError
+    | SVGParseError
+    | SVGPathError
+    | SVGTransformError
+    | SVGNumberError
     deriving (Eq, Ord, Show)
 
 -- | Type representing an error that occured when processing an SVG
@@ -322,6 +332,8 @@ convertDocument doc = fmap mconcat . traverse convertTree $ (doc ^. Svg.elements
 
 -- | Load an SVG file into a `Waterfall.Path2D`
 readSVG :: FilePath -> IO (Either SVGError [Waterfall.Path2D])
-readSVG path = 
-    let fileReadErr = Left . SVGError SVGIOError $ "Failed to read svg from file: " <> path
-    in ( convertDocument <=< maybe fileReadErr Right) <$> Svg.loadSvgFile path 
+readSVG path =
+    let fileReadErr = Left . SVGError SVGTreeError $ "Failed to parse svg tree in file: " <> path
+        fileOpenErr = SVGError SVGIOError . show @IOException
+    in (convertDocument <=< maybe fileReadErr Right <=< first fileOpenErr)
+        <$> try (Svg.loadSvgFile path)

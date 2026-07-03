@@ -44,8 +44,9 @@ cheby = [ [ 1,  0,  0,  0,  0,  0]
 chebyApprox :: (Double -> Double) -> Int -> [Double]
 chebyApprox f p' = 
     let fnCoeffs = [chebyExpnCoeffs k f | k <- [0..p'] ]
-        adjust 0 = head fnCoeffs /2
-        adjust _ = 0
+        adjust p
+            | p == 0, (c : _) <- fnCoeffs = c / 2
+            | otherwise = 0
      in [ sum [fnCoeffs!!k  * (cheby !! k !! pwr) | k <- [0..p'] ] - adjust pwr | pwr <- [0..p'] ]
 
 binom :: Int -> Int -> Double 
