@@ -1,20 +1,28 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ImpredicativeTypes #-}
 module Waterfall.Transforms
-( Transformable
+( -- * Transformations
+  Transformable
 , matTransform
 , scale
 , uScale
 , rotate
 , translate
 , mirror
+  -- * Optics
+, _translated
+, _scaled
+, _uScaled
+, _rotated
+, _mirrored
 ) where
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire) 
 import Waterfall.Internal.Path.Common (RawPath(..))
 import Linear.V3 (V3 (..))
 import Linear.V4 (V4 (..))
-import Linear (M34, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z)
+import Linear (M34, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z, nearZero)
 import qualified Linear.Quaternion as Quaternion
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
@@ -32,7 +40,7 @@ import Foreign.Ptr
 import Waterfall.Internal.Path (Path(..))
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Data.Function ((&))
-import Control.Lens ((.~))
+import Control.Lens ((.~), Iso', iso)
 
 -- | Typeclass for objects that can be manipulated in 3D space
 class Transformable a where
@@ -244,3 +252,34 @@ instance Transformable (V3 Double) where
         let nm = normalize mirrorVec
         in toMirror - (2 * (nm `dot` toMirror) *^ nm)
 
+-- | Every translation is an isomorphism
+_translated :: Transformable t => V3 Double -> Iso' t t
+_translated v = iso (translate v) (translate (negate v))
+
+-- | A scale by @v@ as an isomorphism
+--
+-- Returns 'Nothing' when any component of @v@ is (near) zero,
+-- as a scale that collapses an axis has no inverse.
+_scaled :: Transformable t => V3 Double -> Maybe (Iso' t t)
+_scaled v =
+    if any nearZero v
+        then Nothing
+        else Just $ iso (scale v) (scale (1/v))
+
+-- | A scale by @s@ as an isomorphism
+--
+-- Returns 'Nothing' when @s@ is (near) zero,
+--  as a scale that collapses everything to the origin has no inverse.
+_uScaled :: Transformable t => Double -> Maybe (Iso' t t)
+_uScaled s = 
+    if nearZero s
+        then Nothing 
+        else Just $ iso (uScale s) (uScale (1/s))
+
+-- | Every rotation is an isomorphism
+_rotated :: Transformable t => V3 Double -> Double -> Iso' t t
+_rotated axis angle = iso (rotate axis angle) (rotate axis (negate angle))
+
+-- | Every mirror is an isomorphism
+_mirrored :: Transformable t => V3 Double -> Iso' t t
+_mirrored v = let f = mirror v in iso f f 
