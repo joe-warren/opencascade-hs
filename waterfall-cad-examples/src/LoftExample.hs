@@ -14,6 +14,7 @@ import qualified Waterfall.Sweep as Sweep
 import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Loft as Loft
 import qualified Waterfall.Path.Common as Path
+import Data.Maybe (fromMaybe)
 
 -- | [Loft](https://en.wikipedia.org/wiki/Loft_\(3D\)) is a method to create smooth 3D shapes. 
 --
@@ -39,7 +40,7 @@ loftExample =
         mirror = Transforms.mirror (V3 1 0 0 ) . Path.reversePath
         makeSymetric p = mirror p <> p
         symetricPaths = makeSymetric <$> paths
-        body = 
+        body = fromMaybe mempty $
           Loft.pointedLoft 
             Nothing
             (Path.closeLoop <$>  symetricPaths)
