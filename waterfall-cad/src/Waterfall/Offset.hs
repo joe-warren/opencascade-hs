@@ -1,6 +1,7 @@
 module Waterfall.Offset 
 ( offset
 , offsetWithTolerance
+-- * unsafe functions
 , unsafeOffset 
 , unsafeOffsetWithTolerance
 ) where 
