@@ -11,6 +11,7 @@ import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Path2D as Path2D
 import qualified Waterfall.TwoD.Shape as Shape
 import Linear ( V3 (..), (*^), angle, unit, _x, zero)
+import Data.Maybe (fromMaybe)
 
 sweepExample :: Solid
 sweepExample = 
@@ -24,4 +25,4 @@ sweepExample =
         sweepProfile = Shape.makeShape $
                 Path2D.repeatLooping $
                 Path2D.bezier (0.25 *^ unit _x) (0.5 *^ unit _x) (0.5 *^ angle (pi/6)) (0.25 *^ angle (pi/6))
-    in sweep sweepPath sweepProfile
+    in fromMaybe mempty $ sweep sweepPath sweepProfile

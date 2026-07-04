@@ -49,7 +49,7 @@ loftExample =
         -- use this to hollow out the boat
         cavity = Transforms.translate (V3 0 (0.025 * 20) 0.3) $ Transforms.uScale 0.95 body
         -- sweep a circle along each of the paths, this makes them visible in the generated model
-        sweepWithCircle = (`Sweep.sweep` Transforms2D.uScale2D 0.2 Shape.unitCircle)
+        sweepWithCircle = (`Sweep.unsafeSweep` Transforms2D.uScale2D 0.2 Shape.unitCircle)
         splines = mconcat $ sweepWithCircle <$> symetricPaths
       in Transforms.uScale 0.1 $
           (body <> splines) `Booleans.difference` cavity

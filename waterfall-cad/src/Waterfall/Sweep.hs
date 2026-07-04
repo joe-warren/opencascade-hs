@@ -1,8 +1,9 @@
 module Waterfall.Sweep
 ( sweep
+, unsafeSweep
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, solidFromAcquireWithCatch)
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.Internal.Path.Common (RawPath (..))
 import Waterfall.Internal.Edges (wireTangentStart, wireEndpoints)
@@ -18,6 +19,7 @@ import Foreign.Ptr
 import Linear (V3, normalize, unit, _x, _z, nearZero, cross, dot)
 import Data.Acquire (Acquire)
 import qualified Waterfall.Solids as Solids
+import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 
 rotateFace :: V3 Double -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 rotateFace v face = 
@@ -33,9 +35,10 @@ rotateFace v face =
 positionFace :: V3 Double -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 positionFace p = acquireSolid . translate p . solidFromAcquire . pure
 
+
 -- | Sweep a 2D `Shape` along a `Path`, constructing a `Solid`
-sweep :: Path -> Shape -> Solid
-sweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = solidFromAcquire $ do
+rawSweep :: Path -> Shape -> Acquire (Ptr TopoDS.Shape)
+rawSweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = do
     path <- toAcquire theRawPath
     shape <- toAcquire theRawShape
     tangent <- liftIO $ wireTangentStart path
@@ -43,4 +46,14 @@ sweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = solidFromAcquire 
     adjustedFace <- positionFace start =<< rotateFace tangent shape
     builder <- MakePipe.fromWireAndShape path adjustedFace
     MakeShape.shape (upcast builder)
-sweep _ _ = Solids.emptySolid
+rawSweep _ _ = upcast <$> (MakeSolid.solid =<< MakeSolid.new)
+
+
+-- | Sweep a 2D `Shape` along a `Path`, constructing a `Solid`
+sweep :: Path -> Shape -> Maybe Solid
+sweep path shape = solidFromAcquireWithCatch $ rawSweep path shape
+
+
+-- | Unsafe version of `sweep`, throws rather than returning a `Maybe`
+unsafeSweep :: Path -> Shape -> Solid
+unsafeSweep path shape = solidFromAcquire $ rawSweep path shape

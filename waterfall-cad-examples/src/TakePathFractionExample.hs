@@ -12,6 +12,8 @@ import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
 import Linear (V3 (..), zero)
+import Data.Maybe (fromMaybe)
+import Data.Function ((&))
 
 takePathFractionExample :: Solid
 takePathFractionExample =
@@ -24,6 +26,9 @@ takePathFractionExample =
         profile = TwoD.Transforms.uScale2D 0.2 Shape.unitCircle
         fractions = [0.1, 0.2 .. 1.0]
     in mconcat
-        [ Transforms.translate (V3 (f * 10) 0 0) . sweep (Path.takePathFraction3D f sweepPath) $ profile
+        [ profile
+            & sweep (Path.takePathFraction3D f sweepPath)            
+            & fromMaybe mempty
+            & Transforms.translate (V3 (f * 10) 0 0)
         | f <- fractions
         ]
