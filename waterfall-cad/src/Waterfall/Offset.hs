@@ -1,12 +1,12 @@
 module Waterfall.Offset 
 ( offset
 , offsetWithTolerance
--- * unsafe functions
-, unsafeOffset 
-, unsafeOffsetWithTolerance
+-- * Functions that Return Errors
+, offsetEither
+, offsetWithToleranceEither
 ) where 
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, solidFromAcquireWithCatch)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireWithCatch)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
@@ -15,13 +15,14 @@ import qualified OpenCascade.BRepOffset.Mode as Mode
 import qualified OpenCascade.GeomAbs.JoinType as GeomAbs.JoinType
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import qualified OpenCascade.TopoDS.Types as TopoDS
-import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
 import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
 import Control.Monad (when)
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
 import Linear.Epsilon (nearZero)
+import Waterfall.Error (WaterfallError)
+import Data.Either (fromRight)
 
 combineShellsToSolid :: Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 combineShellsToSolid s = do
@@ -37,27 +38,28 @@ combineShellsToSolid s = do
     go
     upcast <$> MakeSolid.solid makeSolid
 
-rawOffsetWithTolerance :: 
+-- | Version of `offsetWithTolerance` that returns an error on failure
+offsetWithToleranceEither :: 
     Double       
     -> Double   
     -> Solid   
-    -> Acquire (Ptr TopoDS.Shape.Shape)
-rawOffsetWithTolerance tolerance value solid
-    | nearZero value = acquireSolid solid
-    | otherwise = do
+    -> Either WaterfallError Solid
+offsetWithToleranceEither tolerance value solid
+    | nearZero value = Right solid
+    | otherwise = solidFromAcquireWithCatch $ do
     builder <- MakeOffsetShape.new
     s <- acquireSolid solid 
     liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False 
     shell <- MakeShape.shape (upcast builder)
     combineShellsToSolid shell
 
--- | like `offset`, but allows setting the tolerance parameter used by the algorithm 
 offsetWithTolerance :: 
     Double       -- ^ Tolerance, this can be relatively small
     -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
     -> Solid        -- ^ the `Solid` to offset 
-    -> Maybe Solid
-offsetWithTolerance tolerance value solid = solidFromAcquireWithCatch $ rawOffsetWithTolerance tolerance value solid
+    -> Solid
+offsetWithTolerance tolerance value solid = 
+    fromRight mempty $ offsetWithToleranceEither tolerance value solid
 
 defaultTolerance :: Double
 defaultTolerance = 1e-6
@@ -79,22 +81,14 @@ defaultTolerance = 1e-6
 offset :: 
     Double    -- ^ Amount to offset by, positive values expand, negative values contract
     -> Solid        -- ^ the `Solid` to offset 
-    -> Maybe Solid
+    -> Solid
 offset = offsetWithTolerance defaultTolerance
 
 
--- | unsafe version of `offsetWithTolerance`, throws rather than returning a `Maybe` 
-unsafeOffsetWithTolerance :: 
-    Double       -- ^ Tolerance, this can be relatively small
-    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
-    -> Solid        -- ^ the `Solid` to offset 
-    -> Solid
-unsafeOffsetWithTolerance tolerance value solid = solidFromAcquire $ rawOffsetWithTolerance tolerance value solid
-
-
--- | unsafe version of `offsetWithTolerance`, throws rather than returning a `Maybe` 
-unsafeOffset :: 
+-- | Version of `offset` that returns an error on failure
+offsetEither  :: 
     Double    -- ^ Amount to offset by, positive values expand, negative values contract
     -> Solid        -- ^ the `Solid` to offset 
-    -> Solid
-unsafeOffset = unsafeOffsetWithTolerance defaultTolerance
+    -> Either WaterfallError Solid
+offsetEither = offsetWithToleranceEither defaultTolerance
+

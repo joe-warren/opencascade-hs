@@ -54,6 +54,8 @@ module Waterfall
 , module Waterfall.Path.Common
 -- | Generate 2D `Diagram`s from 3D `Solid`s
 , module Waterfall.Diagram
+-- | This module defines the Error type used by some functions
+, module Waterfall.Error
 )where
 
 import Waterfall.Booleans
@@ -76,3 +78,4 @@ import Waterfall.TwoD.Transforms
 import Waterfall.TwoD.Path2D
 import Waterfall.TwoD.Shape
 import Waterfall.TwoD.Text
+import Waterfall.Error

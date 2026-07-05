@@ -32,6 +32,7 @@ import OpenCascade.Inheritance (upcast)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire, unsafeFromAcquireWithCatch)
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
 import Data.Foldable (traverse_)
+import Waterfall.Error (WaterfallError)
 
 -- | The Boundary Representation of a solid object.
 --
@@ -51,7 +52,7 @@ acquireSolid (Solid ptr) = toAcquire ptr
 solidFromAcquire :: Acquire (Ptr TopoDS.Shape.Shape) -> Solid
 solidFromAcquire = Solid . unsafeFromAcquire
 
-solidFromAcquireWithCatch :: Acquire (Ptr TopoDS.Shape.Shape) -> Maybe Solid
+solidFromAcquireWithCatch :: Acquire (Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
 solidFromAcquireWithCatch = fmap Solid . unsafeFromAcquireWithCatch
 
 -- | print debug information about a Solid when it's evaluated 

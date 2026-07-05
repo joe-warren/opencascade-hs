@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.39.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -34,6 +34,7 @@ library
       Waterfall.BoundingBox.AxisAligned
       Waterfall.BoundingBox.Oriented
       Waterfall.Diagram
+      Waterfall.Error
       Waterfall.Fillet
       Waterfall.Internal.Diagram
       Waterfall.Internal.Edges

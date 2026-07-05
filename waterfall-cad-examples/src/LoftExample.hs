@@ -14,7 +14,6 @@ import qualified Waterfall.Sweep as Sweep
 import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Loft as Loft
 import qualified Waterfall.Path.Common as Path
-import Data.Maybe (fromMaybe)
 
 -- | [Loft](https://en.wikipedia.org/wiki/Loft_\(3D\)) is a method to create smooth 3D shapes. 
 --
@@ -40,8 +39,7 @@ loftExample =
         mirror = Transforms.mirror (V3 1 0 0 ) . Path.reversePath
         makeSymetric p = mirror p <> p
         symetricPaths = makeSymetric <$> paths
-        body = fromMaybe mempty $
-          Loft.pointedLoft 
+        body = Loft.pointedLoft 
             Nothing
             (Path.closeLoop <$>  symetricPaths)
             (Just (V3 0 20 5))
@@ -49,7 +47,7 @@ loftExample =
         -- use this to hollow out the boat
         cavity = Transforms.translate (V3 0 (0.025 * 20) 0.3) $ Transforms.uScale 0.95 body
         -- sweep a circle along each of the paths, this makes them visible in the generated model
-        sweepWithCircle = (`Sweep.unsafeSweep` Transforms2D.uScale2D 0.2 Shape.unitCircle)
+        sweepWithCircle = (`Sweep.sweep` Transforms2D.uScale2D 0.2 Shape.unitCircle)
         splines = mconcat $ sweepWithCircle <$> symetricPaths
       in Transforms.uScale 0.1 $
           (body <> splines) `Booleans.difference` cavity

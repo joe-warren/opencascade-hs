@@ -1,6 +1,6 @@
 module Waterfall.Sweep
 ( sweep
-, unsafeSweep
+, sweepEither
 ) where
 
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, solidFromAcquireWithCatch)
@@ -20,6 +20,8 @@ import Linear (V3, normalize, unit, _x, _z, nearZero, cross, dot)
 import Data.Acquire (Acquire)
 import qualified Waterfall.Solids as Solids
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
+import Waterfall.Error (WaterfallError)
+import Data.Either (fromRight)
 
 rotateFace :: V3 Double -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 rotateFace v face = 
@@ -36,9 +38,9 @@ positionFace :: V3 Double -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 positionFace p = acquireSolid . translate p . solidFromAcquire . pure
 
 
--- | Sweep a 2D `Shape` along a `Path`, constructing a `Solid`
-rawSweep :: Path -> Shape -> Acquire (Ptr TopoDS.Shape)
-rawSweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = do
+-- | Version of `sweep` that returns an Error on Failure
+sweepEither :: Path -> Shape -> Either WaterfallError Solid
+sweepEither (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = solidFromAcquireWithCatch $ do
     path <- toAcquire theRawPath
     shape <- toAcquire theRawShape
     tangent <- liftIO $ wireTangentStart path
@@ -46,14 +48,9 @@ rawSweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = do
     adjustedFace <- positionFace start =<< rotateFace tangent shape
     builder <- MakePipe.fromWireAndShape path adjustedFace
     MakeShape.shape (upcast builder)
-rawSweep _ _ = upcast <$> (MakeSolid.solid =<< MakeSolid.new)
+sweepEither _ _ = Right mempty
 
 
 -- | Sweep a 2D `Shape` along a `Path`, constructing a `Solid`
-sweep :: Path -> Shape -> Maybe Solid
-sweep path shape = solidFromAcquireWithCatch $ rawSweep path shape
-
-
--- | Unsafe version of `sweep`, throws rather than returning a `Maybe`
-unsafeSweep :: Path -> Shape -> Solid
-unsafeSweep path shape = solidFromAcquire $ rawSweep path shape
+sweep :: Path -> Shape -> Solid
+sweep path shape = fromRight mempty $ sweepEither path shape

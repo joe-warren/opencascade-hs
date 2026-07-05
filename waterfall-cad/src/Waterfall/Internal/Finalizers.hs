@@ -26,8 +26,10 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (fromMaybe)
 import Control.Monad (forM, when)
 import Data.IORef (newIORef, atomicModifyIORef)
-import Control.Exception (catch)
+import Control.Exception (try)
+import Control.Arrow (left)
 import OpenCascade.Internal.Exception (OpenCascadeException)
+import Waterfall.Error (WaterfallError (..))
 
 -- | Convert a resource in the `Data.Acquire.Acquire` monad to a value in IO
 -- the `free` action of the resource is called when the underlying value goes out of scope of the Haskell garbage collection
@@ -68,14 +70,11 @@ fromAcquireT a = runResourceT $ do
 unsafeFromAcquire :: Acquire a -> a 
 unsafeFromAcquire = unsafePerformIO . fromAcquire
 
-opencascadeExceptionToNothing :: OpenCascadeException -> Maybe a
-opencascadeExceptionToNothing _ = Nothing
-
--- | Version of `unsafeFromAcquire` which returns `Nothing` if the action throws
+-- | Version of `unsafeFromAcquire` which returns a `WaterfallError` if the action throws
 {-# NOINLINE unsafeFromAcquireWithCatch #-}
-unsafeFromAcquireWithCatch :: Acquire a -> Maybe a
+unsafeFromAcquireWithCatch :: Acquire a -> Either WaterfallError a
 unsafeFromAcquireWithCatch = 
-    in foldMap Just . unsafePerformIO . try . fromAcquire
+    left WaterfallError . unsafePerformIO . try . fromAcquire
 
 -- | Version of `unsafeFromAcquire`  which registers the finalizer on the _value_ in a container 
 {-# NOINLINE unsafeFromAcquireT #-}

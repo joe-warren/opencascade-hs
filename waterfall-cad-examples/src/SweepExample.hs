@@ -25,4 +25,4 @@ sweepExample =
         sweepProfile = Shape.makeShape $
                 Path2D.repeatLooping $
                 Path2D.bezier (0.25 *^ unit _x) (0.5 *^ unit _x) (0.5 *^ angle (pi/6)) (0.25 *^ angle (pi/6))
-    in fromMaybe mempty $ sweep sweepPath sweepProfile
+    in sweep sweepPath sweepProfile
