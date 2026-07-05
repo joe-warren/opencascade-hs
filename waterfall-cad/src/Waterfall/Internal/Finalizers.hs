@@ -75,8 +75,7 @@ opencascadeExceptionToNothing _ = Nothing
 {-# NOINLINE unsafeFromAcquireWithCatch #-}
 unsafeFromAcquireWithCatch :: Acquire a -> Maybe a
 unsafeFromAcquireWithCatch = 
-    let handle = (const (pure Nothing)) :: (OpenCascadeException -> IO (Maybe a))
-    in unsafePerformIO . (`catch` handle) . fmap Just . fromAcquire
+    in foldMap Just . unsafePerformIO . try . fromAcquire
 
 -- | Version of `unsafeFromAcquire`  which registers the finalizer on the _value_ in a container 
 {-# NOINLINE unsafeFromAcquireT #-}
