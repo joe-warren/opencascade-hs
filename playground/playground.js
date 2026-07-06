@@ -85,6 +85,31 @@ async function fetchWithProgress(url, onProgress) {
   return out;
 }
 
+// First-visit warning: the rootfs bundle is large, so warn before fetching it.
+// Once the user continues, remember that in localStorage and never ask again.
+const ROOTFS_WARNING_KEY = "waterfall-playground-rootfs-warning-ack";
+async function confirmRootfsDownload() {
+  let acknowledged = false;
+  try { acknowledged = localStorage.getItem(ROOTFS_WARNING_KEY) === "1"; } catch (_) {}
+  if (acknowledged) return;
+  // The dialog element must exist before we can show it.
+  if (document.readyState === "loading") {
+    await new Promise((res) =>
+      document.addEventListener("DOMContentLoaded", res, { once: true })
+    );
+  }
+  const dlg = document.getElementById("warningDialog");
+  setStatus("Waiting to download rootfs...");
+  dlg.showModal();
+  await new Promise((res) => dlg.addEventListener("close", res, { once: true }));
+  // Persist only when the user explicitly continued (not on an Esc dismiss), so
+  // a dismissed warning reappears next time.
+  if (dlg.returnValue === "ok") {
+    try { localStorage.setItem(ROOTFS_WARNING_KEY, "1"); } catch (_) {}
+  }
+}
+await confirmRootfsDownload();
+
 setStatus("Downloading rootfs...");
 const rootfs = new PreopenDirectory("/", []);
 

@@ -107,6 +107,24 @@
       </section>
     </div>
 
+    <dialog id="warningDialog">
+      <div class="warning-body">
+        <h2>High(ish) Bandwidth Warning</h2>
+        <p>
+          This is a browser-based Haskell CAD environment.
+        </p>
+        <p>
+          To run it, your browser will need to fetch a ~100MB WASM blob.
+        </p>
+        <p>
+          Those using a metered or slow connection may wish to navigate away.
+        </p>
+      </div>
+      <form method="dialog" class="dialog-buttons">
+        <button value="ok">Continue</button>
+      </form>
+    </dialog>
+
     <dialog id="loadDialog">
       <form method="dialog">
         <label for="loadUrl">Load program from URL</label>

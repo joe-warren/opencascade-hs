@@ -21,6 +21,7 @@
   --c-mint: #6ee7a8;
   --c-teal: #59d3ff;
   --c-blue: #596eff;
+  --c-red: #ff6e59;
   --c-yellow: #ffd23f;
   --c-pink: #ff6faf;
   --c-violet: #af6fff;
@@ -33,7 +34,7 @@
   --c-files: var(--c-blue);
   --c-download: var(--c-pink);
   --c-about: var(--c-orange);
-
+  --c-warning: var(--c-red);
   /* spinner colours */
   --c-spinner-a: var(--c-teal);
   --c-spinner-b: var(--c-pink);
@@ -191,7 +192,7 @@ header .logo { height: 3rem; width: auto; }
 }
 
 /* --- Dialogs --- */
-#loadDialog, #aboutDialog, #settingsDialog, #filesDialog {
+#loadDialog, #aboutDialog, #settingsDialog, #filesDialog, #warningDialog {
   background: var(--panel); color: var(--fg);
   border: var(--bw) solid var(--ink); border-radius: var(--radius);
   box-shadow: 6px 6px 0 var(--shadow);
@@ -201,8 +202,17 @@ header .logo { height: 3rem; width: auto; }
 #aboutDialog { max-width: min(90vw, 34rem); }
 #settingsDialog { min-width: min(90vw, 24rem); }
 #filesDialog { min-width: min(90vw, 30rem); }
+#warningDialog { max-width: min(90vw, 34rem); }
 #loadDialog::backdrop, #aboutDialog::backdrop, #settingsDialog::backdrop,
-#filesDialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+#filesDialog::backdrop, #warningDialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+#warningDialog .warning-body h2 { margin: 0 0 0.6rem; }
+#warningDialog .warning-body p { margin: 0 0 0.75rem; line-height: 1.45; }
+#warningDialog .dialog-buttons { 
+  margin-top: 0.5rem; 
+}
+#warningDialog button {
+  background-color: var(--c-warning);
+}
 .dialog-note { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
 .dialog-note code { font-family: var(--font-mono); color: var(--fg); }
 
