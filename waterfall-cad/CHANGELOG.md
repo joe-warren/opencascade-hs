@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.6.3.0
+
 - Fixed an issue in `Waterfall.Transforms` where negative coefficients to `scale` would produce a broken `Solid`
 - Added optics derived from the `Transformable` typeclass, `_translated`, `_scaled`, `_uScaled`, `_rotated`, `_mirrored` and their 2D equivalents.
 - Operations that can fail (`roundFillet`, `chamfer`, `offset`, `loft`, `sweep`, `revolution` and their relatives) now fall back to an empty `Solid` rather than throwing. Added `try*` variants (`tryRoundFillet`, `tryOffset`, `tryLoft`, `trySweep`, `tryRevolution`, etc) that return `Either WaterfallError`, along with a new `Waterfall.Error` module.
