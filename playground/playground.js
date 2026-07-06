@@ -12,15 +12,14 @@ import { DyLDBrowserHost, main } from "./dyld.mjs";
 const statusEl = document.getElementById("status");
 const setStatus = (msg) => { statusEl.textContent = msg; };
 
-// Editor colour scheme follows the OS light/dark preference. The theme lives in
-// a Compartment so it can be swapped live when the preference changes.
+// Editor colour scheme follows the OS light/dark preference. 
+// Put the theme into a Compartment so it can be swapped
 const themeCompartment = new Compartment();
 const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
 const editorTheme = () => (darkQuery.matches ? oneDark : []);
 
-// Full-page spinner overlay, shown while loading/compiling/rendering. Counted so
-// nested busy sections (load -> run -> render) don't hide it prematurely. Starts
-// at 1 because the page begins in the loading state (overlay visible by default).
+// Full-page spinner overlay, shown while loading/compiling/rendering. 
+// Counted so nested busy sections (load -> run -> render) don't hide it prematurely.
 const spinner = document.getElementById("spinner");
 let busyCount = 1;
 function setBusy(on) {
@@ -28,9 +27,7 @@ function setBusy(on) {
   spinner.classList.toggle("hidden", busyCount === 0);
 }
 
-// Keep the console hidden unless there's an error (stderr output). stdout on its
-// own (e.g. the "Rendering: …" line) isn't worth showing; when there is an error
-// we reveal stdout too, but only if it actually has content.
+// Keep the console hidden unless there's an error 
 function refreshOutputs() {
   const hasErr = document.getElementById("stderr").value.trim() !== "";
   const hasOut = document.getElementById("stdout").value.trim() !== "";
@@ -41,9 +38,9 @@ function refreshOutputs() {
 }
 
 // --- Editor content persistence ---
-// The editor is saved to localStorage so its contents survive refreshes. A
-// ?program= deeplink takes priority on load; once the user edits, we clear
-// ?program so a reload keeps their edits instead of re-fetching the program.
+// The editor is saved to localStorage so its contents survive refreshes. 
+// query parameters override localStorage on load
+// on edit, we clear the query parameter so refresh doesn't re-fetch
 const EDITOR_KEY = "waterfall-playground-program";
 let suppressProgramClear = false; // true while the doc is set programmatically
 function persistEditor() {
@@ -57,9 +54,7 @@ function clearProgramParam() {
   }
 }
 
-// Fetch a URL, streaming the body so we can report download progress (the
-// rootfs is large; slow connections should see how much is left). Falls back to
-// a plain read if the body isn't a readable stream.
+// Fetch a URL, streaming the body so we can report download progress
 const fmtBytes = (n) => `${(n / 1048576).toFixed(1)} MB`;
 async function fetchWithProgress(url, onProgress) {
   const r = await fetch(url);
@@ -85,8 +80,8 @@ async function fetchWithProgress(url, onProgress) {
   return out;
 }
 
-// First-visit warning: the rootfs bundle is large, so warn before fetching it.
-// Once the user continues, remember that in localStorage and never ask again.
+// Warn on first visit,
+// When the rootfs is loaded, save that to localStorage, don't ask again
 const ROOTFS_WARNING_KEY = "waterfall-playground-rootfs-warning-ack";
 async function confirmRootfsDownload() {
   let acknowledged = false;
@@ -102,8 +97,6 @@ async function confirmRootfsDownload() {
   setStatus("Waiting to download rootfs...");
   dlg.showModal();
   await new Promise((res) => dlg.addEventListener("close", res, { once: true }));
-  // Persist only when the user explicitly continued (not on an Esc dismiss), so
-  // a dismissed warning reappears next time.
   if (dlg.returnValue === "ok") {
     try { localStorage.setItem(ROOTFS_WARNING_KEY, "1"); } catch (_) {}
   }
@@ -124,14 +117,13 @@ const bsdtar_wasi = new WASI(
   { debug: false }
 );
 
-// Program source precedence: ?program= deeplink > saved edits > bundled example.
+// Program source precedence: query parameter > saved edits > bundled example.
 const programParam = new URLSearchParams(window.location.search).get("program");
 let savedProgram = null;
 try { savedProgram = localStorage.getItem(EDITOR_KEY); } catch (_) {}
 const programUrl = programParam ?? (savedProgram != null ? null : "./example.hs");
 
-// Assigned during init below; referenced by the event handlers. Kept at module
-// scope so the handlers can see them.
+// Variables referenced by the event handlers, assigned in init.
 let dyld, runProgram, renderSolid, exportSolid;
 
 try {
@@ -140,8 +132,7 @@ try {
       fetch("https://haskell-wasm.github.io/bsdtar-wasm/bsdtar.wasm"),
       { wasi_snapshot_preview1: bsdtar_wasi.wasiImport }
     ),
-    // ROOTFS_URL is substituted by build_playground.sh; defaults to
-    // "./rootfs.tar.zst" but can point at another host for deployment.
+    // ROOTFS_URL is substituted by build_playground.sh
     fetchWithProgress("ROOTFS_URL", (received, total) => {
       setStatus(
         `Downloading rootfs… ${fmtBytes(received)}` +
@@ -190,8 +181,7 @@ try {
           },
         },
       ]),
-      // Persist on every edit; a genuine user edit also drops the ?program
-      // deeplink (programmatic loads set suppressProgramClear to keep it).
+      // Persist on every edit
       EditorView.updateListener.of((update) => {
         if (!update.docChanged) return;
         persistEditor();
@@ -202,11 +192,11 @@ try {
       themeCompartment.of(editorTheme()),
     ],
   });
-  // Swap the editor theme live if the OS light/dark preference changes.
+  // Swap the editor theme live if the OS light/dark preference changes
   darkQuery.addEventListener("change", () => {
     editor.dispatch({ effects: themeCompartment.reconfigure(editorTheme()) });
   });
-  // Loading a program only touches the editor, so enable it before GHC is ready.
+  // Loading a program only touches the editor, so we can enable it here, before GHC is ready
   document.getElementById("loadBtn").disabled = false;
   document.getElementById("exampleMain").disabled = false;
   document.getElementById("exampleToggle").disabled = false;
@@ -228,9 +218,7 @@ try {
     isIserv: false,
   });
 
-  // Grow memory to ensure enough heap space for OCCT allocations. After loading
-  // all GHC modules the default memory is ~33MB, which is insufficient for
-  // OCCT's Standard::Allocate; growing by 256MB fixes it.
+  // Grow memory to ensure enough heap space for OCCT allocations
   dyld.exportFuncs.memory.grow(4096);
 
   [runProgram, renderSolid, exportSolid] = await dyld.exportFuncs.myMain("GHC_LIBDIR", "PLAYGROUND_PKG_DBS");
@@ -251,7 +239,7 @@ try {
     if (e instanceof WebAssembly.CompileError) {
       stderrEl.value +=
         `\nThis build may need WebAssembly exception-handling support.\n ` +
-        `In Firefox, open about:config and set ` +
+        `In Firefox, it may help to open about:config and set ` +
         `javascript.options.wasm_exnref to true, then reload.\n` + 
         `Also, it's a little temperamental, it may help to reload even if that is set.\n`;
     }
@@ -259,7 +247,7 @@ try {
   }
 }
 
-// --- 3D preview: show the first .glb file found in the wasm filesystem ---
+// 3D preview: show the first .glb file found in the wasm filesystem
 const VIEWER_SKIP_DIRS = new Set(["root", "opencascade-hs"]);
 window.__lastModel = null;
 function findGlbFiles(node, prefix, depth, out) {
@@ -317,8 +305,9 @@ const solidSelect = document.getElementById("solidSelect");
 let solidIsIO = {};
 const ioFlag = (name) => (solidIsIO[name] ? "true" : "false");
 
-// Render the Solid currently chosen in the dropdown, reusing the already-loaded
-// module. Deletes any previous model first so the viewer reflects only this one.
+// Render the Solid currently chosen in the dropdown
+// reusing the already-loaded module. 
+// Deletes any previous model first so the viewer reflects only this one.
 async function showSelected() {
   const name = solidSelect.value;
   if (!name) { updateViewer(); return; }
@@ -339,7 +328,7 @@ async function showSelected() {
 }
 solidSelect.addEventListener("change", showSelected);
 
-// --- Load a program from a URL, reflecting it in the ?program= query string ---
+// Load a program from a URL, reflecting it in the query string
 const loadDialog = document.getElementById("loadDialog");
 const loadUrlInput = document.getElementById("loadUrl");
 
@@ -362,8 +351,8 @@ async function loadFromUrl(url) {
     const r = await fetch(url);
     if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
     applyProgram(url, await r.text());
-    // Run it immediately if GHC is ready; otherwise the startup auto-run will
-    // pick up the freshly-loaded editor content once init finishes.
+    // Run it immediately if GHC is ready
+    //  otherwise the startup auto-run will pick up the freshly-loaded editor content once init finishes.
     if (runProgram) await run();
     else setStatus("Loaded");
   } catch (e) {
@@ -393,20 +382,19 @@ document.getElementById("aboutBtn").addEventListener("click", () => {
   document.getElementById("aboutDialog").showModal();
 });
 
-// --- Settings modal ---
+// Settings modal
 document.getElementById("settingsBtn").addEventListener("click", () => {
   document.getElementById("settingsDialog").showModal();
 });
 
-// --- File upload modal: write arbitrary files into the in-memory FS at their
-// own name (/<name>) so user code can read them (fonts, meshes to import, ...).
-// URL-loaded files are reflected in the query string (?file=<url>, repeatable)
-// for deeplinking and are re-fetched on load; uploaded files are session-only. ---
+// File upload modal: write arbitrary files into the in-memory FS at
+// (/<name>) so user code can read them
+// URL-loaded files are reflected in the query string
 const filesDialog = document.getElementById("filesDialog");
 const fileUrlInput = document.getElementById("fileUrlInput");
 const fileUploadInput = document.getElementById("fileUploadInput");
 const fileListEl = document.getElementById("fileList");
-// name -> { url } (url present when the file came from a URL, for the deeplink).
+// map from name -> url, present when the file came from a URL, for the deeplink
 const loadedFiles = new Map();
 
 document.getElementById("filesBtn").addEventListener("click", () => {
@@ -416,8 +404,7 @@ document.getElementById("filesBtn").addEventListener("click", () => {
 function fsWrite(name, bytes) {
   (rootfs.dir ?? rootfs).contents.set(name, new File(bytes, { readonly: true }));
 }
-// Reflect URL-loaded files in the address bar (?file=<url>, one per file) so the
-// page is shareable. Local uploads have no URL and are omitted.
+// Reflect URL-loaded files in the query string
 function syncFileParams() {
   const u = new URL(window.location.href);
   u.searchParams.delete("file");
@@ -489,8 +476,7 @@ fileUploadInput.addEventListener("change", async () => {
   renderFileList();
   setStatus("Files loaded");
 });
-// Load files named in the query string (?file=<url>, repeatable) on startup,
-// for deeplinks (fire-and-forget; Reload if a program races ahead of a file).
+// Load files named in the query string on startup,
 for (const url of new URLSearchParams(window.location.search).getAll("file")) {
   addFileFromUrl(url).catch((e) => reportFileError(url, e));
 }
@@ -498,8 +484,7 @@ for (const url of new URLSearchParams(window.location.search).getAll("file")) {
 const rotateToggle = document.getElementById("rotateToggle");
 const resolutionInput = document.getElementById("resolutionInput");
 
-// Persist settings across refreshes (localStorage; ignored if unavailable,
-// e.g. private mode).
+// Persist settings across refreshes
 const SETTINGS_KEY = "waterfall-playground-settings";
 function saveSettings() {
   try {
@@ -512,7 +497,7 @@ function saveSettings() {
     );
   } catch (_) {}
 }
-// Restore before wiring handlers, so the startup render picks up the stored
+// Restore before handlers, so the startup render picks up the stored
 // resolution and the viewer starts with the stored rotate state.
 try {
   const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
@@ -532,9 +517,7 @@ rotateToggle.addEventListener("change", () => {
   saveSettings();
 });
 
-// Mesh resolution (deflection) passed to render/export. Falls back to a sane
-// default if the field is blank or non-positive; returned as a string so it
-// drops straight into the compiled Haskell expression.
+// Mesh resolution (deflection) passed to render/export. 
 function resolution() {
   const v = parseFloat(resolutionInput.value);
   return Number.isFinite(v) && v > 0 ? String(v) : "0.01";
@@ -545,13 +528,9 @@ resolutionInput.addEventListener("change", () => {
   if (runProgram && solidSelect.value) showSelected();
 });
 
-// TEMPORARY: load examples from the current dev branch rather than main, so
-// unmerged example changes (e.g. the Text example) are available. Revert to
-// refs/heads/main once merged.
+// TODO: this loads examples from the current dev branch rather than main
 const EXAMPLES_BASE =
   "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/wasm-build-dirty-rebased/waterfall-cad-examples/src/";
-// Each example may bring files that are loaded into the FS before it runs (e.g.
-// a font for the Text example). Font is on main (it's stable test-data).
 const FONT_VARELA =
   "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/main/waterfall-cad-examples/test-data/fonts/varela/VarelaRound-Regular.ttf";
 const EXAMPLES = [
@@ -569,15 +548,13 @@ const EXAMPLES = [
   { label: "Text", mod: "TextExample", files: [FONT_VARELA] },
 ];
 
-// --- Split-button dropdown menus (Examples, Download format) ---
+// Split-button dropdown menus
 function closeAllMenus() {
   document.querySelectorAll(".split-menu").forEach((m) => (m.hidden = true));
 }
 // Clicking anywhere else dismisses any open menu.
 document.addEventListener("click", closeAllMenus);
 
-// Wire an element to toggle a menu (stopping the click from immediately
-// closing it again via the document handler).
 function wireMenuToggle(triggerEl, menuEl) {
   triggerEl.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -587,14 +564,14 @@ function wireMenuToggle(triggerEl, menuEl) {
   });
 }
 
-// Examples: both segments just open the menu (there's no default action).
+// Examples: both segments just open the menu
 const exampleMenu = document.getElementById("exampleMenu");
 for (const { label, mod, files } of EXAMPLES) {
   const li = document.createElement("li");
   li.textContent = label;
   li.addEventListener("click", async () => {
     closeAllMenus();
-    // Load the example's files into the FS first, so the program can read them,
+    // Load the example's files into the FS first
     // then load + run the program.
     for (const url of files) {
       try { await addFileFromUrl(url); } catch (e) { reportFileError(url, e); }
@@ -608,7 +585,6 @@ wireMenuToggle(document.getElementById("exampleMain"), exampleMenu);
 wireMenuToggle(document.getElementById("exampleToggle"), exampleMenu);
 
 // Download the current solid, (STL, STEP, GLB); 
-// writeSolid on the Haskell side picks the writer by extension.
 const downloadMain = document.getElementById("downloadMain");
 const downloadMenu = document.getElementById("downloadMenu");
 let downloadExt = "stl";
@@ -650,8 +626,6 @@ async function downloadModel() {
   }
 }
 
-// Main segment downloads in the current format; the menu picks a format and
-// downloads immediately (and remembers it for the main segment).
 downloadMain.addEventListener("click", downloadModel);
 wireMenuToggle(document.getElementById("downloadToggle"), downloadMenu);
 downloadMenu.addEventListener("click", (e) => e.stopPropagation());
@@ -672,10 +646,9 @@ async function run() {
     document.getElementById("stdout").value = "";
     document.getElementById("stderr").value = "";
 
-    // Drop any model from a previous run so the viewer reflects only this run.
     try { (rootfs.dir ?? rootfs).contents.delete("out.glb"); } catch (_) {}
 
-    // Each entry is { name, io } — io=true for `IO Solid` bindings.
+    // Each entry is { name, io }
     const entries = JSON.parse(
       await runProgram(
         document.getElementById("ghcArgs").value,
@@ -712,7 +685,7 @@ async function run() {
     }
   } catch (e) {
     setStatus(`Error: ${e.message}`);
-    // The run failed (e.g. a compile error), so there's no current model.
+    // The run failed: there's no current model
     clearViewer();
     document.getElementById("solidControls").style.display = "none";
     document.getElementById("downloadMain").disabled = true;
@@ -726,8 +699,8 @@ async function run() {
 
 document.getElementById("runBtn").addEventListener("click", run);
 
-// Auto-run on startup once GHC is ready and there's a program to run. `runProgram`
-// is only defined if init fully succeeded, so this is skipped on init failure.
+// Auto-run on startup once GHC is ready
+// skipped on init failure.
 if (runProgram && editor.state.doc.length > 0) {
   await run();
 }

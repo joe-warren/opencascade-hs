@@ -27,27 +27,25 @@ import GHC.Utils.Exception
 import GHC.Wasm.Prim
 
 -- | Compile the user's source and return the names of its top-level
--- Solid-valued bindings (JSON array, source order).
+-- Solid-valued bindings (JSON array, in source order).
 type RunFunction = JSString -> JSString -> IO JSString
 
--- | Render a named top-level binding to /out.glb, at a given mesh deflection
--- (resolution; smaller = finer). Args: name, deflection, isIO ("true" when the
--- binding is @IO Solid@ rather than @Solid@).
+-- | Render a named top-level binding to /out.glb,
+-- args: name, deflection, isIO ("true" when @IO Solid@).
 type RenderFunction = JSString -> JSString -> JSString -> IO ()
 
--- | Write a named top-level binding to a path; the format is chosen from the
--- file extension by @Waterfall.IO.writeSolid@ (.stl/.step/.gltf/.glb/.obj).
+-- | Write a named top-level binding to a path
+-- @Waterfall.IO.writeSolid@ choses format from the extension (.stl/.step/.gltf/.glb/.obj).
 -- Args: name, path, deflection (resolution), isIO.
 type ExportFunction = JSString -> JSString -> JSString -> JSString -> IO ()
 
--- | Sortable start position for a binding's source span. Bindings without a
--- real span (which shouldn't happen for top-level definitions) sort first.
+-- | Start position for a binding's source span.
+--  Bindings without a real span (shouldn't happen) sort first.
 spanKey :: SrcSpan -> (Int, Int)
 spanKey (RealSrcSpan s _) = (srcSpanStartLine s, srcSpanStartCol s)
 spanKey _ = (minBound, minBound)
 
--- | True when the type's head is Waterfall's Solid newtype. Checked by the
--- TyCon's original name so we don't need Solid in the interactive scope.
+-- | True when the type's head is Solid.
 isSolidType :: Type -> Bool
 isSolidType ty = case tyConAppTyCon_maybe ty of
   Just tc ->
@@ -59,15 +57,16 @@ isSolidType ty = case tyConAppTyCon_maybe ty of
             (nameModule_maybe n)
   Nothing -> False
 
--- | True when the TyCon is GHC's @IO@. We match on the OccName only: @IO@'s
--- defining module moved across GHC versions (GHC.Types -> GHC.Internal.Types
--- when base was split), so pinning the module is fragile, and no other in-scope
--- TyCon is realistically named @IO@.
+-- | True when the TyCon is GHC's @IO@.
+-- We match on the OccName only: @IO@'s
+-- defining module moved across GHC versions (GHC.Types -> GHC.Internal.Types)
 isIOTyCon :: TyCon -> Bool
 isIOTyCon tc = occNameString (nameOccName (tyConName tc)) == "IO"
 
--- | Classify a binding's type: @Just False@ for @Solid@, @Just True@ for
--- @IO Solid@, @Nothing@ otherwise.
+-- | Classify a binding's type
+-- @Just False@ for @Solid@
+-- @Just True@ for @IO Solid@
+-- @Nothing@ otherwise.
 solidKind :: Type -> Maybe Bool
 solidKind ty
   | isSolidType ty = Just False
