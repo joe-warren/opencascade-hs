@@ -7,3 +7,12 @@ packages:
 package *
   ghc-options: -haddock
   documentation: True
+
+-- The wasm cross-build uses a newer GHC (9.14) than the native build; relax the
+-- base/template-haskell/ghc-bignum upper bounds so the package set resolves.
+allow-newer: all:base
+allow-newer: all:template-haskell
+allow-newer: all:ghc-bignum
+
+-- Pin the package set so the wasm Docker build is reproducible.
+index-state: 2026-04-01T00:00:00Z

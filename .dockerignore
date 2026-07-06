@@ -1,5 +1,9 @@
-.stack-work/
+.git
+.devcontainer
+**/.stack-work
 dist-newstyle/
 waterfall-cad-examples/test-results/*
 playground/dist/
+scratch
+Dockerfile.playground
 *~

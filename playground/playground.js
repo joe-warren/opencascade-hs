@@ -1,0 +1,706 @@
+import { EditorView, basicSetup } from "https://esm.sh/codemirror@6.0.1";
+import { keymap } from "https://esm.sh/@codemirror/view@6";
+import { StreamLanguage } from "https://esm.sh/@codemirror/language@6";
+import { haskell } from "https://esm.sh/@codemirror/legacy-modes@6/mode/haskell";
+import { oneDark } from "https://esm.sh/@codemirror/theme-one-dark@6";
+import { Compartment } from "https://esm.sh/@codemirror/state@6";
+import {
+  ConsoleStdout, File, OpenFile, PreopenDirectory, WASI,
+} from "https://esm.sh/gh/haskell-wasm/browser_wasi_shim";
+import { DyLDBrowserHost, main } from "./dyld.mjs";
+
+const statusEl = document.getElementById("status");
+const setStatus = (msg) => { statusEl.textContent = msg; };
+
+// Editor colour scheme follows the OS light/dark preference. 
+// Put the theme into a Compartment so it can be swapped
+const themeCompartment = new Compartment();
+const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+const editorTheme = () => (darkQuery.matches ? oneDark : []);
+
+// Full-page spinner overlay, shown while loading/compiling/rendering. 
+// Counted so nested busy sections (load -> run -> render) don't hide it prematurely.
+const spinner = document.getElementById("spinner");
+let busyCount = 1;
+function setBusy(on) {
+  busyCount = Math.max(0, busyCount + (on ? 1 : -1));
+  spinner.classList.toggle("hidden", busyCount === 0);
+}
+
+// Keep the console hidden unless there's an error 
+function refreshOutputs() {
+  const hasErr = document.getElementById("stderr").value.trim() !== "";
+  const hasOut = document.getElementById("stdout").value.trim() !== "";
+  document.getElementById("outputs").style.display = hasErr ? "block" : "none";
+  document.getElementById("stderrPanel").style.display = hasErr ? "block" : "none";
+  document.getElementById("stdoutPanel").style.display =
+    hasErr && hasOut ? "block" : "none";
+}
+
+// --- Editor content persistence ---
+// The editor is saved to localStorage so its contents survive refreshes. 
+// query parameters override localStorage on load
+// on edit, we clear the query parameter so refresh doesn't re-fetch
+const EDITOR_KEY = "waterfall-playground-program";
+let suppressProgramClear = false; // true while the doc is set programmatically
+function persistEditor() {
+  try { localStorage.setItem(EDITOR_KEY, editor.state.doc.toString()); } catch (_) {}
+}
+function clearProgramParam() {
+  const u = new URL(window.location.href);
+  if (u.searchParams.has("program")) {
+    u.searchParams.delete("program");
+    history.replaceState(null, "", u);
+  }
+}
+
+// Fetch a URL, streaming the body so we can report download progress
+const fmtBytes = (n) => `${(n / 1048576).toFixed(1)} MB`;
+async function fetchWithProgress(url, onProgress) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  if (!r.body) return new Uint8Array(await r.arrayBuffer());
+  const total = Number(r.headers.get("content-length")) || 0;
+  const reader = r.body.getReader();
+  const chunks = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    onProgress(received, total);
+  }
+  const out = new Uint8Array(received);
+  let offset = 0;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.length;
+  }
+  return out;
+}
+
+// Warn on first visit,
+// When the rootfs is loaded, save that to localStorage, don't ask again
+const ROOTFS_WARNING_KEY = "waterfall-playground-rootfs-warning-ack";
+async function confirmRootfsDownload() {
+  let acknowledged = false;
+  try { acknowledged = localStorage.getItem(ROOTFS_WARNING_KEY) === "1"; } catch (_) {}
+  if (acknowledged) return;
+  // The dialog element must exist before we can show it.
+  if (document.readyState === "loading") {
+    await new Promise((res) =>
+      document.addEventListener("DOMContentLoaded", res, { once: true })
+    );
+  }
+  const dlg = document.getElementById("warningDialog");
+  setStatus("Waiting to download rootfs...");
+  dlg.showModal();
+  await new Promise((res) => dlg.addEventListener("close", res, { once: true }));
+  if (dlg.returnValue === "ok") {
+    try { localStorage.setItem(ROOTFS_WARNING_KEY, "1"); } catch (_) {}
+  }
+}
+await confirmRootfsDownload();
+
+setStatus("Downloading rootfs...");
+const rootfs = new PreopenDirectory("/", []);
+
+const bsdtar_wasi = new WASI(
+  ["bsdtar.wasm", "-x"], [],
+  [
+    new OpenFile(new File(new Uint8Array(), { readonly: true })),
+    ConsoleStdout.lineBuffered((msg) => console.info(msg)),
+    ConsoleStdout.lineBuffered((msg) => console.warn(msg)),
+    rootfs,
+  ],
+  { debug: false }
+);
+
+// Program source precedence: query parameter > saved edits > bundled example.
+const programParam = new URLSearchParams(window.location.search).get("program");
+let savedProgram = null;
+try { savedProgram = localStorage.getItem(EDITOR_KEY); } catch (_) {}
+const programUrl = programParam ?? (savedProgram != null ? null : "./example.hs");
+
+// Variables referenced by the event handlers, assigned in init.
+let dyld, runProgram, renderSolid, exportSolid;
+
+try {
+  const [{ instance }, rootfs_bytes, programResult] = await Promise.all([
+    WebAssembly.instantiateStreaming(
+      fetch("https://haskell-wasm.github.io/bsdtar-wasm/bsdtar.wasm"),
+      { wasi_snapshot_preview1: bsdtar_wasi.wasiImport }
+    ),
+    // ROOTFS_URL is substituted by build_playground.sh
+    fetchWithProgress("ROOTFS_URL", (received, total) => {
+      setStatus(
+        `Downloading rootfs… ${fmtBytes(received)}` +
+          (total ? ` / ${fmtBytes(total)}` : "")
+      );
+    }),
+    programUrl
+      ? fetch(programUrl)
+          .then(async (r) => {
+            if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+            return { text: await r.text() };
+          })
+          .catch((e) => ({ error: e }))
+      : Promise.resolve({ text: savedProgram }),
+  ]);
+
+  setStatus("Extracting rootfs...");
+  bsdtar_wasi.fds[0] = new OpenFile(
+    new File(rootfs_bytes, { readonly: true })
+  );
+  bsdtar_wasi.start(instance);
+
+  if (document.readyState === "loading") {
+    await new Promise((res) =>
+      document.addEventListener("DOMContentLoaded", res, { once: true })
+    );
+  }
+
+  if (programResult.error) {
+    document.getElementById("stderr").value +=
+      `Failed to load program from ${programUrl}: ${programResult.error.message}\n`;
+    refreshOutputs();
+  }
+
+  window.editor = new EditorView({
+    doc: programResult.text ?? "",
+    parent: document.getElementById("editor"),
+    extensions: [
+      keymap.of([
+        {
+          key: "Mod-Enter",
+          preventDefault: true,
+          run: () => {
+            if (runProgram) run();
+            return true;
+          },
+        },
+      ]),
+      // Persist on every edit
+      EditorView.updateListener.of((update) => {
+        if (!update.docChanged) return;
+        persistEditor();
+        if (!suppressProgramClear) clearProgramParam();
+      }),
+      basicSetup,
+      StreamLanguage.define(haskell),
+      themeCompartment.of(editorTheme()),
+    ],
+  });
+  // Swap the editor theme live if the OS light/dark preference changes
+  darkQuery.addEventListener("change", () => {
+    editor.dispatch({ effects: themeCompartment.reconfigure(editorTheme()) });
+  });
+  // Loading a program only touches the editor, so we can enable it here, before GHC is ready
+  document.getElementById("loadBtn").disabled = false;
+  document.getElementById("exampleMain").disabled = false;
+  document.getElementById("exampleToggle").disabled = false;
+
+  setStatus("Initialising GHC...");
+  dyld = await main({
+    rpc: new DyLDBrowserHost({
+      rootfs,
+      stdout: (msg) => {
+        document.getElementById("stdout").value += `${msg}\n`;
+      },
+      stderr: (msg) => {
+        document.getElementById("stderr").value += `${msg}\n`;
+      },
+    }),
+    searchDirs: SEARCH_DIRS_JSON,
+    mainSoPath: "/tmp/libplayground.so",
+    args: ["libplayground.so", "+RTS", "-c", "-RTS"],
+    isIserv: false,
+  });
+
+  // Grow memory to ensure enough heap space for OCCT allocations
+  dyld.exportFuncs.memory.grow(4096);
+
+  [runProgram, renderSolid, exportSolid] = await dyld.exportFuncs.myMain("GHC_LIBDIR", "PLAYGROUND_PKG_DBS");
+
+  setStatus("Ready!");
+  document.getElementById("runBtn").disabled = false;
+  setBusy(false);
+} catch (e) {
+  setBusy(false);
+  const msg = e && e.message ? e.message : String(e);
+  console.error("Playground initialisation failed:", e);
+  setStatus(`Initialisation failed: ${msg}`);
+  const stderrEl = document.getElementById("stderr");
+  if (stderrEl) {
+    stderrEl.value += `Initialisation failed: ${msg}\n`;
+    // A wasm CompileError here might mean the browser can't decode the
+    // module's exception-handling opcodes (this build uses the newer wasm EH).
+    if (e instanceof WebAssembly.CompileError) {
+      stderrEl.value +=
+        `\nThis build may need WebAssembly exception-handling support.\n ` +
+        `In Firefox, it may help to open about:config and set ` +
+        `javascript.options.wasm_exnref to true, then reload.\n` + 
+        `Also, it's a little temperamental, it may help to reload even if that is set.\n`;
+    }
+    refreshOutputs();
+  }
+}
+
+// 3D preview: show the first .glb file found in the wasm filesystem
+const VIEWER_SKIP_DIRS = new Set(["root", "opencascade-hs"]);
+window.__lastModel = null;
+function findGlbFiles(node, prefix, depth, out) {
+  if (!(node.contents instanceof Map)) return;
+  for (const [name, child] of node.contents) {
+    const path = `${prefix}/${name}`;
+    if (child.contents instanceof Map) {
+      if (depth === 0 && VIEWER_SKIP_DIRS.has(name)) continue;
+      if (depth < 6) findGlbFiles(child, path, depth + 1, out);
+    } else if (name.toLowerCase().endsWith(".glb") && child.data) {
+      out.push([path, child.data]);
+    }
+  }
+}
+function updateViewer() {
+  const viewer = document.getElementById("viewer");
+  const found = [];
+  try {
+    findGlbFiles(rootfs.dir ?? rootfs, "", 0, found);
+  } catch (e) {
+    console.warn("model scan failed:", e);
+  }
+  if (!found.length) {
+    viewer.style.display = "none";
+    window.__lastModel = null;
+    return;
+  }
+  found.sort((a, b) => a[0].length - b[0].length || a[0].localeCompare(b[0]));
+  const [path, data] = found[0];
+  if (viewer.dataset.url) URL.revokeObjectURL(viewer.dataset.url);
+  const url = URL.createObjectURL(
+    new Blob([data], { type: "model/gltf-binary" })
+  );
+  viewer.dataset.url = url;
+  viewer.setAttribute("src", url);
+  viewer.style.display = "block";
+  window.__lastModel = path;
+}
+
+function clearViewer() {
+  const viewer = document.getElementById("viewer");
+  if (viewer.dataset.url) {
+    URL.revokeObjectURL(viewer.dataset.url);
+    delete viewer.dataset.url;
+  }
+  viewer.removeAttribute("src");
+  viewer.style.display = "none";
+  window.__lastModel = null;
+}
+
+const solidSelect = document.getElementById("solidSelect");
+
+// name -> whether the binding is `IO Solid` (true) or plain `Solid` (false),
+// populated by run(). render/export need this to build the right expression.
+let solidIsIO = {};
+const ioFlag = (name) => (solidIsIO[name] ? "true" : "false");
+
+// Render the Solid currently chosen in the dropdown
+// reusing the already-loaded module. 
+// Deletes any previous model first so the viewer reflects only this one.
+async function showSelected() {
+  const name = solidSelect.value;
+  if (!name) { updateViewer(); return; }
+  setBusy(true);
+  setStatus(`Rendering ${name}...`);
+  try { (rootfs.dir ?? rootfs).contents.delete("out.glb"); } catch (_) {}
+  try {
+    await renderSolid(name, resolution(), ioFlag(name));
+    updateViewer();
+    setStatus("Done!");
+  } catch (e) {
+    setStatus(`Error: ${e.message}`);
+    clearViewer();
+  } finally {
+    setBusy(false);
+    refreshOutputs();
+  }
+}
+solidSelect.addEventListener("change", showSelected);
+
+// Load a program from a URL, reflecting it in the query string
+const loadDialog = document.getElementById("loadDialog");
+const loadUrlInput = document.getElementById("loadUrl");
+
+function applyProgram(url, text) {
+  // Programmatic load: persist the content but keep the ?program deeplink.
+  suppressProgramClear = true;
+  editor.dispatch({
+    changes: { from: 0, to: editor.state.doc.length, insert: text },
+  });
+  suppressProgramClear = false;
+  const u = new URL(window.location.href);
+  u.searchParams.set("program", url);
+  history.replaceState(null, "", u);
+}
+
+async function loadFromUrl(url) {
+  setBusy(true);
+  setStatus(`Loading ${url}...`);
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+    applyProgram(url, await r.text());
+    // Run it immediately if GHC is ready
+    //  otherwise the startup auto-run will pick up the freshly-loaded editor content once init finishes.
+    if (runProgram) await run();
+    else setStatus("Loaded");
+  } catch (e) {
+    setStatus("Failed to load program");
+    document.getElementById("stderr").value +=
+      `Failed to load program from ${url}: ${e.message}\n`;
+  } finally {
+    setBusy(false);
+    refreshOutputs();
+  }
+}
+
+document.getElementById("loadBtn").addEventListener("click", () => {
+  loadUrlInput.value =
+    new URLSearchParams(window.location.search).get("program") ?? "";
+  loadDialog.showModal();
+  loadUrlInput.select();
+});
+
+loadDialog.addEventListener("close", () => {
+  if (loadDialog.returnValue !== "ok") return;
+  const url = loadUrlInput.value.trim();
+  if (url) loadFromUrl(url);
+});
+
+document.getElementById("aboutBtn").addEventListener("click", () => {
+  document.getElementById("aboutDialog").showModal();
+});
+
+// Settings modal
+document.getElementById("settingsBtn").addEventListener("click", () => {
+  document.getElementById("settingsDialog").showModal();
+});
+
+// File upload modal: write arbitrary files into the in-memory FS at
+// (/<name>) so user code can read them
+// URL-loaded files are reflected in the query string
+const filesDialog = document.getElementById("filesDialog");
+const fileUrlInput = document.getElementById("fileUrlInput");
+const fileUploadInput = document.getElementById("fileUploadInput");
+const fileListEl = document.getElementById("fileList");
+// map from name -> url, present when the file came from a URL, for the deeplink
+const loadedFiles = new Map();
+
+document.getElementById("filesBtn").addEventListener("click", () => {
+  filesDialog.showModal();
+});
+
+function fsWrite(name, bytes) {
+  (rootfs.dir ?? rootfs).contents.set(name, new File(bytes, { readonly: true }));
+}
+// Reflect URL-loaded files in the query string
+function syncFileParams() {
+  const u = new URL(window.location.href);
+  u.searchParams.delete("file");
+  for (const v of loadedFiles.values()) {
+    if (v.url) u.searchParams.append("file", v.url);
+  }
+  history.replaceState(null, "", u);
+}
+function reportFileError(where, e) {
+  document.getElementById("stderr").value +=
+    `Failed to load file from ${where}: ${e.message}\n`;
+  refreshOutputs();
+}
+function renderFileList() {
+  fileListEl.innerHTML = "";
+  for (const name of loadedFiles.keys()) {
+    const li = document.createElement("li");
+    const code = document.createElement("code");
+    code.textContent = `/${name}`;
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.textContent = "✕";
+    rm.setAttribute("aria-label", `Remove ${name}`);
+    rm.addEventListener("click", () => {
+      try { (rootfs.dir ?? rootfs).contents.delete(name); } catch (_) {}
+      loadedFiles.delete(name);
+      syncFileParams();
+      renderFileList();
+    });
+    li.append(code, rm);
+    fileListEl.appendChild(li);
+  }
+}
+function urlBasename(url) {
+  try {
+    const name = new URL(url, window.location.href).pathname.split("/").filter(Boolean).pop();
+    return name || "download";
+  } catch (_) {
+    return "download";
+  }
+}
+async function addFileFromUrl(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  const name = urlBasename(url);
+  fsWrite(name, new Uint8Array(await r.arrayBuffer()));
+  loadedFiles.set(name, { url });
+  syncFileParams();
+  renderFileList();
+}
+
+document.getElementById("fileUrlAdd").addEventListener("click", async () => {
+  const url = fileUrlInput.value.trim();
+  if (!url) return;
+  try {
+    await addFileFromUrl(url);
+    fileUrlInput.value = "";
+    setStatus("File loaded");
+  } catch (e) {
+    reportFileError(url, e);
+  }
+});
+fileUploadInput.addEventListener("change", async () => {
+  for (const file of fileUploadInput.files) {
+    fsWrite(file.name, new Uint8Array(await file.arrayBuffer()));
+    loadedFiles.set(file.name, {}); // session-only, no URL to persist
+  }
+  fileUploadInput.value = "";
+  renderFileList();
+  setStatus("Files loaded");
+});
+// Load files named in the query string on startup,
+for (const url of new URLSearchParams(window.location.search).getAll("file")) {
+  addFileFromUrl(url).catch((e) => reportFileError(url, e));
+}
+
+const rotateToggle = document.getElementById("rotateToggle");
+const resolutionInput = document.getElementById("resolutionInput");
+
+// Persist settings across refreshes
+const SETTINGS_KEY = "waterfall-playground-settings";
+function saveSettings() {
+  try {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({
+        autoRotate: rotateToggle.checked,
+        resolution: resolutionInput.value,
+      })
+    );
+  } catch (_) {}
+}
+// Restore before handlers, so the startup render picks up the stored
+// resolution and the viewer starts with the stored rotate state.
+try {
+  const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+  if (typeof s.autoRotate === "boolean") rotateToggle.checked = s.autoRotate;
+  if (s.resolution) resolutionInput.value = s.resolution;
+} catch (_) {}
+
+// Auto-rotate toggle for the model viewer.
+function applyRotate() {
+  const viewer = document.getElementById("viewer");
+  if (rotateToggle.checked) viewer.setAttribute("auto-rotate", "");
+  else viewer.removeAttribute("auto-rotate");
+}
+applyRotate();
+rotateToggle.addEventListener("change", () => {
+  applyRotate();
+  saveSettings();
+});
+
+// Mesh resolution (deflection) passed to render/export. 
+function resolution() {
+  const v = parseFloat(resolutionInput.value);
+  return Number.isFinite(v) && v > 0 ? String(v) : "0.01";
+}
+// Re-render the current solid when the resolution changes.
+resolutionInput.addEventListener("change", () => {
+  saveSettings();
+  if (runProgram && solidSelect.value) showSelected();
+});
+
+// TODO: this loads examples from the current dev branch rather than main
+const EXAMPLES_BASE =
+  "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/wasm-build-dirty-rebased/waterfall-cad-examples/src/";
+const FONT_VARELA =
+  "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/main/waterfall-cad-examples/test-data/fonts/varela/VarelaRound-Regular.ttf";
+const EXAMPLES = [
+  { label: "CSG", mod: "CsgExample", files: [] },
+  { label: "Bounding Boxes", mod: "BoundingBoxExample", files: [] },
+  { label: "Fillet", mod: "FilletExample", files: [] },
+  { label: "Offset", mod: "OffsetExample", files: [] },
+  { label: "Platonic Solids", mod: "PlatonicSolidsExample", files: [] },
+  { label: "Gear", mod: "GearExample", files: [] },
+  { label: "Prism", mod: "PrismExample", files: [] },
+  { label: "Revolution", mod: "RevolutionExample", files: [] },
+  { label: "Sweep", mod: "SweepExample", files: [] },
+  { label: "Take Path Fraction", mod: "TakePathFractionExample", files: [] },
+  { label: "2D Booleans", mod: "TwoDBooleansExample", files: [] },
+  { label: "Text", mod: "TextExample", files: [FONT_VARELA] },
+];
+
+// Split-button dropdown menus
+function closeAllMenus() {
+  document.querySelectorAll(".split-menu").forEach((m) => (m.hidden = true));
+}
+// Clicking anywhere else dismisses any open menu.
+document.addEventListener("click", closeAllMenus);
+
+function wireMenuToggle(triggerEl, menuEl) {
+  triggerEl.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const willOpen = menuEl.hidden;
+    closeAllMenus();
+    menuEl.hidden = !willOpen;
+  });
+}
+
+// Examples: both segments just open the menu
+const exampleMenu = document.getElementById("exampleMenu");
+for (const { label, mod, files } of EXAMPLES) {
+  const li = document.createElement("li");
+  li.textContent = label;
+  li.addEventListener("click", async () => {
+    closeAllMenus();
+    // Load the example's files into the FS first
+    // then load + run the program.
+    for (const url of files) {
+      try { await addFileFromUrl(url); } catch (e) { reportFileError(url, e); }
+    }
+    loadFromUrl(`${EXAMPLES_BASE}${mod}.hs`);
+  });
+  exampleMenu.appendChild(li);
+}
+exampleMenu.addEventListener("click", (e) => e.stopPropagation());
+wireMenuToggle(document.getElementById("exampleMain"), exampleMenu);
+wireMenuToggle(document.getElementById("exampleToggle"), exampleMenu);
+
+// Download the current solid, (STL, STEP, GLB); 
+const downloadMain = document.getElementById("downloadMain");
+const downloadMenu = document.getElementById("downloadMenu");
+let downloadExt = "stl";
+
+function setDownloadFormat(ext) {
+  downloadExt = ext;
+  downloadMain.textContent = `Download ${ext.toUpperCase()}`;
+}
+
+async function downloadModel() {
+  const name = solidSelect.value;
+  if (!name) return;
+  const ext = downloadExt;
+  const file = `${name}.${ext}`;
+  setBusy(true);
+  setStatus(`Exporting ${ext.toUpperCase()}…`);
+  try {
+    const dir = (rootfs.dir ?? rootfs).contents;
+    try { dir.delete(file); } catch (_) {}
+    await exportSolid(name, `/${file}`, resolution(), ioFlag(name));
+    const node = dir.get(file);
+    if (!node || !node.data) throw new Error("export produced no output");
+    const url = URL.createObjectURL(
+      new Blob([node.data], { type: "application/octet-stream" })
+    );
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setStatus("Done!");
+  } catch (e) {
+    setStatus(`Error: ${e.message}`);
+  } finally {
+    setBusy(false);
+    refreshOutputs();
+  }
+}
+
+downloadMain.addEventListener("click", downloadModel);
+wireMenuToggle(document.getElementById("downloadToggle"), downloadMenu);
+downloadMenu.addEventListener("click", (e) => e.stopPropagation());
+downloadMenu.querySelectorAll("li").forEach((li) => {
+  li.addEventListener("click", () => {
+    closeAllMenus();
+    setDownloadFormat(li.dataset.value);
+    downloadModel();
+  });
+});
+
+async function run() {
+  document.getElementById("runBtn").disabled = true;
+  setBusy(true);
+  setStatus("Compiling...");
+
+  try {
+    document.getElementById("stdout").value = "";
+    document.getElementById("stderr").value = "";
+
+    try { (rootfs.dir ?? rootfs).contents.delete("out.glb"); } catch (_) {}
+
+    // Each entry is { name, io }
+    const entries = JSON.parse(
+      await runProgram(
+        document.getElementById("ghcArgs").value,
+        editor.state.doc.toString()
+      )
+    );
+
+    // Repopulate the dropdown and remember each binding's kind (pure vs IO).
+    solidSelect.innerHTML = "";
+    solidIsIO = {};
+    for (const { name, io } of entries) {
+      solidIsIO[name] = io;
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      solidSelect.appendChild(opt);
+    }
+    // Only show the picker when there's an actual choice to make.
+    document.getElementById("solidControls").style.display =
+      entries.length > 1 ? "flex" : "none";
+    // Download is possible whenever there's at least one solid.
+    document.getElementById("downloadMain").disabled = entries.length === 0;
+    document.getElementById("downloadToggle").disabled = entries.length === 0;
+
+    if (entries.length === 0) {
+      solidSelect.disabled = true;
+      updateViewer();
+      setStatus("No top-level values of type Solid found.");
+    } else {
+      solidSelect.disabled = false;
+      // Default to the last-defined Solid.
+      solidSelect.value = entries[entries.length - 1].name;
+      await showSelected();
+    }
+  } catch (e) {
+    setStatus(`Error: ${e.message}`);
+    // The run failed: there's no current model
+    clearViewer();
+    document.getElementById("solidControls").style.display = "none";
+    document.getElementById("downloadMain").disabled = true;
+    document.getElementById("downloadToggle").disabled = true;
+  } finally {
+    document.getElementById("runBtn").disabled = false;
+    setBusy(false);
+    refreshOutputs();
+  }
+}
+
+document.getElementById("runBtn").addEventListener("click", run);
+
+// Auto-run on startup once GHC is ready
+// skipped on init failure.
+if (runProgram && editor.state.doc.length > 0) {
+  await run();
+}

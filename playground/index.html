@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Waterfall CAD Playground</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400..900&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4/dist/model-viewer.min.js"></script>
+    <script async type="module" src="./playground.js"></script>
+  </head>
+  <body>
+    <div id="spinner" class="spinner-overlay">
+      <div class="spinner-box-container">
+       <div class="spinner-box spinner-box-a"></div>
+       <div class="spinner-box spinner-box-b"></div>
+       <div class="spinner-box spinner-box-c"></div>
+       <div class="spinner-box spinner-box-d"></div>
+      </div>
+      <div id="status">Loading...</div>
+    </div>
+    <div class="app">
+      <section class="pane">
+        <header>
+          <img src="./assets/logo.svg" alt="" class="logo" />
+          Waterfall CAD Playground
+        </header>
+        <div id="editor"></div>
+      </section>
+
+      <section class="pane right">
+        <input
+          id="ghcArgs"
+          type="text"
+          hidden
+          value="-package waterfall-cad -package waterfall-cad-svg -package linear -v0"
+        />
+        <div class="controls">
+          <div class="split" id="downloadSplit">
+            <button type="button" class="split-main" id="downloadMain" disabled>
+              Download STL
+            </button>
+            <button
+              type="button"
+              class="split-toggle"
+              id="downloadToggle"
+              disabled
+              aria-label="Choose format"
+            >▼</button>
+            <ul class="split-menu" id="downloadMenu" hidden>
+              <li data-value="stl">STL</li>
+              <li data-value="step">STEP</li>
+              <li data-value="glb">GLB</li>
+            </ul>
+          </div>
+          
+          <div class="split" id="exampleSplit">
+            <button type="button" class="split-main" id="exampleMain" disabled>
+              Examples
+            </button>
+            <button
+              type="button"
+              class="split-toggle"
+              id="exampleToggle"
+              disabled
+              aria-label="Choose an example"
+            >▼</button>
+            <ul class="split-menu" id="exampleMenu" hidden></ul>
+          </div>
+          <button id="loadBtn" disabled>Load URL</button>
+          <button id="filesBtn">Files</button>
+          <button id="settingsBtn">Settings</button>
+          <button id="aboutBtn">About</button>
+          <button id="runBtn" disabled>Reload</button>
+        </div>
+        <div class="controls" id="solidControls" style="display: none">
+          <select id="solidSelect" disabled></select>
+        </div>
+        <model-viewer
+          id="viewer"
+          camera-controls
+          auto-rotate
+          interaction-prompt="none"
+          exposure="0.9"
+          environment-image="assets/environment.hdr"
+          orientation="0deg -90deg 0deg"
+          alt="rendered model"
+        ></model-viewer>
+        <div class="outputs" id="outputs" style="display: none">
+          <div id="stdoutPanel">
+            <div class="label">stdout</div>
+            <textarea id="stdout" readonly></textarea>
+          </div>
+          <div id="stderrPanel">
+            <div class="label">stderr</div>
+            <textarea id="stderr" class="stderr" readonly></textarea>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <dialog id="warningDialog">
+      <div class="warning-body">
+        <h2>High(ish) Bandwidth Warning</h2>
+        <p>
+          This is a browser-based Haskell CAD environment.
+        </p>
+        <p>
+          To run it, your browser will need to fetch a ~100MB WASM blob.
+        </p>
+        <p>
+          Those using a metered or slow connection may wish to navigate away.
+        </p>
+      </div>
+      <form method="dialog" class="dialog-buttons">
+        <button value="ok">Continue</button>
+      </form>
+    </dialog>
+
+    <dialog id="loadDialog">
+      <form method="dialog">
+        <label for="loadUrl">Load program from URL</label>
+        <input
+          id="loadUrl"
+          type="text"
+          placeholder="https://…/Example.hs"
+        />
+        <div class="dialog-buttons">
+          <button value="ok">Load</button>
+          <button value="cancel" formnovalidate>Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="settingsDialog">
+      <div class="settings-body">
+        <h2>Settings</h2>
+        <label class="setting-row">
+          <span>Auto-rotate</span>
+          <input type="checkbox" id="rotateToggle" checked />
+        </label>
+        <label class="setting-row">
+          <span>Resolution (mesh deflection)</span>
+          <input
+            type="number"
+            id="resolutionInput"
+            value="0.01"
+            min="0.0001"
+            step="0.001"
+          />
+        </label>
+        <form method="dialog" class="dialog-buttons">
+          <button value="ok">Close</button>
+        </form>
+      </div>
+    </dialog>
+
+    <dialog id="filesDialog">
+      <div class="files-body">
+        <h2>File Upload</h2>
+        <p class="dialog-note">
+          Files are written into the in-memory filesystem at
+          <code>/&lt;name&gt;</code>.
+        </p>
+        <div class="files-row">
+          <input type="text" id="fileUrlInput" placeholder="https://…/MyFont.ttf" />
+          <button type="button" id="fileUrlAdd">Add URL</button>
+        </div>
+        <div class="files-row">
+          <input type="file" id="fileUploadInput" multiple />
+        </div>
+        <ul class="file-list" id="fileList"></ul>
+        <form method="dialog" class="dialog-buttons">
+          <button value="ok">Close</button>
+        </form>
+      </div>
+    </dialog>
+
+    <dialog id="aboutDialog">
+      <div class="about-body">
+        <h2>
+          <img src="./assets/logo.svg" alt="" class="about-logo" />
+          Waterfall CAD Playground
+        </h2>
+        <p>
+          An in-browser playground for <strong>Waterfall CAD</strong>, a
+          declarative Haskell CAD library built on OpenCASCADE.
+          Code is compiled and run entirely in your browser in WASM.
+        </p>
+        <ul class="about-links">
+          <li>
+            <img class="icon" src="./assets/haskell.svg" alt="" />
+            <span
+              ><a
+                href="https://hackage.haskell.org/package/waterfall-cad"
+                target="_blank"
+                rel="noopener"
+                >Waterfall CAD API docs on Hackage</a
+              ></span
+            >
+          </li>
+          <li>
+            <img class="icon" src="./assets/github.svg" alt="" />
+            <span
+              ><a
+                href="https://github.com/joe-warren/opencascade-hs"
+                target="_blank"
+                rel="noopener"
+                >Source on GitHub</a
+              ></span
+            >
+          </li>
+          <li>
+            <img class="icon" src="./assets/wasm.svg" alt="" />
+            <span
+              >Made possible by the
+              <a
+                href="https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta"
+                target="_blank"
+                rel="noopener"
+                >GHC WASM backend</a
+              >, by Cheng Shao et al.</span
+            >
+          </li>
+        </ul>
+      </div>
+      <form method="dialog" class="dialog-buttons">
+        <button value="ok">Close</button>
+      </form>
+    </dialog>
+  </body>
+</html>

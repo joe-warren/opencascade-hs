@@ -12,6 +12,7 @@
 -}
 module GearExample 
 ( gearExample
+, playgroundGearExample
 ) where 
 
 import qualified Waterfall.Solids as Solids
@@ -20,7 +21,7 @@ import qualified Waterfall.TwoD.Path2D as Path2D
 import Waterfall.TwoD.Transforms (rotate2D)
 import Control.Lens ((^.))
 import Linear (V2 (..), _y)
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe, listToMaybe)
 
 
 chebyExpnCoeffs :: Int -> (Double -> Double) -> Double
@@ -148,3 +149,7 @@ gearExample thickness moduleLength nGears pressureAngle =
         path = Path2D.repeatLooping segment
         --path = mconcat [rotate2D (-fromIntegral n * pi * 2 / fromIntegral nGears) segment | n <- [0..nGears]]
     in Solids.prism thickness . Shape.makeShape $ path
+
+-- | This is intended to be viewed via the WASM playground
+playgroundGearExample :: Solids.Solid
+playgroundGearExample = gearExample 10 5 20 (20*pi/180)

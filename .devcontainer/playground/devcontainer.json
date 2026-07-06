@@ -1,0 +1,21 @@
+{
+  "name": "waterfall-cad wasm playground",
+
+  "build": {
+    "dockerfile": "../../Dockerfile.playground",
+    "target": "toolchain"
+  },
+
+  "workspaceFolder": "/opencascade-hs",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/opencascade-hs,type=bind,consistency=cached",
+
+  "mounts": [
+    "source=waterpark-dist-newstyle,target=/opencascade-hs/dist-newstyle,type=volume",
+    "source=waterpark-cabal-store,target=/root/.ghc-wasm/.cabal/store,type=volume"
+  ],
+
+  "forwardPorts": [8080],
+
+  // Make `wasm32-wasi-*` tools available in every interactive shell.
+  "postCreateCommand": "grep -q ghc-wasm/env ~/.bashrc || echo 'source ~/.ghc-wasm/env' >> ~/.bashrc"
+}

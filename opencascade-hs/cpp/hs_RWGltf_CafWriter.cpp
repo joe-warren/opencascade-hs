@@ -1,4 +1,5 @@
 #include <RWGltf_CafWriter.hxx>
+#include <TColStd_IndexedDataMapOfStringString.hxx>
 #include "hs_Exception.h"
 #include "hs_RWGltf_CafWriter.h"
 
