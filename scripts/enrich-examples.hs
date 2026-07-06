@@ -37,7 +37,7 @@ modifyImage currentCommit (XML.Elem e) =
                 , ("rotation-per-second", "45deg")
                 , ("shadow-intensity", "1")
                 , ("orientation", "0 270deg 0")
-                , ("environment-image", urlPrefix <> "models/studio_small_03_1k.hdr")
+                , ("environment-image", urlPrefix <> "models/environment.hdr")
                 , ("style", "width: 100%; height: 600px; border: 1px dashed #5E5184; background-color: #f2f2f2;")
                 ]
 modifyImage _ x = x
