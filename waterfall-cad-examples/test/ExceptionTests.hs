@@ -5,7 +5,11 @@ module ExceptionTests
 
 import qualified Waterfall.Offset as Offset
 import qualified Waterfall.Fillet as Fillet
+import qualified Waterfall.Revolution as Revolution
+import qualified Waterfall.TwoD.Path2D as Path2D
 import qualified Waterfall.Solids as Solids
+import Waterfall.Error (WaterfallError (..))
+import Linear (V2 (..))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import OpenCascade.Internal.Exception (OpenCascadeException (..), testThrow)
@@ -17,6 +21,7 @@ import System.IO.Temp (emptySystemTempFile)
 import qualified Waterfall.IO as IO
 import Waterfall.IO (WaterfallIOException(WaterfallIOException), WaterfallIOExceptionCause (FileError))
 import Data.Acquire (with)
+import Data.Either (fromLeft)
 
 
 checkFailure :: Exception b => IO a -> (b -> Maybe String)  -> IO ()
@@ -54,7 +59,17 @@ exceptionTests = testGroup "Exception Tests"
             $ \case 
                 WaterfallIOException FileError _ -> Nothing
                 e -> Just $ "Expected WaterfallIOException\ngot: " <> show e
-    , testCase "Bad Fillet" $ expectFailure (writeTmpStl $ Fillet.roundFillet 2 Solids.centeredCube) (OpenCascadeStandardFailure "BRep_API: command not done" "")
+    , testCase "Bad Fillet" $ assertEqual "Bad Fillet"
+        (fromLeft (error "expected failure") $ Fillet.tryRoundFillet 2 Solids.centeredCube)
+        (WaterfallError $ OpenCascadeStandardFailure "BRep_API: command not done" "")
+    , testCase "Bad Revolution" $ assertEqual "Bad Revolution"
+        (fromLeft (error "expected failure") $ Revolution.tryRevolution
+            (Path2D.pathFrom (V2 (-1) 0)
+                [ Path2D.lineTo (V2 1 0)
+                , Path2D.lineTo (V2 1 2)
+                , Path2D.lineTo (V2 (-1) 2)
+                ]))
+        (WaterfallError $ OpenCascadeStandardFailure "BRep_API: command not done" "")
     , testCase "Throw Std Exception" $ with (RuntimeError.new "Some Exception Text") $ \re -> 
         expectFailure (testThrow (upcast re)) (OpenCascadeStdException "Some Exception Text")
     ]

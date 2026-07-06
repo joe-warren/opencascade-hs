@@ -39,6 +39,7 @@ import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.Internal.Finalizers (unsafeFromAcquire, toAcquire, unsafeFromAcquireT)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Waterfall.Internal.Edges (wireEndpoints, reverseWire, splitWires, wireLength, truncateWire)
+import Waterfall.Internal.NearZero (nearZero)
 import Control.Arrow (second)
 import Prelude hiding (Foldable(..))
 import Data.Foldable (Foldable(..))
@@ -53,7 +54,7 @@ import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP.Vec as  GP.Vec
 import qualified OpenCascade.BRepBuilderAPI.Transform as BRepBuilderAPI.Transform
 import Data.Proxy (Proxy (..))
-import Linear (V3 (..), V2 (..), _xy, Epsilon, nearZero)
+import Linear (V3 (..), V2 (..), _xy, Epsilon)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import Control.Lens ((^.))
 
@@ -82,10 +83,13 @@ edgeToPath es = fromWire $ do
     liftIO $ MakeWire.addEdge builder edge
     MakeWire.wire builder
 
+veryClose :: (AnyPath point path) => Proxy path -> point -> point -> Bool
+veryClose proxy a b = all nearZero (pointToV3 proxy a - pointToV3 proxy b)
+
 -- | A straight line between two points
-line :: forall point path. (AnyPath point path, Epsilon point) => point -> point -> path
+line :: forall point path. (AnyPath point path) => point -> point -> path
 line start end = 
-    if nearZero (start - end)
+    if veryClose (Proxy :: Proxy path) start end
         then reconstructPath . SinglePointRawPath . pointToV3 (Proxy :: Proxy path) $ start
         else edgeToPath $ do
             pt1 <- pointToGPPnt (Proxy :: Proxy path) start
@@ -93,7 +97,7 @@ line start end =
             MakeEdge.fromPnts pt1 pt2
 
 -- | Version of `line` designed to work with `pathFrom`
-lineTo :: (AnyPath point path, Epsilon point) => point -> point -> (point, path)
+lineTo :: (AnyPath point path) => point -> point -> (point, path)
 lineTo end = \start -> (end, line start end) 
 
 -- | Version of `line` designed to work with `pathFrom`
@@ -106,9 +110,10 @@ lineRelative dEnd = do
     lineTo end
 
 -- | Section of a circle based on three arguments, the start point, a point on the arc, and the endpoint
-arcVia :: forall point path. (AnyPath point path, Epsilon point) => point -> point -> point -> path
+arcVia :: forall point path. (AnyPath point path) => point -> point -> point -> path
 arcVia start mid end =
-    if nearZero (start - end) && nearZero (start - mid) 
+    let vc = veryClose (Proxy :: Proxy path)
+    in if vc start end && vc start mid
         then reconstructPath . SinglePointRawPath . pointToV3 (Proxy :: Proxy path) $ start
         else edgeToPath $ do
             s <- pointToGPPnt (Proxy :: Proxy path) start
@@ -121,7 +126,7 @@ arcVia start mid end =
 --
 -- The first argument is a point on the arc
 -- The second argument is the endpoint of the arc
-arcViaTo :: (AnyPath point path, Epsilon point) => point -> point -> point -> (point, path)
+arcViaTo :: (AnyPath point path) => point -> point -> point -> (point, path)
 arcViaTo mid end = \start -> (end, arcVia start mid end) 
 
 -- | Version of `arcVia` designed to work with `pathFrom`
@@ -137,9 +142,10 @@ arcViaRelative dMid dEnd = do
 -- | Bezier curve of order 3
 -- 
 -- The arguments are, the start of the curve, the two control points, and the end of the curve
-bezier :: forall point path. (AnyPath point path, Epsilon point) => point -> point -> point -> point -> path
+bezier :: forall point path. (AnyPath point path) => point -> point -> point -> point -> path
 bezier start controlPoint1 controlPoint2 end = 
-    if nearZero (start - end) && nearZero (start - controlPoint1) && nearZero (start - controlPoint2)
+    let vc = veryClose (Proxy :: Proxy path)
+    in if vc start end && vc start controlPoint1 && vc start controlPoint2
         then reconstructPath . SinglePointRawPath . pointToV3 (Proxy :: Proxy path) $ start
         else edgeToPath $ do
             s <- pointToGPPnt (Proxy :: Proxy path) start
@@ -156,7 +162,7 @@ bezier start controlPoint1 controlPoint2 end =
             MakeEdge.fromCurve (upcast b)
 
 -- | Version of `bezier` designed to work with `pathFrom`
-bezierTo :: (AnyPath point path, Epsilon point) => point -> point -> point -> point -> (point, path)
+bezierTo :: (AnyPath point path) => point -> point -> point -> point -> (point, path)
 bezierTo controlPoint1 controlPoint2 end = \start -> (end, bezier start controlPoint1 controlPoint2 end) 
 
 -- | Version of `bezier` designed to work with `pathFrom`
@@ -233,10 +239,10 @@ splice path pnt =
         _ -> (pnt, reconstructPath EmptyRawPath)
 
 -- | Given a path, return a new path with the endpoints joined by a straight line.
-closeLoop :: (AnyPath point path, Monoid path, Epsilon point) => path -> path
+closeLoop :: forall point path. (AnyPath point path, Monoid path) => path -> path
 closeLoop p = 
     case pathEndpoints p of
-        Just (s, e) -> if nearZero (s - e) 
+        Just (s, e) -> if veryClose (Proxy :: Proxy path) s e 
             then p
             else p <> line e s
         Nothing -> p

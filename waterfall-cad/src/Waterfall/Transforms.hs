@@ -20,9 +20,10 @@ module Waterfall.Transforms
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire) 
 import Waterfall.Internal.Path.Common (RawPath(..))
+import Waterfall.Internal.NearZero (nearZero)
 import Linear.V3 (V3 (..))
 import Linear.V4 (V4 (..))
-import Linear (M34, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z, nearZero)
+import Linear (M34, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z)
 import qualified Linear.Quaternion as Quaternion
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP

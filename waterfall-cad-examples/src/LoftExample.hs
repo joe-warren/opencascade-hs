@@ -39,8 +39,7 @@ loftExample =
         mirror = Transforms.mirror (V3 1 0 0 ) . Path.reversePath
         makeSymetric p = mirror p <> p
         symetricPaths = makeSymetric <$> paths
-        body = 
-          Loft.pointedLoft 
+        body = Loft.pointedLoft 
             Nothing
             (Path.closeLoop <$>  symetricPaths)
             (Just (V3 0 20 5))

@@ -1,9 +1,12 @@
 module Waterfall.Offset 
 ( offset
 , offsetWithTolerance
+-- * Functions that return Errors
+, tryOffset
+, tryOffsetWithTolerance
 ) where 
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireWithCatch)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
@@ -17,7 +20,9 @@ import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
 import Control.Monad (when)
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
-import Linear.Epsilon (nearZero)
+import Waterfall.Internal.NearZero (nearZero)
+import Waterfall.Error (WaterfallError)
+import Data.Either (fromRight)
 
 combineShellsToSolid :: Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 combineShellsToSolid s = do
@@ -33,21 +38,31 @@ combineShellsToSolid s = do
     go
     upcast <$> MakeSolid.solid makeSolid
 
--- | like `offset`, but allows setting the tolerance parameter used by the algorithm 
-offsetWithTolerance :: 
-    Double       -- ^ Tolerance, this can be relatively small
-    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
-    -> Solid        -- ^ the `Solid` to offset 
-    -> Solid
-offsetWithTolerance tolerance value solid
-    | nearZero value = solid
-    | otherwise = 
-  solidFromAcquire $ do
+-- | Version of `offsetWithTolerance` that returns an error on failure
+tryOffsetWithTolerance :: 
+    Double       
+    -> Double   
+    -> Solid   
+    -> Either WaterfallError Solid
+tryOffsetWithTolerance tolerance value solid
+    | nearZero value = Right solid
+    | otherwise = solidFromAcquireWithCatch $ do
     builder <- MakeOffsetShape.new
     s <- acquireSolid solid 
     liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False 
     shell <- MakeShape.shape (upcast builder)
     combineShellsToSolid shell
+
+offsetWithTolerance :: 
+    Double       -- ^ Tolerance, this can be relatively small
+    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid        -- ^ the `Solid` to offset 
+    -> Solid
+offsetWithTolerance tolerance value solid = 
+    fromRight mempty $ tryOffsetWithTolerance tolerance value solid
+
+defaultTolerance :: Double
+defaultTolerance = 1e-6
 
 -- | Expand or contract a `Solid` by a certain amount.
 -- 
@@ -67,4 +82,13 @@ offset ::
     Double    -- ^ Amount to offset by, positive values expand, negative values contract
     -> Solid        -- ^ the `Solid` to offset 
     -> Solid
-offset = offsetWithTolerance 1e-6 
+offset = offsetWithTolerance defaultTolerance
+
+
+-- | Version of `offset` that returns an error on failure
+tryOffset  :: 
+    Double    -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid        -- ^ the `Solid` to offset 
+    -> Either WaterfallError Solid
+tryOffset = tryOffsetWithTolerance defaultTolerance
+
