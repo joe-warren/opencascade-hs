@@ -528,9 +528,8 @@ resolutionInput.addEventListener("change", () => {
   if (runProgram && solidSelect.value) showSelected();
 });
 
-// TODO: this loads examples from the current dev branch rather than main
 const EXAMPLES_BASE =
-  "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/wasm-build-dirty-rebased/waterfall-cad-examples/src/";
+  "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/main/waterfall-cad-examples/src/";
 const FONT_VARELA =
   "https://raw.githubusercontent.com/joe-warren/opencascade-hs/refs/heads/main/waterfall-cad-examples/test-data/fonts/varela/VarelaRound-Regular.ttf";
 const EXAMPLES = [
