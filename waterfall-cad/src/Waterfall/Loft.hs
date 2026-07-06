@@ -12,9 +12,9 @@ module Waterfall.Loft
 , pointedLoft
 , loft
 -- * Functions that return Errors
-, pointedLoftWithPrecisionEither
-, pointedLoftEither
-, loftEither
+, tryPointedLoftWithPrecision
+, tryPointedLoft
+, tryLoft
 ) where
 
 import Linear (V3 (..))
@@ -31,12 +31,12 @@ import Control.Monad (forM_, (<=<))
 import Waterfall.Error (WaterfallError)
 
 -- | like `pointedLoftWithPrecision`, but returns an Either on error
-pointedLoftWithPrecisionEither :: Double -- ^ The loft precision, this should be a small value, e.g. @ 1e-6 @ 
+tryPointedLoftWithPrecision :: Double -- ^ The loft precision, this should be a small value, e.g. @ 1e-6 @ 
     -> Maybe (V3 Double) -- ^ Optional start point for the loft
     -> [Path] -- ^ Series of cross-sections that the loft will pass through
     -> Maybe (V3 Double) -- ^ Optional end point for the loft
     -> Either WaterfallError Solid
-pointedLoftWithPrecisionEither precision start paths end = solidFromAcquireWithCatch $ do
+tryPointedLoftWithPrecision precision start paths end = solidFromAcquireWithCatch $ do
     thruSections <- ThruSections.new True False precision
     forM_ start ((liftIO . ThruSections.addVertex thruSections) <=< v3ToVertex)
     forM_ paths (traverse (liftIO . ThruSections.addWire thruSections) . rawPathWire . rawPath)
@@ -44,18 +44,18 @@ pointedLoftWithPrecisionEither precision start paths end = solidFromAcquireWithC
     MakeShape.shape (upcast thruSections)
 
 -- | like `pointedLoft`, but returns an Either on error
-pointedLoftEither :: 
+tryPointedLoft :: 
     Maybe (V3 Double) -- ^ Optional start point for the loft
     -> [Path] -- ^ Series of cross-sections that the loft will pass through
     -> Maybe (V3 Double) -- ^ Optional end point for the loft
     -> Either WaterfallError Solid
-pointedLoftEither = pointedLoftWithPrecisionEither defaultPrecision
+tryPointedLoft = tryPointedLoftWithPrecision defaultPrecision
 
 -- | like `pointedLoft`, but returns an Either on error
-loftEither :: 
+tryLoft :: 
     [Path] -- ^ Series of cross-sections that the loft will pass through
     -> Either WaterfallError Solid
-loftEither paths = pointedLoftEither Nothing paths Nothing
+tryLoft paths = tryPointedLoft Nothing paths Nothing
 
 defaultPrecision :: Double
 defaultPrecision = 1e-6
@@ -67,7 +67,7 @@ pointedLoftWithPrecision :: Double -- ^ The loft precision, this should be a sma
     -> Maybe (V3 Double) -- ^ Optional end point for the loft
     -> Solid
 pointedLoftWithPrecision precision start paths end =
-    fromRight mempty $ pointedLoftWithPrecisionEither precision start paths end
+    fromRight mempty $ tryPointedLoftWithPrecision precision start paths end
 
 -- | Form a Loft which may terminate at defined points.
 --

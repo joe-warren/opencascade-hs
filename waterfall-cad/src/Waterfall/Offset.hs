@@ -1,9 +1,9 @@
 module Waterfall.Offset 
 ( offset
 , offsetWithTolerance
--- * Functions that Return Errors
-, offsetEither
-, offsetWithToleranceEither
+-- * Functions that return Errors
+, tryOffset
+, tryOffsetWithTolerance
 ) where 
 
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireWithCatch)
@@ -39,12 +39,12 @@ combineShellsToSolid s = do
     upcast <$> MakeSolid.solid makeSolid
 
 -- | Version of `offsetWithTolerance` that returns an error on failure
-offsetWithToleranceEither :: 
+tryOffsetWithTolerance :: 
     Double       
     -> Double   
     -> Solid   
     -> Either WaterfallError Solid
-offsetWithToleranceEither tolerance value solid
+tryOffsetWithTolerance tolerance value solid
     | nearZero value = Right solid
     | otherwise = solidFromAcquireWithCatch $ do
     builder <- MakeOffsetShape.new
@@ -59,7 +59,7 @@ offsetWithTolerance ::
     -> Solid        -- ^ the `Solid` to offset 
     -> Solid
 offsetWithTolerance tolerance value solid = 
-    fromRight mempty $ offsetWithToleranceEither tolerance value solid
+    fromRight mempty $ tryOffsetWithTolerance tolerance value solid
 
 defaultTolerance :: Double
 defaultTolerance = 1e-6
@@ -86,9 +86,9 @@ offset = offsetWithTolerance defaultTolerance
 
 
 -- | Version of `offset` that returns an error on failure
-offsetEither  :: 
+tryOffset  :: 
     Double    -- ^ Amount to offset by, positive values expand, negative values contract
     -> Solid        -- ^ the `Solid` to offset 
     -> Either WaterfallError Solid
-offsetEither = offsetWithToleranceEither defaultTolerance
+tryOffset = tryOffsetWithTolerance defaultTolerance
 

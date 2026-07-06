@@ -1,6 +1,6 @@
 module Waterfall.Sweep
 ( sweep
-, sweepEither
+, trySweep
 ) where
 
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, solidFromAcquireWithCatch)
@@ -41,8 +41,8 @@ positionFace p = acquireSolid . translate p . solidFromAcquire . pure
 
 
 -- | Version of `sweep` that returns an Error on Failure
-sweepEither :: Path -> Shape -> Either WaterfallError Solid
-sweepEither (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = solidFromAcquireWithCatch $ do
+trySweep :: Path -> Shape -> Either WaterfallError Solid
+trySweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = solidFromAcquireWithCatch $ do
     path <- toAcquire theRawPath
     shape <- toAcquire theRawShape
     tangent <- liftIO $ wireTangentStart path
@@ -50,9 +50,9 @@ sweepEither (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = solidFromAc
     adjustedFace <- positionFace start =<< rotateFace tangent shape
     builder <- MakePipe.fromWireAndShape path adjustedFace
     MakeShape.shape (upcast builder)
-sweepEither _ _ = Right mempty
+trySweep _ _ = Right mempty
 
 
 -- | Sweep a 2D `Shape` along a `Path`, constructing a `Solid`
 sweep :: Path -> Shape -> Solid
-sweep path shape = fromRight mempty $ sweepEither path shape
+sweep path shape = fromRight mempty $ trySweep path shape

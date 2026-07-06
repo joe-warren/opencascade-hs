@@ -9,17 +9,17 @@ module Waterfall.Fillet
   roundFillet
 , roundConditionalFillet
 , roundIndexedConditionalFillet
-, roundFilletEither
-, roundConditionalFilletEither
-, roundIndexedConditionalFilletEither
+, tryRoundFillet
+, tryRoundConditionalFillet
+, tryRoundIndexedConditionalFillet
 -- * Chamfers
 -- | Adds flat faces at a constant angle to the two faces either side of an edge.
 , chamfer
 , conditionalChamfer
 , indexedConditionalChamfer
-, chamferEither
-, conditionalChamferEither
-, indexedConditionalChamferEither
+, tryChamfer
+, tryConditionalChamfer
+, tryIndexedConditionalChamfer
 -- * Utility Methods
 , whenNearlyEqual
 ) where
@@ -64,11 +64,11 @@ addEdges radiusFn action explorer = go [] 0
 
 
 -- | Version of `roundIndexedConditionalFillet` that returns an `Either` on failure
-roundIndexedConditionalFilletEither
+tryRoundIndexedConditionalFillet
     :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid
     -> Either WaterfallError Solid
-roundIndexedConditionalFilletEither radiusFunction solid = solidFromAcquireWithCatch $ do
+tryRoundIndexedConditionalFillet radiusFunction solid = solidFromAcquireWithCatch $ do
     s <- acquireSolid solid
     builder <- MakeFillet.fromShape s
 
@@ -90,15 +90,15 @@ roundIndexedConditionalFillet
     :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid
     -> Solid
-roundIndexedConditionalFillet radiusFunction solid = fromRight mempty $ roundIndexedConditionalFilletEither radiusFunction solid
+roundIndexedConditionalFillet radiusFunction solid = fromRight mempty $ tryRoundIndexedConditionalFillet radiusFunction solid
 
 
 -- | Version of `roundConditionalFillet` that returns an `Either` on failure
-roundConditionalFilletEither 
+tryRoundConditionalFillet 
     :: ((V3 Double, V3 Double) -> Maybe Double)
     -> Solid 
     -> Either WaterfallError Solid
-roundConditionalFilletEither f = roundIndexedConditionalFilletEither (const f)
+tryRoundConditionalFillet f = tryRoundIndexedConditionalFillet (const f)
 
 -- | Add rounds with the given radius to each edge of a solid, conditional on the endpoints of the edge.
 -- 
@@ -114,16 +114,16 @@ roundFillet r = roundConditionalFillet (const . pure $ r)
 
 
 -- | Version of `roundFillet` that returns an `Either` on failure
-roundFilletEither :: Double -> Solid -> Either WaterfallError Solid
-roundFilletEither r = roundConditionalFilletEither (const . pure $ r)
+tryRoundFillet :: Double -> Solid -> Either WaterfallError Solid
+tryRoundFillet r = tryRoundConditionalFillet (const . pure $ r)
 
 
 -- | Version of `indexedConditionalChamfer` that returns an `Either` on failure
-indexedConditionalChamferEither 
+tryIndexedConditionalChamfer 
     :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid 
     -> Either WaterfallError Solid
-indexedConditionalChamferEither radiusFunction solid = solidFromAcquireWithCatch $ do
+tryIndexedConditionalChamfer radiusFunction solid = solidFromAcquireWithCatch $ do
     s <- acquireSolid solid
     builder <- MakeChamfer.fromShape s
 
@@ -146,14 +146,14 @@ indexedConditionalChamfer
     -> Solid 
     -> Solid
 indexedConditionalChamfer radiusFunction solid =
-    fromRight mempty $ indexedConditionalChamferEither radiusFunction solid
+    fromRight mempty $ tryIndexedConditionalChamfer radiusFunction solid
 
 -- | Version of `conditionalChamfer` that returns an `Either` on failure
-conditionalChamferEither 
+tryConditionalChamfer 
     :: ((V3 Double, V3 Double) -> Maybe Double) 
     -> Solid
     -> Either WaterfallError Solid
-conditionalChamferEither f = indexedConditionalChamferEither (const f)
+tryConditionalChamfer f = tryIndexedConditionalChamfer (const f)
 
 -- | Add chamfers with the given size to each edge of a solid, conditional on the endpoints of the edge.
 -- 
@@ -162,8 +162,8 @@ conditionalChamfer :: ((V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
 conditionalChamfer f = indexedConditionalChamfer (const f)
 
 -- | Version of `chamfer` that returns an `Either` on failure
-chamferEither :: Double -> Solid -> Either WaterfallError Solid
-chamferEither d = conditionalChamferEither (const . pure $ d)
+tryChamfer :: Double -> Solid -> Either WaterfallError Solid
+tryChamfer d = tryConditionalChamfer (const . pure $ d)
 
 -- | Add a chamfer with a given size to every edge of a solid
 --

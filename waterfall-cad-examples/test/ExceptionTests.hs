@@ -60,10 +60,10 @@ exceptionTests = testGroup "Exception Tests"
                 WaterfallIOException FileError _ -> Nothing
                 e -> Just $ "Expected WaterfallIOException\ngot: " <> show e
     , testCase "Bad Fillet" $ assertEqual "Bad Fillet"
-        (fromLeft (error "expected failure") $ Fillet.roundFilletEither 2 Solids.centeredCube)
+        (fromLeft (error "expected failure") $ Fillet.tryRoundFillet 2 Solids.centeredCube)
         (WaterfallError $ OpenCascadeStandardFailure "BRep_API: command not done" "")
     , testCase "Bad Revolution" $ assertEqual "Bad Revolution"
-        (fromLeft (error "expected failure") $ Revolution.revolutionEither
+        (fromLeft (error "expected failure") $ Revolution.tryRevolution
             (Path2D.pathFrom (V2 (-1) 0)
                 [ Path2D.lineTo (V2 1 0)
                 , Path2D.lineTo (V2 1 2)

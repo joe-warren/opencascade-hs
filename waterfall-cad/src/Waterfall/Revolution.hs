@@ -1,6 +1,6 @@
 module Waterfall.Revolution
 ( revolution
-, revolutionEither
+, tryRevolution
 ) where
 
 import Waterfall.Internal.Solid (Solid (..), solidFromAcquireWithCatch)
@@ -21,8 +21,8 @@ import Data.Either (fromRight)
 -- | Version of `revolution` that returns an `Error` on failure.
 --
 -- Revolution can fail, for example, if the `Path2D` crosses the axis of revolution.
-revolutionEither :: Path2D -> Either WaterfallError Solid
-revolutionEither (Path2D (ComplexRawPath theRawPath)) =
+tryRevolution :: Path2D -> Either WaterfallError Solid
+tryRevolution (Path2D (ComplexRawPath theRawPath)) =
     fmap (rotate (unit _x) (pi/2)) . solidFromAcquireWithCatch $ do
         p <- toAcquire theRawPath
         axis <- GP.oy -- revolve around the y axis
@@ -31,7 +31,7 @@ revolutionEither (Path2D (ComplexRawPath theRawPath)) =
         solidBuilder <- MakeSolid.new
         liftIO $ MakeSolid.add solidBuilder =<< unsafeDowncast shell
         MakeShape.shape (upcast solidBuilder)
-revolutionEither _ = Right mempty
+tryRevolution _ = Right mempty
 
 -- | Construct a `Solid` of revolution from a `Path2D`.
 --
@@ -39,4 +39,4 @@ revolutionEither _ = Right mempty
 --
 -- The resulting `Solid` is rotated such that the axis of revolution is the z axis.
 revolution :: Path2D -> Solid
-revolution = fromRight mempty . revolutionEither
+revolution = fromRight mempty . tryRevolution

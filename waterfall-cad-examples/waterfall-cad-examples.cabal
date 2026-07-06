@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.39.1.
+-- This file has been generated from package.yaml by hpack version 0.39.6.
 --
 -- see: https://github.com/sol/hpack
 
@@ -25,6 +25,7 @@ data-files:
     test-data/2d-booleans.svg
     test-data/bounding-boxes.svg
     test-data/csg.svg
+    test-data/fillet.svg
     test-data/gear.svg
     test-data/loft.svg
     test-data/negativeScaledCube-II.svg
