@@ -107,6 +107,8 @@ RUN source ~/.ghc-wasm/env && \
 
 FROM toolchain AS playground
 
+# Build from the repo root so the COPY below picks up the whole source tree:
+#   docker build . -f Dockerfile.playground -t waterpark   (see scripts/build-wasm-docker.sh)
 # copy in opencascade-hs source and build
 COPY . /opencascade-hs
 WORKDIR /opencascade-hs

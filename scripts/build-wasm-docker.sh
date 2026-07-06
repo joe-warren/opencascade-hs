@@ -1,2 +1,2 @@
 #!/bin/sh
-docker build . -t waterpark
+docker build . -f Dockerfile.playground -t waterpark

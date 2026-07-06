@@ -2,7 +2,7 @@
   "name": "waterfall-cad wasm playground",
 
   "build": {
-    "dockerfile": "../Dockerfile",
+    "dockerfile": "../../Dockerfile.playground",
     "target": "toolchain"
   },
 
