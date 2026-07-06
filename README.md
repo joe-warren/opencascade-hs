@@ -20,6 +20,12 @@ It uses the library [svg-tree](https://hackage.haskell.org/package/svg-tree).
 
 It's packaged as a separate library to Waterfall-CAD.
 
+### Waterfall CAD Playground 
+
+The repo also contains a WASM based interactive playground, hosted at [doscienceto.it/waterpark](https://doscienceto.it/waterpark).
+
+This can be built using the Dockerfile in [Dockerfile.playground](./Dockerfile.playground), and developed using the devcontainer in [.devcontainer/playground](./.devcontainer/playground/).
+
 ## Installing Dependencies
 
 OpenCASCADE-hs depends on Open Cascade version `>= 7.8.x`. In order to run with an earlier version of Open Cascade, you'll need to use a version prior to `0.3.0.0`.
