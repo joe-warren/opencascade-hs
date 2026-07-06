@@ -72,10 +72,10 @@ centeredSquare = translate2D (V2 (-0.5) (-0.5)) unitSquare
 
 -- | \(n\) sided Polygon, centered on the origin
 -- 
--- Ill-defined when n <= 2
+-- Empty when n <= 2
 unitPolygon :: Integer -> Shape
 unitPolygon n 
-    | n <= 2 = error "Polygon with <= 2 points is ill defined"
+    | n <= 2 = mempty
     | otherwise = 
         let n' = fromIntegral n
             points = [
