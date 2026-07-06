@@ -6,6 +6,7 @@ module ExceptionTests
 import qualified Waterfall.Offset as Offset
 import qualified Waterfall.Fillet as Fillet
 import qualified Waterfall.Solids as Solids
+import Waterfall.Error (WaterfallError (..))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import OpenCascade.Internal.Exception (OpenCascadeException (..), testThrow)
@@ -17,6 +18,7 @@ import System.IO.Temp (emptySystemTempFile)
 import qualified Waterfall.IO as IO
 import Waterfall.IO (WaterfallIOException(WaterfallIOException), WaterfallIOExceptionCause (FileError))
 import Data.Acquire (with)
+import Data.Either (fromLeft)
 
 
 checkFailure :: Exception b => IO a -> (b -> Maybe String)  -> IO ()
@@ -54,7 +56,9 @@ exceptionTests = testGroup "Exception Tests"
             $ \case 
                 WaterfallIOException FileError _ -> Nothing
                 e -> Just $ "Expected WaterfallIOException\ngot: " <> show e
-    , testCase "Bad Fillet" $ expectFailure (writeTmpStl $ Fillet.roundFillet 2 Solids.centeredCube) (OpenCascadeStandardFailure "BRep_API: command not done" "")
+    , testCase "Bad Fillet" $ assertEqual "Bad Fillet" 
+        (fromLeft (error "expected failure") $ Fillet.roundFilletEither 2 Solids.centeredCube)
+        (WaterfallError $ OpenCascadeStandardFailure "BRep_API: command not done" "")
     , testCase "Throw Std Exception" $ with (RuntimeError.new "Some Exception Text") $ \re -> 
         expectFailure (testThrow (upcast re)) (OpenCascadeStdException "Some Exception Text")
     ]
