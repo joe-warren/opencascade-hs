@@ -54,7 +54,7 @@ import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP.Vec as  GP.Vec
 import qualified OpenCascade.BRepBuilderAPI.Transform as BRepBuilderAPI.Transform
 import Data.Proxy (Proxy (..))
-import Linear (V3 (..), V2 (..), _xy, Epsilon, Metric (quadrance))
+import Linear (V3 (..), V2 (..), _xy, Epsilon)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import Control.Lens ((^.))
 
@@ -84,7 +84,7 @@ edgeToPath es = fromWire $ do
     MakeWire.wire builder
 
 veryClose :: (AnyPath point path) => Proxy path -> point -> point -> Bool
-veryClose proxy a b = nearZero . quadrance $ (pointToV3 proxy a - pointToV3 proxy b)
+veryClose proxy a b = all nearZero (pointToV3 proxy a - pointToV3 proxy b)
 
 -- | A straight line between two points
 line :: forall point path. (AnyPath point path) => point -> point -> path

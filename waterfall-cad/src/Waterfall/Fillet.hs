@@ -145,8 +145,8 @@ indexedConditionalChamfer
     :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid 
     -> Solid
-indexedConditionalChamfer radiusFunction solid = indexedConditionalChamfer radiusFunction solid
-
+indexedConditionalChamfer radiusFunction solid =
+    fromRight mempty $ indexedConditionalChamferEither radiusFunction solid
 
 -- | Version of `conditionalChamfer` that returns an `Either` on failure
 conditionalChamferEither 
@@ -160,7 +160,6 @@ conditionalChamferEither f = indexedConditionalChamferEither (const f)
 -- This can be used to selectively chamfer a `Solid`.
 conditionalChamfer :: ((V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
 conditionalChamfer f = indexedConditionalChamfer (const f)
-
 
 -- | Version of `chamfer` that returns an `Either` on failure
 chamferEither :: Double -> Solid -> Either WaterfallError Solid

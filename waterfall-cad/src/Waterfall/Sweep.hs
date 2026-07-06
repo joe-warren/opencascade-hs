@@ -17,7 +17,7 @@ import OpenCascade.Inheritance (upcast)
 import qualified OpenCascade.TopoDS as TopoDS
 import Control.Monad.IO.Class (liftIO)
 import Foreign.Ptr
-import Linear (V3, normalize, unit, _x, _z, cross, dot, quadrance)
+import Linear (V3, normalize, unit, _x, _z, cross, dot)
 import Data.Acquire (Acquire)
 import Waterfall.Error (WaterfallError)
 import Data.Either (fromRight)
@@ -26,11 +26,11 @@ rotateFace :: V3 Double -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 rotateFace v face = 
     let vn = normalize v
         z = unit _z
-        in if nearZero . quadrance $ (vn - z)
+        in if all nearZero (vn - z)
             then pure face
             else
                 let axis = 
-                        if nearZero . quadrance $ (vn + z) 
+                        if all nearZero (vn + z)
                             then unit _x 
                             else z `cross` vn
                     angle = acos (vn `dot` z)

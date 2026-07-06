@@ -37,7 +37,7 @@ import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
 import Data.Acquire
 import Control.Monad.IO.Class (liftIO)
-import Linear (V3 (..), distance, normalize, Metric (quadrance))
+import Linear (V3 (..), distance, normalize)
 import Foreign.Ptr
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Control.Monad (when)
@@ -235,7 +235,7 @@ splitWires wire = do
                     edge <- liftIO $ WireExplorer.current explorer
                     s' <- normalize <$> edgeTangentStart edge
                     e' <- normalize <$> edgeTangentEnd edge
-                    let startIsTangent = maybe True (nearZero . quadrance . (s' -)) lastDelta
+                    let startIsTangent = maybe True (all nearZero . (s' -)) lastDelta
                     when startIsTangent $ do
                             liftIO $ MakeWire.addEdge builder edge
                             liftIO $ WireExplorer.next explorer

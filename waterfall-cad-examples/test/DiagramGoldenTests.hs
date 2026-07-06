@@ -27,6 +27,7 @@ import Control.Lens
 import Data.Function (on)
 import Data.Monoid (Sum (getSum))
 import System.FilePath (takeBaseName, (</>))
+import qualified FilletExample
 import qualified GearExample
 import qualified RevolutionExample
 import qualified SweepExample
@@ -207,6 +208,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             10
     , smallSolidTest "Bound" "bounding-boxes.svg" BoundingBoxExample.boundingBoxExample
     , solidTest "Loft" "loft.svg" LoftExample.loftExample
+    , solidTest "Fillet" "fillet.svg" FilletExample.filletExample
     , smallSolidTest "2D Booleans" "2d-booleans.svg"  TwoDBooleansExample.twoDBooleansExample
     , solidTest "Platonic Solids" "platonic.svg" PlatonicSolidsExample.platonicSolidsExample
     , solidTest "Take Path Fraction" "takePathFraction.svg" TakePathFractionExample.takePathFractionExample

@@ -12,7 +12,7 @@ import qualified Waterfall
 import qualified Graphics.Svg as Svg
 import qualified Graphics.Svg.CssTypes as Svg.Css
 import Waterfall.Internal.NearZero (nearZero)
-import Linear (_xy, _x, _y, V2 (..), quadrance)
+import Linear (_xy, _x, _y, V2 (..))
 import Control.Lens ((^.), (&), (.~))
 import Foreign.Ptr (Ptr)
 import Control.Monad ((<=<)) 
@@ -112,7 +112,7 @@ edgeToPathCommand :: Maybe (V2 Double) -> Ptr TopoDS.Edge -> (Maybe (V2 Double),
 edgeToPathCommand curPos edge = Internal.Finalizers.unsafeFromAcquire $ do
     startPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 0
     endPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 1
-    let hasntMoved = nearZero . quadrance . (startPos -) <$> curPos
+    let hasntMoved = all nearZero . (startPos -) <$> curPos
     let addMoveCommand = 
             case hasntMoved of 
                 Just True -> id

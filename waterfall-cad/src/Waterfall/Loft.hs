@@ -11,7 +11,7 @@ module Waterfall.Loft
 ( pointedLoftWithPrecision
 , pointedLoft
 , loft
--- * Unsafe Functions
+-- * Functions that return Errors
 , pointedLoftWithPrecisionEither
 , pointedLoftEither
 , loftEither
