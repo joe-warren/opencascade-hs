@@ -45,7 +45,7 @@ import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
 import qualified OpenCascade.GP as GP
 import Control.Lens ((^.), (&), (.~))
-import Linear (V3 (..), V2 (..), unit, _x, _y, _z, _xy, _yz, _zx, (^*), (*^), unangle, zero)
+import Linear (V3 (..), V2 (..), unit, _x, _y, _z, _xy, _yz, _zx, (^*), (*^), unangle, zero, nearZero)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.GP.Dir as GP.Dir
@@ -76,11 +76,13 @@ centeredCube = solidFromAcquire $ do
 
 -- | A cuboid, one vertex on the origin, another on a given point
 box :: V3 Double -> Solid
-box (V3 x y z) = solidFromAcquire $ do
-    a <- GP.origin
-    b <- GP.Pnt.new x y z
-    builder <- MakeBox.fromPnts a b
-    Inheritance.upcast <$> MakeBox.solid builder
+box v@(V3 x y z) 
+    | any nearZero v = mempty
+    | otherwise = solidFromAcquire $ do
+        a <- GP.origin
+        b <- GP.Pnt.new x y z
+        builder <- MakeBox.fromPnts a b
+        Inheritance.upcast <$> MakeBox.solid builder
 
     
 -- | A sphere with radius of 1, centered on the origin
@@ -101,14 +103,15 @@ centeredCylinder = translate (unit _z ^* (-0.5)) $ unitCylinder
 
 -- | A Torus, with the axis of revolution about the Z axis
 -- 
--- Warning, this will generate malformed geometry if asked to generate a Spindle Torus
+-- Warning, this will fail to generate geometry if asked to generate a Spindle Torus
 -- (when the Major Radius is smaller than the Minor Radius)
 torus ::
     Double -- ^ The Major Radius (Distance from center of torus to center of tube)
     -> Double -- ^ The Minor Radius (Distance from center of tube to the surface of the torus)
     -> Solid
-torus major minor = 
-    solidFromAcquire
+torus major minor 
+    | major < minor = mempty  
+    | otherwise = solidFromAcquire
          $ MakeShape.shape 
          . Inheritance.upcast 
          =<< MakeTorus.fromRadii major minor
@@ -124,11 +127,12 @@ unitCone = solidFromAcquire $ Inheritance.upcast <$> MakeCone.fromTwoRadiiAndHei
 -- One of the prism's faces lies on the plane \(z = 0\),
 -- the other on the plane \(z = len\).
 prism :: Double -> TwoD.Shape.Shape -> Solid
-prism len face = solidFromAcquire $ do
-    p <- toAcquire . rawShape $ face
-    v <- GP.Vec.new 0 0 len
-    MakePrism.fromVec p v True True
-    
+prism len face 
+    | nearZero len = mempty
+    | otherwise = solidFromAcquire $ do
+        p <- toAcquire . rawShape $ face
+        v <- GP.Vec.new 0 0 len
+        MakePrism.fromVec p v True True
 
 faceFromVerts :: [V3 Double] -> Acquire (Ptr TopoDS.Face)
 faceFromVerts pnts = do
