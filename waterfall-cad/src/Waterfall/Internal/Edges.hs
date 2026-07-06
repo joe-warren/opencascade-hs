@@ -28,6 +28,7 @@ import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.TopTools.ShapeMapHasher as TopTools.ShapeMapHasher
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import qualified OpenCascade.BRepLib as BRepLib
+import Waterfall.Internal.NearZero (nearZero)
 import OpenCascade.GeomAbs.Shape as GeomAbs.Shape
 import Waterfall.Internal.FromOpenCascade (gpPntToV3, gpVecToV3)
 import qualified OpenCascade.BRepAdaptor.Curve as BRepAdaptor.Curve
@@ -36,7 +37,7 @@ import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
 import Data.Acquire
 import Control.Monad.IO.Class (liftIO)
-import Linear (V3 (..), distance, normalize, nearZero)
+import Linear (V3 (..), distance, normalize, Metric (quadrance))
 import Foreign.Ptr
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Control.Monad (when)
@@ -234,7 +235,7 @@ splitWires wire = do
                     edge <- liftIO $ WireExplorer.current explorer
                     s' <- normalize <$> edgeTangentStart edge
                     e' <- normalize <$> edgeTangentEnd edge
-                    let startIsTangent = maybe True (nearZero . (s' -)) lastDelta
+                    let startIsTangent = maybe True (nearZero . quadrance . (s' -)) lastDelta
                     when startIsTangent $ do
                             liftIO $ MakeWire.addEdge builder edge
                             liftIO $ WireExplorer.next explorer

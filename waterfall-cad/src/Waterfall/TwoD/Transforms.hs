@@ -20,7 +20,8 @@ module Waterfall.TwoD.Transforms
 
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
-import Linear ((*^), normalize, dot, V3 (..), V2 (..), (!*), _xy, _z, unit, M23, nearZero)
+import Waterfall.Internal.NearZero (nearZero)
+import Linear ((*^), normalize, dot, V3 (..), V2 (..), (!*), _xy, _z, unit, M23)
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.GTrsf as GP.GTrsf

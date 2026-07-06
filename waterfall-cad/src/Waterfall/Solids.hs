@@ -27,6 +27,7 @@ import Waterfall.Internal.ToOpenCascade (v3ToVertex)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Waterfall.Internal.Remesh (makeSolidFromShell)
 import Waterfall.Transforms (translate, rotate)
+import Waterfall.Internal.NearZero (nearZero)
 import qualified Waterfall.TwoD.Shape as TwoD.Shape
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
@@ -45,7 +46,7 @@ import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
 import qualified OpenCascade.GP as GP
 import Control.Lens ((^.), (&), (.~))
-import Linear (V3 (..), V2 (..), unit, _x, _y, _z, _xy, _yz, _zx, (^*), (*^), unangle, zero, nearZero)
+import Linear (V3 (..), V2 (..), unit, _x, _y, _z, _xy, _yz, _zx, (^*), (*^), unangle, zero)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.GP.Dir as GP.Dir

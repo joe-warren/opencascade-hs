@@ -33,9 +33,10 @@ module Waterfall.TwoD.Path2D
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..))
 import Waterfall.TwoD.Transforms (rotate2D)
+import Waterfall.Internal.NearZero (nearZero)
 import Linear.V2 (V2(..))
 import Control.Lens ((^.))
-import Linear ((^*), _xy, distance, normalize, unangle, nearZero)
+import Linear ((^*), _xy, distance, normalize, unangle)
 import Waterfall.Path.Common
 
 data Sense = Clockwise | Counterclockwise deriving (Eq, Show)

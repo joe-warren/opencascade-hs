@@ -8,6 +8,7 @@ import Waterfall.Internal.Path (Path (..))
 import Waterfall.Internal.Path.Common (RawPath (..))
 import Waterfall.Internal.Edges (wireTangentStart, wireEndpoints)
 import Waterfall.Internal.Finalizers (toAcquire)
+import Waterfall.Internal.NearZero (nearZero)
 import Waterfall.Transforms (rotate, translate)
 import Waterfall.TwoD.Internal.Shape (Shape (..))
 import qualified OpenCascade.BRepOffsetAPI.MakePipe as MakePipe
@@ -16,10 +17,8 @@ import OpenCascade.Inheritance (upcast)
 import qualified OpenCascade.TopoDS as TopoDS
 import Control.Monad.IO.Class (liftIO)
 import Foreign.Ptr
-import Linear (V3, normalize, unit, _x, _z, nearZero, cross, dot)
+import Linear (V3, normalize, unit, _x, _z, cross, dot, quadrance)
 import Data.Acquire (Acquire)
-import qualified Waterfall.Solids as Solids
-import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import Waterfall.Error (WaterfallError)
 import Data.Either (fromRight)
 
@@ -27,10 +26,13 @@ rotateFace :: V3 Double -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 rotateFace v face = 
     let vn = normalize v
         z = unit _z
-        in if nearZero (vn - z)
+        in if nearZero . quadrance $ (vn - z)
             then pure face
             else
-                let axis = if nearZero (vn + z) then unit _x else z `cross` vn
+                let axis = 
+                        if nearZero . quadrance $ (vn + z) 
+                            then unit _x 
+                            else z `cross` vn
                     angle = acos (vn `dot` z)
                 in acquireSolid . rotate axis angle . solidFromAcquire . pure $ face 
 

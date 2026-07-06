@@ -20,7 +20,7 @@ import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
 import Control.Monad (when)
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
-import Linear.Epsilon (nearZero)
+import Waterfall.Internal.NearZero (nearZero)
 import Waterfall.Error (WaterfallError)
 import Data.Either (fromRight)
 

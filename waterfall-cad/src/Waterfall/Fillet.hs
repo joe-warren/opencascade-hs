@@ -39,7 +39,7 @@ import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Linear.V3 (V3 (..))
-import Linear.Epsilon 
+import Linear.Epsilon (Epsilon, nearZero)
 import Control.Lens (Lens', (^.))
 import Data.Either (fromRight)
 
