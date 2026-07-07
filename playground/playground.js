@@ -542,6 +542,7 @@ const EXAMPLES = [
   { label: "Prism", mod: "PrismExample", files: [] },
   { label: "Revolution", mod: "RevolutionExample", files: [] },
   { label: "Sweep", mod: "SweepExample", files: [] },
+  { label: "Loft", mod: "LoftExample", files: [] },
   { label: "Take Path Fraction", mod: "TakePathFractionExample", files: [] },
   { label: "2D Booleans", mod: "TwoDBooleansExample", files: [] },
   { label: "Text", mod: "TextExample", files: [FONT_VARELA] },
