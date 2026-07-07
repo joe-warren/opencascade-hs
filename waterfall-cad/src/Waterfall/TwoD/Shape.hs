@@ -18,7 +18,7 @@ module Waterfall.TwoD.Shape
 import Waterfall.TwoD.Internal.Shape (Shape (..), union2D, difference2D, intersection2D, unions2D, intersections2D, emptyShape)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.TwoD.Transforms (translate2D, rotate2D)
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
+import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire, unsafeFromAcquireT)
 import Waterfall.Internal.Edges (allWires)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import OpenCascade.Inheritance (upcast)
@@ -45,7 +45,7 @@ makeShape _ = Shape . unsafeFromAcquire $
 -- Although this can only hold when the shape has one boundary path, 
 -- and is not guaranteed
 shapePaths :: Shape -> [Path2D] 
-shapePaths (Shape r) = fmap (Path2D . ComplexRawPath) . unsafeFromAcquire $ do
+shapePaths (Shape r) = fmap (Path2D . ComplexRawPath) . unsafeFromAcquireT $ do
     s <- toAcquire r 
     allWires s 
 

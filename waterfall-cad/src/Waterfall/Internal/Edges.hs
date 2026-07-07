@@ -74,22 +74,6 @@ allWireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
                 else pure [points]
     runToEnd
 
-allSubShapes :: ShapeEnum.ShapeEnum -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
-allSubShapes t s = do 
-    explorer <- Explorer.new s t
-    let go visited = do
-            isMore <- liftIO $ Explorer.more explorer
-            if isMore 
-                then do
-                    v <- liftIO $ Explorer.value explorer
-                    hash <- liftIO $ TopTools.ShapeMapHasher.hash v
-                    let add = if hash `elem` visited then id else (v:) 
-                    liftIO $ Explorer.next explorer
-                    add <$> go visited
-                else return []
-    go []
-
-    
 allSubShapesWithCopy :: ShapeEnum.ShapeEnum -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
 allSubShapesWithCopy t s = do 
     explorer <- Explorer.new s t
@@ -114,7 +98,7 @@ allEdges :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Edge]
 allEdges s = traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Edge s 
 
 allWires :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Wire]
-allWires s = traverse (liftIO . unsafeDowncast) =<< allSubShapes ShapeEnum.Wire s 
+allWires s = traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Wire s
     
 wireEndpoints :: Ptr TopoDS.Wire -> IO (V3 Double, V3 Double)
 wireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do

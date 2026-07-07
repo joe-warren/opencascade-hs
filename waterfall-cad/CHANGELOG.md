@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- Fix potential segfault in `shapePaths`
+
 ## 0.6.3.0
 
 - Fixed an issue in `Waterfall.Transforms` where negative coefficients to `scale` would produce a broken `Solid`
