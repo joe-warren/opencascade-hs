@@ -14,6 +14,16 @@
 // crash inside scan_eh_tab. Modules that export aligned_alloc (i.e. libc.so)
 // are still initialised eagerly, because dyld itself calls aligned_alloc
 // while loading subsequent modules.
+//
+// Patch 3: enlarge the C shadow stack from one page (64KB) to STACK_PAGES
+// pages. dyld lays linear memory out as [C stack | libc data | heap] and
+// hardcodes a single page of stack; the stack-size passed when linking a .so
+// is ignored under dynamic linking. 64KB is far too small for OCCT: e.g.
+// filleting a B-spline surface (any non-uniformly scaled solid) nests
+// BSplSLib evaluations whose stack frames are ~22KB each, overflowing the
+// stack and trapping with "memory access out of bounds" / "index out of
+// bounds". 128 pages = 8MB, matching the default main-thread stack on
+// native platforms, where the same code runs fine.
 const fs = require('fs');
 const src = process.argv[2];
 const dst = process.argv[3] || src;
@@ -94,6 +104,55 @@ if (c.includes('deferredInits')) {
   console.log('Patched (defer):', c.includes('deferredInits'));
 } else {
   console.error('ERROR: defer patch anchors not found');
+  process.exit(1);
+}
+
+// --- Patch 3: enlarge the C shadow stack ---
+const STACK_PAGES = 128; // 8MB
+
+const memoryOld = `#memory = new WebAssembly.Memory({ initial: 1 });`;
+const memoryNew = `#memory = new WebAssembly.Memory({ initial: ${STACK_PAGES} });`;
+
+const spOld = `  #sp = new WebAssembly.Global(
+    {
+      value: "i32",
+      mutable: true,
+    },
+    DyLD.#pageSize
+  );`;
+const spNew = `  #sp = new WebAssembly.Global(
+    {
+      value: "i32",
+      mutable: true,
+    },
+    // patched: STACK_PAGES pages of C stack, not one
+    DyLD.#pageSize * ${STACK_PAGES}
+  );`;
+
+const memBaseOld = `        memory_base = DyLD.#pageSize;`;
+const memBaseNew = `        memory_base = DyLD.#pageSize * ${STACK_PAGES};`;
+
+const heapBaseOld = `DyLD.#pageSize * (1 + data_pages)`;
+const heapBaseNew = `DyLD.#pageSize * (${STACK_PAGES} + data_pages)`;
+
+const heapEndOld = `DyLD.#pageSize * (1 + data_pages + 1)`;
+const heapEndNew = `DyLD.#pageSize * (${STACK_PAGES} + data_pages + 1)`;
+
+if (c.includes(memoryNew)) {
+  console.log('Already patched (stack)');
+} else if (
+  c.includes(memoryOld) && c.includes(spOld) &&
+  c.includes(memBaseOld) && c.includes(heapBaseOld) && c.includes(heapEndOld)
+) {
+  c = c.replace(memoryOld, memoryNew);
+  c = c.replace(spOld, spNew);
+  c = c.replace(memBaseOld, memBaseNew);
+  // heapEnd first: heapBase is a prefix of heapEnd's anchor
+  c = c.replace(heapEndOld, heapEndNew);
+  c = c.replace(heapBaseOld, heapBaseNew);
+  console.log('Patched (stack):', c.includes(memoryNew));
+} else {
+  console.error('ERROR: stack patch anchors not found');
   process.exit(1);
 }
 
