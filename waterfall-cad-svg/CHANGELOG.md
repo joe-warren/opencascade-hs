@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.6.3.1
+
 ## 0.6.3.0
 
 - the SVG CSS now declares the Path fill opacity as 0

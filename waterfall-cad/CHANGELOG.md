@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.6.3.1
+
 - Fix potential segfault in `shapePaths`
 
 ## 0.6.3.0
