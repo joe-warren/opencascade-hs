@@ -1,10 +1,10 @@
-This repository contains two libraries, "OpenCascade-hs" and "Waterfall CAD".
+This repository contains multiple libraries, the main two are "OpenCascade-hs" and "Waterfall CAD".
 
 ## ![OpenCASCADE-hs](images/logo/opencascade-hs-logo-name.svg)
 
 A third party Haskell wrapper to [Open CASCADE](https://dev.opencascade.org) ([wiki](https://en.wikipedia.org/wiki/Open_Cascade_Technology)), which is the underlying framework behind [FreeCAD](https://www.freecad.org/).
 
-Wrapping the Open Cascade API has been done on an incremental basis, and only a partially subset has been extracted, this largely consists of the modeling functionality (BRep/Boolean Ops/Curves/etc), and does not include the visualization components.
+Wrapping the Open Cascade API has been done on an incremental basis, and only a partial subset has been extracted, this largely consists of the modeling functionality (BRep/Boolean Ops/Curves/etc), and does not include the visualization components.
 
 ## ![Waterfall CAD](images/logo/waterfall-cad-logo-name.svg)
 
@@ -23,6 +23,10 @@ It's packaged as a separate library to Waterfall-CAD.
 ### Waterfall CAD Playground 
 
 The repo also contains a WASM based interactive playground, hosted at [doscienceto.it/waterpark](https://doscienceto.it/waterpark).
+
+The playground lets you try Waterfall-CAD in your browser, without installing anything locally.
+
+It can also be used to view Waterfall-CAD models in a format that allows people to easily make small changes.
 
 This can be built using the Dockerfile in [Dockerfile.playground](./Dockerfile.playground), and developed using the devcontainer in [.devcontainer/playground](./.devcontainer/playground/).
 
@@ -66,6 +70,13 @@ export LIBRARY_PATH=$LIBRARY_PATH:`echo $HOMEBREW_PREFIX/Cellar/opencascade/7.*/
 export DYDLD_FALLBACK_LIBRARY_PATH=$DYDLD_FALLBACK_LIBRARY_PATH:`echo $HOMEBREW_PREFIX/Cellar/opencascade/7.*/lib`:/opt/homebrew/lib
 ```
 
+## Quick Start
+
+Waterfall-CAD is first and foremost a Haskell library, so you can use it in a Haskell project like any other dependency.
+For small standalone models, [cabal scripts](https://cabal.readthedocs.io/en/stable/getting-started.html#run-a-single-file-haskell-script) or [stack scripts](https://docs.haskellstack.org/en/stable/topics/scripts/) work well, because they let you keep an entire design in a single file.
+
+The workflow I use when designing a model is to have the code write out a solid using `writeSTL`, and to keep that file open in a mesh viewer (I use [MeshLab](https://www.meshlab.net/)).
+
 ## Licensing
 
 Because OpenCASCADE is licensed under the LGPL version 2.1, I'm also using that library for this project.
@@ -96,3 +107,8 @@ If you've found the project useful, or interesting, or if you've built anything 
 [![](waterfall-cad-examples/test-data/platonic.svg)](waterfall-cad-examples/src/PlatonicSolidsExample.hs)
 
 [![](waterfall-cad-examples/test-data/takePathFraction.svg)](waterfall-cad-examples/src/TakePathFractionExample.hs)
+
+## External Projects
+
+* There are some examples of small Waterfall-CAD projects on [my website](https://doscienceto.it/blog/waterfall/)
+* [A Waterfall-CAD parametric chess set](https://doscienceto.it/blog/posts/2024-09-15-chess-set.html)
