@@ -5,6 +5,7 @@ module Waterfall.Internal.Solid
 , acquireSolid
 , solidFromAcquire
 , solidFromAcquireWithCatch
+, solidFromAcquireTWithCatch
 , union3D
 , difference3D
 , intersection3D
@@ -29,7 +30,7 @@ import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
 import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import OpenCascade.Inheritance (upcast)
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire, unsafeFromAcquireWithCatch)
+import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire, unsafeFromAcquireWithCatch, unsafeFromAcquireTWithCatch)
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
 import Data.Foldable (traverse_)
 import Waterfall.Error (WaterfallError)
@@ -54,6 +55,9 @@ solidFromAcquire = Solid . unsafeFromAcquire
 
 solidFromAcquireWithCatch :: Acquire (Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
 solidFromAcquireWithCatch = fmap Solid . unsafeFromAcquireWithCatch
+
+solidFromAcquireTWithCatch :: Traversable t => Acquire (t (Ptr TopoDS.Shape.Shape)) -> Either WaterfallError (t Solid)
+solidFromAcquireTWithCatch = fmap (fmap Solid) . unsafeFromAcquireTWithCatch
 
 -- | print debug information about a Solid when it's evaluated 
 -- exposes the properties of the underlying OpenCacade.TopoDS.Shape

@@ -6,7 +6,7 @@ module Waterfall.Offset
 , tryOffsetWithTolerance
 ) where 
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireWithCatch)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireWithCatch, solidFromAcquireTWithCatch)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
@@ -15,6 +15,7 @@ import qualified OpenCascade.BRepOffset.Mode as Mode
 import qualified OpenCascade.GeomAbs.JoinType as GeomAbs.JoinType
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import qualified OpenCascade.TopoDS.Types as TopoDS
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
 import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
 import Control.Monad (when)
@@ -38,6 +39,30 @@ combineShellsToSolid s = do
     go
     upcast <$> MakeSolid.solid makeSolid
 
+getCompoundAsSolids :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
+getCompoundAsSolids s = do
+    explorer <-  TopExp.Explorer.new s TopAbs.ShapeEnum.Solid
+    let go = do
+            isMore <- liftIO $ TopExp.Explorer.more explorer
+            if not isMore
+                then pure []
+                else  do
+                    solid <- TopoDS.Shape.copy =<< liftIO (TopExp.Explorer.value explorer)
+                    liftIO $ TopExp.Explorer.next explorer
+                    (solid :) <$> go
+    go
+
+offsetOneWithTolerance :: 
+    Double       
+    -> Double   
+    -> Ptr TopoDS.Shape
+    -> Acquire (Ptr TopoDS.Shape)
+offsetOneWithTolerance tolerance value s = do
+    builder <- MakeOffsetShape.new
+    liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False 
+    shell <- MakeShape.shape (upcast builder)
+    combineShellsToSolid shell
+
 -- | Version of `offsetWithTolerance` that returns an error on failure
 tryOffsetWithTolerance :: 
     Double       
@@ -46,12 +71,12 @@ tryOffsetWithTolerance ::
     -> Either WaterfallError Solid
 tryOffsetWithTolerance tolerance value solid
     | nearZero value = Right solid
-    | otherwise = solidFromAcquireWithCatch $ do
-    builder <- MakeOffsetShape.new
-    s <- acquireSolid solid 
-    liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False 
-    shell <- MakeShape.shape (upcast builder)
-    combineShellsToSolid shell
+    | otherwise = 
+        fmap mconcat 
+        . solidFromAcquireTWithCatch 
+        $ traverse (offsetOneWithTolerance tolerance value) 
+        =<< getCompoundAsSolids 
+        =<< acquireSolid solid
 
 offsetWithTolerance :: 
     Double       -- ^ Tolerance, this can be relatively small
