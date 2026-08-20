@@ -33,6 +33,7 @@ data-files:
     test-data/negativeScaledCube.svg
     test-data/negativeScaledCuboid.svg
     test-data/offset.svg
+    test-data/offsetOfCompound.svg
     test-data/platonic.svg
     test-data/revolution.svg
     test-data/sweep.svg

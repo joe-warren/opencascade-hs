@@ -14,6 +14,7 @@ import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
 import Waterfall.Solids (Solid)
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.Transforms as Transforms
+import qualified Waterfall.Offset as Offset
 import Linear
 import qualified CsgExample
 import Control.Monad.Except (runExceptT, liftEither)
@@ -220,4 +221,6 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         (Transforms.scale (V3 (negate 10) (negate 10) 10) Solids.unitCube)
     , solidTest "Negative Scaled Cuboid" "negativeScaledCuboid.svg" 
         (Transforms.scale (V3 (negate 1) 2 3) Solids.unitCube)
+    , solidTest "Offset of Compound" "offsetOfCompound.svg" 
+        (Offset.offset 1 $ (id <> Transforms.translate (unit _x ^* 3)) Solids.unitCube)
     ]
