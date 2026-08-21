@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.6.3.2
+
 - Fix an issue when the `offset` functions were applied to `Solid`s with multiple separate parts ("Compounds" in OpenCascade terms)
 
 ## 0.6.3.1
