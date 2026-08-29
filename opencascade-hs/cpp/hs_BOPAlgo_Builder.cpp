@@ -1,4 +1,6 @@
 #include <BOPAlgo_Builder.hxx>
+#include <TopTools_ListOfShape.hxx>
+#include <TopoDS_Shape.hxx>
 #include "hs_Exception.h"
 #include "hs_BOPAlgo_Builder.h"
 
@@ -53,3 +55,43 @@ void hs_BOPAlgo_Builder_Perform(
     });
 }
 
+
+TopTools_ListOfShape * hs_BOPAlgo_Builder_Modified(
+        BOPAlgo_Builder * builder, TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [builder, shape]{
+        return new TopTools_ListOfShape(builder->Modified(*shape));
+    });
+}
+
+TopTools_ListOfShape * hs_BOPAlgo_Builder_Generated(
+        BOPAlgo_Builder * builder, TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [builder, shape]{
+        return new TopTools_ListOfShape(builder->Generated(*shape));
+    });
+}
+
+bool hs_BOPAlgo_Builder_IsDeleted(
+        BOPAlgo_Builder * builder, TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleExWithDefault(
+        exType,
+        exPtr,
+        [builder, shape]{
+        return builder->IsDeleted(*shape) == Standard_True;
+    },
+    false);
+}

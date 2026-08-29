@@ -94,6 +94,7 @@ extra-source-files:
     cpp/hs_NCollection_Array1.h
     cpp/hs_Poly_Triangle.h
     cpp/hs_Poly_Triangulation.h
+    cpp/hs_Quantity_Color.h
     cpp/hs_RWGltf_CafReader.h
     cpp/hs_RWGltf_CafWriter.h
     cpp/hs_RWMesh_CafReader.h
@@ -103,6 +104,7 @@ extra-source-files:
     cpp/hs_ShapeExtend_WireData.h
     cpp/hs_ShapeFix_Solid.h
     cpp/hs_Standard_Failure.h
+    cpp/hs_STEPCAFControl_Writer.h
     cpp/hs_STEPControl_Reader.h
     cpp/hs_STEPControl_Writer.h
     cpp/hs_StlAPI_Reader.h
@@ -110,6 +112,7 @@ extra-source-files:
     cpp/hs_TColStd_IndexedDataMapOfStringString.h
     cpp/hs_TDF_Label.h
     cpp/hs_TDocStd_Document.h
+    cpp/hs_TopExp.h
     cpp/hs_TopExp_Explorer.h
     cpp/hs_TopLoc_Location.h
     cpp/hs_TopoDS_Builder.h
@@ -122,8 +125,11 @@ extra-source-files:
     cpp/hs_TopoDS_Solid.h
     cpp/hs_TopoDS_Vertex.h
     cpp/hs_TopoDS_Wire.h
+    cpp/hs_TopTools_IndexedDataMapOfShapeListOfShape.h
+    cpp/hs_TopTools_ListOfShape.h
     cpp/hs_TopTools_ShapeMapHasher.h
     cpp/hs_types.h
+    cpp/hs_XCAFDoc_ColorTool.h
     cpp/hs_XCAFDoc_DocumentTool.h
     cpp/hs_XCAFDoc_ShapeTool.h
     cpp/hs_XSControl_Reader.h
@@ -274,6 +280,10 @@ library
       OpenCascade.Poly.Triangle
       OpenCascade.Poly.Triangulation
       OpenCascade.Poly.Types
+      OpenCascade.Quantity.Color
+      OpenCascade.Quantity.Internal.Destructors
+      OpenCascade.Quantity.TypeOfColor
+      OpenCascade.Quantity.Types
       OpenCascade.RWGltf.CafReader
       OpenCascade.RWGltf.CafWriter
       OpenCascade.RWGltf.Internal.Destructors
@@ -301,6 +311,9 @@ library
       OpenCascade.Std.Internal.Destructors
       OpenCascade.Std.RuntimeError
       OpenCascade.Std.Types
+      OpenCascade.STEPCAFControl.Internal.Destructors
+      OpenCascade.STEPCAFControl.Types
+      OpenCascade.STEPCAFControl.Writer
       OpenCascade.STEPControl
       OpenCascade.STEPControl.Internal.Destructors
       OpenCascade.STEPControl.Reader
@@ -316,6 +329,7 @@ library
       OpenCascade.TColStd.Internal.Destructors
       OpenCascade.TColStd.Types
       OpenCascade.TDF.Internal.Destructors
+      OpenCascade.TDF.Label
       OpenCascade.TDF.Types
       OpenCascade.TDocStd.Document
       OpenCascade.TDocStd.Internal.Destructors
@@ -345,8 +359,13 @@ library
       OpenCascade.TopoDS.Vertex
       OpenCascade.TopoDS.Wire
       OpenCascade.TopTools
+      OpenCascade.TopTools.IndexedDataMapOfShapeListOfShape
+      OpenCascade.TopTools.Internal.Destructors
+      OpenCascade.TopTools.ListOfShape
       OpenCascade.TopTools.ShapeMapHasher
       OpenCascade.TopTools.Types
+      OpenCascade.XCAFDoc.ColorTool
+      OpenCascade.XCAFDoc.ColorType
       OpenCascade.XCAFDoc.DocumentTool
       OpenCascade.XCAFDoc.Internal.Destructors
       OpenCascade.XCAFDoc.ShapeTool
@@ -450,6 +469,7 @@ library
         cpp/hs_NCollection_Array1.cpp
         cpp/hs_Poly_Triangle.cpp
         cpp/hs_Poly_Triangulation.cpp
+        cpp/hs_Quantity_Color.cpp
         cpp/hs_RWGltf_CafReader.cpp
         cpp/hs_RWGltf_CafWriter.cpp
         cpp/hs_RWMesh_CafReader.cpp
@@ -459,6 +479,7 @@ library
         cpp/hs_ShapeExtend_WireData.cpp
         cpp/hs_ShapeFix_Solid.cpp
         cpp/hs_Standard_Failure.cpp
+        cpp/hs_STEPCAFControl_Writer.cpp
         cpp/hs_STEPControl_Reader.cpp
         cpp/hs_STEPControl_Writer.cpp
         cpp/hs_StlAPI_Reader.cpp
@@ -466,6 +487,7 @@ library
         cpp/hs_TColStd_IndexedDataMapOfStringString.cpp
         cpp/hs_TDF_Label.cpp
         cpp/hs_TDocStd_Document.cpp
+        cpp/hs_TopExp.cpp
         cpp/hs_TopExp_Explorer.cpp
         cpp/hs_TopLoc_Location.cpp
         cpp/hs_TopoDS_Builder.cpp
@@ -478,7 +500,10 @@ library
         cpp/hs_TopoDS_Solid.cpp
         cpp/hs_TopoDS_Vertex.cpp
         cpp/hs_TopoDS_Wire.cpp
+        cpp/hs_TopTools_IndexedDataMapOfShapeListOfShape.cpp
+        cpp/hs_TopTools_ListOfShape.cpp
         cpp/hs_TopTools_ShapeMapHasher.cpp
+        cpp/hs_XCAFDoc_ColorTool.cpp
         cpp/hs_XCAFDoc_DocumentTool.cpp
         cpp/hs_XCAFDoc_ShapeTool.cpp
         cpp/hs_XSControl_Reader.cpp
