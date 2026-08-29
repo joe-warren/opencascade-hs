@@ -14,9 +14,30 @@ TopoDS_Shape * hs_BRepBuilderAPI_MakeShape_shape(
 );
 
 void hs_BRepBuilderAPI_MakeShape_build(
-        BRepBuilderAPI_MakeShape* builder, 
+        BRepBuilderAPI_MakeShape* builder,
         HSExceptionType* exType,
         void** exPtr
+);
+
+TopTools_ListOfShape * hs_BRepBuilderAPI_MakeShape_modified(
+    BRepBuilderAPI_MakeShape * builder,
+    TopoDS_Shape * shape,
+    HSExceptionType* exType,
+    void** exPtr
+);
+
+TopTools_ListOfShape * hs_BRepBuilderAPI_MakeShape_generated(
+    BRepBuilderAPI_MakeShape * builder,
+    TopoDS_Shape * shape,
+    HSExceptionType* exType,
+    void** exPtr
+);
+
+bool hs_BRepBuilderAPI_MakeShape_isDeleted(
+    BRepBuilderAPI_MakeShape * builder,
+    TopoDS_Shape * shape,
+    HSExceptionType* exType,
+    void** exPtr
 );
 
 #ifdef __cplusplus

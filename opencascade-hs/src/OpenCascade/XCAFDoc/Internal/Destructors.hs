@@ -1,10 +1,13 @@
 {-# LANGUAGE CApiFFI #-}
-module OpenCascade.XCAFDoc.Internal.Destructors 
-( deleteShapeToolHandle 
+module OpenCascade.XCAFDoc.Internal.Destructors
+( deleteShapeToolHandle
+, deleteColorToolHandle
 ) where
 
 import OpenCascade.XCAFDoc.Types
 import OpenCascade.Handle
-import Foreign.Ptr 
+import Foreign.Ptr
 
 foreign import capi unsafe "hs_XCAFDoc_ShapeTool.h hs_delete_XCAFDoc_ShapeTool" deleteShapeToolHandle :: Ptr (Handle ShapeTool) -> IO ()
+
+foreign import capi unsafe "hs_XCAFDoc_ColorTool.h hs_delete_XCAFDoc_ColorTool" deleteColorToolHandle :: Ptr (Handle ColorTool) -> IO ()
