@@ -2,10 +2,11 @@
 module OpenCascade.XCAFDoc.DocumentTool
 ( shapeTool
 , colorTool
+, visMaterialTool
 ) where
 
-import OpenCascade.XCAFDoc.Types (ShapeTool, ColorTool)
-import OpenCascade.XCAFDoc.Internal.Destructors (deleteShapeToolHandle, deleteColorToolHandle)
+import OpenCascade.XCAFDoc.Types (ShapeTool, ColorTool, VisMaterialTool)
+import OpenCascade.XCAFDoc.Internal.Destructors (deleteShapeToolHandle, deleteColorToolHandle, deleteVisMaterialToolHandle)
 import OpenCascade.TDF.Types (Label)
 import OpenCascade.Handle (Handle)
 import OpenCascade.Internal.Exception (wrapException)
@@ -30,3 +31,12 @@ foreign import capi unsafe "hs_XCAFDoc_DocumentTool.h hs_XCAFDoc_DocumentTool_co
 
 colorTool :: Ptr Label -> Acquire (Ptr (Handle ColorTool))
 colorTool label = mkAcquire (wrapException $ rawColorTool label) deleteColorToolHandle
+
+foreign import capi unsafe "hs_XCAFDoc_DocumentTool.h hs_XCAFDoc_DocumentTool_visMaterialTool" rawVisMaterialTool
+    :: Ptr Label
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr (Handle VisMaterialTool))
+
+visMaterialTool :: Ptr Label -> Acquire (Ptr (Handle VisMaterialTool))
+visMaterialTool label = mkAcquire (wrapException $ rawVisMaterialTool label) deleteVisMaterialToolHandle

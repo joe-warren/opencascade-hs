@@ -132,6 +132,9 @@ extra-source-files:
     cpp/hs_XCAFDoc_ColorTool.h
     cpp/hs_XCAFDoc_DocumentTool.h
     cpp/hs_XCAFDoc_ShapeTool.h
+    cpp/hs_XCAFDoc_VisMaterial.h
+    cpp/hs_XCAFDoc_VisMaterialPBR.h
+    cpp/hs_XCAFDoc_VisMaterialTool.h
     cpp/hs_XSControl_Reader.h
 
 source-repository head
@@ -254,6 +257,7 @@ library
       OpenCascade.GProp.GProps
       OpenCascade.GProp.Internal.Destructors
       OpenCascade.GProp.Types
+      OpenCascade.Graphic3D.AlphaMode
       OpenCascade.Graphic3D.HorizontalTextAlignment
       OpenCascade.Graphic3D.VerticalTextAlignment
       OpenCascade.Handle
@@ -370,6 +374,9 @@ library
       OpenCascade.XCAFDoc.Internal.Destructors
       OpenCascade.XCAFDoc.ShapeTool
       OpenCascade.XCAFDoc.Types
+      OpenCascade.XCAFDoc.VisMaterial
+      OpenCascade.XCAFDoc.VisMaterialPBR
+      OpenCascade.XCAFDoc.VisMaterialTool
       OpenCascade.XSControl.Reader
       OpenCascade.XSControl.Types
   other-modules:
@@ -506,6 +513,9 @@ library
         cpp/hs_XCAFDoc_ColorTool.cpp
         cpp/hs_XCAFDoc_DocumentTool.cpp
         cpp/hs_XCAFDoc_ShapeTool.cpp
+        cpp/hs_XCAFDoc_VisMaterial.cpp
+        cpp/hs_XCAFDoc_VisMaterialPBR.cpp
+        cpp/hs_XCAFDoc_VisMaterialTool.cpp
         cpp/hs_XSControl_Reader.cpp
     extra-libraries:
         stdc++
