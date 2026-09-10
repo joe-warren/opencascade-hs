@@ -92,6 +92,7 @@ extra-source-files:
     cpp/hs_HLRBRep_HLRToShape.h
     cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
+    cpp/hs_NCollection_IndexedDataMap.h
     cpp/hs_Poly_Triangle.h
     cpp/hs_Poly_Triangulation.h
     cpp/hs_RWGltf_CafReader.h
@@ -107,7 +108,6 @@ extra-source-files:
     cpp/hs_STEPControl_Writer.h
     cpp/hs_StlAPI_Reader.h
     cpp/hs_StlAPI_Writer.h
-    cpp/hs_TColStd_IndexedDataMapOfStringString.h
     cpp/hs_TDF_Label.h
     cpp/hs_TDocStd_Document.h
     cpp/hs_TopExp_Explorer.h
@@ -268,6 +268,7 @@ library
       OpenCascade.Message.Types
       OpenCascade.NCollection
       OpenCascade.NCollection.Array1
+      OpenCascade.NCollection.IndexedDataMap
       OpenCascade.NCollection.Internal.Destructors
       OpenCascade.NCollection.Types
       OpenCascade.Poly.Internal.Destructors
@@ -312,9 +313,8 @@ library
       OpenCascade.StlAPI.Reader
       OpenCascade.StlAPI.Types
       OpenCascade.StlAPI.Writer
-      OpenCascade.TColStd.IndexedDataMapOfStringString
-      OpenCascade.TColStd.Internal.Destructors
-      OpenCascade.TColStd.Types
+      OpenCascade.TCollection
+      OpenCascade.TCollection.Types
       OpenCascade.TDF.Internal.Destructors
       OpenCascade.TDF.Types
       OpenCascade.TDocStd.Document
@@ -344,9 +344,7 @@ library
       OpenCascade.TopoDS.Types
       OpenCascade.TopoDS.Vertex
       OpenCascade.TopoDS.Wire
-      OpenCascade.TopTools
       OpenCascade.TopTools.ShapeMapHasher
-      OpenCascade.TopTools.Types
       OpenCascade.XCAFDoc.DocumentTool
       OpenCascade.XCAFDoc.Internal.Destructors
       OpenCascade.XCAFDoc.ShapeTool
@@ -448,6 +446,7 @@ library
         cpp/hs_HLRBRep_HLRToShape.cpp
         cpp/hs_Message_ProgressRange.cpp
         cpp/hs_NCollection_Array1.cpp
+        cpp/hs_NCollection_IndexedDataMap.cpp
         cpp/hs_Poly_Triangle.cpp
         cpp/hs_Poly_Triangulation.cpp
         cpp/hs_RWGltf_CafReader.cpp
@@ -463,7 +462,6 @@ library
         cpp/hs_STEPControl_Writer.cpp
         cpp/hs_StlAPI_Reader.cpp
         cpp/hs_StlAPI_Writer.cpp
-        cpp/hs_TColStd_IndexedDataMapOfStringString.cpp
         cpp/hs_TDF_Label.cpp
         cpp/hs_TDocStd_Document.cpp
         cpp/hs_TopExp_Explorer.cpp

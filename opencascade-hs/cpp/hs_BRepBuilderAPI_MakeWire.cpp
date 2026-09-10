@@ -1,5 +1,6 @@
 #include <BRepBuilderAPI_MakeWire.hxx>
-#include <TopTools_ListOfShape.hxx>
+#include <NCollection_List.hxx>
+#include <TopoDS_Shape.hxx>
 #include <TopoDS_Wire.hxx>
 #include "hs_Exception.h"
 #include "hs_BRepBuilderAPI_MakeWire.h"
@@ -39,7 +40,7 @@ void hs_BRepBuilderAPI_MakeWire_AddWire(
 }
 
 void hs_BRepBuilderAPI_MakeWire_AddListOfShape(
-        BRepBuilderAPI_MakeWire* builder, TopTools_ListOfShape *list,
+        BRepBuilderAPI_MakeWire* builder, LIST(TopoDS_Shape) *list,
         HSExceptionType* exType,
         void** exPtr
 ){

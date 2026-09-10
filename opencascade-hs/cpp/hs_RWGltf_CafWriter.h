@@ -12,7 +12,7 @@ RWGltf_CafWriter * hs_new_RWGltf_CafWriter(char * theFile, bool isBinary);
 void hs_delete_RWGltf_CafWriter(RWGltf_CafWriter * theWriter);
 
 void hs_RWGltf_CafWriter_Perform(
-    RWGltf_CafWriter * theWriter, Handle(TDocStd_Document) * theDocument, TColStd_IndexedDataMapOfStringString * theFileInfo, Message_ProgressRange * theProgress,
+    RWGltf_CafWriter * theWriter, Handle(TDocStd_Document) * theDocument, INDEXED_DATA_MAP(TCollection_AsciiString, TCollection_AsciiString) * theFileInfo, Message_ProgressRange * theProgress,
     HSExceptionType* exType, void ** exPtr
 );
 

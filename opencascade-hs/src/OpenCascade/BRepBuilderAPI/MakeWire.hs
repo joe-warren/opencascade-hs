@@ -18,7 +18,7 @@ import OpenCascade.Inheritance
 import OpenCascade.Internal.Bool
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Internal.Destructors as TopoDS.Destructors
-import qualified OpenCascade.TopTools as TopTools
+import qualified OpenCascade.NCollection.Types as NCollection
 import OpenCascade.BRepBuilderAPI.WireError (WireError)
 import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C
@@ -62,12 +62,12 @@ addWire builder theWire = wrapException $ rawAddWire builder theWire
 
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_BRepBuilderAPI_MakeWire_AddListOfShape" rawAddListOfShape
     :: Ptr MakeWire
-    -> Ptr TopTools.ListOfShape
+    -> Ptr (NCollection.List TopoDS.Shape)
     -> Ptr CInt
     -> Ptr (Ptr ())
     -> IO ()
 
-addListOfShape :: Ptr MakeWire -> Ptr TopTools.ListOfShape -> IO ()
+addListOfShape :: Ptr MakeWire -> Ptr (NCollection.List TopoDS.Shape) -> IO ()
 addListOfShape builder list = wrapException $ rawAddListOfShape builder list
 
 -- wire

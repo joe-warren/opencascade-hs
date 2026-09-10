@@ -14,7 +14,8 @@ import Data.Acquire (Acquire, mkAcquire)
 import OpenCascade.Internal.Exception (wrapException)
 import OpenCascade.Handle (Handle)
 import qualified OpenCascade.TDocStd.Types as TDocStd
-import qualified OpenCascade.TColStd.Types as TColStd
+import qualified OpenCascade.NCollection.Types as NCollection
+import qualified OpenCascade.TCollection.Types as TCollection
 import qualified OpenCascade.Message.Types as Message
 
 foreign import capi unsafe "hs_RWObj_CafWriter.h hs_new_RWObj_CafWriter" rawNew :: CString -> IO (Ptr CafWriter)
@@ -25,11 +26,11 @@ new filepath = mkAcquire (withCString filepath rawNew) deleteCafWriter
 foreign import capi unsafe "hs_RWObj_CafWriter.h hs_RWObj_CafWriter_Perform" rawPerform
     :: Ptr CafWriter
     -> Ptr (Handle TDocStd.Document)
-    -> Ptr (TColStd.IndexedDataMapOfStringString)
+    -> Ptr (NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString)
     -> Ptr (Message.ProgressRange)
     -> Ptr CInt
     -> Ptr (Ptr ())
     -> IO ()
 
-perform :: Ptr CafWriter -> Ptr (Handle TDocStd.Document) -> Ptr (TColStd.IndexedDataMapOfStringString) -> Ptr (Message.ProgressRange) -> IO ()
+perform :: Ptr CafWriter -> Ptr (Handle TDocStd.Document) -> Ptr (NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString) -> Ptr (Message.ProgressRange) -> IO ()
 perform writer doc fileInfo progress = wrapException $ rawPerform writer doc fileInfo progress

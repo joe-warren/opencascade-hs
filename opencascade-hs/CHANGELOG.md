@@ -8,6 +8,19 @@ and this project adheres to the
 
 ## Unreleased
 
+
+### Added
+
+- Support for OpenCASCADE 8.x
+- Added `OpenCascade.TCollection.AsciiString`
+- Added `OpenCascade.NCollection.IndexedDataMap`
+
+### Removed
+
+- In order to support building against OpenCASCADE 8.x:
+  - Removed `OpenCascade.TopTools.ListOfShape` (replaced by `OpenCascade.NCollection.List TopoDS.Shape`)
+  - Removed `OpenCascade.TColStd.IndexedDataMapOfStringString` ( replaced by `OpenCascade.NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString` + `OpenCascade.NCollection.IndexedDataMap.newAsciiStringMap`)
+
 ## 0.6.3.2
 
 ## 0.6.3.1
