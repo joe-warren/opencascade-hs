@@ -132,6 +132,11 @@ source-repository head
   type: git
   location: https://github.com/joe-warren/opencascade-hs
 
+flag ignore-deprecations
+  description: Don't fail the C++ build on use of deprecated OCCT headers and declarations Needed for OCCT-8.x.x
+  manual: True
+  default: False
+
 library
   exposed-modules:
       OpenCascade.Bnd.Box
@@ -367,6 +372,8 @@ library
       base >=4.7 && <5
     , resourcet >=1.2 && <1.4
   default-language: Haskell2010
+  if flag(ignore-deprecations)
+    cxx-options: -DOCCT_NO_DEPRECATED -Wno-deprecated-declarations
   if arch(wasm32)
     ghc-options: -Wwarn=redundant-constraints
     cxx-options: -Wno-#pragma-messages -fexceptions -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false

@@ -16,6 +16,11 @@ extra-source-files:
 include-dirs:
 - cpp
 
+when:
+- condition: flag(ignore-deprecations)
+  cxx-options:
+  - -DOCCT_NO_DEPRECATED
+  - -Wno-deprecated-declarations
 # The wasm build (see Dockerfile / WASM_BUILD_NOTES.md) compiles against an
 # OCCT tree built with wasi-sdk at /OCCT, with C++ wasm-native exceptions.
 # On wasm32 this package ships no C++ at all: the wrappers can't go in
@@ -24,7 +29,6 @@ include-dirs:
 # C++ (wrappers, OCCT, libc++abi) is linked into a single wasm module. The
 # hs_* FFI imports are left undefined and bound by the dynamic loader to the
 # module that does contain them (see playground/build_playground.sh).
-when:
 - condition: arch(wasm32)
   then:
     include-dirs:
@@ -87,6 +91,14 @@ cxx-options:
   - -Wall
   - -Werror
   - -Wno-deprecated
+
+flags:
+  ignore-deprecations:
+    description: >
+      Don't fail the C++ build on use of deprecated OCCT headers and declarations
+      Needed for OCCT-8.x.x
+    manual: true
+    default: false
 
 library:
   source-dirs: src

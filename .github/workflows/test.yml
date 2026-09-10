@@ -105,6 +105,7 @@ jobs:
       - name: Build
         run: |
           stack build --test --no-run-tests \
+            --flag opencascade-hs:ignore-deprecations \
             --extra-include-dirs="$OCCT_PREFIX/include/opencascade" \
             --extra-include-dirs="$OCCT_PREFIX/include" \
             --extra-lib-dirs="$OCCT_PREFIX/lib"
@@ -112,6 +113,7 @@ jobs:
       - name: Run tests
         run: |
           stack test \
+            --flag opencascade-hs:ignore-deprecations \
             --extra-include-dirs="$OCCT_PREFIX/include/opencascade" \
             --extra-include-dirs="$OCCT_PREFIX/include" \
             --extra-lib-dirs="$OCCT_PREFIX/lib"
