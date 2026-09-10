@@ -62,3 +62,70 @@ jobs:
           name: test-artifacts
           path: test-artifacts/*.png
           if-no-files-found: ignore
+
+  test-occt8:
+    runs-on: ubuntu-24.04
+    env:
+      OCCT_VERSION: "8.0.1"
+      OCCT_PREFIX: /home/runner/occt8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential libgmp-dev libtinfo-dev zlib1g-dev xz-utils bzip2
+
+      - name: Install Stack
+        run: which stack || curl -sSL https://get.haskellstack.org/ | sh
+
+      - name: Install OCCT ${{ env.OCCT_VERSION }} from conda-forge
+        run: |
+          curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xj bin/micromamba
+          ./bin/micromamba create -y \
+            -r "$HOME/micromamba" \
+            -p "$OCCT_PREFIX" \
+            --override-channels -c conda-forge \
+            "occt=${OCCT_VERSION}=novtk_*"
+          grep OCC_VERSION_COMPLETE "$OCCT_PREFIX/include/opencascade/Standard_Version.hxx"
+          echo "LD_LIBRARY_PATH=$OCCT_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+
+      - name: Cache stack
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.stack
+            **/.stack-work
+          key: occt8-${{ env.OCCT_VERSION }}-stack-${{ hashFiles('stack.yaml', 'stack.yaml.lock', '**/package.yaml') }}-${{ hashFiles('**/*.hs', '**/*.cpp', '**/*.h') }}
+          restore-keys: |
+            occt8-${{ env.OCCT_VERSION }}-stack-${{ hashFiles('stack.yaml', 'stack.yaml.lock', '**/package.yaml') }}-
+            occt8-${{ env.OCCT_VERSION }}-stack-
+
+      - name: Build
+        run: |
+          stack build --test --no-run-tests \
+            --extra-include-dirs="$OCCT_PREFIX/include/opencascade" \
+            --extra-include-dirs="$OCCT_PREFIX/include" \
+            --extra-lib-dirs="$OCCT_PREFIX/lib"
+
+      - name: Run tests
+        run: |
+          stack test \
+            --extra-include-dirs="$OCCT_PREFIX/include/opencascade" \
+            --extra-include-dirs="$OCCT_PREFIX/include" \
+            --extra-lib-dirs="$OCCT_PREFIX/lib"
+
+      - name: Collect test images
+        if: failure()
+        run: |
+          mkdir -p test-artifacts
+          find . -path '*test-results*' -name '*.png' -exec cp {} test-artifacts/ \;
+
+      - name: Upload test images
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-occt8
+          path: test-artifacts/*.png
+          if-no-files-found: ignore
