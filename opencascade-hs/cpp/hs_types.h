@@ -48,7 +48,6 @@ typedef void TopExp_Explorer;
 typedef void BRepPrimAPI_MakeCylinder;
 typedef void BRepPrimAPI_MakeRevol;
 typedef void BRepOffsetAPI_MakePipe;
-typedef void TopTools_ListOfShape;
 typedef void BRepTools_WireExplorer;
 typedef void BRepOffsetAPI_MakeThickSolid;
 typedef void Geom2d_Ellipse;
@@ -82,7 +81,6 @@ typedef void RWGltf_CafReader;
 typedef void RWObj_CafWriter;
 typedef void RWObj_CafReader;
 typedef void RWMesh_CafReader;
-typedef void TColStd_IndexedDataMapOfStringString;
 typedef void TDF_Label;
 typedef void TDocStd_Document;
 typedef void XCAFDoc_ShapeTool;
@@ -114,11 +112,15 @@ typedef int HSExceptionType;
 
 #define Handle(X) void
 #define ARRAY_1(X) void
+#define LIST(X) void
+#define INDEXED_DATA_MAP(K, V) void
 #else // __cplusplus
 #include <exception>
 #include <stdexcept>
 
 #define ARRAY_1(X) NCollection_Array1<X>
+#define LIST(X) NCollection_List<X>
+#define INDEXED_DATA_MAP(K, V) NCollection_IndexedDataMap<K, V>
 typedef std::exception STD_EXCEPTION;
 typedef std::runtime_error STD_RUNTIME_ERROR;
 #endif // __cplusplus

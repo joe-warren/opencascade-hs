@@ -37,15 +37,16 @@ import qualified OpenCascade.IFSelect.ReturnStatus as IFSelect.ReturnStatus
 import qualified OpenCascade.TDocStd.Document as TDocStd.Document
 import qualified OpenCascade.Message.Types as Message
 import qualified OpenCascade.Message.ProgressRange as Message.ProgressRange
-import qualified OpenCascade.TColStd.IndexedDataMapOfStringString as TColStd.IndexedDataMapOfStringString
 import qualified OpenCascade.RWGltf.CafWriter as RWGltf.CafWriter
+import qualified OpenCascade.NCollection.IndexedDataMap as NCollection.IndexedDataMap
+import qualified OpenCascade.NCollection.Types as NCollection
+import qualified OpenCascade.TCollection.Types as TCollection
 import qualified OpenCascade.RWGltf.CafReader as RWGltf.CafReader
 import qualified OpenCascade.RWObj.CafWriter as RWObj.CafWriter
 import qualified OpenCascade.RWObj.CafReader as RWObj.CafReader
 import qualified OpenCascade.RWMesh.Types as RWMesh
 import qualified OpenCascade.RWMesh.CafReader as RWMesh.CafReader
 import qualified OpenCascade.TDocStd.Types as TDocStd
-import qualified OpenCascade.TColStd.Types as TColStd
 import qualified OpenCascade.XCAFDoc.DocumentTool as XCafDoc.DocumentTool
 import qualified OpenCascade.XCAFDoc.ShapeTool as XCafDoc.ShapeTool
 import qualified OpenCascade.TopoDS.Types as TopoDS
@@ -60,6 +61,7 @@ import Foreign.Ptr (Ptr)
 import Data.Char (toLower)
 import System.FilePath (takeExtension)
 import Control.Exception (Exception, throwIO)
+import qualified OpenCascade.TCollection as TCollection
 
 -- | The type of exceptions thrown by IO actions defined in `Waterfall.IO`
 data WaterfallIOException = 
@@ -155,7 +157,7 @@ writeSTEP filepath (Solid ptr) = (`withAcquire` pure) $ do
     resWrite <- liftIO $ StepWriter.write writer filepath
     unless (resWrite == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
 
-cafWriter :: (FilePath -> Ptr (Handle TDocStd.Document) -> Ptr TColStd.IndexedDataMapOfStringString -> Ptr Message.ProgressRange -> Acquire ()) -> Double -> FilePath -> Solid-> IO ()
+cafWriter :: (FilePath -> Ptr (Handle TDocStd.Document) -> Ptr (NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString) -> Ptr Message.ProgressRange -> Acquire ()) -> Double -> FilePath -> Solid-> IO ()
 cafWriter write linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
@@ -164,7 +166,7 @@ cafWriter write linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
     mainLabel <- TDocStd.Document.main doc
     shapeTool <- XCafDoc.DocumentTool.shapeTool mainLabel
     _ <- XCafDoc.ShapeTool.addShape shapeTool s True True
-    meta <- TColStd.IndexedDataMapOfStringString.new
+    meta <- NCollection.IndexedDataMap.newAsciiStringMap
     progress <- Message.ProgressRange.new
     write filepath doc meta progress
 

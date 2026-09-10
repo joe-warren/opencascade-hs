@@ -24,7 +24,7 @@ void hs_BRepBuilderAPI_MakeWire_AddWire(
 );
 
 void hs_BRepBuilderAPI_MakeWire_AddListOfShape(
-    BRepBuilderAPI_MakeWire* builder, TopTools_ListOfShape *list,
+    BRepBuilderAPI_MakeWire* builder, LIST(TopoDS_Shape) *list,
     HSExceptionType* exType,
     void** exPtr
 );
