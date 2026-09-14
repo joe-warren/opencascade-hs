@@ -10,13 +10,13 @@ module OpenCascade.BRepBuilderAPI.MakeShape
 import OpenCascade.BRepBuilderAPI.Types
 import qualified OpenCascade.TopoDS as TopoDS
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
-import qualified OpenCascade.TopTools.Types as TopTools
-import OpenCascade.TopTools.Internal.Destructors (deleteListOfShape)
 import OpenCascade.Internal.Bool (cBoolToBool)
 import OpenCascade.Internal.Exception (wrapException)
 import Foreign.Ptr
 import Data.Acquire
 import Foreign.C (CBool (..), CInt)
+import qualified OpenCascade.NCollection.Types as NCollection
+import OpenCascade.NCollection.Internal.Destructors (deleteListOfShape)
 
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_MakeShape_shape" rawShape
     :: Ptr MakeShape 
@@ -41,9 +41,9 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_Make
     -> Ptr TopoDS.Shape
     -> Ptr CInt
     -> Ptr (Ptr ())
-    -> IO (Ptr TopTools.ListOfShape)
+    -> IO (Ptr (NCollection.List TopoDS.Shape))
 
-modified :: Ptr MakeShape -> Ptr TopoDS.Shape -> Acquire (Ptr TopTools.ListOfShape)
+modified :: Ptr MakeShape -> Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.List TopoDS.Shape))
 modified builder s = mkAcquire (wrapException $ rawModified builder s) deleteListOfShape
 
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_MakeShape_generated" rawGenerated
@@ -51,9 +51,9 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_Make
     -> Ptr TopoDS.Shape
     -> Ptr CInt
     -> Ptr (Ptr ())
-    -> IO (Ptr TopTools.ListOfShape)
+    -> IO (Ptr (NCollection.List TopoDS.Shape))
 
-generated :: Ptr MakeShape -> Ptr TopoDS.Shape -> Acquire (Ptr TopTools.ListOfShape)
+generated :: Ptr MakeShape -> Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.List TopoDS.Shape))
 generated builder s = mkAcquire (wrapException $ rawGenerated builder s) deleteListOfShape
 
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_MakeShape_isDeleted" rawIsDeleted

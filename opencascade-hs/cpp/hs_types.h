@@ -122,14 +122,15 @@ typedef int HSExceptionType;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #define LIST(X) void
-#define INDEXED_DATA_MAP(K, V) void
+#define INDEXED_DATA_MAP(K, V, Hasher) void
 #else // __cplusplus
 #include <exception>
 #include <stdexcept>
 
 #define ARRAY_1(X) NCollection_Array1<X>
 #define LIST(X) NCollection_List<X>
-#define INDEXED_DATA_MAP(K, V) NCollection_IndexedDataMap<K, V>
+#define INDEXED_DATA_MAP(K, V, Hasher) NCollection_IndexedDataMap<K, V, Hasher>
+#define DEFAULT_HASHER(K) NCollection_DefaultHasher<K>
 typedef std::exception STD_EXCEPTION;
 typedef std::runtime_error STD_RUNTIME_ERROR;
 #endif // __cplusplus

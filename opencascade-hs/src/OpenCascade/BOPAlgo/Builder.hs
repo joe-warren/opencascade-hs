@@ -15,9 +15,9 @@ import OpenCascade.BOPAlgo.Types
 import OpenCascade.BOPAlgo.Internal.Destructors (deleteBuilder)
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
-import qualified OpenCascade.TopTools.Types as TopTools
-import OpenCascade.TopTools.Internal.Destructors (deleteListOfShape)
 import OpenCascade.Internal.Exception (wrapException)
+import qualified OpenCascade.NCollection.Types as NCollection
+import OpenCascade.NCollection.Internal.Destructors (deleteListOfShape)
 import Foreign.Ptr (Ptr)
 import Foreign.C (CBool (..), CInt)
 import Data.Acquire (Acquire, mkAcquire)
@@ -67,9 +67,9 @@ foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_Modified" ra
     -> Ptr TopoDS.Shape
     -> Ptr CInt
     -> Ptr (Ptr ())
-    -> IO (Ptr TopTools.ListOfShape)
+    -> IO (Ptr (NCollection.List TopoDS.Shape))
 
-modified :: Ptr Builder -> Ptr TopoDS.Shape -> Acquire (Ptr TopTools.ListOfShape)
+modified :: Ptr Builder -> Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.List TopoDS.Shape))
 modified builder shape' = mkAcquire (wrapException $ rawModified builder shape') deleteListOfShape
 
 foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_Generated" rawGenerated
@@ -77,9 +77,9 @@ foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_Generated" r
     -> Ptr TopoDS.Shape
     -> Ptr CInt
     -> Ptr (Ptr ())
-    -> IO (Ptr TopTools.ListOfShape)
+    -> IO (Ptr (NCollection.List TopoDS.Shape))
 
-generated :: Ptr Builder -> Ptr TopoDS.Shape -> Acquire (Ptr TopTools.ListOfShape)
+generated :: Ptr Builder -> Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.List TopoDS.Shape))
 generated builder shape' = mkAcquire (wrapException $ rawGenerated builder shape') deleteListOfShape
 
 foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_IsDeleted" rawIsDeleted

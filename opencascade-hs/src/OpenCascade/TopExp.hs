@@ -7,8 +7,8 @@ module OpenCascade.TopExp
 import OpenCascade.TopExp.Types
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import qualified OpenCascade.TopAbs as TopAbs
-import qualified OpenCascade.TopTools.Types as TopTools
-import OpenCascade.TopTools.Internal.Destructors (deleteIndexedDataMapOfShapeListOfShape)
+import qualified OpenCascade.NCollection.Types as NCollection
+import OpenCascade.NCollection.Internal.Destructors (deleteIndexedDataMapOfShapeListOfShape)
 import OpenCascade.Internal.Exception (wrapException)
 import Foreign.Ptr (Ptr)
 import Foreign.C (CInt (..))
@@ -18,12 +18,19 @@ foreign import capi unsafe "hs_TopExp.h hs_TopExp_mapShapesAndAncestors" rawMapS
     :: Ptr TopoDS.Shape
     -> CInt
     -> CInt
+    -> (Ptr (NCollection.IndexedDataMap TopoDS.Shape (NCollection.List TopoDS.Shape)))
     -> Ptr CInt
     -> Ptr (Ptr ())
-    -> IO (Ptr TopTools.IndexedDataMapOfShapeListOfShape)
-
-mapShapesAndAncestors :: Ptr TopoDS.Shape -> TopAbs.ShapeEnum -> TopAbs.ShapeEnum -> Acquire (Ptr TopTools.IndexedDataMapOfShapeListOfShape)
-mapShapesAndAncestors shape subshapeType ancestorType =
-    mkAcquire
-        (wrapException $ rawMapShapesAndAncestors shape (fromIntegral . fromEnum $ subshapeType) (fromIntegral . fromEnum $ ancestorType))
-        deleteIndexedDataMapOfShapeListOfShape
+    -> IO ()
+mapShapesAndAncestors 
+    :: Ptr TopoDS.Shape
+    -> TopAbs.ShapeEnum
+    -> TopAbs.ShapeEnum
+    -> (Ptr (NCollection.IndexedDataMap TopoDS.Shape (NCollection.List TopoDS.Shape)))
+    -> IO () 
+mapShapesAndAncestors shape subshapeType ancestorType theMap =
+    wrapException $ rawMapShapesAndAncestors
+        shape 
+        (fromIntegral . fromEnum $ subshapeType)
+        (fromIntegral . fromEnum $ ancestorType)
+        theMap

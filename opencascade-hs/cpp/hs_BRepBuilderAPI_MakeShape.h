@@ -19,14 +19,14 @@ void hs_BRepBuilderAPI_MakeShape_build(
         void** exPtr
 );
 
-TopTools_ListOfShape * hs_BRepBuilderAPI_MakeShape_modified(
+LIST(TopoDS_Shape) * hs_BRepBuilderAPI_MakeShape_modified(
     BRepBuilderAPI_MakeShape * builder,
     TopoDS_Shape * shape,
     HSExceptionType* exType,
     void** exPtr
 );
 
-TopTools_ListOfShape * hs_BRepBuilderAPI_MakeShape_generated(
+LIST(TopoDS_Shape) * hs_BRepBuilderAPI_MakeShape_generated(
     BRepBuilderAPI_MakeShape * builder,
     TopoDS_Shape * shape,
     HSExceptionType* exType,

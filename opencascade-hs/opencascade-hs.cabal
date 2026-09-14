@@ -92,6 +92,8 @@ extra-source-files:
     cpp/hs_HLRBRep_HLRToShape.h
     cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
+    cpp/hs_NCollection_IndexedDataMap.h
+    cpp/hs_NCollection_List.h
     cpp/hs_Poly_Triangle.h
     cpp/hs_Poly_Triangulation.h
     cpp/hs_Quantity_Color.h
@@ -109,7 +111,6 @@ extra-source-files:
     cpp/hs_STEPControl_Writer.h
     cpp/hs_StlAPI_Reader.h
     cpp/hs_StlAPI_Writer.h
-    cpp/hs_TColStd_IndexedDataMapOfStringString.h
     cpp/hs_TDF_Label.h
     cpp/hs_TDocStd_Document.h
     cpp/hs_TopExp.h
@@ -278,6 +279,7 @@ library
       OpenCascade.Message.Types
       OpenCascade.NCollection
       OpenCascade.NCollection.Array1
+      OpenCascade.NCollection.IndexedDataMap
       OpenCascade.NCollection.Internal.Destructors
       OpenCascade.NCollection.Types
       OpenCascade.Poly.Internal.Destructors
@@ -329,9 +331,8 @@ library
       OpenCascade.StlAPI.Reader
       OpenCascade.StlAPI.Types
       OpenCascade.StlAPI.Writer
-      OpenCascade.TColStd.IndexedDataMapOfStringString
-      OpenCascade.TColStd.Internal.Destructors
-      OpenCascade.TColStd.Types
+      OpenCascade.TCollection
+      OpenCascade.TCollection.Types
       OpenCascade.TDF.Internal.Destructors
       OpenCascade.TDF.Label
       OpenCascade.TDF.Types
@@ -362,12 +363,7 @@ library
       OpenCascade.TopoDS.Types
       OpenCascade.TopoDS.Vertex
       OpenCascade.TopoDS.Wire
-      OpenCascade.TopTools
-      OpenCascade.TopTools.IndexedDataMapOfShapeListOfShape
-      OpenCascade.TopTools.Internal.Destructors
-      OpenCascade.TopTools.ListOfShape
       OpenCascade.TopTools.ShapeMapHasher
-      OpenCascade.TopTools.Types
       OpenCascade.XCAFDoc.ColorTool
       OpenCascade.XCAFDoc.ColorType
       OpenCascade.XCAFDoc.DocumentTool
@@ -474,6 +470,8 @@ library
         cpp/hs_HLRBRep_HLRToShape.cpp
         cpp/hs_Message_ProgressRange.cpp
         cpp/hs_NCollection_Array1.cpp
+        cpp/hs_NCollection_IndexedDataMap.cpp
+        cpp/hs_NCollection_List.cpp
         cpp/hs_Poly_Triangle.cpp
         cpp/hs_Poly_Triangulation.cpp
         cpp/hs_Quantity_Color.cpp
@@ -491,7 +489,6 @@ library
         cpp/hs_STEPControl_Writer.cpp
         cpp/hs_StlAPI_Reader.cpp
         cpp/hs_StlAPI_Writer.cpp
-        cpp/hs_TColStd_IndexedDataMapOfStringString.cpp
         cpp/hs_TDF_Label.cpp
         cpp/hs_TDocStd_Document.cpp
         cpp/hs_TopExp.cpp

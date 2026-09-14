@@ -31,13 +31,13 @@ void hs_BOPAlgo_Builder_Perform(
     void** exPtr
 );
 
-TopTools_ListOfShape * hs_BOPAlgo_Builder_Modified(
+LIST(TopoDS_Shape) * hs_BOPAlgo_Builder_Modified(
     BOPAlgo_Builder * builder, TopoDS_Shape * shape,
     HSExceptionType* exType,
     void** exPtr
 );
 
-TopTools_ListOfShape * hs_BOPAlgo_Builder_Generated(
+LIST(TopoDS_Shape) * hs_BOPAlgo_Builder_Generated(
     BOPAlgo_Builder * builder, TopoDS_Shape * shape,
     HSExceptionType* exType,
     void** exPtr
