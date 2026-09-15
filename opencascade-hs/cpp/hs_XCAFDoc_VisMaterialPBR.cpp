@@ -1,6 +1,6 @@
 #include <XCAFDoc_VisMaterialPBR.hxx>
 #include <Quantity_ColorRGBA.hxx>
-#include <Graphic3d_Vec3.hxx>
+#include <NCollection_Vec3.hxx>
 #include "hs_XCAFDoc_VisMaterialPBR.h"
 
 XCAFDoc_VisMaterialPBR * hs_new_XCAFDoc_VisMaterialPBR(){
@@ -24,7 +24,7 @@ void hs_XCAFDoc_VisMaterialPBR_setRoughness(XCAFDoc_VisMaterialPBR * pbr, double
 }
 
 void hs_XCAFDoc_VisMaterialPBR_setEmissiveFactor(XCAFDoc_VisMaterialPBR * pbr, double r, double g, double b){
-    pbr->EmissiveFactor = Graphic3d_Vec3((float) r, (float) g, (float) b);
+    pbr->EmissiveFactor = NCollection_Vec3<float>((float) r, (float) g, (float) b);
 }
 
 void hs_XCAFDoc_VisMaterialPBR_setRefractionIndex(XCAFDoc_VisMaterialPBR * pbr, double refractionIndex){

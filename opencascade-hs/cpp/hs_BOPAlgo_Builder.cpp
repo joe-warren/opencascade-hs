@@ -1,5 +1,5 @@
 #include <BOPAlgo_Builder.hxx>
-#include <TopTools_ListOfShape.hxx>
+#include <NCollection_List.hxx>
 #include <TopoDS_Shape.hxx>
 #include "hs_Exception.h"
 #include "hs_BOPAlgo_Builder.h"
@@ -65,7 +65,7 @@ LIST(TopoDS_Shape) * hs_BOPAlgo_Builder_Modified(
         exType,
         exPtr,
         [builder, shape]{
-        return new TopTools_ListOfShape(builder->Modified(*shape));
+        return new NCollection_List<TopoDS_Shape>(builder->Modified(*shape));
     });
 }
 
@@ -78,7 +78,7 @@ LIST(TopoDS_Shape) * hs_BOPAlgo_Builder_Generated(
         exType,
         exPtr,
         [builder, shape]{
-        return new TopTools_ListOfShape(builder->Generated(*shape));
+        return new NCollection_List<TopoDS_Shape>(builder->Generated(*shape));
     });
 }
 
@@ -91,7 +91,7 @@ bool hs_BOPAlgo_Builder_IsDeleted(
         exType,
         exPtr,
         [builder, shape]{
-        return builder->IsDeleted(*shape) == Standard_True;
+        return builder->IsDeleted(*shape);
     },
     false);
 }

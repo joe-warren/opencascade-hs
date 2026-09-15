@@ -33,6 +33,6 @@ bool hs_XCAFDoc_VisMaterialTool_setShapeMaterialFromShape(
         HSExceptionType* exType, void ** exPtr
 ){
     return hs_handleExWithDefault(exType, exPtr, [materialTool, shape, materialLabel]{
-        return (*materialTool)->SetShapeMaterial(*shape, *materialLabel) == Standard_True;
+        return (*materialTool)->SetShapeMaterial(*shape, *materialLabel);
     }, false);
 }

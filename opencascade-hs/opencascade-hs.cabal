@@ -126,8 +126,6 @@ extra-source-files:
     cpp/hs_TopoDS_Solid.h
     cpp/hs_TopoDS_Vertex.h
     cpp/hs_TopoDS_Wire.h
-    cpp/hs_TopTools_IndexedDataMapOfShapeListOfShape.h
-    cpp/hs_TopTools_ListOfShape.h
     cpp/hs_TopTools_ShapeMapHasher.h
     cpp/hs_types.h
     cpp/hs_XCAFDoc_ColorTool.h
@@ -504,8 +502,6 @@ library
         cpp/hs_TopoDS_Solid.cpp
         cpp/hs_TopoDS_Vertex.cpp
         cpp/hs_TopoDS_Wire.cpp
-        cpp/hs_TopTools_IndexedDataMapOfShapeListOfShape.cpp
-        cpp/hs_TopTools_ListOfShape.cpp
         cpp/hs_TopTools_ShapeMapHasher.cpp
         cpp/hs_XCAFDoc_ColorTool.cpp
         cpp/hs_XCAFDoc_DocumentTool.cpp
