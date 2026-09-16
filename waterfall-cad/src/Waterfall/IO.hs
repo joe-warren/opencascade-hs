@@ -48,11 +48,17 @@ import qualified OpenCascade.RWMesh.Types as RWMesh
 import qualified OpenCascade.RWMesh.CafReader as RWMesh.CafReader
 import qualified OpenCascade.TDocStd.Types as TDocStd
 import qualified OpenCascade.XCAFDoc.DocumentTool as XCafDoc.DocumentTool
+import qualified OpenCascade.XCAFDoc.ColorTool as XCafDoc.ColorTool
 import qualified OpenCascade.XCAFDoc.ShapeTool as XCafDoc.ShapeTool
+import qualified OpenCascade.XCAFDoc.ColorType as XCAFDoc.ColorType
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
+import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
 import OpenCascade.Handle (Handle)
 import OpenCascade.Inheritance (upcast)
+import qualified OpenCascade.Quantity.Color as Quantity.Color
+import qualified OpenCascade.Quantity.TypeOfColor as Quantity.TypeOfColor
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (unless, when)
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
@@ -165,7 +171,17 @@ cafWriter write linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
     doc <- TDocStd.Document.fromStorageFormat ""
     mainLabel <- TDocStd.Document.main doc
     shapeTool <- XCafDoc.DocumentTool.shapeTool mainLabel
-    _ <- XCafDoc.ShapeTool.addShape shapeTool s True True
+    red <- Quantity.Color.new 1.0 0.0 0.0 Quantity.TypeOfColor.RGB
+    shapeLabel <- XCafDoc.ShapeTool.addShape shapeTool s True True
+    colorTool <- XCafDoc.DocumentTool.colorTool shapeLabel
+    liftIO $ print =<< XCafDoc.ColorTool.setShapeColor colorTool s red XCAFDoc.ColorType.ColorSurf
+    explorer <- TopExp.Explorer.new s TopAbs.ShapeEnum.Face
+    firstFace <- liftIO $ TopExp.Explorer.value explorer
+    -- faceLabel <- XCafDoc.ShapeTool.findShape shapeTool firstFace False
+    -- faceLabel <- XCafDoc.ShapeTool.addShape shapeTool firstFace True True
+    blue <- Quantity.Color.new 0.0 0.0 1.0 Quantity.TypeOfColor.RGB
+    -- colorTool' <- XCafDoc.DocumentTool.colorTool faceLabel
+    liftIO $ print =<< XCafDoc.ColorTool.setShapeColor colorTool firstFace blue XCAFDoc.ColorType.ColorSurf
     meta <- NCollection.IndexedDataMap.newAsciiStringMap
     progress <- Message.ProgressRange.new
     write filepath doc meta progress
