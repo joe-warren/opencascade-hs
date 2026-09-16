@@ -3,14 +3,20 @@ module OpenCascade.BRepBuilderAPI.MakeShape
 ( MakeShape
 , shape
 , build
+, modified
+, generated
+, isDeleted
 ) where
 import OpenCascade.BRepBuilderAPI.Types
 import qualified OpenCascade.TopoDS as TopoDS
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
+import OpenCascade.Internal.Bool (cBoolToBool)
 import OpenCascade.Internal.Exception (wrapException)
 import Foreign.Ptr
-import Data.Acquire 
-import Foreign.C (CInt)
+import Data.Acquire
+import Foreign.C (CBool (..), CInt)
+import qualified OpenCascade.NCollection.Types as NCollection
+import OpenCascade.NCollection.Internal.Destructors (deleteListOfShape)
 
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_MakeShape_shape" rawShape
     :: Ptr MakeShape 
@@ -29,3 +35,33 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_Make
 
 build :: Ptr MakeShape -> IO ()
 build builder = wrapException $ rawBuild builder
+
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_MakeShape_modified" rawModified
+    :: Ptr MakeShape
+    -> Ptr TopoDS.Shape
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr (NCollection.List TopoDS.Shape))
+
+modified :: Ptr MakeShape -> Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.List TopoDS.Shape))
+modified builder s = mkAcquire (wrapException $ rawModified builder s) deleteListOfShape
+
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_MakeShape_generated" rawGenerated
+    :: Ptr MakeShape
+    -> Ptr TopoDS.Shape
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr (NCollection.List TopoDS.Shape))
+
+generated :: Ptr MakeShape -> Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.List TopoDS.Shape))
+generated builder s = mkAcquire (wrapException $ rawGenerated builder s) deleteListOfShape
+
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_MakeShape_isDeleted" rawIsDeleted
+    :: Ptr MakeShape
+    -> Ptr TopoDS.Shape
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO CBool
+
+isDeleted :: Ptr MakeShape -> Ptr TopoDS.Shape -> IO Bool
+isDeleted builder s = cBoolToBool <$> wrapException (rawIsDeleted builder s)
