@@ -49,6 +49,7 @@ library
       Waterfall.IO
       Waterfall.Loft
       Waterfall.Offset
+      Waterfall.Paint
       Waterfall.Path
       Waterfall.Path.Common
       Waterfall.Revolution
