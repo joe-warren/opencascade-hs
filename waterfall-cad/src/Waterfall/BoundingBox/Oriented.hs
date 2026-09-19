@@ -78,7 +78,7 @@ obbSideZ =  getSide OBB.zDirection OBB.zHSize
 
 -- | Reify an `OrientedBoundingBox` as a `Solid`
 obbToSolid :: OrientedBoundingBox -> Solid
-obbToSolid obb = solidFromAcquire $ do
+obbToSolid obb = solidFromAcquire Nothing $ do
     obb' <- toAcquire . rawOBB $ obb
     x <- liftIO . OBB.xHSize $ obb'
     y <- liftIO . OBB.yHSize $ obb'

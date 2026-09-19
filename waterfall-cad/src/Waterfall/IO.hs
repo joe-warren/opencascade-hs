@@ -120,7 +120,7 @@ writeSolid res filepath =
         Nothing -> const $ throwIO (WaterfallIOException UnrecognizedFormatError filepath)
 
 writeSTLAsciiOrBinary :: Bool -> Double -> FilePath -> Solid -> IO ()
-writeSTLAsciiOrBinary asciiMode linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
+writeSTLAsciiOrBinary asciiMode linDeflection filepath (Solid ptr _paintFn) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
     liftIO $ BRepMesh.IncrementalMesh.perform mesh
@@ -155,7 +155,7 @@ writeAsciiSTL = writeSTLAsciiOrBinary True
 --
 -- STEP files can be imported by [FreeCAD](https://www.freecad.org/)
 writeSTEP :: FilePath -> Solid -> IO ()
-writeSTEP filepath (Solid ptr) = (`withAcquire` pure) $ do
+writeSTEP filepath (Solid ptr _paintFn) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     writer <- StepWriter.new
     resTransfer <- liftIO $ StepWriter.transfer writer s StepModelType.Asls True
@@ -164,7 +164,7 @@ writeSTEP filepath (Solid ptr) = (`withAcquire` pure) $ do
     unless (resWrite == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
 
 cafWriter :: (FilePath -> Ptr (Handle TDocStd.Document) -> Ptr (NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString) -> Ptr Message.ProgressRange -> Acquire ()) -> Double -> FilePath -> Solid-> IO ()
-cafWriter write linDeflection filepath (Solid ptr) = (`withAcquire` pure) $ do
+cafWriter write linDeflection filepath (Solid ptr _paintFn) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
     liftIO $ BRepMesh.IncrementalMesh.perform mesh
@@ -253,7 +253,7 @@ remeshOrThrow filepath shape = do
 
 -- | Read a `Solid` from an STL file at a given path
 readSTL :: FilePath -> IO Solid
-readSTL filepath = fmap Solid . fromAcquire $ do
+readSTL filepath = fmap (`Solid` Nothing) . fromAcquire $ do
     shape <- TopoDS.Shape.new
     reader <- StlReader.new
     res <- liftIO $ StlReader.read reader shape filepath
@@ -262,7 +262,7 @@ readSTL filepath = fmap Solid . fromAcquire $ do
 
 -- | Read a `Solid` from a STEP file at a given path
 readSTEP :: FilePath -> IO Solid
-readSTEP filepath = fmap Solid . fromAcquire $ do
+readSTEP filepath = fmap (`Solid` Nothing) . fromAcquire $ do
     reader <- STEPReader.new
     status <- liftIO $ XSControl.Reader.readFile (upcast reader) filepath
     _ <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
@@ -273,7 +273,7 @@ readSTEP filepath = fmap Solid . fromAcquire $ do
     return shape
 
 cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO Solid
-cafReader mkReader filepath = fmap Solid . fromAcquire $ do
+cafReader mkReader filepath = fmap (`Solid` Nothing) . fromAcquire $ do
     reader <- mkReader
     doc <- TDocStd.Document.fromStorageFormat ""
     progress <- Message.ProgressRange.new

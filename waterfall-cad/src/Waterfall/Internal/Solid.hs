@@ -2,6 +2,7 @@
 {-# LANGUAGE InstanceSigs #-}
 module Waterfall.Internal.Solid 
 ( Solid (..)
+, PaintFn (..)
 , acquireSolid
 , solidFromAcquire
 , solidFromAcquireWithCatch
@@ -34,6 +35,9 @@ import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire, unsafeFromAc
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
 import Data.Foldable (traverse_)
 import Waterfall.Error (WaterfallError)
+import Waterfall.Paint (Paint)
+
+newtype PaintFn = PaintFn { runPaintFn :: Ptr TopoDS.Shape.Shape -> Acquire (Maybe Paint) } 
 
 -- | The Boundary Representation of a solid object.
 --
@@ -44,25 +48,28 @@ import Waterfall.Error (WaterfallError)
 -- 
 -- While you shouldn't need to know what this means to use the library,
 -- please feel free to report a bug if you're able to construct a `Solid`
--- where this isnt' the case (without using internal functions).
-newtype Solid = Solid { rawSolid :: Ptr TopoDS.Shape.Shape }
+-- where this isn't the case (without using internal functions).
+data Solid = Solid 
+    { rawSolid :: Ptr TopoDS.Shape.Shape 
+    , solidPaintFn :: Maybe PaintFn
+    }
 
 acquireSolid :: Solid -> Acquire (Ptr TopoDS.Shape.Shape)
-acquireSolid (Solid ptr) = toAcquire ptr
+acquireSolid (Solid ptr _) = toAcquire ptr
 
-solidFromAcquire :: Acquire (Ptr TopoDS.Shape.Shape) -> Solid
-solidFromAcquire = Solid . unsafeFromAcquire
+solidFromAcquire :: Maybe PaintFn -> Acquire (Ptr TopoDS.Shape.Shape) -> Solid
+solidFromAcquire paintFn = (`Solid` paintFn) . unsafeFromAcquire
 
-solidFromAcquireWithCatch :: Acquire (Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
-solidFromAcquireWithCatch = fmap Solid . unsafeFromAcquireWithCatch
+solidFromAcquireWithCatch :: Maybe PaintFn -> Acquire (Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
+solidFromAcquireWithCatch paintFn = fmap (`Solid` paintFn) . unsafeFromAcquireWithCatch
 
-solidFromAcquireTWithCatch :: Traversable t => Acquire (t (Ptr TopoDS.Shape.Shape)) -> Either WaterfallError (t Solid)
-solidFromAcquireTWithCatch = fmap (fmap Solid) . unsafeFromAcquireTWithCatch
+solidFromAcquireTWithCatch :: Traversable t => Maybe PaintFn -> Acquire (t (Ptr TopoDS.Shape.Shape)) -> Either WaterfallError (t Solid)
+solidFromAcquireTWithCatch paintFn  = fmap (fmap (`Solid` paintFn)) . unsafeFromAcquireTWithCatch
 
 -- | print debug information about a Solid when it's evaluated 
 -- exposes the properties of the underlying OpenCacade.TopoDS.Shape
 debug :: Solid -> String
-debug (Solid ptr) = 
+debug (Solid ptr _) = 
     let 
         fshow :: Show a => IO a -> IO String 
         fshow = fmap show
@@ -98,19 +105,19 @@ everywhere = complement $ emptySolid
 --
 -- Be warned that @complement emptySolid@ does not appear to work correctly.
 complement :: Solid -> Solid
-complement (Solid ptr) = Solid . unsafeFromAcquire $ TopoDS.Shape.complemented =<< toAcquire ptr
+complement (Solid ptr paintFn) = (`Solid` paintFn) . unsafeFromAcquire $ TopoDS.Shape.complemented =<< toAcquire ptr
 
 -- | An empty solid
 --
 -- Be warned that @complement emptySolid@ does not appear to work correctly.
 emptySolid :: Solid 
-emptySolid =  Solid . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
+emptySolid =  (`Solid` Nothing) . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
 
 -- defining the boolean CSG operators here, rather than in Waterfall.Booleans 
 -- means that we can use them in typeclass instances without resorting to orphans
 
 toBoolean :: (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)) -> Solid -> Solid -> Solid
-toBoolean f (Solid ptrA) (Solid ptrB) = Solid . unsafeFromAcquire $ do
+toBoolean f (Solid ptrA paintFnA) (Solid ptrB _) = (`Solid` paintFnA) . unsafeFromAcquire $ do
     a <- toAcquire ptrA
     b <- toAcquire ptrB
     f a b
@@ -125,7 +132,7 @@ union3D = toBoolean Fuse.fuse
 toBooleans :: BOPAlgo.Operation.Operation -> [Solid] -> Solid
 toBooleans _ [] = emptySolid
 toBooleans _ [x] = x
-toBooleans op (h:solids) = Solid . unsafeFromAcquire $ do
+toBooleans op (h:solids) = (`Solid` solidPaintFn h) . unsafeFromAcquire $ do
     firstPtr <- toAcquire . rawSolid $ h
     ptrs <- traverse (toAcquire . rawSolid) solids
     bop <- BOPAlgo.BOP.new

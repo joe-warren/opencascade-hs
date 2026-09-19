@@ -68,7 +68,7 @@ tryRoundIndexedConditionalFillet
     :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid
     -> Either WaterfallError Solid
-tryRoundIndexedConditionalFillet radiusFunction solid = solidFromAcquireWithCatch $ do
+tryRoundIndexedConditionalFillet radiusFunction solid = solidFromAcquireWithCatch (solidPaintFn solid) $ do
     s <- acquireSolid solid
     builder <- MakeFillet.fromShape s
 
@@ -123,7 +123,7 @@ tryIndexedConditionalChamfer
     :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid 
     -> Either WaterfallError Solid
-tryIndexedConditionalChamfer radiusFunction solid = solidFromAcquireWithCatch $ do
+tryIndexedConditionalChamfer radiusFunction solid = solidFromAcquireWithCatch (solidPaintFn solid) $ do
     s <- acquireSolid solid
     builder <- MakeChamfer.fromShape s
 

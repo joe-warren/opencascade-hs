@@ -36,7 +36,7 @@ tryPointedLoftWithPrecision :: Double -- ^ The loft precision, this should be a 
     -> [Path] -- ^ Series of cross-sections that the loft will pass through
     -> Maybe (V3 Double) -- ^ Optional end point for the loft
     -> Either WaterfallError Solid
-tryPointedLoftWithPrecision precision start paths end = solidFromAcquireWithCatch $ do
+tryPointedLoftWithPrecision precision start paths end = solidFromAcquireWithCatch Nothing $ do
     thruSections <- ThruSections.new True False precision
     forM_ start ((liftIO . ThruSections.addVertex thruSections) <=< v3ToVertex)
     forM_ paths (traverse (liftIO . ThruSections.addWire thruSections) . rawPathWire . rawPath)
