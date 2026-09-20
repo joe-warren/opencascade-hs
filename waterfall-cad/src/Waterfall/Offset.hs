@@ -73,7 +73,7 @@ tryOffsetWithTolerance tolerance value solid
     | nearZero value = Right solid
     | otherwise = 
         fmap mconcat 
-        . solidFromAcquireTWithCatch 
+        . solidFromAcquireTWithCatch (solidPaintFn solid)
         $ traverse (offsetOneWithTolerance tolerance value) 
         =<< getCompoundAsSolids 
         =<< acquireSolid solid

@@ -23,7 +23,7 @@ import Data.Either (fromRight)
 -- Revolution can fail, for example, if the `Path2D` crosses the axis of revolution.
 tryRevolution :: Path2D -> Either WaterfallError Solid
 tryRevolution (Path2D (ComplexRawPath theRawPath)) =
-    fmap (rotate (unit _x) (pi/2)) . solidFromAcquireWithCatch $ do
+    fmap (rotate (unit _x) (pi/2)) . solidFromAcquireWithCatch Nothing $ do
         p <- toAcquire theRawPath
         axis <- GP.oy -- revolve around the y axis
         revol <- MakeRevol.fromShapeAndAx1 (upcast p) axis True

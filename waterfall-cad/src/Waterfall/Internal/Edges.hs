@@ -2,6 +2,7 @@ module Waterfall.Internal.Edges
 ( edgeEndpoints
 , edgeValue
 , wireEndpoints
+, allSubShapesWithCopy
 , allWireEndpoints
 , allWires
 , allEdges
