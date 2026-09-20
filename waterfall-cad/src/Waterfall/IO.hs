@@ -24,7 +24,7 @@ module Waterfall.IO
 , readOBJ
 ) where 
 
-import Waterfall.Internal.Solid (Solid(..))
+import Waterfall.Internal.Solid (Solid(..), PaintFn (runPaintFn))
 import qualified Waterfall.Internal.Remesh as Remesh
 import qualified OpenCascade.BRepMesh.IncrementalMesh as BRepMesh.IncrementalMesh
 import qualified OpenCascade.StlAPI.Writer as StlWriter
@@ -60,14 +60,19 @@ import OpenCascade.Inheritance (upcast)
 import qualified OpenCascade.Quantity.Color as Quantity.Color
 import qualified OpenCascade.Quantity.TypeOfColor as Quantity.TypeOfColor
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (unless, when)
+import Control.Monad (unless, when, forM_, void)
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
 import Data.Acquire ( Acquire, withAcquire )
 import Foreign.Ptr (Ptr)
 import Data.Char (toLower)
 import System.FilePath (takeExtension)
 import Control.Exception (Exception, throwIO)
-import qualified OpenCascade.TCollection as TCollection
+import OpenCascade.TDF.Label (Label)
+import Waterfall.Internal.Edges (allSubShapesWithCopy)
+import Waterfall.Paint (Colour(..), paintColour)
+import qualified OpenCascade.XCAFDoc.ColorTool as XCafDoc.ColourTool
+import Control.Lens ((^.))
+import Data.Foldable (traverse_)
 
 -- | The type of exceptions thrown by IO actions defined in `Waterfall.IO`
 data WaterfallIOException = 
@@ -163,25 +168,28 @@ writeSTEP filepath (Solid ptr _paintFn) = (`withAcquire` pure) $ do
     resWrite <- liftIO $ StepWriter.write writer filepath
     unless (resWrite == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
 
+addColourToCafWriter :: Ptr TopoDS.Shape -> Ptr Label -> PaintFn -> Acquire ()
+addColourToCafWriter s shapeLabel paintFn = do
+    faces <- allSubShapesWithCopy TopAbs.ShapeEnum.Face s
+    colourTool <- XCafDoc.DocumentTool.colorTool shapeLabel
+    forM_ faces $ \face -> do
+        maybePaint <- runPaintFn paintFn face
+        forM_ maybePaint $ \paint -> case paint ^. paintColour of
+            Nothing -> pure ()
+            Just (Colour r g b) -> do
+                color <- Quantity.Color.new  r g b Quantity.TypeOfColor.RGB
+                void . liftIO $ XCafDoc.ColourTool.setShapeColor colourTool face color XCAFDoc.ColorType.ColorSurf
+
 cafWriter :: (FilePath -> Ptr (Handle TDocStd.Document) -> Ptr (NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString) -> Ptr Message.ProgressRange -> Acquire ()) -> Double -> FilePath -> Solid-> IO ()
-cafWriter write linDeflection filepath (Solid ptr _paintFn) = (`withAcquire` pure) $ do
+cafWriter write linDeflection filepath (Solid ptr paintFnMay) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
     liftIO $ BRepMesh.IncrementalMesh.perform mesh
     doc <- TDocStd.Document.fromStorageFormat ""
     mainLabel <- TDocStd.Document.main doc
     shapeTool <- XCafDoc.DocumentTool.shapeTool mainLabel
-    red <- Quantity.Color.new 1.0 0.0 0.0 Quantity.TypeOfColor.RGB
     shapeLabel <- XCafDoc.ShapeTool.addShape shapeTool s True True
-    colorTool <- XCafDoc.DocumentTool.colorTool shapeLabel
-    liftIO $ print =<< XCafDoc.ColorTool.setShapeColor colorTool s red XCAFDoc.ColorType.ColorSurf
-    explorer <- TopExp.Explorer.new s TopAbs.ShapeEnum.Face
-    firstFace <- liftIO $ TopExp.Explorer.value explorer
-    -- faceLabel <- XCafDoc.ShapeTool.findShape shapeTool firstFace False
-    -- faceLabel <- XCafDoc.ShapeTool.addShape shapeTool firstFace True True
-    blue <- Quantity.Color.new 0.0 0.0 1.0 Quantity.TypeOfColor.RGB
-    -- colorTool' <- XCafDoc.DocumentTool.colorTool faceLabel
-    liftIO $ print =<< XCafDoc.ColorTool.setShapeColor colorTool firstFace blue XCAFDoc.ColorType.ColorSurf
+    traverse_ (addColourToCafWriter s shapeLabel) paintFnMay
     meta <- NCollection.IndexedDataMap.newAsciiStringMap
     progress <- Message.ProgressRange.new
     write filepath doc meta progress
