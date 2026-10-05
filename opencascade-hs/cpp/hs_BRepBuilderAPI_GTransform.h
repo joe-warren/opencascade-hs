@@ -7,11 +7,13 @@
 extern "C" {
 #endif
 
-TopoDS_Shape * hs_BRepBuilderAPI_GTransform_gtransform(
+BRepBuilderAPI_GTransform * hs_new_BRepBuilderAPI_GTransform_fromShapeAndGTrsf(
     TopoDS_Shape * shape, gp_GTrsf * trsf, bool copy,
     HSExceptionType* exType,
     void** exPtr
 );
+
+void hs_delete_BRepBuilderAPI_GTransform(BRepBuilderAPI_GTransform * builder);
 
 #ifdef __cplusplus
 }

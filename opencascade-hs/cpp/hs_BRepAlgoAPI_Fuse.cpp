@@ -4,7 +4,7 @@
 
 #include <TopoDS_Shape.hxx>
 
-TopoDS_Shape * hs_BRepAlgoAPI_Fuse(
+BRepAlgoAPI_Fuse * hs_new_BRepAlgoAPI_Fuse_fromShapes(
         TopoDS_Shape * a, TopoDS_Shape * b,
         HSExceptionType* exType,
         void** exPtr
@@ -13,7 +13,10 @@ TopoDS_Shape * hs_BRepAlgoAPI_Fuse(
         exType,
         exPtr,
         [a, b]{
-        auto builder = BRepAlgoAPI_Fuse(*a, *b);
-        return new TopoDS_Shape(builder.Shape());
+        return new BRepAlgoAPI_Fuse(*a, *b);
     });
+}
+
+void hs_delete_BRepAlgoAPI_Fuse(BRepAlgoAPI_Fuse * builder){
+    delete builder;
 }

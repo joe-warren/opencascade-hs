@@ -14,12 +14,28 @@ and this project adheres to the
 - Support for OpenCASCADE 8.x
 - Added `OpenCascade.TCollection.AsciiString`
 - Added `OpenCascade.NCollection.IndexedDataMap`
+- Added `OpenCascade.NCollection.List`
+- Added `OpenCascade.TopExp.mapShapesAndAncestors`
+- Added `modified`, `generated` and `isDeleted` to `OpenCascade.BRepBuilderAPI.MakeShape` and `OpenCascade.BOPAlgo.Builder`
+- Added builder versions of some functions that used to be one-shot:
+  - `OpenCascade.BRepAlgoAPI.Fuse` 
+  - `OpenCascade.BRepAlgoAPI.Cut`
+  - `OpenCascade.BRepAlgoAPI.Common`
+  - `OpenCascade.BRepBuilderAPI.Transform` 
+  - `OpenCascade.BRepBuilderAPI.GTransform`
+- Added `OpenCascade.TDF.Label.isNull`
+- Added `addSubShape` and `findShape` to `OpenCascade.XCAFDoc.ShapeTool`
+- Added `OpenCascade.Quantity.Color`, `OpenCascade.Quantity.TypeOfColor`, `OpenCascade.XCAFDoc.ColorTool`,
+  `OpenCascade.XCAFDoc.ColorType`, `OpenCascade.XCAFDoc.VisMaterial`, `OpenCascade.XCAFDoc.VisMaterialPBR`,
+  `OpenCascade.XCAFDoc.VisMaterialTool`, `OpenCascade.Graphic3D.AlphaMode`
+- Added `colorTool` and `visMaterialTool` to `OpenCascade.XCAFDoc.DocumentTool`
+- Added `OpenCascade.STEPCAFControl.Writer`
 
 ### Removed
 
 - In order to support building against OpenCASCADE 8.x:
-  - Removed `OpenCascade.TopTools.ListOfShape` (replaced by `OpenCascade.NCollection.List TopoDS.Shape`)
   - Removed `OpenCascade.TColStd.IndexedDataMapOfStringString` ( replaced by `OpenCascade.NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString` + `OpenCascade.NCollection.IndexedDataMap.newAsciiStringMap`)
+- Removed `fuse`, `cut`, `common`, `transform` and `gtransform`, in favour of `fromShapes` in `OpenCascade.BRepAlgoAPI.Fuse`, `OpenCascade.BRepAlgoAPI.Cut` and `OpenCascade.BRepAlgoAPI.Common`, `fromShapeAndTrsf` in `OpenCascade.BRepBuilderAPI.Transform` and `fromShapeAndGTrsf` in `OpenCascade.BRepBuilderAPI.GTransform`
 
 ## 0.6.3.2
 

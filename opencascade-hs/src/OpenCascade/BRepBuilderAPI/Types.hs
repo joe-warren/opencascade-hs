@@ -7,6 +7,8 @@ module OpenCascade.BRepBuilderAPI.Types
 , MakeSolid
 , MakeShape
 , Sewing
+, Transform
+, GTransform
 ) where
 
 import qualified OpenCascade.Inheritance as Inheritance
@@ -20,8 +22,12 @@ data MakeShape
 
 data Sewing
 
+data Transform
+data GTransform
+
 instance Inheritance.SubTypeOf MakeShape MakeVertex
 instance Inheritance.SubTypeOf MakeShape MakeWire
 instance Inheritance.SubTypeOf MakeShape MakeSolid
 instance Inheritance.SubTypeOf MakeShape MakeFace
-
+instance Inheritance.SubTypeOf MakeShape Transform
+instance Inheritance.SubTypeOf MakeShape GTransform

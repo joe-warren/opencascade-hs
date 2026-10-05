@@ -4,7 +4,7 @@
 
 #include <TopoDS_Shape.hxx>
 
-TopoDS_Shape * hs_BRepAlgoAPI_Common(
+BRepAlgoAPI_Common * hs_new_BRepAlgoAPI_Common_fromShapes(
         TopoDS_Shape * a, TopoDS_Shape * b,
         HSExceptionType* exType,
         void** exPtr
@@ -13,7 +13,10 @@ TopoDS_Shape * hs_BRepAlgoAPI_Common(
         exType,
         exPtr,
         [a, b]{
-        auto builder = BRepAlgoAPI_Common(*a, *b);
-        return new TopoDS_Shape(builder.Shape());
+        return new BRepAlgoAPI_Common(*a, *b);
     });
+}
+
+void hs_delete_BRepAlgoAPI_Common(BRepAlgoAPI_Common * builder){
+    delete builder;
 }

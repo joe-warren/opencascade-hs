@@ -156,9 +156,12 @@ library
       OpenCascade.BRepAdaptor.Curve
       OpenCascade.BRepAdaptor.Internal.Destructors
       OpenCascade.BRepAdaptor.Types
+      OpenCascade.BRepAlgoAPI
       OpenCascade.BRepAlgoAPI.Common
       OpenCascade.BRepAlgoAPI.Cut
       OpenCascade.BRepAlgoAPI.Fuse
+      OpenCascade.BRepAlgoAPI.Internal.Destructors
+      OpenCascade.BRepAlgoAPI.Types
       OpenCascade.BRepBndLib
       OpenCascade.BRepBuilderAPI
       OpenCascade.BRepBuilderAPI.Copy
@@ -279,6 +282,7 @@ library
       OpenCascade.NCollection.Array1
       OpenCascade.NCollection.IndexedDataMap
       OpenCascade.NCollection.Internal.Destructors
+      OpenCascade.NCollection.List
       OpenCascade.NCollection.Types
       OpenCascade.Poly.Internal.Destructors
       OpenCascade.Poly.Triangle
