@@ -1,7 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepBuilderAPI.GTransform 
 ( GTransform
-, fromShapeAndGTrsf
+, fromShapeGTrsfAndCopy
 ) where
 
 import OpenCascade.BRepBuilderAPI.Types (GTransform)
@@ -14,7 +14,7 @@ import Foreign.C
 import Foreign.Ptr
 import Data.Acquire
 
-foreign import capi unsafe "hs_BRepBuilderAPI_GTransform.h hs_new_BRepBuilderAPI_GTransform_fromShapeAndGTrsf" rawFromShapeAndGTrsf
+foreign import capi unsafe "hs_BRepBuilderAPI_GTransform.h hs_new_BRepBuilderAPI_GTransform_fromShapeGTrsfAndCopy" rawFromShapeGTrsfAndCopy
     :: Ptr TopoDS.Shape
     -> Ptr GP.GTrsf
     -> CBool
@@ -22,5 +22,5 @@ foreign import capi unsafe "hs_BRepBuilderAPI_GTransform.h hs_new_BRepBuilderAPI
     -> Ptr (Ptr ())
     -> IO (Ptr GTransform)
 
-fromShapeAndGTrsf :: Ptr TopoDS.Shape -> Ptr GP.GTrsf -> Bool -> Acquire (Ptr GTransform)
-fromShapeAndGTrsf shape trsf copy = mkAcquire (wrapException $ rawFromShapeAndGTrsf shape trsf (boolToCBool copy)) deleteGTransform
+fromShapeGTrsfAndCopy :: Ptr TopoDS.Shape -> Ptr GP.GTrsf -> Bool -> Acquire (Ptr GTransform)
+fromShapeGTrsfAndCopy shape trsf copy = mkAcquire (wrapException $ rawFromShapeGTrsfAndCopy shape trsf (boolToCBool copy)) deleteGTransform

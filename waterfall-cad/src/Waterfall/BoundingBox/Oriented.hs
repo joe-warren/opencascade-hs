@@ -92,4 +92,4 @@ obbToSolid obb = solidFromAcquire Nothing $ do
     trsf <- Trsf.new
     liftIO $ Trsf.setDisplacement trsf o position
     BRepBuilderAPI.MakeShape.shape 
-        =<< fmap upcast (BRepBuilderAPI.Transform.fromShapeAndTrsf unpositioned trsf True)
+        =<< fmap upcast (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy unpositioned trsf True)

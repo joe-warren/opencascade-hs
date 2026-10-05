@@ -64,14 +64,14 @@ fromTrsfSolid :: Acquire (Ptr GP.Trsf) -> Solid -> Solid
 fromTrsfSolid mkTrsf s = solidFromAcquire (solidPaintFn s) $ do 
     solid <- acquireSolid s
     trsf <- mkTrsf 
-    builder <- BRepBuilderAPI.Transform.fromShapeAndTrsf solid trsf True 
+    builder <- BRepBuilderAPI.Transform.fromShapeTrsfAndCopy solid trsf True 
     BRepBuilderAPI.MakeShape.shape (upcast builder)
 
 fromGTrsfSolid :: Acquire (Ptr GP.GTrsf) -> Solid -> Solid
 fromGTrsfSolid mkTrsf s = solidFromAcquire (solidPaintFn s) $ do 
     solid <- acquireSolid s
     trsf <- mkTrsf 
-    builder <- BRepBuilderAPI.GTransform.fromShapeAndGTrsf solid trsf True 
+    builder <- BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy solid trsf True 
     BRepBuilderAPI.MakeShape.shape (upcast builder)
 
 transformPathSinglePointPaths :: (V3 Double -> V3 Double) -> Path -> Path
@@ -85,7 +85,7 @@ fromTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafe
     (liftIO . unsafeDowncast)
         =<< BRepBuilderAPI.MakeShape.shape
         =<< fmap upcast 
-            (BRepBuilderAPI.Transform.fromShapeAndTrsf (upcast path) trsf True)
+            (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
 fromTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
 fromTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 
@@ -96,7 +96,7 @@ fromGTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsaf
     (liftIO . unsafeDowncast) 
         =<< BRepBuilderAPI.MakeShape.shape
         =<< fmap upcast
-            (BRepBuilderAPI.GTransform.fromShapeAndGTrsf (upcast path) trsf True)
+            (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
 fromGTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
 fromGTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 

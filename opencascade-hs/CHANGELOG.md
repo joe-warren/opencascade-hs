@@ -35,7 +35,7 @@ and this project adheres to the
 
 - In order to support building against OpenCASCADE 8.x:
   - Removed `OpenCascade.TColStd.IndexedDataMapOfStringString` ( replaced by `OpenCascade.NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString` + `OpenCascade.NCollection.IndexedDataMap.newAsciiStringMap`)
-- Removed `fuse`, `cut`, `common`, `transform` and `gtransform`, in favour of `fromShapes` in `OpenCascade.BRepAlgoAPI.Fuse`, `OpenCascade.BRepAlgoAPI.Cut` and `OpenCascade.BRepAlgoAPI.Common`, `fromShapeAndTrsf` in `OpenCascade.BRepBuilderAPI.Transform` and `fromShapeAndGTrsf` in `OpenCascade.BRepBuilderAPI.GTransform`
+- Removed `fuse`, `cut`, `common`, `transform` and `gtransform`, in favour of `fromShapes` in `OpenCascade.BRepAlgoAPI.Fuse`, `OpenCascade.BRepAlgoAPI.Cut` and `OpenCascade.BRepAlgoAPI.Common`, `fromShapeTrsfAndCopy` in `OpenCascade.BRepBuilderAPI.Transform` and `fromShapeGTrsfAndCopy` in `OpenCascade.BRepBuilderAPI.GTransform`
 
 ## 0.6.3.2
 

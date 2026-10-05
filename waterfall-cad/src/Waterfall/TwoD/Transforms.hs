@@ -68,7 +68,7 @@ fromTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . un
     (liftIO . unsafeDowncast) 
         =<< BRepBuilderAPI.MakeShape.shape
         =<< fmap upcast
-            (BRepBuilderAPI.Transform.fromShapeAndTrsf (upcast path) trsf True)
+            (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
 fromTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $ (v & _xy %~ f)
 fromTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
 
@@ -76,7 +76,7 @@ fromTrsfShape :: Acquire (Ptr GP.Trsf) -> Shape -> Shape
 fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
     shape <- toAcquire theRawShape
     trsf <- mkTrsf 
-    builder <- BRepBuilderAPI.Transform.fromShapeAndTrsf shape trsf True 
+    builder <- BRepBuilderAPI.Transform.fromShapeTrsfAndCopy shape trsf True 
     BRepBuilderAPI.MakeShape.shape (upcast builder)
     
 fromGTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Maybe (Ptr GP.GTrsf)) -> Path2D -> Path2D
@@ -88,7 +88,7 @@ fromGTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . u
             (liftIO . unsafeDowncast) 
                 =<< BRepBuilderAPI.MakeShape.shape
                 =<< fmap upcast
-                    (BRepBuilderAPI.GTransform.fromShapeAndGTrsf (upcast path) trsf True)
+                    (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
         Nothing -> pure path
 fromGTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $ (v & _xy %~ f)
 fromGTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
@@ -101,7 +101,7 @@ fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do
         Just trsf -> 
             BRepBuilderAPI.MakeShape.shape 
                 =<< fmap upcast
-                    (BRepBuilderAPI.GTransform.fromShapeAndGTrsf shape trsf True)
+                    (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy shape trsf True)
         Nothing -> pure shape
 
 fromTrsfDiagram :: Acquire (Ptr GP.Trsf) -> RawDiagram -> RawDiagram
@@ -112,7 +112,7 @@ fromTrsfDiagram mkTrsf (RawDiagram runTheDiagram) = RawDiagram $ \lt v is3D -> d
         (liftIO . unsafeDowncast) 
             =<< BRepBuilderAPI.MakeShape.shape 
             =<< fmap upcast
-                (BRepBuilderAPI.Transform.fromShapeAndTrsf (upcast s) trsf True)
+                (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast s) trsf True)
 
 fromGTrsfDiagram :: Acquire (Maybe (Ptr GP.GTrsf)) -> RawDiagram -> RawDiagram
 fromGTrsfDiagram mkTrsf (RawDiagram runTheDiagram) = RawDiagram $ \lt v is3D -> do 
@@ -124,7 +124,7 @@ fromGTrsfDiagram mkTrsf (RawDiagram runTheDiagram) = RawDiagram $ \lt v is3D -> 
                 (liftIO . unsafeDowncast) 
                     =<< BRepBuilderAPI.MakeShape.shape
                     =<< fmap upcast
-                        (BRepBuilderAPI.GTransform.fromShapeAndGTrsf (upcast s) trsf True)
+                        (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast s) trsf True)
         Nothing -> pure edges
 
 matrixGTrsf :: M23 Double -> Acquire (Maybe (Ptr GP.GTrsf))

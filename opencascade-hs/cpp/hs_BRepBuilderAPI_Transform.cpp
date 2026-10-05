@@ -3,7 +3,7 @@
 #include "hs_Exception.h"
 #include "hs_BRepBuilderAPI_Transform.h"
 
-BRepBuilderAPI_Transform * hs_new_BRepBuilderAPI_Transform_fromShapeAndTrsf(
+BRepBuilderAPI_Transform * hs_new_BRepBuilderAPI_Transform_fromShapeTrsfAndCopy(
         TopoDS_Shape * shape, gp_Trsf * trsf, bool copy,
         HSExceptionType* exType,
         void** exPtr

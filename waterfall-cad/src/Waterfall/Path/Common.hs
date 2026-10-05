@@ -238,7 +238,7 @@ splice path pnt =
                         (liftIO . unsafeDowncast) 
                             =<< BRepBuilderAPI.MakeShape.shape
                             =<< fmap upcast 
-                                (BRepBuilderAPI.Transform.fromShapeAndTrsf (upcast wire) trsf True)
+                                (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast wire) trsf True)
                     return (pnt + e' - s', newWire)
             in (fst res, fromWire (fmap snd . toAcquire $ res))
         _ -> (pnt, reconstructPath EmptyRawPath)
