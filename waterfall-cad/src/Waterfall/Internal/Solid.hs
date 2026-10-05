@@ -1,5 +1,6 @@
 {-# OPTIONS_HADDOCK not-home #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Waterfall.Internal.Solid 
 ( Solid (..)
 , PaintFn (..)
@@ -27,10 +28,12 @@ import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
 import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
+import OpenCascade.BRepBuilderAPI (MakeShape)
+import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
 import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
-import OpenCascade.Inheritance (upcast)
+import OpenCascade.Inheritance (SubTypeOf(..), upcast)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire, unsafeFromAcquireWithCatch, unsafeFromAcquireTWithCatch)
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
 import Data.Foldable (traverse_)
@@ -116,17 +119,17 @@ emptySolid =  (`Solid` Nothing) . unsafeFromAcquire $ upcast <$> (MakeSolid.soli
 -- defining the boolean CSG operators here, rather than in Waterfall.Booleans 
 -- means that we can use them in typeclass instances without resorting to orphans
 
-toBoolean :: (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)) -> Solid -> Solid -> Solid
+toBoolean :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr a)) -> Solid -> Solid -> Solid
 toBoolean f (Solid ptrA paintFnA) (Solid ptrB _) = (`Solid` paintFnA) . unsafeFromAcquire $ do
     a <- toAcquire ptrA
     b <- toAcquire ptrB
-    f a b
+    MakeShape.shape =<< fmap upcast (f a b)
 
 -- | Take the sum of two solids
 --
 -- The region occupied by either one of them.
 union3D :: Solid -> Solid -> Solid
-union3D = toBoolean Fuse.fuse
+union3D = toBoolean Fuse.fromShapes
 
 
 toBooleans :: BOPAlgo.Operation.Operation -> [Solid] -> Solid
@@ -155,13 +158,13 @@ unions3D = toBooleans BOPAlgo.Operation.Fuse
 -- 
 -- The region occupied by the first, but not the second.
 difference3D :: Solid -> Solid -> Solid
-difference3D = toBoolean Cut.cut
+difference3D = toBoolean Cut.fromShapes
 
 -- | Take the intersection of two solids 
 --
 -- The region occupied by both of them.
 intersection3D :: Solid -> Solid -> Solid
-intersection3D = toBoolean Common.common
+intersection3D = toBoolean Common.fromShapes
 
 
 -- | Take the intersection of a list of solids 

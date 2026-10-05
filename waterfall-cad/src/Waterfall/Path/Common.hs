@@ -53,6 +53,7 @@ import qualified OpenCascade.Geom.BezierCurve as BezierCurve
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP.Vec as  GP.Vec
 import qualified OpenCascade.BRepBuilderAPI.Transform as BRepBuilderAPI.Transform
+import qualified OpenCascade.BRepBuilderAPI.MakeShape as BRepBuilderAPI.MakeShape
 import Data.Proxy (Proxy (..))
 import Linear (V3 (..), V2 (..), _xy, Epsilon)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
@@ -233,7 +234,11 @@ splice path pnt =
                     trsf <- GP.Trsf.new
                     vec <- GP.Vec.new x y z
                     liftIO $ GP.Trsf.setTranslation trsf vec
-                    newWire <- (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast wire) trsf True 
+                    newWire <- 
+                        (liftIO . unsafeDowncast) 
+                            =<< BRepBuilderAPI.MakeShape.shape
+                            =<< fmap upcast 
+                                (BRepBuilderAPI.Transform.fromShapeAndTrsf (upcast wire) trsf True)
                     return (pnt + e' - s', newWire)
             in (fst res, fromWire (fmap snd . toAcquire $ res))
         _ -> (pnt, reconstructPath EmptyRawPath)

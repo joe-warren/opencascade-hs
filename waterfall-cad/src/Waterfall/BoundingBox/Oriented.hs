@@ -23,6 +23,8 @@ import qualified OpenCascade.GP.Ax3 as Ax3
 import qualified OpenCascade.GP.Trsf as Trsf
 import qualified OpenCascade.BRepBndLib as BRepBndLib
 import qualified OpenCascade.BRepBuilderAPI.Transform  as BRepBuilderAPI.Transform
+import qualified OpenCascade.BRepBuilderAPI.MakeShape as BRepBuilderAPI.MakeShape
+import OpenCascade.Inheritance (upcast)
 import Data.Acquire (Acquire)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad ((<=<))
@@ -89,4 +91,5 @@ obbToSolid obb = solidFromAcquire Nothing $ do
     o <- Ax3.fromAx2 =<< GP.xoy
     trsf <- Trsf.new
     liftIO $ Trsf.setDisplacement trsf o position
-    BRepBuilderAPI.Transform.transform unpositioned trsf True
+    BRepBuilderAPI.MakeShape.shape 
+        =<< fmap upcast (BRepBuilderAPI.Transform.fromShapeAndTrsf unpositioned trsf True)
