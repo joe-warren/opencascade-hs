@@ -1,6 +1,7 @@
 {-# OPTIONS_HADDOCK not-home #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DerivingVia, DeriveGeneric #-}
 module Waterfall.Internal.Solid 
 ( Solid (..)
@@ -35,8 +36,11 @@ import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
 import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
-import OpenCascade.Inheritance (SubTypeOf(..), upcast)
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire, unsafeFromAcquireWithCatch, unsafeFromAcquireTWithCatch)
+import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
+import qualified OpenCascade.NCollection.List as NCollection.List
+import OpenCascade.Inheritance (SubTypeOf(..), upcast, unsafeDowncast)
+import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire, unsafeFromAcquireWithCatch, unsafeFromAcquireTWithCatch, unsafeFromAcquireT)
+import Waterfall.Internal.Edges (allSubShapesWithCopy)
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
 import Data.Foldable (traverse_)
 import Waterfall.Error (WaterfallError)
@@ -69,6 +73,11 @@ acquireSolid (Solid ptr _) = toAcquire ptr
 
 solidFromAcquire :: PaintMap -> Acquire (Ptr TopoDS.Shape.Shape) -> Solid
 solidFromAcquire paintMap = (`Solid` paintMap) . unsafeFromAcquire
+
+solidFromAcquireWithPaintMap ::  Acquire (PaintMap, Ptr TopoDS.Shape.Shape) -> Solid
+solidFromAcquireWithPaintMap f = 
+    let (paintMap, ptr) = unsafeFromAcquireT f 
+    in Solid ptr paintMap
 
 solidFromAcquireWithCatch :: PaintMap -> Acquire (Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
 solidFromAcquireWithCatch paintMap = fmap (`Solid` paintMap) . unsafeFromAcquireWithCatch
@@ -127,10 +136,43 @@ emptySolid =  (`Solid` mempty) . unsafeFromAcquire $ upcast <$> (MakeSolid.solid
 -- means that we can use them in typeclass instances without resorting to orphans
 
 toBoolean :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr a)) -> Solid -> Solid -> Solid
-toBoolean f (Solid ptrA paintMapA) (Solid ptrB _) = (`Solid` paintMapA) . unsafeFromAcquire $ do
+toBoolean f (Solid ptrA paintMapA) (Solid ptrB paintMapB) = solidFromAcquireWithPaintMap $ do
     a <- toAcquire ptrA
     b <- toAcquire ptrB
-    MakeShape.shape =<< fmap upcast (f a b)
+    builder <- f a b
+    
+    let newPaintMap = PaintMap 
+            { paintMapDefault = paintMapDefault paintMapA
+            , paintMapFacePaints = 
+                let facePaintsA = paintMapFacePaints paintMapA
+                    newFacePaintsB = 
+                        if (paintMapDefault paintMapA /= paintMapDefault paintMapB) 
+                            then fmap (\s -> (s, paintMapDefault paintMapB)) 
+                                    . unsafeFromAcquireT 
+                                    $ ( traverse (liftIO . unsafeDowncast)
+                                        =<< allSubShapesWithCopy ShapeEnum.Face ptrB
+                                    )
+                            else []
+                    existingFacePaints = 
+                        facePaintsA <> newFacePaintsB <> paintMapFacePaints paintMapB
+
+                in do
+                        (face, paint) <- existingFacePaints
+                        fmap (\s -> (s, paint)) . unsafeFromAcquireT $ do 
+                            modified <-
+                                traverse (liftIO . unsafeDowncast)
+                                    =<< NCollection.List.fromListOfShape
+                                    =<< MakeShape.modified (upcast builder) (upcast face)
+                            if not (null modified)
+                                then pure modified
+                                else do
+                                    isDeleted <- liftIO $ MakeShape.isDeleted (upcast builder) (upcast face)
+                                    if isDeleted
+                                        then pure []
+                                        else pure [face]
+            }
+    shape <- MakeShape.shape (upcast builder)
+    return (newPaintMap, shape)
 
 -- | Take the sum of two solids
 --

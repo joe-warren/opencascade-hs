@@ -13,6 +13,7 @@ module Waterfall.Solids
 , octahedron
 , dodecahedron
 , icosahedron
+, paintSolid
 , prism
 , volume
 , centerOfMass
@@ -20,7 +21,8 @@ module Waterfall.Solids
 ) where
 
 
-import Waterfall.Internal.Solid (Solid (..), solidFromAcquire, acquireSolid, emptySolid)
+import Waterfall.Internal.Solid (Solid (..), PaintMap (..), solidFromAcquire, acquireSolid, emptySolid)
+import Waterfall.Paint (Paint)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Waterfall.TwoD.Internal.Shape (rawShape)
 import Waterfall.Internal.ToOpenCascade (v3ToVertex)
@@ -248,6 +250,13 @@ dodecahedron =
         , \x y -> [ green y (-1), green y 1, orange x y 1, pink x y, orange x y (-1)]  
         , \x z -> [ pink x (-1), pink x 1, orange x 1 z, blue x z, orange x (-1) z] 
         ] <*> plusMinusOne <*> plusMinusOne
+
+-- | Apply a `Paint` to a `Solid`
+--
+-- Replaces any previously applied paint
+paintSolid :: Paint -> Solid -> Solid
+paintSolid paint (Solid s _) = 
+    Solid s (mempty { paintMapDefault = paint })
 
 gPropQuery :: (Ptr GProps.GProps -> Acquire a) -> Solid -> a
 gPropQuery f s = unsafeFromAcquire $ do

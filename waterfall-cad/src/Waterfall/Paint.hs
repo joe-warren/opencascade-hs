@@ -3,6 +3,7 @@ module Waterfall.Paint
 ( Colour (..)
 , Paint
 , DoubleSidedness (..)
+, paintIsDefined
 -- * Constructors
 , paintWithColour
 , paintWithOpacity
@@ -73,6 +74,9 @@ instance Show Paint where
             . foldMap Endo
             . intersperse (showString " <> ") 
             $ terms
+
+paintIsDefined :: Paint -> Bool
+paintIsDefined = (== mempty)
 
 paintColour :: Lens' Paint (Maybe Colour)
 paintColour = 
