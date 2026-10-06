@@ -61,14 +61,14 @@ class Transformable a where
     mirror :: V3 Double -> a -> a
 
 fromTrsfSolid :: Acquire (Ptr GP.Trsf) -> Solid -> Solid
-fromTrsfSolid mkTrsf s = solidFromAcquire (solidPaintFn s) $ do 
+fromTrsfSolid mkTrsf s = solidFromAcquire (solidPaintMap s) $ do 
     solid <- acquireSolid s
     trsf <- mkTrsf 
     builder <- BRepBuilderAPI.Transform.fromShapeTrsfAndCopy solid trsf True 
     BRepBuilderAPI.MakeShape.shape (upcast builder)
 
 fromGTrsfSolid :: Acquire (Ptr GP.GTrsf) -> Solid -> Solid
-fromGTrsfSolid mkTrsf s = solidFromAcquire (solidPaintFn s) $ do 
+fromGTrsfSolid mkTrsf s = solidFromAcquire (solidPaintMap s) $ do 
     solid <- acquireSolid s
     trsf <- mkTrsf 
     builder <- BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy solid trsf True 

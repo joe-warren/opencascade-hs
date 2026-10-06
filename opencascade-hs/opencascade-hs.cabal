@@ -288,6 +288,7 @@ library
       OpenCascade.Poly.Triangle
       OpenCascade.Poly.Triangulation
       OpenCascade.Poly.Types
+      OpenCascade.Quantity
       OpenCascade.Quantity.Color
       OpenCascade.Quantity.Internal.Destructors
       OpenCascade.Quantity.TypeOfColor

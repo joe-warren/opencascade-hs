@@ -24,7 +24,7 @@ module Waterfall.IO
 , readOBJ
 ) where 
 
-import Waterfall.Internal.Solid (Solid(..), PaintFn (runPaintFn))
+import Waterfall.Internal.Solid (Solid(..), PaintMap(..))
 import qualified Waterfall.Internal.Remesh as Remesh
 import qualified OpenCascade.BRepMesh.IncrementalMesh as BRepMesh.IncrementalMesh
 import qualified OpenCascade.StlAPI.Writer as StlWriter
@@ -48,19 +48,17 @@ import qualified OpenCascade.RWMesh.Types as RWMesh
 import qualified OpenCascade.RWMesh.CafReader as RWMesh.CafReader
 import qualified OpenCascade.TDocStd.Types as TDocStd
 import qualified OpenCascade.XCAFDoc.DocumentTool as XCafDoc.DocumentTool
-import qualified OpenCascade.XCAFDoc.ColorTool as XCafDoc.ColorTool
 import qualified OpenCascade.XCAFDoc.ShapeTool as XCafDoc.ShapeTool
 import qualified OpenCascade.XCAFDoc.ColorType as XCAFDoc.ColorType
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
-import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
-import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
 import OpenCascade.Handle (Handle)
 import OpenCascade.Inheritance (upcast)
+import qualified OpenCascade.Quantity as Quantity
 import qualified OpenCascade.Quantity.Color as Quantity.Color
 import qualified OpenCascade.Quantity.TypeOfColor as Quantity.TypeOfColor
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (unless, when, forM_, void)
+import Control.Monad (unless, when, forM_)
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
 import Data.Acquire ( Acquire, withAcquire )
 import Foreign.Ptr (Ptr)
@@ -68,11 +66,10 @@ import Data.Char (toLower)
 import System.FilePath (takeExtension)
 import Control.Exception (Exception, throwIO)
 import OpenCascade.TDF.Label (Label)
-import Waterfall.Internal.Edges (allSubShapesWithCopy)
 import Waterfall.Paint (Colour(..), paintColour)
 import qualified OpenCascade.XCAFDoc.ColorTool as XCafDoc.ColourTool
 import Control.Lens ((^.))
-import Data.Foldable (traverse_)
+import System.IO (hPutStrLn, stderr)
 
 -- | The type of exceptions thrown by IO actions defined in `Waterfall.IO`
 data WaterfallIOException = 
@@ -125,7 +122,7 @@ writeSolid res filepath =
         Nothing -> const $ throwIO (WaterfallIOException UnrecognizedFormatError filepath)
 
 writeSTLAsciiOrBinary :: Bool -> Double -> FilePath -> Solid -> IO ()
-writeSTLAsciiOrBinary asciiMode linDeflection filepath (Solid ptr _paintFn) = (`withAcquire` pure) $ do
+writeSTLAsciiOrBinary asciiMode linDeflection filepath (Solid ptr _paintMap) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
     liftIO $ BRepMesh.IncrementalMesh.perform mesh
@@ -160,7 +157,7 @@ writeAsciiSTL = writeSTLAsciiOrBinary True
 --
 -- STEP files can be imported by [FreeCAD](https://www.freecad.org/)
 writeSTEP :: FilePath -> Solid -> IO ()
-writeSTEP filepath (Solid ptr _paintFn) = (`withAcquire` pure) $ do
+writeSTEP filepath (Solid ptr _paintMap) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     writer <- StepWriter.new
     resTransfer <- liftIO $ StepWriter.transfer writer s StepModelType.Asls True
@@ -168,20 +165,26 @@ writeSTEP filepath (Solid ptr _paintFn) = (`withAcquire` pure) $ do
     resWrite <- liftIO $ StepWriter.write writer filepath
     unless (resWrite == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
 
-addColourToCafWriter :: Ptr TopoDS.Shape -> Ptr Label -> PaintFn -> Acquire ()
-addColourToCafWriter s shapeLabel paintFn = do
-    faces <- allSubShapesWithCopy TopAbs.ShapeEnum.Face s
+colourToOCColor :: Colour -> Acquire (Ptr Quantity.Color)
+colourToOCColor (Colour r g b) =
+    Quantity.Color.new r g b Quantity.TypeOfColor.RGB
+
+addColourToCafWriter :: Ptr TopoDS.Shape -> Ptr Label -> PaintMap -> Acquire ()
+addColourToCafWriter s shapeLabel paintMap = do
     colourTool <- XCafDoc.DocumentTool.colorTool shapeLabel
-    forM_ faces $ \face -> do
-        maybePaint <- runPaintFn paintFn face
-        forM_ maybePaint $ \paint -> case paint ^. paintColour of
-            Nothing -> pure ()
-            Just (Colour r g b) -> do
-                color <- Quantity.Color.new  r g b Quantity.TypeOfColor.RGB
-                void . liftIO $ XCafDoc.ColourTool.setShapeColor colourTool face color XCAFDoc.ColorType.ColorSurf
+    forM_ (paintMapDefault paintMap ^. paintColour) $ \color -> do
+        ocColour <- colourToOCColor color
+        colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool s ocColour XCAFDoc.ColorType.ColorSurf
+        liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Base Shape not found in CAF document"
+
+    forM_ (paintMapFacePaints paintMap) $ \(face, paint) -> 
+        forM_ (paint ^. paintColour) $ \colour -> do
+                ocColour <- colourToOCColor colour
+                colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool (upcast face) ocColour XCAFDoc.ColorType.ColorSurf
+                liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Face not found in CAF document"
 
 cafWriter :: (FilePath -> Ptr (Handle TDocStd.Document) -> Ptr (NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString) -> Ptr Message.ProgressRange -> Acquire ()) -> Double -> FilePath -> Solid-> IO ()
-cafWriter write linDeflection filepath (Solid ptr paintFnMay) = (`withAcquire` pure) $ do
+cafWriter write linDeflection filepath (Solid ptr paintMap) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
     liftIO $ BRepMesh.IncrementalMesh.perform mesh
@@ -189,7 +192,7 @@ cafWriter write linDeflection filepath (Solid ptr paintFnMay) = (`withAcquire` p
     mainLabel <- TDocStd.Document.main doc
     shapeTool <- XCafDoc.DocumentTool.shapeTool mainLabel
     shapeLabel <- XCafDoc.ShapeTool.addShape shapeTool s True True
-    traverse_ (addColourToCafWriter s shapeLabel) paintFnMay
+    addColourToCafWriter s shapeLabel paintMap
     meta <- NCollection.IndexedDataMap.newAsciiStringMap
     progress <- Message.ProgressRange.new
     write filepath doc meta progress
@@ -261,7 +264,7 @@ remeshOrThrow filepath shape = do
 
 -- | Read a `Solid` from an STL file at a given path
 readSTL :: FilePath -> IO Solid
-readSTL filepath = fmap (`Solid` Nothing) . fromAcquire $ do
+readSTL filepath = fmap (`Solid` mempty) . fromAcquire $ do
     shape <- TopoDS.Shape.new
     reader <- StlReader.new
     res <- liftIO $ StlReader.read reader shape filepath
@@ -270,7 +273,7 @@ readSTL filepath = fmap (`Solid` Nothing) . fromAcquire $ do
 
 -- | Read a `Solid` from a STEP file at a given path
 readSTEP :: FilePath -> IO Solid
-readSTEP filepath = fmap (`Solid` Nothing) . fromAcquire $ do
+readSTEP filepath = fmap (`Solid` mempty) . fromAcquire $ do
     reader <- STEPReader.new
     status <- liftIO $ XSControl.Reader.readFile (upcast reader) filepath
     _ <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
@@ -281,7 +284,7 @@ readSTEP filepath = fmap (`Solid` Nothing) . fromAcquire $ do
     return shape
 
 cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO Solid
-cafReader mkReader filepath = fmap (`Solid` Nothing) . fromAcquire $ do
+cafReader mkReader filepath = fmap (`Solid` mempty) . fromAcquire $ do
     reader <- mkReader
     doc <- TDocStd.Document.fromStorageFormat ""
     progress <- Message.ProgressRange.new

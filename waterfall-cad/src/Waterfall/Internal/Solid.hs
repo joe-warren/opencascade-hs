@@ -1,9 +1,10 @@
 {-# OPTIONS_HADDOCK not-home #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DerivingVia, DeriveGeneric #-}
 module Waterfall.Internal.Solid 
 ( Solid (..)
-, PaintFn (..)
+, PaintMap (..)
 , acquireSolid
 , solidFromAcquire
 , solidFromAcquireWithCatch
@@ -22,6 +23,7 @@ import Data.Acquire
 import Foreign.Ptr
 import Algebra.Lattice
 import Control.Monad.IO.Class (liftIO)
+import GHC.Generics (Generically (..), Generic)
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
@@ -40,7 +42,12 @@ import Data.Foldable (traverse_)
 import Waterfall.Error (WaterfallError)
 import Waterfall.Paint (Paint)
 
-newtype PaintFn = PaintFn { runPaintFn :: Ptr TopoDS.Shape.Shape -> Acquire (Maybe Paint) } 
+data PaintMap = PaintMap 
+    { paintMapFacePaints :: [(Ptr TopoDS.Face, Paint)]
+    , paintMapDefault :: Paint
+    }
+    deriving (Generic)
+    deriving (Semigroup, Monoid) via (Generically PaintMap)
 
 -- | The Boundary Representation of a solid object.
 --
@@ -54,20 +61,20 @@ newtype PaintFn = PaintFn { runPaintFn :: Ptr TopoDS.Shape.Shape -> Acquire (May
 -- where this isn't the case (without using internal functions).
 data Solid = Solid 
     { rawSolid :: Ptr TopoDS.Shape.Shape 
-    , solidPaintFn :: Maybe PaintFn
+    , solidPaintMap :: PaintMap
     }
 
 acquireSolid :: Solid -> Acquire (Ptr TopoDS.Shape.Shape)
 acquireSolid (Solid ptr _) = toAcquire ptr
 
-solidFromAcquire :: Maybe PaintFn -> Acquire (Ptr TopoDS.Shape.Shape) -> Solid
-solidFromAcquire paintFn = (`Solid` paintFn) . unsafeFromAcquire
+solidFromAcquire :: PaintMap -> Acquire (Ptr TopoDS.Shape.Shape) -> Solid
+solidFromAcquire paintMap = (`Solid` paintMap) . unsafeFromAcquire
 
-solidFromAcquireWithCatch :: Maybe PaintFn -> Acquire (Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
-solidFromAcquireWithCatch paintFn = fmap (`Solid` paintFn) . unsafeFromAcquireWithCatch
+solidFromAcquireWithCatch :: PaintMap -> Acquire (Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
+solidFromAcquireWithCatch paintMap = fmap (`Solid` paintMap) . unsafeFromAcquireWithCatch
 
-solidFromAcquireTWithCatch :: Traversable t => Maybe PaintFn -> Acquire (t (Ptr TopoDS.Shape.Shape)) -> Either WaterfallError (t Solid)
-solidFromAcquireTWithCatch paintFn  = fmap (fmap (`Solid` paintFn)) . unsafeFromAcquireTWithCatch
+solidFromAcquireTWithCatch :: Traversable t => PaintMap -> Acquire (t (Ptr TopoDS.Shape.Shape)) -> Either WaterfallError (t Solid)
+solidFromAcquireTWithCatch paintMap  = fmap (fmap (`Solid` paintMap)) . unsafeFromAcquireTWithCatch
 
 -- | print debug information about a Solid when it's evaluated 
 -- exposes the properties of the underlying OpenCacade.TopoDS.Shape
@@ -108,19 +115,19 @@ everywhere = complement $ emptySolid
 --
 -- Be warned that @complement emptySolid@ does not appear to work correctly.
 complement :: Solid -> Solid
-complement (Solid ptr paintFn) = (`Solid` paintFn) . unsafeFromAcquire $ TopoDS.Shape.complemented =<< toAcquire ptr
+complement (Solid ptr paintMap) = (`Solid` paintMap) . unsafeFromAcquire $ TopoDS.Shape.complemented =<< toAcquire ptr
 
 -- | An empty solid
 --
 -- Be warned that @complement emptySolid@ does not appear to work correctly.
 emptySolid :: Solid 
-emptySolid =  (`Solid` Nothing) . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
+emptySolid =  (`Solid` mempty) . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
 
 -- defining the boolean CSG operators here, rather than in Waterfall.Booleans 
 -- means that we can use them in typeclass instances without resorting to orphans
 
 toBoolean :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr a)) -> Solid -> Solid -> Solid
-toBoolean f (Solid ptrA paintFnA) (Solid ptrB _) = (`Solid` paintFnA) . unsafeFromAcquire $ do
+toBoolean f (Solid ptrA paintMapA) (Solid ptrB _) = (`Solid` paintMapA) . unsafeFromAcquire $ do
     a <- toAcquire ptrA
     b <- toAcquire ptrB
     MakeShape.shape =<< fmap upcast (f a b)
@@ -135,7 +142,7 @@ union3D = toBoolean Fuse.fromShapes
 toBooleans :: BOPAlgo.Operation.Operation -> [Solid] -> Solid
 toBooleans _ [] = emptySolid
 toBooleans _ [x] = x
-toBooleans op (h:solids) = (`Solid` solidPaintFn h) . unsafeFromAcquire $ do
+toBooleans op (h:solids) = (`Solid` solidPaintMap h) . unsafeFromAcquire $ do
     firstPtr <- toAcquire . rawSolid $ h
     ptrs <- traverse (toAcquire . rawSolid) solids
     bop <- BOPAlgo.BOP.new
