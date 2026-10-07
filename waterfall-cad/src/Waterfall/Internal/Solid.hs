@@ -47,6 +47,8 @@ import Data.Bifunctor.Flip (Flip (..))
 import Waterfall.Error (WaterfallError)
 import Waterfall.Paint (Paint)
 import Data.Functor.Compose (Compose(..))
+import qualified OpenCascade.NCollection as NCollection
+import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 
 data PaintMap 
     = UniformPaint Paint
@@ -139,24 +141,37 @@ emptySolid =  (`Solid` emptyPaintMap) . unsafeFromAcquire $ upcast <$> (MakeSoli
 -- means that we can use them in typeclass instances without resorting to orphans
 
 
+-- | this is used to abstract between `MakeShape` and `BOPAlgo.Builder`
+data History = History 
+    { historyModified :: Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.List TopoDS.Shape))
+    , historyIsDeleted :: Ptr TopoDS.Shape -> IO Bool
+    , historyResult :: Acquire (Ptr TopoDS.Shape)
+    }
+
+makeShapeHistory :: Ptr MakeShape -> History
+makeShapeHistory builder = History (MakeShape.modified builder) (MakeShape.isDeleted builder) (MakeShape.shape builder)
+
+bopBuilderHistory :: Ptr BOPAlgo.Builder -> History
+bopBuilderHistory builder = History (BOPAlgo.Builder.modified builder) (BOPAlgo.Builder.isDeleted builder) (BOPAlgo.Builder.shape builder)
+
 -- | for a builder, and a shape
 --
 -- * if the shape was modified by the builder, return the modified shapes
 -- * if the shape was deleted by the builder, return nothing
 -- * otherwise, return the shape
-remap :: Ptr MakeShape -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
-remap builder s = do
+remap :: History -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
+remap history s = do
         modified <- NCollection.List.fromListOfShape
-                =<< MakeShape.modified builder s
+                =<< historyModified history s
         if not . null $ modified 
             then pure modified
             else do
-                isDeleted <- liftIO $ MakeShape.isDeleted builder s
+                isDeleted <- liftIO $ historyIsDeleted history s
                 pure [s | not isDeleted]
 
-remapPaints :: Ptr MakeShape -> [(Ptr TopoDS.Face, Paint)] -> IO [(Ptr TopoDS.Face, Paint)]
-remapPaints builder facePaints = 
-    let remapPaint (f, p) = fmap (,p) <$> (liftIO . traverse unsafeDowncast =<< remap builder (upcast f))
+remapPaints :: History -> [(Ptr TopoDS.Face, Paint)] -> IO [(Ptr TopoDS.Face, Paint)]
+remapPaints history facePaints = 
+    let remapPaint (f, p) = fmap (,p) <$> (liftIO . traverse unsafeDowncast =<< remap history (upcast f))
         remappedPaints = concat <$> traverse remapPaint facePaints
         wrap = fmap (Compose . fmap Flip)
         unwrap = fmap runFlip . getCompose
@@ -169,21 +184,36 @@ materialiseFacePaints solid (UniformPaint paint) = do
         =<< allSubShapesWithCopy ShapeEnum.Face solid
     return $ fmap (, paint) faces
 
+materialiseSolidFacePaints :: Solid -> Acquire [(Ptr TopoDS.Face, Paint)]
+materialiseSolidFacePaints solid = do
+    s <- acquireSolid solid
+    materialiseFacePaints s (solidPaintMap solid)
+
+
+solidFromAcquireMappingPaintMap :: Acquire (PaintMap, History) -> Solid
+solidFromAcquireMappingPaintMap f = solidFromAcquireWithPaintMap $ do
+    (paintMap, history) <- f
+    remappedPaintMap <- case paintMap of
+        UniformPaint _ -> pure paintMap
+        FacePaints oldFacePaints -> 
+            liftIO $ FacePaints <$> remapPaints history oldFacePaints
+            
+    shape <- historyResult history
+    return (remappedPaintMap, shape)
+
 toBoolean :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr a)) -> Solid -> Solid -> Solid
-toBoolean f (Solid ptrA paintMapA) (Solid ptrB paintMapB) = solidFromAcquireWithPaintMap $ do
+toBoolean f (Solid ptrA paintMapA) (Solid ptrB paintMapB) = solidFromAcquireMappingPaintMap $ do
     a <- toAcquire ptrA
     b <- toAcquire ptrB
     builder <- f a b
     
-    newPaintMap <- case (paintMapA, paintMapB) of
+    materialisedPaintMap <- case (paintMapA, paintMapB) of
         (UniformPaint paintA, UniformPaint paintB) | paintA == paintB -> pure paintMapA
-        _ -> do
-            existingFacePaints <- 
+        _ -> FacePaints <$> (
                 (<>) <$> materialiseFacePaints a paintMapA <*> materialiseFacePaints b paintMapB
-            liftIO $ FacePaints <$> remapPaints (upcast builder) existingFacePaints
-        
-    shape <- MakeShape.shape (upcast builder)
-    return (newPaintMap, shape)
+            )
+
+    return (materialisedPaintMap, makeShapeHistory . upcast $ builder)
 
 -- | Take the sum of two solids
 --
@@ -191,13 +221,12 @@ toBoolean f (Solid ptrA paintMapA) (Solid ptrB paintMapB) = solidFromAcquireWith
 union3D :: Solid -> Solid -> Solid
 union3D = toBoolean Fuse.fromShapes
 
-
 toBooleans :: BOPAlgo.Operation.Operation -> [Solid] -> Solid
 toBooleans _ [] = emptySolid
 toBooleans _ [x] = x
-toBooleans op (h:solids) = (`Solid` solidPaintMap h) . unsafeFromAcquire $ do
+toBooleans op solids@(h:t) = solidFromAcquireMappingPaintMap $ do
     firstPtr <- toAcquire . rawSolid $ h
-    ptrs <- traverse (toAcquire . rawSolid) solids
+    ptrs <- traverse (toAcquire . rawSolid) t
     bop <- BOPAlgo.BOP.new
     let builder = upcast bop
     liftIO $ do
@@ -206,7 +235,17 @@ toBooleans op (h:solids) = (`Solid` solidPaintMap h) . unsafeFromAcquire $ do
         traverse_ (BOPAlgo.BOP.addTool bop) ptrs
         BOPAlgo.setRunParallel builder True
         BOPAlgo.Builder.perform builder
-    BOPAlgo.Builder.shape builder
+
+    let matchesUniformPaint pa (UniformPaint pb) = pa == pb
+        matchesUniformPaint _ _ = False
+
+    combinedPaintMap <- 
+        case solidPaintMap h of
+            UniformPaint p | all (matchesUniformPaint p . solidPaintMap) t -> 
+                pure $ UniformPaint p
+            _ -> FacePaints . concat <$> traverse materialiseSolidFacePaints solids
+            
+    return  (combinedPaintMap, bopBuilderHistory builder)
 
 -- | Take the sum of a list of solids 
 -- 
