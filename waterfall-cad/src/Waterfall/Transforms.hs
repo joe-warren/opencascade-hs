@@ -17,7 +17,7 @@ module Waterfall.Transforms
 , _rotated
 , _mirrored
 ) where
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireMappingPaintMap, makeShapeHistory)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire) 
 import Waterfall.Internal.Path.Common (RawPath(..))
 import Waterfall.Internal.NearZero (nearZero)
@@ -61,18 +61,18 @@ class Transformable a where
     mirror :: V3 Double -> a -> a
 
 fromTrsfSolid :: Acquire (Ptr GP.Trsf) -> Solid -> Solid
-fromTrsfSolid mkTrsf s = solidFromAcquire (solidPaintMap s) $ do 
+fromTrsfSolid mkTrsf s = solidFromAcquireMappingPaintMap $ do 
     solid <- acquireSolid s
     trsf <- mkTrsf 
     builder <- BRepBuilderAPI.Transform.fromShapeTrsfAndCopy solid trsf True 
-    BRepBuilderAPI.MakeShape.shape (upcast builder)
-
+    return (solidPaintMap s, makeShapeHistory . upcast $ builder )
+    
 fromGTrsfSolid :: Acquire (Ptr GP.GTrsf) -> Solid -> Solid
-fromGTrsfSolid mkTrsf s = solidFromAcquire (solidPaintMap s) $ do 
+fromGTrsfSolid mkTrsf s = solidFromAcquireMappingPaintMap $ do 
     solid <- acquireSolid s
     trsf <- mkTrsf 
     builder <- BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy solid trsf True 
-    BRepBuilderAPI.MakeShape.shape (upcast builder)
+    return (solidPaintMap s, makeShapeHistory . upcast $ builder )
 
 transformPathSinglePointPaths :: (V3 Double -> V3 Double) -> Path -> Path
 transformPathSinglePointPaths f (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v 

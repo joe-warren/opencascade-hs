@@ -66,7 +66,7 @@ import Data.Char (toLower)
 import System.FilePath (takeExtension)
 import Control.Exception (Exception, throwIO)
 import OpenCascade.TDF.Label (Label)
-import Waterfall.Paint (Colour(..), paintColour)
+import Waterfall.Paint (Colour(..), paintColour, defaultPaint)
 import qualified OpenCascade.XCAFDoc.ColorTool as XCafDoc.ColourTool
 import Control.Lens ((^.))
 import System.IO (hPutStrLn, stderr)
@@ -178,7 +178,11 @@ addColourToCafWriter s shapeLabel paintMap = do
                 ocColour <- colourToOCColor color
                 colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool s ocColour XCAFDoc.ColorType.ColorSurf
                 liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Base Shape not found in CAF document"
-        FacePaints facePaints -> 
+        FacePaints facePaints -> do
+            forM_ (defaultPaint ^. paintColour) $ \color -> do
+                ocColour <- colourToOCColor color
+                colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool s ocColour XCAFDoc.ColorType.ColorSurf
+                liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Base Shape not found in CAF document"
             forM_ facePaints $ \(face, paint) -> 
                 forM_ (paint ^. paintColour) $ \colour -> do
                         ocColour <- colourToOCColor colour

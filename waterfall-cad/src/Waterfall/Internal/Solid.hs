@@ -6,11 +6,15 @@
 module Waterfall.Internal.Solid 
 ( Solid (..)
 , PaintMap (..)
+, History (..)
 , emptyPaintMap
 , acquireSolid
 , solidFromAcquire
 , solidFromAcquireWithCatch
 , solidFromAcquireTWithCatch
+, solidFromAcquireMappingPaintMap
+, makeShapeHistory
+, bopBuilderHistory
 , union3D
 , difference3D
 , intersection3D
