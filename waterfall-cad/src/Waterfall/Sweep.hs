@@ -3,7 +3,7 @@ module Waterfall.Sweep
 , trySweep
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, solidFromAcquireWithCatch)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, solidFromAcquireWithCatch, emptyPaintMap)
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.Internal.Path.Common (RawPath (..))
 import Waterfall.Internal.Edges (wireTangentStart, wireEndpoints)
@@ -34,15 +34,15 @@ rotateFace v face =
                             then unit _x 
                             else z `cross` vn
                     angle = acos (vn `dot` z)
-                in acquireSolid . rotate axis angle . solidFromAcquire mempty . pure $ face 
+                in acquireSolid . rotate axis angle . solidFromAcquire emptyPaintMap . pure $ face 
 
 positionFace :: V3 Double -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
-positionFace p = acquireSolid . translate p . solidFromAcquire mempty . pure
+positionFace p = acquireSolid . translate p . solidFromAcquire emptyPaintMap . pure
 
 
 -- | Version of `sweep` that returns an Error on Failure
 trySweep :: Path -> Shape -> Either WaterfallError Solid
-trySweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = solidFromAcquireWithCatch mempty $ do
+trySweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = solidFromAcquireWithCatch emptyPaintMap $ do
     path <- toAcquire theRawPath
     shape <- toAcquire theRawShape
     tangent <- liftIO $ wireTangentStart path

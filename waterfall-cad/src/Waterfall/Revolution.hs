@@ -3,7 +3,7 @@ module Waterfall.Revolution
 , tryRevolution
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), solidFromAcquireWithCatch)
+import Waterfall.Internal.Solid (Solid (..), solidFromAcquireWithCatch, emptyPaintMap)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.Internal.Finalizers (toAcquire)
 import qualified OpenCascade.BRepPrimAPI.MakeRevol as MakeRevol
@@ -23,7 +23,7 @@ import Data.Either (fromRight)
 -- Revolution can fail, for example, if the `Path2D` crosses the axis of revolution.
 tryRevolution :: Path2D -> Either WaterfallError Solid
 tryRevolution (Path2D (ComplexRawPath theRawPath)) =
-    fmap (rotate (unit _x) (pi/2)) . solidFromAcquireWithCatch mempty $ do
+    fmap (rotate (unit _x) (pi/2)) . solidFromAcquireWithCatch emptyPaintMap $ do
         p <- toAcquire theRawPath
         axis <- GP.oy -- revolve around the y axis
         revol <- MakeRevol.fromShapeAndAx1 (upcast p) axis True

@@ -24,7 +24,7 @@ module Waterfall.IO
 , readOBJ
 ) where 
 
-import Waterfall.Internal.Solid (Solid(..), PaintMap(..))
+import Waterfall.Internal.Solid (Solid(..), PaintMap(..), emptyPaintMap)
 import qualified Waterfall.Internal.Remesh as Remesh
 import qualified OpenCascade.BRepMesh.IncrementalMesh as BRepMesh.IncrementalMesh
 import qualified OpenCascade.StlAPI.Writer as StlWriter
@@ -172,16 +172,18 @@ colourToOCColor (Colour r g b) =
 addColourToCafWriter :: Ptr TopoDS.Shape -> Ptr Label -> PaintMap -> Acquire ()
 addColourToCafWriter s shapeLabel paintMap = do
     colourTool <- XCafDoc.DocumentTool.colorTool shapeLabel
-    forM_ (paintMapDefault paintMap ^. paintColour) $ \color -> do
-        ocColour <- colourToOCColor color
-        colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool s ocColour XCAFDoc.ColorType.ColorSurf
-        liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Base Shape not found in CAF document"
-
-    forM_ (paintMapFacePaints paintMap) $ \(face, paint) -> 
-        forM_ (paint ^. paintColour) $ \colour -> do
-                ocColour <- colourToOCColor colour
-                colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool (upcast face) ocColour XCAFDoc.ColorType.ColorSurf
-                liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Face not found in CAF document"
+    case paintMap of
+        UniformPaint paint -> 
+            forM_ (paint ^. paintColour) $ \color -> do
+                ocColour <- colourToOCColor color
+                colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool s ocColour XCAFDoc.ColorType.ColorSurf
+                liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Base Shape not found in CAF document"
+        FacePaints facePaints -> 
+            forM_ facePaints $ \(face, paint) -> 
+                forM_ (paint ^. paintColour) $ \colour -> do
+                        ocColour <- colourToOCColor colour
+                        colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool (upcast face) ocColour XCAFDoc.ColorType.ColorSurf
+                        liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Face not found in CAF document"
 
 cafWriter :: (FilePath -> Ptr (Handle TDocStd.Document) -> Ptr (NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString) -> Ptr Message.ProgressRange -> Acquire ()) -> Double -> FilePath -> Solid-> IO ()
 cafWriter write linDeflection filepath (Solid ptr paintMap) = (`withAcquire` pure) $ do
@@ -264,7 +266,7 @@ remeshOrThrow filepath shape = do
 
 -- | Read a `Solid` from an STL file at a given path
 readSTL :: FilePath -> IO Solid
-readSTL filepath = fmap (`Solid` mempty) . fromAcquire $ do
+readSTL filepath = fmap (`Solid` emptyPaintMap) . fromAcquire $ do
     shape <- TopoDS.Shape.new
     reader <- StlReader.new
     res <- liftIO $ StlReader.read reader shape filepath
@@ -273,7 +275,7 @@ readSTL filepath = fmap (`Solid` mempty) . fromAcquire $ do
 
 -- | Read a `Solid` from a STEP file at a given path
 readSTEP :: FilePath -> IO Solid
-readSTEP filepath = fmap (`Solid` mempty) . fromAcquire $ do
+readSTEP filepath = fmap (`Solid` emptyPaintMap) . fromAcquire $ do
     reader <- STEPReader.new
     status <- liftIO $ XSControl.Reader.readFile (upcast reader) filepath
     _ <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
@@ -284,7 +286,7 @@ readSTEP filepath = fmap (`Solid` mempty) . fromAcquire $ do
     return shape
 
 cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO Solid
-cafReader mkReader filepath = fmap (`Solid` mempty) . fromAcquire $ do
+cafReader mkReader filepath = fmap (`Solid` emptyPaintMap) . fromAcquire $ do
     reader <- mkReader
     doc <- TDocStd.Document.fromStorageFormat ""
     progress <- Message.ProgressRange.new

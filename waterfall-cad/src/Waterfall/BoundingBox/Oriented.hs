@@ -9,7 +9,7 @@ module Waterfall.BoundingBox.Oriented
 ) where
 
 import Linear (V3 (..), normalize, (^*))
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, emptyPaintMap)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Waterfall.Internal.FromOpenCascade (gpXYZToV3)
 import Foreign.Ptr (Ptr)
@@ -80,7 +80,7 @@ obbSideZ =  getSide OBB.zDirection OBB.zHSize
 
 -- | Reify an `OrientedBoundingBox` as a `Solid`
 obbToSolid :: OrientedBoundingBox -> Solid
-obbToSolid obb = solidFromAcquire mempty $ do
+obbToSolid obb = solidFromAcquire emptyPaintMap $ do
     obb' <- toAcquire . rawOBB $ obb
     x <- liftIO . OBB.xHSize $ obb'
     y <- liftIO . OBB.yHSize $ obb'

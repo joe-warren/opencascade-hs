@@ -6,6 +6,7 @@
 module Waterfall.Internal.Solid 
 ( Solid (..)
 , PaintMap (..)
+, emptyPaintMap
 , acquireSolid
 , solidFromAcquire
 , solidFromAcquireWithCatch
@@ -24,7 +25,6 @@ import Data.Acquire
 import Foreign.Ptr
 import Algebra.Lattice
 import Control.Monad.IO.Class (liftIO)
-import GHC.Generics (Generically (..), Generic)
 import qualified OpenCascade.TopoDS as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
@@ -48,12 +48,13 @@ import Waterfall.Error (WaterfallError)
 import Waterfall.Paint (Paint)
 import Data.Functor.Compose (Compose(..))
 
-data PaintMap = PaintMap 
-    { paintMapFacePaints :: [(Ptr TopoDS.Face, Paint)]
-    , paintMapDefault :: Paint
-    }
-    deriving (Generic)
-    deriving (Semigroup, Monoid) via (Generically PaintMap)
+data PaintMap 
+    = UniformPaint Paint
+    | FacePaints [(Ptr TopoDS.Face, Paint)]
+
+emptyPaintMap :: PaintMap
+emptyPaintMap = UniformPaint mempty
+
 
 -- | The Boundary Representation of a solid object.
 --
@@ -132,7 +133,7 @@ complement (Solid ptr paintMap) = (`Solid` paintMap) . unsafeFromAcquire $ TopoD
 --
 -- Be warned that @complement emptySolid@ does not appear to work correctly.
 emptySolid :: Solid 
-emptySolid =  (`Solid` mempty) . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
+emptySolid =  (`Solid` emptyPaintMap) . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
 
 -- defining the boolean CSG operators here, rather than in Waterfall.Booleans 
 -- means that we can use them in typeclass instances without resorting to orphans
@@ -161,38 +162,26 @@ remapPaints builder facePaints =
         unwrap = fmap runFlip . getCompose
     in fmap unwrap . fromAcquireT . wrap  $ remappedPaints 
 
+materialiseFacePaints :: Ptr TopoDS.Shape -> PaintMap -> Acquire [(Ptr TopoDS.Face, Paint)]
+materialiseFacePaints _ (FacePaints facePaints) = pure facePaints
+materialiseFacePaints solid (UniformPaint paint) = do
+    faces <- traverse (liftIO . unsafeDowncast)
+        =<< allSubShapesWithCopy ShapeEnum.Face solid
+    return $ fmap (, paint) faces
+
 toBoolean :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr a)) -> Solid -> Solid -> Solid
 toBoolean f (Solid ptrA paintMapA) (Solid ptrB paintMapB) = solidFromAcquireWithPaintMap $ do
     a <- toAcquire ptrA
     b <- toAcquire ptrB
     builder <- f a b
     
-    let defaultPaintsAreSame = paintMapDefault paintMapA == paintMapDefault paintMapB
-
-    -- when a and b have different default paints
-    -- if the facePaints are unset
-    -- we need to enumerate the solid's faces
-    -- and add them with the solids's default paint
-    let facePaintsFor paintMap solid = 
-            if defaultPaintsAreSame || not (null (paintMapFacePaints paintMap))
-                then pure (paintMapFacePaints paintMap)
-                else do              
-                    faces <- traverse (liftIO . unsafeDowncast)
-                            =<< allSubShapesWithCopy ShapeEnum.Face solid
-                    return $ fmap (, paintMapDefault paintMap) faces
-
-    existingFacePaints <- 
-        (<>) <$> facePaintsFor paintMapA a <*> facePaintsFor paintMapB b
-
-    newFacePaints <- liftIO $ remapPaints (upcast builder) existingFacePaints
-    
-    let newPaintMap = PaintMap 
-            { paintMapDefault = 
-                    if defaultPaintsAreSame 
-                        then paintMapDefault paintMapA
-                        else mempty
-            , paintMapFacePaints = newFacePaints
-            }
+    newPaintMap <- case (paintMapA, paintMapB) of
+        (UniformPaint paintA, UniformPaint paintB) | paintA == paintB -> pure paintMapA
+        _ -> do
+            existingFacePaints <- 
+                (<>) <$> materialiseFacePaints a paintMapA <*> materialiseFacePaints b paintMapB
+            liftIO $ FacePaints <$> remapPaints (upcast builder) existingFacePaints
+        
     shape <- MakeShape.shape (upcast builder)
     return (newPaintMap, shape)
 

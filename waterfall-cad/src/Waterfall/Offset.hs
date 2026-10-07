@@ -6,7 +6,7 @@ module Waterfall.Offset
 , tryOffsetWithTolerance
 ) where 
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireWithCatch, solidFromAcquireTWithCatch)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireTWithCatch)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)

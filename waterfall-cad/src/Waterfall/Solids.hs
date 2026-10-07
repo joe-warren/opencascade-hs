@@ -21,7 +21,7 @@ module Waterfall.Solids
 ) where
 
 
-import Waterfall.Internal.Solid (Solid (..), PaintMap (..), solidFromAcquire, acquireSolid, emptySolid)
+import Waterfall.Internal.Solid (Solid (..), PaintMap (..), solidFromAcquire, acquireSolid, emptySolid, emptyPaintMap)
 import Waterfall.Paint (Paint)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Waterfall.TwoD.Internal.Shape (rawShape)
@@ -63,7 +63,7 @@ import Data.Acquire (Acquire)
 
 -- | A cube with side lengths of 1, one vertex on the origin, another on \( (1, 1, 1) \)
 unitCube :: Solid
-unitCube = solidFromAcquire mempty $ do
+unitCube = solidFromAcquire emptyPaintMap $ do
     a <- GP.origin
     b <- GP.Pnt.new 1 1 1
     builder <- MakeBox.fromPnts a b
@@ -71,7 +71,7 @@ unitCube = solidFromAcquire mempty $ do
 
 -- | A cube with side lengths of 1, centered on the origin
 centeredCube :: Solid
-centeredCube = solidFromAcquire mempty $ do
+centeredCube = solidFromAcquire emptyPaintMap $ do
     a <- GP.Pnt.new (-1/2) (-1/2) (-1/2)
     b <- GP.Pnt.new (1/2) (1/2) (1/2)
     builder <- MakeBox.fromPnts a b
@@ -81,7 +81,7 @@ centeredCube = solidFromAcquire mempty $ do
 box :: V3 Double -> Solid
 box v@(V3 x y z) 
     | any nearZero v = mempty
-    | otherwise = solidFromAcquire mempty $ do
+    | otherwise = solidFromAcquire emptyPaintMap $ do
         a <- GP.origin
         b <- GP.Pnt.new x y z
         builder <- MakeBox.fromPnts a b
@@ -90,13 +90,13 @@ box v@(V3 x y z)
     
 -- | A sphere with radius of 1, centered on the origin
 unitSphere :: Solid
-unitSphere = solidFromAcquire mempty $ Inheritance.upcast <$> MakeSphere.fromRadius 1
+unitSphere = solidFromAcquire emptyPaintMap $ Inheritance.upcast <$> MakeSphere.fromRadius 1
 
 -- | A cylinder with radius 1, length 1,
 -- one of its circular faces centered on the origin,
 -- the other centered on \( (0, 0, 1) \)
 unitCylinder :: Solid
-unitCylinder = solidFromAcquire mempty $ Inheritance.upcast <$> MakeCylinder.fromRadiusAndHeight 1 1
+unitCylinder = solidFromAcquire emptyPaintMap $ Inheritance.upcast <$> MakeCylinder.fromRadiusAndHeight 1 1
 
 -- | A cylinder with radius 1, length 1,
 -- centered on the origin
@@ -114,7 +114,7 @@ torus ::
     -> Solid
 torus major minor 
     | major < minor = mempty  
-    | otherwise = solidFromAcquire mempty
+    | otherwise = solidFromAcquire emptyPaintMap
          $ MakeShape.shape 
          . Inheritance.upcast 
          =<< MakeTorus.fromRadii major minor
@@ -123,7 +123,7 @@ torus major minor
 -- With a point at the origin 
 -- and a circular face with Radius 1, centered on \( (0, 0, 1) \)
 unitCone :: Solid
-unitCone = solidFromAcquire mempty $ Inheritance.upcast <$> MakeCone.fromTwoRadiiAndHeight 0 1 1
+unitCone = solidFromAcquire emptyPaintMap $ Inheritance.upcast <$> MakeCone.fromTwoRadiiAndHeight 0 1 1
 
 -- | Extrude a 2D face into a prism with a given length \(len\).
 --
@@ -132,7 +132,7 @@ unitCone = solidFromAcquire mempty $ Inheritance.upcast <$> MakeCone.fromTwoRadi
 prism :: Double -> TwoD.Shape.Shape -> Solid
 prism len face 
     | nearZero len = mempty
-    | otherwise = solidFromAcquire mempty $ do
+    | otherwise = solidFromAcquire emptyPaintMap $ do
         p <- toAcquire . rawShape $ face
         v <- GP.Vec.new 0 0 len
         MakePrism.fromVec p v True True
@@ -164,7 +164,7 @@ solidFromFaces faces = do
         Nothing -> error "Failed to construct solid from faces"
 
 solidFromVerts :: [[V3 Double]] -> Solid
-solidFromVerts = solidFromAcquire mempty . fmap Inheritance.upcast . (solidFromFaces <=< traverse faceFromVerts)
+solidFromVerts = solidFromAcquire emptyPaintMap . fmap Inheritance.upcast . (solidFromFaces <=< traverse faceFromVerts)
 
 -- | Regular Tetrahedron with unit side lengths
 -- 
@@ -256,7 +256,7 @@ dodecahedron =
 -- Replaces any previously applied paint
 paintSolid :: Paint -> Solid -> Solid
 paintSolid paint (Solid s _) = 
-    Solid s (mempty { paintMapDefault = paint })
+    Solid s (UniformPaint paint )
 
 gPropQuery :: (Ptr GProps.GProps -> Acquire a) -> Solid -> a
 gPropQuery f s = unsafeFromAcquire $ do
