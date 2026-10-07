@@ -1,7 +1,7 @@
 {-# OPTIONS_HADDOCK not-home #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE DerivingVia, DeriveGeneric #-}
 module Waterfall.Internal.Solid 
 ( Solid (..)
@@ -39,12 +39,14 @@ import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.NCollection.List as NCollection.List
 import OpenCascade.Inheritance (SubTypeOf(..), upcast, unsafeDowncast)
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire, unsafeFromAcquireWithCatch, unsafeFromAcquireTWithCatch, unsafeFromAcquireT)
+import Waterfall.Internal.Finalizers (toAcquire, fromAcquireT, unsafeFromAcquire, unsafeFromAcquireWithCatch, unsafeFromAcquireTWithCatch, unsafeFromAcquireT)
 import Waterfall.Internal.Edges (allSubShapesWithCopy)
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
 import Data.Foldable (traverse_)
+import Data.Bifunctor.Flip (Flip (..))
 import Waterfall.Error (WaterfallError)
 import Waterfall.Paint (Paint)
+import Data.Functor.Compose (Compose(..))
 
 data PaintMap = PaintMap 
     { paintMapFacePaints :: [(Ptr TopoDS.Face, Paint)]
@@ -135,41 +137,61 @@ emptySolid =  (`Solid` mempty) . unsafeFromAcquire $ upcast <$> (MakeSolid.solid
 -- defining the boolean CSG operators here, rather than in Waterfall.Booleans 
 -- means that we can use them in typeclass instances without resorting to orphans
 
+
+-- | for a builder, and a shape
+--
+-- * if the shape was modified by the builder, return the modified shapes
+-- * if the shape was deleted by the builder, return nothing
+-- * otherwise, return the shape
+remap :: Ptr MakeShape -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
+remap builder s = do
+        modified <- NCollection.List.fromListOfShape
+                =<< MakeShape.modified builder s
+        if not . null $ modified 
+            then pure modified
+            else do
+                isDeleted <- liftIO $ MakeShape.isDeleted builder s
+                pure [s | not isDeleted]
+
+remapPaints :: Ptr MakeShape -> [(Ptr TopoDS.Face, Paint)] -> IO [(Ptr TopoDS.Face, Paint)]
+remapPaints builder facePaints = 
+    let remapPaint (f, p) = fmap (,p) <$> (liftIO . traverse unsafeDowncast =<< remap builder (upcast f))
+        remappedPaints = concat <$> traverse remapPaint facePaints
+        wrap = fmap (Compose . fmap Flip)
+        unwrap = fmap runFlip . getCompose
+    in fmap unwrap . fromAcquireT . wrap  $ remappedPaints 
+
 toBoolean :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr a)) -> Solid -> Solid -> Solid
 toBoolean f (Solid ptrA paintMapA) (Solid ptrB paintMapB) = solidFromAcquireWithPaintMap $ do
     a <- toAcquire ptrA
     b <- toAcquire ptrB
     builder <- f a b
     
-    let newPaintMap = PaintMap 
-            { paintMapDefault = paintMapDefault paintMapA
-            , paintMapFacePaints = 
-                let facePaintsA = paintMapFacePaints paintMapA
-                    newFacePaintsB = 
-                        if (paintMapDefault paintMapA /= paintMapDefault paintMapB) 
-                            then fmap (\s -> (s, paintMapDefault paintMapB)) 
-                                    . unsafeFromAcquireT 
-                                    $ ( traverse (liftIO . unsafeDowncast)
-                                        =<< allSubShapesWithCopy ShapeEnum.Face ptrB
-                                    )
-                            else []
-                    existingFacePaints = 
-                        facePaintsA <> newFacePaintsB <> paintMapFacePaints paintMapB
+    let defaultPaintsAreSame = paintMapDefault paintMapA == paintMapDefault paintMapB
 
-                in do
-                        (face, paint) <- existingFacePaints
-                        fmap (\s -> (s, paint)) . unsafeFromAcquireT $ do 
-                            modified <-
-                                traverse (liftIO . unsafeDowncast)
-                                    =<< NCollection.List.fromListOfShape
-                                    =<< MakeShape.modified (upcast builder) (upcast face)
-                            if not (null modified)
-                                then pure modified
-                                else do
-                                    isDeleted <- liftIO $ MakeShape.isDeleted (upcast builder) (upcast face)
-                                    if isDeleted
-                                        then pure []
-                                        else pure [face]
+    -- when a and b have different default paints
+    -- if the facePaints are unset
+    -- we need to enumerate the solid's faces
+    -- and add them with the solids's default paint
+    let facePaintsFor paintMap solid = 
+            if defaultPaintsAreSame || not (null (paintMapFacePaints paintMap))
+                then pure (paintMapFacePaints paintMap)
+                else do              
+                    faces <- traverse (liftIO . unsafeDowncast)
+                            =<< allSubShapesWithCopy ShapeEnum.Face solid
+                    return $ fmap (, paintMapDefault paintMap) faces
+
+    existingFacePaints <- 
+        (<>) <$> facePaintsFor paintMapA a <*> facePaintsFor paintMapB b
+
+    newFacePaints <- liftIO $ remapPaints (upcast builder) existingFacePaints
+    
+    let newPaintMap = PaintMap 
+            { paintMapDefault = 
+                    if defaultPaintsAreSame 
+                        then paintMapDefault paintMapA
+                        else mempty
+            , paintMapFacePaints = newFacePaints
             }
     shape <- MakeShape.shape (upcast builder)
     return (newPaintMap, shape)

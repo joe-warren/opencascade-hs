@@ -23,6 +23,10 @@ module Waterfall
 -- 
 -- The `Waterfall.IO` module also supports reading `Solid`s from a variety of file formats.
 , module Waterfall.IO
+-- | `Paint` can be applied to a `Solid` to affect how it appears 
+-- 
+-- (only supported by some file formats, see the documentation of `Waterfall.IO` for specifics)
+, module Waterfall.Paint
 -- | Calculating Axis Aligned Bounding Boxes from a `Solid`.
 , module Waterfall.BoundingBox.AxisAligned
 -- | Calculating Oriented Bounding Boxes from a `Solid`.
@@ -66,6 +70,7 @@ import Waterfall.BoundingBox.Oriented
 import Waterfall.Diagram
 import Waterfall.Fillet
 import Waterfall.IO
+import Waterfall.Paint
 import Waterfall.Offset
 import Waterfall.Path.Common
 import Waterfall.Path
