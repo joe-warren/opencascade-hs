@@ -55,10 +55,11 @@ fromAcquireT a = runResourceT $ do
     let finalize = do
             isLast <- atomicModifyIORef ref (\count -> (count - 1, count == 1))
             when isLast release
-            
+    liftIO $ when (null v) release
     forM v $ \v' -> do 
         liftIO $ addFinalizer v' finalize
         return v'
+    
 
 -- | Converting to a value in the `Data.Acquire.Acquire` monad, to a raw value.
 -- Analagous to calling `unsafePerformIO` to extract a value in the `IO` monad.
