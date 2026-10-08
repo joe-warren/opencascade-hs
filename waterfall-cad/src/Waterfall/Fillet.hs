@@ -9,32 +9,41 @@ module Waterfall.Fillet
 -- Sometimes, it may not be possible to construct a fillet because there is not enough space next to one of the fillet edges,
 -- Or because the geometry is too complicated for the fillet algorithm.
   roundFillet
+, roundFilletWithPaint
 , roundConditionalFillet
+, roundConditionalFilletWithPaint
 , roundIndexedConditionalFillet
+, roundIndexedConditionalFilletWithPaint
 , tryRoundFillet
+, tryRoundFilletWithPaint
 , tryRoundConditionalFillet
+, tryRoundConditionalFilletWithPaint
 , tryRoundIndexedConditionalFillet
 , tryRoundIndexedConditionalFilletWithPaint
 -- * Chamfers
 -- | Adds flat faces at a constant angle to the two faces either side of an edge.
 , chamfer
+, chamferWithPaint
 , conditionalChamfer
+, conditionalChamferWithPaint
 , indexedConditionalChamfer
+, indexedConditionalChamferWithPaint
 , tryChamfer
+, tryChamferWithPaint
 , tryConditionalChamfer
+, tryConditionalChamferWithPaint
 , tryIndexedConditionalChamfer
+, tryIndexedConditionalChamferWithPaint
 -- * Utility Methods
 , whenNearlyEqual
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireWithCatch, makeShapeHistory, remapPaints, PaintMap (..), solidFromAcquireMappingPaintMapWithCatch, solidFromAcquireWithPaintMapWithCatch, acquirePaints, materialiseFacePaints)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, makeShapeHistory, remapPaints, PaintMap (..), solidFromAcquireWithPaintMapWithCatch, acquirePaints, materialiseFacePaints)
 import Waterfall.Internal.Edges (edgeEndpoints, allEdges, allSubShapesWithCopy)
 import Waterfall.Error (WaterfallError)
 import qualified OpenCascade.BRepFilletAPI.MakeFillet as MakeFillet
 import qualified OpenCascade.BRepFilletAPI.MakeChamfer as MakeChamfer
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
-import qualified OpenCascade.TopExp.Explorer as Explorer 
-import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.TopTools.ShapeMapHasher as TopTools.ShapeMapHasher
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import Foreign.Ptr (Ptr)
@@ -50,33 +59,15 @@ import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NE
 import Data.Acquire (Acquire)
 import Data.Maybe (catMaybes)
-import Data.Foldable (find, fold, toList)
-import Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
+import Data.Foldable (find, toList)
 import qualified OpenCascade.NCollection as NCollection
 import qualified OpenCascade.NCollection.IndexedDataMap as NCollection.IndexedDataMap
 import qualified OpenCascade.TopExp as TopExp
 import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
 import qualified OpenCascade.NCollection.List as NCollection.List
-
-addEdges :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> (Double -> Ptr TopoDS.Edge -> IO ()) -> Ptr Explorer.Explorer -> IO ()
-addEdges radiusFn action explorer = go [] 0
-    where go visited i = do
-            isMore <- Explorer.more explorer
-            when isMore $ do
-                v <- unsafeDowncast =<< Explorer.value explorer
-                hash <- TopTools.ShapeMapHasher.hash (upcast v)
-                if hash `elem` visited
-                    then do
-                        Explorer.next explorer
-                        go visited i
-                    else do
-                        endpoints <- edgeEndpoints v
-                        case radiusFn i endpoints of 
-                            Just r | r > 0 -> action r v
-                            _ -> pure ()
-                        Explorer.next explorer
-                        go (hash:visited) (i + 1) 
+import qualified OpenCascade.BRepBuilderAPI.MakeShape as BRepBuilderAPI
+import qualified Waterfall.Internal.ShapeMap as ShapeMap
+import Control.Arrow (first)
 
 getEdgesWithRadius :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Ptr TopoDS.Shape -> Acquire [(Double, Ptr TopoDS.Edge)]
 getEdgesWithRadius f s = do
@@ -85,20 +76,11 @@ getEdgesWithRadius f s = do
         endpoints <- liftIO $ edgeEndpoints e
         return $ (, e) <$> find (> 0) (f i endpoints)
 
-buildShapeLookup :: (SubTypeOf TopoDS.Shape a) => [(Ptr a, b)] -> IO (IntMap b)
-buildShapeLookup paints = 
-    fmap IntMap.fromList $ forM paints $ \(face, paint) -> do
-        hash <- TopTools.ShapeMapHasher.hash (upcast face)
-        return (hash, paint)
-
-lookupShape :: IntMap a -> Ptr TopoDS.Shape -> IO (Maybe a)
-lookupShape m s = (`IntMap.lookup` m) <$> TopTools.ShapeMapHasher.hash s
-
 getUniqueVertexes :: [Ptr TopoDS.Edge] -> Acquire [Ptr TopoDS.Vertex]
 getUniqueVertexes edges = 
     let vertsForEdge e = traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy TopAbs.ShapeEnum.Vertex (upcast e)
-        dup a = (a, a)
-        in fmap (toList . fold) . liftIO . traverse (buildShapeLookup . fmap dup) =<< traverse vertsForEdge edges
+        dup a = (upcast a, a)
+        in fmap toList . liftIO . ShapeMap.fromList . fmap dup . concat  =<< traverse vertsForEdge edges
 
 makeAncestorMap :: Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.IndexedDataMap TopoDS.Shape (NCollection.List TopoDS.Shape)))
 makeAncestorMap s = do
@@ -107,19 +89,22 @@ makeAncestorMap s = do
     liftIO $ TopExp.mapShapesAndAncestors s TopAbs.ShapeEnum.Vertex TopAbs.ShapeEnum.Face m
     return m
                         
-tryRoundIndexedConditionalFilletWithPaint
-    :: (NonEmpty Paint -> Paint)
+trySomeIndexedConditionalFilletWithPaint
+    :: (SubTypeOf BRepBuilderAPI.MakeShape a)
+    => (Ptr TopoDS.Shape -> Acquire (Ptr a))
+    -> (Ptr a -> Double -> Ptr TopoDS.Edge -> IO ())
+    -> (NonEmpty Paint -> Paint)
     -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid
     -> Either WaterfallError Solid
-tryRoundIndexedConditionalFilletWithPaint paintFunction radiusFunction solid = 
+trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiusFunction solid = 
     solidFromAcquireWithPaintMapWithCatch $ do
         s <- acquireSolid solid
-        builder <- MakeFillet.fromShape s
+        builder <- makeBuilder s
 
         edgesWithRadius <- getEdgesWithRadius radiusFunction s
 
-        liftIO $ forM_ edgesWithRadius (uncurry (MakeFillet.addEdgeWithRadius builder))
+        liftIO $ forM_ edgesWithRadius (uncurry (addEdge builder))
 
         resultShape <- MakeShape.shape (upcast builder)
 
@@ -127,7 +112,7 @@ tryRoundIndexedConditionalFilletWithPaint paintFunction radiusFunction solid =
                 mappedPaints <- liftIO $ remapPaints (makeShapeHistory . upcast $ builder) paints
 
                 ancestorMap <- makeAncestorMap s
-                paintMap <- liftIO $ buildShapeLookup paints 
+                paintMap <- liftIO $ ShapeMap.fromList (fmap (first upcast) paints)
 
                 let filletSurfacesFor :: Ptr TopoDS.Shape -> Acquire [(Ptr TopoDS.Face, Paint)]
                     filletSurfacesFor edge = do
@@ -135,7 +120,7 @@ tryRoundIndexedConditionalFilletWithPaint paintFunction radiusFunction solid =
                         if null faces then pure [] else do
                             neighbours <- NCollection.List.fromListOfShape =<<
                                 NCollection.IndexedDataMap.findFromKeyShapeListOfShapeMap ancestorMap edge
-                            neighbouringPaints <- liftIO . fmap catMaybes $ traverse (lookupShape paintMap) neighbours
+                            neighbouringPaints <- liftIO . fmap catMaybes $ traverse (ShapeMap.lookup paintMap) neighbours
                             case NE.nonEmpty neighbouringPaints of 
                                 Nothing -> pure []
                                 Just ps -> 
@@ -148,28 +133,30 @@ tryRoundIndexedConditionalFilletWithPaint paintFunction radiusFunction solid =
 
                 return $ FacePaints (mappedPaints <> filletSurfacesEdges <> filletSurfacesVerts)
 
-        paintMapWithoutFilletFaces <- case solidPaintMap solid of
+        newPaintMap <- case solidPaintMap solid of
             UniformPaint p -> 
                 if paintFunction (NE.singleton p) == p 
                     then pure $ UniformPaint p
                     else buildPaintMapFrom =<< materialiseFacePaints s (UniformPaint p) 
             FacePaints paints -> buildPaintMapFrom paints
 
-        pure (paintMapWithoutFilletFaces, resultShape)
---}
+        pure (newPaintMap, resultShape)
+
+tryRoundIndexedConditionalFilletWithPaint
+    :: (NonEmpty Paint -> Paint)
+    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
+    -> Solid
+    -> Either WaterfallError Solid
+tryRoundIndexedConditionalFilletWithPaint = 
+    trySomeIndexedConditionalFilletWithPaint MakeFillet.fromShape MakeFillet.addEdgeWithRadius
+        
 -- | Version of `roundIndexedConditionalFillet` that returns an `Either` on failure
 tryRoundIndexedConditionalFillet
     :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid
     -> Either WaterfallError Solid
-tryRoundIndexedConditionalFillet radiusFunction solid = solidFromAcquireWithCatch (solidPaintMap solid) $ do
-    s <- acquireSolid solid
-    builder <- MakeFillet.fromShape s
-
-    explorer <- Explorer.new s ShapeEnum.Edge
-    liftIO $ addEdges radiusFunction (MakeFillet.addEdgeWithRadius builder) explorer
-
-    MakeShape.shape (upcast builder)
+tryRoundIndexedConditionalFillet =
+    tryRoundIndexedConditionalFilletWithPaint NE.head
 
 -- | Add rounds with the given radius to each edge of a solid, conditional on the endpoints of the edge, and the index of the edge.
 -- 
@@ -187,6 +174,14 @@ roundIndexedConditionalFillet
 roundIndexedConditionalFillet radiusFunction solid = fromRight mempty $ tryRoundIndexedConditionalFillet radiusFunction solid
 
 
+roundIndexedConditionalFilletWithPaint 
+    :: (NonEmpty Paint -> Paint)
+    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
+    -> Solid
+    -> Solid
+roundIndexedConditionalFilletWithPaint paintFn radiusFunction solid = 
+    fromRight mempty $ tryRoundIndexedConditionalFilletWithPaint paintFn radiusFunction solid
+
 -- | Version of `roundConditionalFillet` that returns an `Either` on failure
 tryRoundConditionalFillet 
     :: ((V3 Double, V3 Double) -> Maybe Double)
@@ -194,11 +189,25 @@ tryRoundConditionalFillet
     -> Either WaterfallError Solid
 tryRoundConditionalFillet f = tryRoundIndexedConditionalFillet (const f)
 
+tryRoundConditionalFilletWithPaint
+    :: (NonEmpty Paint -> Paint)
+    -> ((V3 Double, V3 Double) -> Maybe Double)
+    -> Solid 
+    -> Either WaterfallError Solid
+tryRoundConditionalFilletWithPaint paintFn f = tryRoundIndexedConditionalFilletWithPaint paintFn (const f)
+
 -- | Add rounds with the given radius to each edge of a solid, conditional on the endpoints of the edge.
 -- 
 -- This can be used to selectively round\/fillet a `Solid`.
 roundConditionalFillet :: ((V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
 roundConditionalFillet f = roundIndexedConditionalFillet (const f)
+
+roundConditionalFilletWithPaint 
+    :: (NonEmpty Paint -> Paint) 
+    -> ((V3 Double, V3 Double) -> Maybe Double) 
+    -> Solid -> Solid
+roundConditionalFilletWithPaint paintFn f =
+    roundIndexedConditionalFilletWithPaint paintFn (const f)
 
 -- | Add a round with a given radius to every edge of a solid
 --
@@ -206,25 +215,40 @@ roundConditionalFillet f = roundIndexedConditionalFillet (const f)
 roundFillet :: Double -> Solid -> Solid
 roundFillet r = roundConditionalFillet (const . pure $ r)
 
+roundFilletWithPaint 
+    :: (NonEmpty Paint -> Paint) 
+    -> Double
+    -> Solid -> Solid
+roundFilletWithPaint paintFn r 
+    = roundConditionalFilletWithPaint paintFn (const . pure $ r)
 
 -- | Version of `roundFillet` that returns an `Either` on failure
 tryRoundFillet :: Double -> Solid -> Either WaterfallError Solid
 tryRoundFillet r = tryRoundConditionalFillet (const . pure $ r)
 
+tryRoundFilletWithPaint 
+    :: (NonEmpty Paint -> Paint)
+    -> Double
+    -> Solid
+    -> Either WaterfallError Solid
+tryRoundFilletWithPaint paintFn r =
+    tryRoundConditionalFilletWithPaint paintFn (const . pure $ r) 
+
+tryIndexedConditionalChamferWithPaint
+    :: (NonEmpty Paint -> Paint)
+    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
+    -> Solid
+    -> Either WaterfallError Solid
+tryIndexedConditionalChamferWithPaint = 
+    trySomeIndexedConditionalFilletWithPaint MakeChamfer.fromShape MakeChamfer.addEdgeWithDistance
 
 -- | Version of `indexedConditionalChamfer` that returns an `Either` on failure
 tryIndexedConditionalChamfer 
     :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid 
     -> Either WaterfallError Solid
-tryIndexedConditionalChamfer radiusFunction solid = solidFromAcquireWithCatch (solidPaintMap solid) $ do
-    s <- acquireSolid solid
-    builder <- MakeChamfer.fromShape s
-
-    explorer <- Explorer.new s ShapeEnum.Edge
-    liftIO $ addEdges radiusFunction (MakeChamfer.addEdgeWithDistance builder) explorer
-
-    MakeShape.shape (upcast builder)
+tryIndexedConditionalChamfer = 
+    tryIndexedConditionalChamferWithPaint NE.head
 
 -- | Add chamfers of the given size to each edge of a solid, conditional on the endpoints of the edge, and the index of the edge.
 -- 
@@ -242,6 +266,14 @@ indexedConditionalChamfer
 indexedConditionalChamfer radiusFunction solid =
     fromRight mempty $ tryIndexedConditionalChamfer radiusFunction solid
 
+indexedConditionalChamferWithPaint
+    :: (NonEmpty Paint -> Paint)
+    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
+    -> Solid 
+    -> Solid
+indexedConditionalChamferWithPaint paintFn radiusFunction solid =
+    fromRight mempty $ tryIndexedConditionalChamferWithPaint paintFn radiusFunction solid
+
 -- | Version of `conditionalChamfer` that returns an `Either` on failure
 tryConditionalChamfer 
     :: ((V3 Double, V3 Double) -> Maybe Double) 
@@ -249,21 +281,50 @@ tryConditionalChamfer
     -> Either WaterfallError Solid
 tryConditionalChamfer f = tryIndexedConditionalChamfer (const f)
 
+
+tryConditionalChamferWithPaint
+    :: (NonEmpty Paint -> Paint)
+    -> ((V3 Double, V3 Double) -> Maybe Double) 
+    -> Solid
+    -> Either WaterfallError Solid
+tryConditionalChamferWithPaint paintFn f = tryIndexedConditionalChamferWithPaint paintFn (const f)
+
 -- | Add chamfers with the given size to each edge of a solid, conditional on the endpoints of the edge.
 -- 
 -- This can be used to selectively chamfer a `Solid`.
 conditionalChamfer :: ((V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
 conditionalChamfer f = indexedConditionalChamfer (const f)
 
+
+conditionalChamferWithPaint 
+    :: (NonEmpty Paint -> Paint)
+    -> ((V3 Double, V3 Double) 
+    -> Maybe Double) 
+    -> Solid -> Solid
+conditionalChamferWithPaint paintFn f = indexedConditionalChamferWithPaint paintFn (const f)
+
 -- | Version of `chamfer` that returns an `Either` on failure
 tryChamfer :: Double -> Solid -> Either WaterfallError Solid
 tryChamfer d = tryConditionalChamfer (const . pure $ d)
+
+tryChamferWithPaint 
+    :: (NonEmpty Paint -> Paint) 
+    -> Double 
+    -> Solid 
+    -> Either WaterfallError Solid
+tryChamferWithPaint paintFn d = tryConditionalChamferWithPaint paintFn (const . pure $ d)
 
 -- | Add a chamfer with a given size to every edge of a solid
 --
 -- This is applied to both internal (concave) and external (convex) edges
 chamfer :: Double -> Solid -> Solid
 chamfer d = conditionalChamfer (const . pure $ d)
+
+chamferWithPaint 
+    :: (NonEmpty Paint -> Paint)
+    -> Double -> Solid -> Solid
+chamferWithPaint paintFunction d = 
+    conditionalChamferWithPaint paintFunction (const . pure $ d ) 
 
 -- | Returns a value when the target of a lens on two points are close to one another.
 -- 
