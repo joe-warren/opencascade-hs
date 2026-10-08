@@ -1,4 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TupleSections #-}
 module Waterfall.Fillet
 (
  -- * Rounds
@@ -12,6 +14,7 @@ module Waterfall.Fillet
 , tryRoundFillet
 , tryRoundConditionalFillet
 , tryRoundIndexedConditionalFillet
+, tryRoundIndexedConditionalFilletWithPaint
 -- * Chamfers
 -- | Adds flat faces at a constant angle to the two faces either side of an edge.
 , chamfer
@@ -24,8 +27,8 @@ module Waterfall.Fillet
 , whenNearlyEqual
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireWithCatch)
-import Waterfall.Internal.Edges (edgeEndpoints)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireWithCatch, makeShapeHistory, remapPaints, PaintMap (..), solidFromAcquireMappingPaintMapWithCatch, solidFromAcquireWithPaintMapWithCatch, acquirePaints, materialiseFacePaints)
+import Waterfall.Internal.Edges (edgeEndpoints, allEdges, allSubShapesWithCopy)
 import Waterfall.Error (WaterfallError)
 import qualified OpenCascade.BRepFilletAPI.MakeFillet as MakeFillet
 import qualified OpenCascade.BRepFilletAPI.MakeChamfer as MakeChamfer
@@ -35,13 +38,26 @@ import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.TopTools.ShapeMapHasher as TopTools.ShapeMapHasher
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import Foreign.Ptr (Ptr)
-import Control.Monad (when)
+import Control.Monad (when, forM, forM_)
 import Control.Monad.IO.Class (liftIO)
-import OpenCascade.Inheritance (upcast, unsafeDowncast)
+import OpenCascade.Inheritance (upcast, unsafeDowncast, SubTypeOf)
 import Linear.V3 (V3 (..))
 import Linear.Epsilon (Epsilon, nearZero)
 import Control.Lens (Lens', (^.))
 import Data.Either (fromRight)
+import Waterfall.Paint (Paint)
+import Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty as NE
+import Data.Acquire (Acquire)
+import Data.Maybe (catMaybes)
+import Data.Foldable (find, fold, toList)
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
+import qualified OpenCascade.NCollection as NCollection
+import qualified OpenCascade.NCollection.IndexedDataMap as NCollection.IndexedDataMap
+import qualified OpenCascade.TopExp as TopExp
+import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
+import qualified OpenCascade.NCollection.List as NCollection.List
 
 addEdges :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> (Double -> Ptr TopoDS.Edge -> IO ()) -> Ptr Explorer.Explorer -> IO ()
 addEdges radiusFn action explorer = go [] 0
@@ -62,7 +78,85 @@ addEdges radiusFn action explorer = go [] 0
                         Explorer.next explorer
                         go (hash:visited) (i + 1) 
 
+getEdgesWithRadius :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Ptr TopoDS.Shape -> Acquire [(Double, Ptr TopoDS.Edge)]
+getEdgesWithRadius f s = do
+    edges <- allEdges s
+    fmap catMaybes . forM (zip [0..] edges) $ \(i, e) -> do
+        endpoints <- liftIO $ edgeEndpoints e
+        return $ (, e) <$> find (> 0) (f i endpoints)
 
+buildShapeLookup :: (SubTypeOf TopoDS.Shape a) => [(Ptr a, b)] -> IO (IntMap b)
+buildShapeLookup paints = 
+    fmap IntMap.fromList $ forM paints $ \(face, paint) -> do
+        hash <- TopTools.ShapeMapHasher.hash (upcast face)
+        return (hash, paint)
+
+lookupShape :: IntMap a -> Ptr TopoDS.Shape -> IO (Maybe a)
+lookupShape m s = (`IntMap.lookup` m) <$> TopTools.ShapeMapHasher.hash s
+
+getUniqueVertexes :: [Ptr TopoDS.Edge] -> Acquire [Ptr TopoDS.Vertex]
+getUniqueVertexes edges = 
+    let vertsForEdge e = traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy TopAbs.ShapeEnum.Vertex (upcast e)
+        dup a = (a, a)
+        in fmap (toList . fold) . liftIO . traverse (buildShapeLookup . fmap dup) =<< traverse vertsForEdge edges
+
+makeAncestorMap :: Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.IndexedDataMap TopoDS.Shape (NCollection.List TopoDS.Shape)))
+makeAncestorMap s = do
+    m <- NCollection.IndexedDataMap.newShapeListOfShapeMap
+    liftIO $ TopExp.mapShapesAndAncestors s TopAbs.ShapeEnum.Edge TopAbs.ShapeEnum.Face m
+    liftIO $ TopExp.mapShapesAndAncestors s TopAbs.ShapeEnum.Vertex TopAbs.ShapeEnum.Face m
+    return m
+                        
+tryRoundIndexedConditionalFilletWithPaint
+    :: (NonEmpty Paint -> Paint)
+    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
+    -> Solid
+    -> Either WaterfallError Solid
+tryRoundIndexedConditionalFilletWithPaint paintFunction radiusFunction solid = 
+    solidFromAcquireWithPaintMapWithCatch $ do
+        s <- acquireSolid solid
+        builder <- MakeFillet.fromShape s
+
+        edgesWithRadius <- getEdgesWithRadius radiusFunction s
+
+        liftIO $ forM_ edgesWithRadius (uncurry (MakeFillet.addEdgeWithRadius builder))
+
+        resultShape <- MakeShape.shape (upcast builder)
+
+        let buildPaintMapFrom paints = do
+                mappedPaints <- liftIO $ remapPaints (makeShapeHistory . upcast $ builder) paints
+
+                ancestorMap <- makeAncestorMap s
+                paintMap <- liftIO $ buildShapeLookup paints 
+
+                let filletSurfacesFor :: Ptr TopoDS.Shape -> Acquire [(Ptr TopoDS.Face, Paint)]
+                    filletSurfacesFor edge = do
+                        faces <- NCollection.List.fromListOfShape =<< MakeShape.generated (upcast builder) edge
+                        if null faces then pure [] else do
+                            neighbours <- NCollection.List.fromListOfShape =<<
+                                NCollection.IndexedDataMap.findFromKeyShapeListOfShapeMap ancestorMap edge
+                            neighbouringPaints <- liftIO . fmap catMaybes $ traverse (lookupShape paintMap) neighbours
+                            case NE.nonEmpty neighbouringPaints of 
+                                Nothing -> pure []
+                                Just ps -> 
+                                    let newPaint = paintFunction (NE.nub . NE.sort $ ps)
+                                    in traverse (fmap (, newPaint) . liftIO . unsafeDowncast) faces
+
+                filletSurfacesEdges <- liftIO . acquirePaints $ concat <$> traverse (filletSurfacesFor . upcast . snd) edgesWithRadius
+                verts <- getUniqueVertexes (snd <$> edgesWithRadius)
+                filletSurfacesVerts <-liftIO . acquirePaints $ concat <$> traverse (filletSurfacesFor . upcast) verts
+
+                return $ FacePaints (mappedPaints <> filletSurfacesEdges <> filletSurfacesVerts)
+
+        paintMapWithoutFilletFaces <- case solidPaintMap solid of
+            UniformPaint p -> 
+                if paintFunction (NE.singleton p) == p 
+                    then pure $ UniformPaint p
+                    else buildPaintMapFrom =<< materialiseFacePaints s (UniformPaint p) 
+            FacePaints paints -> buildPaintMapFrom paints
+
+        pure (paintMapWithoutFilletFaces, resultShape)
+--}
 -- | Version of `roundIndexedConditionalFillet` that returns an `Either` on failure
 tryRoundIndexedConditionalFillet
     :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)

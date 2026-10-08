@@ -71,6 +71,7 @@ library
   build-depends:
       base >=4.7 && <5
     , bifunctors ==5.*
+    , containers >=0.6 && <1
     , filepath >=1.4 && <1.6
     , lattices >=2.0 && <3
     , lens ==5.*

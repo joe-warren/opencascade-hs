@@ -31,6 +31,7 @@ dependencies:
 - resourcet >= 1.2 && < 1.4
 - primitive >= 0.7 && < 0.10 
 - filepath >= 1.4 && < 1.6
+- containers >= 0.6 && < 1
 
 ghc-options: *ghc-options
 

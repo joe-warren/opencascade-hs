@@ -2,17 +2,22 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TupleSections #-}
-{-# LANGUAGE DerivingVia, DeriveGeneric #-}
+{-# LANGUAGE DerivingVia #-}
 module Waterfall.Internal.Solid 
 ( Solid (..)
 , PaintMap (..)
 , History (..)
 , emptyPaintMap
 , acquireSolid
+, acquirePaints
 , solidFromAcquire
 , solidFromAcquireWithCatch
 , solidFromAcquireTWithCatch
 , solidFromAcquireMappingPaintMap
+, solidFromAcquireWithPaintMapWithCatch
+, solidFromAcquireMappingPaintMapWithCatch
+, remapPaints
+, materialiseFacePaints
 , makeShapeHistory
 , bopBuilderHistory
 , union3D
@@ -61,7 +66,6 @@ data PaintMap
 emptyPaintMap :: PaintMap
 emptyPaintMap = UniformPaint mempty
 
-
 -- | The Boundary Representation of a solid object.
 --
 -- Alternatively, a region of 3d Space.
@@ -87,6 +91,11 @@ solidFromAcquireWithPaintMap ::  Acquire (PaintMap, Ptr TopoDS.Shape.Shape) -> S
 solidFromAcquireWithPaintMap f = 
     let (paintMap, ptr) = unsafeFromAcquireT f 
     in Solid ptr paintMap
+
+solidFromAcquireWithPaintMapWithCatch ::  Acquire (PaintMap, Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
+solidFromAcquireWithPaintMapWithCatch f = do
+    (paintMap, ptr) <-unsafeFromAcquireTWithCatch f 
+    return $ Solid ptr paintMap
 
 solidFromAcquireWithCatch :: PaintMap -> Acquire (Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
 solidFromAcquireWithCatch paintMap = fmap (`Solid` paintMap) . unsafeFromAcquireWithCatch
@@ -173,13 +182,18 @@ remap history s = do
                 isDeleted <- liftIO $ historyIsDeleted history s
                 pure [s | not isDeleted]
 
+acquirePaints :: Acquire [(Ptr TopoDS.Face, Paint)] -> IO [(Ptr TopoDS.Face, Paint)]
+acquirePaints paints = 
+    let wrap = fmap (Compose . fmap Flip)
+        unwrap = fmap runFlip . getCompose
+    in fmap unwrap . fromAcquireT . wrap  $ paints
+
+
 remapPaints :: History -> [(Ptr TopoDS.Face, Paint)] -> IO [(Ptr TopoDS.Face, Paint)]
 remapPaints history facePaints = 
     let remapPaint (f, p) = fmap (,p) <$> (liftIO . traverse unsafeDowncast =<< remap history (upcast f))
         remappedPaints = concat <$> traverse remapPaint facePaints
-        wrap = fmap (Compose . fmap Flip)
-        unwrap = fmap runFlip . getCompose
-    in fmap unwrap . fromAcquireT . wrap  $ remappedPaints 
+    in acquirePaints remappedPaints 
 
 materialiseFacePaints :: Ptr TopoDS.Shape -> PaintMap -> Acquire [(Ptr TopoDS.Face, Paint)]
 materialiseFacePaints _ (FacePaints facePaints) = pure facePaints
@@ -193,17 +207,25 @@ materialiseSolidFacePaints solid = do
     s <- acquireSolid solid
     materialiseFacePaints s (solidPaintMap solid)
 
+mapPaintMap :: (PaintMap, History) -> Acquire (PaintMap, Ptr TopoDS.Shape.Shape)
+mapPaintMap (paintMap, history) = do
+    shape <- historyResult history
 
-solidFromAcquireMappingPaintMap :: Acquire (PaintMap, History) -> Solid
-solidFromAcquireMappingPaintMap f = solidFromAcquireWithPaintMap $ do
-    (paintMap, history) <- f
     remappedPaintMap <- case paintMap of
         UniformPaint _ -> pure paintMap
         FacePaints oldFacePaints -> 
             liftIO $ FacePaints <$> remapPaints history oldFacePaints
             
-    shape <- historyResult history
     return (remappedPaintMap, shape)
+
+
+solidFromAcquireMappingPaintMap :: Acquire (PaintMap, History) -> Solid
+solidFromAcquireMappingPaintMap f = 
+    solidFromAcquireWithPaintMap (mapPaintMap =<< f)
+
+solidFromAcquireMappingPaintMapWithCatch :: Acquire (PaintMap, History) -> Either WaterfallError Solid
+solidFromAcquireMappingPaintMapWithCatch f = 
+    solidFromAcquireWithPaintMapWithCatch (mapPaintMap =<< f)
 
 toBoolean :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr a)) -> Solid -> Solid -> Solid
 toBoolean f (Solid ptrA paintMapA) (Solid ptrB paintMapB) = solidFromAcquireMappingPaintMap $ do

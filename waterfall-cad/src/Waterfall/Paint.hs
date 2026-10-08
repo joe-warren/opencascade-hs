@@ -80,6 +80,8 @@ defaultPaint :: Paint
 defaultPaint = paintWithColour (Colour 1 1 1)
     <> paintWithOpacity 1 
     <> paintWithDoubleSidedness DoubleSided
+    <> paintWithMetallic 0
+    <> paintWithRoughness 0.5
 
 paintIsDefined :: Paint -> Bool
 paintIsDefined = (== mempty)
