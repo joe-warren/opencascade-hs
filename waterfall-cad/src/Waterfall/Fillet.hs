@@ -38,18 +38,17 @@ module Waterfall.Fillet
 , whenNearlyEqual
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, makeShapeHistory, remapPaints, PaintMap (..), solidFromAcquireWithPaintMapWithCatch, acquirePaints, materialiseFacePaints)
-import Waterfall.Internal.Edges (edgeEndpoints, allEdges, allSubShapesWithCopy)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, PaintMap (..), solidFromAcquireWithPaintMapWithCatch, materialiseFacePaints, makeShapeHistory)
+import Waterfall.Internal.Edges (edgeEndpoints, allEdges)
 import Waterfall.Error (WaterfallError)
 import qualified OpenCascade.BRepFilletAPI.MakeFillet as MakeFillet
 import qualified OpenCascade.BRepFilletAPI.MakeChamfer as MakeChamfer
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
-import qualified OpenCascade.TopTools.ShapeMapHasher as TopTools.ShapeMapHasher
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import Foreign.Ptr (Ptr)
-import Control.Monad (when, forM, forM_)
+import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (liftIO)
-import OpenCascade.Inheritance (upcast, unsafeDowncast, SubTypeOf)
+import OpenCascade.Inheritance (upcast, SubTypeOf)
 import Linear.V3 (V3 (..))
 import Linear.Epsilon (Epsilon, nearZero)
 import Control.Lens (Lens', (^.))
@@ -59,15 +58,9 @@ import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NE
 import Data.Acquire (Acquire)
 import Data.Maybe (catMaybes)
-import Data.Foldable (find, toList)
-import qualified OpenCascade.NCollection as NCollection
-import qualified OpenCascade.NCollection.IndexedDataMap as NCollection.IndexedDataMap
-import qualified OpenCascade.TopExp as TopExp
-import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
-import qualified OpenCascade.NCollection.List as NCollection.List
+import Data.Foldable (find)
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as BRepBuilderAPI
-import qualified Waterfall.Internal.ShapeMap as ShapeMap
-import Control.Arrow (first)
+import Waterfall.Internal.PaintHistory (remapWithBlendFunction)
 
 getEdgesWithRadius :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Ptr TopoDS.Shape -> Acquire [(Double, Ptr TopoDS.Edge)]
 getEdgesWithRadius f s = do
@@ -76,19 +69,6 @@ getEdgesWithRadius f s = do
         endpoints <- liftIO $ edgeEndpoints e
         return $ (, e) <$> find (> 0) (f i endpoints)
 
-getUniqueVertexes :: [Ptr TopoDS.Edge] -> Acquire [Ptr TopoDS.Vertex]
-getUniqueVertexes edges = 
-    let vertsForEdge e = traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy TopAbs.ShapeEnum.Vertex (upcast e)
-        dup a = (upcast a, a)
-        in fmap toList . liftIO . ShapeMap.fromList . fmap dup . concat  =<< traverse vertsForEdge edges
-
-makeAncestorMap :: Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.IndexedDataMap TopoDS.Shape (NCollection.List TopoDS.Shape)))
-makeAncestorMap s = do
-    m <- NCollection.IndexedDataMap.newShapeListOfShapeMap
-    liftIO $ TopExp.mapShapesAndAncestors s TopAbs.ShapeEnum.Edge TopAbs.ShapeEnum.Face m
-    liftIO $ TopExp.mapShapesAndAncestors s TopAbs.ShapeEnum.Vertex TopAbs.ShapeEnum.Face m
-    return m
-                        
 trySomeIndexedConditionalFilletWithPaint
     :: (SubTypeOf BRepBuilderAPI.MakeShape a)
     => (Ptr TopoDS.Shape -> Acquire (Ptr a))
@@ -108,37 +88,13 @@ trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiu
 
         resultShape <- MakeShape.shape (upcast builder)
 
-        let buildPaintMapFrom paints = do
-                mappedPaints <- liftIO $ remapPaints (makeShapeHistory . upcast $ builder) paints
-
-                ancestorMap <- makeAncestorMap s
-                paintMap <- liftIO $ ShapeMap.fromList (fmap (first upcast) paints)
-
-                let filletSurfacesFor :: Ptr TopoDS.Shape -> Acquire [(Ptr TopoDS.Face, Paint)]
-                    filletSurfacesFor edge = do
-                        faces <- NCollection.List.fromListOfShape =<< MakeShape.generated (upcast builder) edge
-                        if null faces then pure [] else do
-                            neighbours <- NCollection.List.fromListOfShape =<<
-                                NCollection.IndexedDataMap.findFromKeyShapeListOfShapeMap ancestorMap edge
-                            neighbouringPaints <- liftIO . fmap catMaybes $ traverse (ShapeMap.lookup paintMap) neighbours
-                            case NE.nonEmpty neighbouringPaints of 
-                                Nothing -> pure []
-                                Just ps -> 
-                                    let newPaint = paintFunction (NE.nub . NE.sort $ ps)
-                                    in traverse (fmap (, newPaint) . liftIO . unsafeDowncast) faces
-
-                filletSurfacesEdges <- liftIO . acquirePaints $ concat <$> traverse (filletSurfacesFor . upcast . snd) edgesWithRadius
-                verts <- getUniqueVertexes (snd <$> edgesWithRadius)
-                filletSurfacesVerts <-liftIO . acquirePaints $ concat <$> traverse (filletSurfacesFor . upcast) verts
-
-                return $ FacePaints (mappedPaints <> filletSurfacesEdges <> filletSurfacesVerts)
-
-        newPaintMap <- case solidPaintMap solid of
-            UniformPaint p -> 
-                if paintFunction (NE.singleton p) == p 
-                    then pure $ UniformPaint p
-                    else buildPaintMapFrom =<< materialiseFacePaints s (UniformPaint p) 
-            FacePaints paints -> buildPaintMapFrom paints
+        newPaintMap <- 
+            remapWithBlendFunction 
+                paintFunction
+                s
+                (snd <$> edgesWithRadius)
+                (makeShapeHistory . upcast $ builder)
+                (solidPaintMap solid)
 
         pure (newPaintMap, resultShape)
 

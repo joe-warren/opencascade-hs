@@ -15,6 +15,7 @@ module Waterfall.Internal.Solid
 , solidFromAcquireTWithCatch
 , solidFromAcquireMappingPaintMap
 , solidFromAcquireWithPaintMapWithCatch
+, solidFromAcquireTWithPaintMapWithCatch
 , solidFromAcquireMappingPaintMapWithCatch
 , remapPaints
 , materialiseFacePaints
@@ -57,7 +58,7 @@ import Waterfall.Error (WaterfallError)
 import Waterfall.Paint (Paint)
 import Data.Functor.Compose (Compose(..))
 import qualified OpenCascade.NCollection as NCollection
-import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
+import Control.Monad (filterM)
 
 data PaintMap 
     = UniformPaint Paint
@@ -96,6 +97,11 @@ solidFromAcquireWithPaintMapWithCatch ::  Acquire (PaintMap, Ptr TopoDS.Shape.Sh
 solidFromAcquireWithPaintMapWithCatch f = do
     (paintMap, ptr) <-unsafeFromAcquireTWithCatch f 
     return $ Solid ptr paintMap
+
+    
+solidFromAcquireTWithPaintMapWithCatch :: Traversable t => Acquire (t (PaintMap, Ptr TopoDS.Shape.Shape)) -> Either WaterfallError (t Solid)
+solidFromAcquireTWithPaintMapWithCatch = 
+    fmap (fmap (uncurry (flip Solid))) . unsafeFromAcquireTWithCatch 
 
 solidFromAcquireWithCatch :: PaintMap -> Acquire (Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
 solidFromAcquireWithCatch paintMap = fmap (`Solid` paintMap) . unsafeFromAcquireWithCatch
@@ -157,37 +163,53 @@ emptySolid =  (`Solid` emptyPaintMap) . unsafeFromAcquire $ upcast <$> (MakeSoli
 -- | this is used to abstract between `MakeShape` and `BOPAlgo.Builder`
 data History = History 
     { historyModified :: Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.List TopoDS.Shape))
+    , historyGenerated :: Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.List TopoDS.Shape))
     , historyIsDeleted :: Ptr TopoDS.Shape -> IO Bool
     , historyResult :: Acquire (Ptr TopoDS.Shape)
     }
 
 makeShapeHistory :: Ptr MakeShape -> History
-makeShapeHistory builder = History (MakeShape.modified builder) (MakeShape.isDeleted builder) (MakeShape.shape builder)
+makeShapeHistory builder =
+    History 
+        (MakeShape.modified builder)
+        (MakeShape.generated builder)
+        (MakeShape.isDeleted builder)
+        (MakeShape.shape builder)
 
 bopBuilderHistory :: Ptr BOPAlgo.Builder -> History
-bopBuilderHistory builder = History (BOPAlgo.Builder.modified builder) (BOPAlgo.Builder.isDeleted builder) (BOPAlgo.Builder.shape builder)
+bopBuilderHistory builder = 
+    History 
+        (BOPAlgo.Builder.modified builder)
+        (BOPAlgo.Builder.generated builder)
+        (BOPAlgo.Builder.isDeleted builder)
+        (BOPAlgo.Builder.shape builder)
 
--- | for a builder, and a shape
+-- | for a builder, and a shape, return:
 --
--- * if the shape was modified by the builder, return the modified shapes
+-- * if the shape was modified by the builder, or there were generated shapes of the same kind, return the modified/generated shapes
 -- * if the shape was deleted by the builder, return nothing
 -- * otherwise, return the shape
 remap :: History -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
 remap history s = do
         modified <- NCollection.List.fromListOfShape
                 =<< historyModified history s
-        if not . null $ modified 
-            then pure modified
-            else do
-                isDeleted <- liftIO $ historyIsDeleted history s
-                pure [s | not isDeleted]
+        generated <- NCollection.List.fromListOfShape
+                =<< historyGenerated history s
+        inputShapeType <- liftIO $ TopoDS.Shape.shapeType s
+        sameTypeGenerated <- liftIO $ 
+            filterM (fmap (== inputShapeType) . TopoDS.Shape.shapeType) generated
+        let candidates = modified <> sameTypeGenerated
+        if not . null $ candidates
+                then pure candidates
+                else do
+                    isDeleted <- liftIO $ historyIsDeleted history s
+                    pure [s | not isDeleted]
 
 acquirePaints :: Acquire [(Ptr TopoDS.Face, Paint)] -> IO [(Ptr TopoDS.Face, Paint)]
 acquirePaints paints = 
     let wrap = fmap (Compose . fmap Flip)
         unwrap = fmap runFlip . getCompose
     in fmap unwrap . fromAcquireT . wrap  $ paints
-
 
 remapPaints :: History -> [(Ptr TopoDS.Face, Paint)] -> IO [(Ptr TopoDS.Face, Paint)]
 remapPaints history facePaints = 

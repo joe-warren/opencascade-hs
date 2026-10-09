@@ -41,6 +41,7 @@ library
       Waterfall.Internal.Finalizers
       Waterfall.Internal.FromOpenCascade
       Waterfall.Internal.NearZero
+      Waterfall.Internal.PaintHistory
       Waterfall.Internal.Path
       Waterfall.Internal.Path.Common
       Waterfall.Internal.Remesh
