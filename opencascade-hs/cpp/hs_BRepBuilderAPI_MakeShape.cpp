@@ -1,5 +1,6 @@
 #include <BRepBuilderAPI_MakeShape.hxx>
 #include <TopoDS_Shape.hxx>
+#include <NCollection_List.hxx>
 #include "hs_Exception.h"
 #include "hs_BRepBuilderAPI_MakeShape.h"
 
@@ -32,5 +33,50 @@ void hs_BRepBuilderAPI_MakeShape_build(
         [builder]{
             builder->Build();
         }
+    );
+}
+LIST(TopoDS_Shape) * hs_BRepBuilderAPI_MakeShape_modified(
+        BRepBuilderAPI_MakeShape * builder,
+        TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+    ){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [builder, shape]{
+            return new NCollection_List<TopoDS_Shape>(builder->Modified(*shape));
+        }
+    );
+}
+
+LIST(TopoDS_Shape) * hs_BRepBuilderAPI_MakeShape_generated(
+        BRepBuilderAPI_MakeShape * builder,
+        TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+    ){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [builder, shape]{
+            return new NCollection_List<TopoDS_Shape>(builder->Generated(*shape));
+        }
+    );
+}
+
+bool hs_BRepBuilderAPI_MakeShape_isDeleted(
+        BRepBuilderAPI_MakeShape * builder,
+        TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+    ){
+    return hs_handleExWithDefault(
+        exType,
+        exPtr,
+        [builder, shape]{
+            return builder->IsDeleted(*shape);
+        },
+        false
     );
 }

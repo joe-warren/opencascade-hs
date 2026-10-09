@@ -1,4 +1,6 @@
 #include <BOPAlgo_Builder.hxx>
+#include <NCollection_List.hxx>
+#include <TopoDS_Shape.hxx>
 #include "hs_Exception.h"
 #include "hs_BOPAlgo_Builder.h"
 
@@ -53,3 +55,43 @@ void hs_BOPAlgo_Builder_Perform(
     });
 }
 
+
+LIST(TopoDS_Shape) * hs_BOPAlgo_Builder_Modified(
+        BOPAlgo_Builder * builder, TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [builder, shape]{
+        return new NCollection_List<TopoDS_Shape>(builder->Modified(*shape));
+    });
+}
+
+LIST(TopoDS_Shape) * hs_BOPAlgo_Builder_Generated(
+        BOPAlgo_Builder * builder, TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [builder, shape]{
+        return new NCollection_List<TopoDS_Shape>(builder->Generated(*shape));
+    });
+}
+
+bool hs_BOPAlgo_Builder_IsDeleted(
+        BOPAlgo_Builder * builder, TopoDS_Shape * shape,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleExWithDefault(
+        exType,
+        exPtr,
+        [builder, shape]{
+        return builder->IsDeleted(*shape);
+    },
+    false);
+}

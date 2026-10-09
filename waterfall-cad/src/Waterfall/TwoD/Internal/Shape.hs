@@ -1,4 +1,5 @@
 {-# OPTIONS_HADDOCK not-home #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Waterfall.TwoD.Internal.Shape
 ( Shape (..)
 , acquireShape
@@ -20,11 +21,13 @@ import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
 import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import OpenCascade.BRepBuilderAPI (MakeShape)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
+import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
 import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
-import OpenCascade.Inheritance (upcast)
+import OpenCascade.Inheritance (SubTypeOf, upcast)
 import Control.Monad.IO.Class (liftIO)
 import Data.Foldable (traverse_)
 
@@ -47,26 +50,26 @@ acquireShape (Shape ptr) = toAcquire ptr
 shapeFromAcquire :: Acquire (Ptr TopoDS.Shape) -> Shape
 shapeFromAcquire = Shape . unsafeFromAcquire
 
-toBoolean2D :: (Ptr TopoDS.Shape.Shape -> Ptr TopoDS.Shape.Shape -> Acquire (Ptr TopoDS.Shape.Shape)) -> Shape -> Shape -> Shape
+toBoolean2D :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape.Shape -> Ptr TopoDS.Shape.Shape -> Acquire (Ptr a)) -> Shape -> Shape -> Shape
 toBoolean2D f (Shape ptrA) (Shape ptrB) = Shape . unsafeFromAcquire $ do
     a <- toAcquire ptrA
     b <- toAcquire ptrB
-    f a b
+    MakeShape.shape =<< fmap upcast (f a b)
 
 -- | Take the union of two 2D shapes.
 -- The region occupied by either one of them
 union2D :: Shape -> Shape -> Shape
-union2D = toBoolean2D Fuse.fuse
+union2D = toBoolean2D Fuse.fromShapes
 
 -- | Take the difference of two 2D shapes.
 -- The region occupied by the first, but not the second
 difference2D :: Shape -> Shape -> Shape
-difference2D = toBoolean2D Cut.cut
+difference2D = toBoolean2D Cut.fromShapes
 
 -- | Take the intersection of two 2D shapes.
 -- The region occupied by both of them
 intersection2D :: Shape -> Shape -> Shape
-intersection2D = toBoolean2D Common.common
+intersection2D = toBoolean2D Common.fromShapes
 
 toBooleans2D :: BOPAlgo.Operation.Operation -> [Shape] -> Shape
 toBooleans2D _ [] = emptyShape

@@ -12,7 +12,7 @@ RWObj_CafWriter * hs_new_RWObj_CafWriter(char * theFile);
 void hs_delete_RWObj_CafWriter(RWObj_CafWriter * theWriter);
 
 void hs_RWObj_CafWriter_Perform(
-    RWObj_CafWriter * theWriter, Handle(TDocStd_Document) * theDocument, INDEXED_DATA_MAP(TCollection_AsciiString, TCollection_AsciiString) * theFileInfo, Message_ProgressRange * theProgress,
+    RWObj_CafWriter * theWriter, Handle(TDocStd_Document) * theDocument, INDEXED_DATA_MAP(TCollection_AsciiString, TCollection_AsciiString, DEFAULT_HASHER(TCollection_AsciiString)) * theFileInfo, Message_ProgressRange * theProgress,
     HSExceptionType* exType, void ** exPtr
 );
 

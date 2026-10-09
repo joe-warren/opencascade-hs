@@ -115,6 +115,7 @@ test-suite waterfall-cad-tests
   other-modules:
       DiagramGoldenTests
       ExceptionTests
+      PaintTests
       Paths_waterfall_cad_examples
   hs-source-dirs:
       test

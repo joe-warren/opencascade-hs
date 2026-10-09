@@ -17,7 +17,7 @@ module Waterfall.Transforms
 , _rotated
 , _mirrored
 ) where
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireMappingPaintMap, makeShapeHistory)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire) 
 import Waterfall.Internal.Path.Common (RawPath(..))
 import Waterfall.Internal.NearZero (nearZero)
@@ -34,6 +34,7 @@ import qualified OpenCascade.GP.Dir as GP.Dir
 import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.BRepBuilderAPI.Transform  as BRepBuilderAPI.Transform
 import qualified OpenCascade.BRepBuilderAPI.GTransform  as BRepBuilderAPI.GTransform
+import qualified OpenCascade.BRepBuilderAPI.MakeShape  as BRepBuilderAPI.MakeShape
 import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
 import Data.Acquire
@@ -60,16 +61,18 @@ class Transformable a where
     mirror :: V3 Double -> a -> a
 
 fromTrsfSolid :: Acquire (Ptr GP.Trsf) -> Solid -> Solid
-fromTrsfSolid mkTrsf s = solidFromAcquire $ do 
+fromTrsfSolid mkTrsf s = solidFromAcquireMappingPaintMap $ do 
     solid <- acquireSolid s
     trsf <- mkTrsf 
-    BRepBuilderAPI.Transform.transform solid trsf True 
-
+    builder <- BRepBuilderAPI.Transform.fromShapeTrsfAndCopy solid trsf True 
+    return (solidPaintMap s, makeShapeHistory . upcast $ builder )
+    
 fromGTrsfSolid :: Acquire (Ptr GP.GTrsf) -> Solid -> Solid
-fromGTrsfSolid mkTrsf s = solidFromAcquire $ do 
+fromGTrsfSolid mkTrsf s = solidFromAcquireMappingPaintMap $ do 
     solid <- acquireSolid s
     trsf <- mkTrsf 
-    BRepBuilderAPI.GTransform.gtransform solid trsf True 
+    builder <- BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy solid trsf True 
+    return (solidPaintMap s, makeShapeHistory . upcast $ builder )
 
 transformPathSinglePointPaths :: (V3 Double -> V3 Double) -> Path -> Path
 transformPathSinglePointPaths f (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v 
@@ -79,7 +82,10 @@ fromTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.Trsf) -> Path -> Pat
 fromTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquire $ do 
     path <- toAcquire p
     trsf <- mkTrsf 
-    (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast path) trsf True 
+    (liftIO . unsafeDowncast)
+        =<< BRepBuilderAPI.MakeShape.shape
+        =<< fmap upcast 
+            (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
 fromTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
 fromTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 
@@ -87,7 +93,10 @@ fromGTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.GTrsf) -> Path -> P
 fromGTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquire $ do 
     path <- toAcquire p
     trsf <- mkTrsf 
-    (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
+    (liftIO . unsafeDowncast) 
+        =<< BRepBuilderAPI.MakeShape.shape
+        =<< fmap upcast
+            (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
 fromGTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
 fromGTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 

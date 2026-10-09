@@ -2,6 +2,7 @@ module Waterfall.Internal.Edges
 ( edgeEndpoints
 , edgeValue
 , wireEndpoints
+, allSubShapesWithCopy
 , allWireEndpoints
 , allWires
 , allEdges
@@ -42,8 +43,9 @@ import Foreign.Ptr
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import Control.Monad (when)
 import Waterfall.Internal.ToOpenCascade (v3ToPnt)
-import Data.Foldable (traverse_)
+import Data.Foldable (traverse_, Foldable (toList))
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
+import qualified Waterfall.Internal.ShapeMap as ShapeMap
 
 edgeEndpoints :: Ptr TopoDS.Edge -> IO (V3 Double, V3 Double)
 edgeEndpoints edge = (`with` pure) $ do
@@ -77,21 +79,22 @@ allWireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
 allSubShapesWithCopy :: ShapeEnum.ShapeEnum -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
 allSubShapesWithCopy t s = do 
     explorer <- Explorer.new s t
-    let go visited = do
+    let go acc = do
             isMore <- liftIO $ Explorer.more explorer
             if isMore 
                 then do
                     v <- liftIO $ Explorer.value explorer
-                    hash <- liftIO $ TopTools.ShapeMapHasher.hash v
-                    add <- if hash `elem` visited 
-                        then pure id 
-                        else do
+                    isPresent <- liftIO $ ShapeMap.lookup acc v
+                    (newAcc, add) <- case isPresent of 
+                        Nothing -> do 
                             v' <- TopoDS.Shape.copy v
-                            return (v':) 
+                            newMap <- liftIO $ ShapeMap.addIfAbsent (v', ()) acc
+                            return (newMap, (v':))
+                        Just _ -> pure (acc, id) 
                     liftIO $ Explorer.next explorer
-                    add <$> go visited
+                    add <$> go newAcc
                 else return []
-    go []
+    go ShapeMap.empty
 
 
 allEdges :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Edge]

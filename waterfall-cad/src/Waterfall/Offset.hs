@@ -1,12 +1,17 @@
+{-# LANGUAGE TupleSections #-}
 module Waterfall.Offset 
 ( offset
 , offsetWithTolerance
+, offsetWithPaint
+, offsetWithToleranceWithPaint
 -- * Functions that return Errors
 , tryOffset
 , tryOffsetWithTolerance
+, tryOffsetWithPaint
+, tryOffsetWithToleranceWithPaint
 ) where 
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireWithCatch, solidFromAcquireTWithCatch)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireTWithCatch, PaintMap (..), makeShapeHistory, solidFromAcquireTWithPaintMapWithCatch)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
@@ -18,12 +23,20 @@ import qualified OpenCascade.TopoDS.Types as TopoDS
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
 import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
-import Control.Monad (when)
+import Control.Monad (when, filterM)
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
 import Waterfall.Internal.NearZero (nearZero)
 import Waterfall.Error (WaterfallError)
 import Data.Either (fromRight)
+import Waterfall.Internal.Edges (allSubShapesWithCopy)
+import qualified Waterfall.Internal.ShapeMap as ShapeMap
+import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
+import Data.Maybe (isJust)
+import Waterfall.Internal.PaintHistory (remapWithBlendFunction)
+import Data.List.NonEmpty (NonEmpty)
+import Waterfall.Paint (Paint)
+import qualified Data.List.NonEmpty as NE
 
 combineShellsToSolid :: Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 combineShellsToSolid s = do
@@ -52,16 +65,44 @@ getCompoundAsSolids s = do
                     (solid :) <$> go
     go
 
+
+filterPaintMap :: Ptr TopoDS.Shape -> PaintMap -> Acquire PaintMap
+filterPaintMap _ (UniformPaint paint) = pure (UniformPaint paint)
+filterPaintMap s (FacePaints paints) = do
+    faceSet <- liftIO . ShapeMap.fromList . fmap (,()) =<< allSubShapesWithCopy ShapeEnum.Face s 
+    liftIO $ FacePaints <$> filterM (fmap isJust . ShapeMap.lookup faceSet . upcast . fst) paints
+    
 offsetOneWithTolerance :: 
     Double       
-    -> Double   
+    -> Double
+    -> (NonEmpty Paint -> Paint)
+    -> PaintMap   
     -> Ptr TopoDS.Shape
-    -> Acquire (Ptr TopoDS.Shape)
-offsetOneWithTolerance tolerance value s = do
+    -> Acquire (PaintMap, Ptr TopoDS.Shape)
+offsetOneWithTolerance tolerance value paintFn paintMap s = do
     builder <- MakeOffsetShape.new
+    allEdges <- traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Edge s
     liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False 
     shell <- MakeShape.shape (upcast builder)
-    combineShellsToSolid shell
+    newPaintMap <- remapWithBlendFunction paintFn s allEdges (makeShapeHistory $ upcast builder)
+        =<< filterPaintMap s paintMap
+    (newPaintMap,) <$> combineShellsToSolid shell
+
+
+tryOffsetWithToleranceWithPaint :: 
+    Double       
+    -> (NonEmpty Paint -> Paint)
+    -> Double
+    -> Solid   
+    -> Either WaterfallError Solid
+tryOffsetWithToleranceWithPaint tolerance paintFn value solid
+    | nearZero value = Right solid
+    | otherwise = 
+        fmap mconcat 
+        . solidFromAcquireTWithPaintMapWithCatch
+        $ traverse (offsetOneWithTolerance tolerance value paintFn (solidPaintMap solid)) 
+        =<< getCompoundAsSolids 
+        =<< acquireSolid solid
 
 -- | Version of `offsetWithTolerance` that returns an error on failure
 tryOffsetWithTolerance :: 
@@ -69,14 +110,8 @@ tryOffsetWithTolerance ::
     -> Double   
     -> Solid   
     -> Either WaterfallError Solid
-tryOffsetWithTolerance tolerance value solid
-    | nearZero value = Right solid
-    | otherwise = 
-        fmap mconcat 
-        . solidFromAcquireTWithCatch 
-        $ traverse (offsetOneWithTolerance tolerance value) 
-        =<< getCompoundAsSolids 
-        =<< acquireSolid solid
+tryOffsetWithTolerance tolerance 
+    = tryOffsetWithToleranceWithPaint tolerance NE.head
 
 offsetWithTolerance :: 
     Double       -- ^ Tolerance, this can be relatively small
@@ -85,6 +120,16 @@ offsetWithTolerance ::
     -> Solid
 offsetWithTolerance tolerance value solid = 
     fromRight mempty $ tryOffsetWithTolerance tolerance value solid
+
+    
+offsetWithToleranceWithPaint :: 
+    Double       -- ^ Tolerance, this can be relatively small
+    -> (NonEmpty Paint -> Paint)
+    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid        -- ^ the `Solid` to offset 
+    -> Solid
+offsetWithToleranceWithPaint tolerance paintFn value solid = 
+    fromRight mempty $ tryOffsetWithToleranceWithPaint tolerance paintFn value solid
 
 defaultTolerance :: Double
 defaultTolerance = 1e-6
@@ -109,6 +154,12 @@ offset ::
     -> Solid
 offset = offsetWithTolerance defaultTolerance
 
+offsetWithPaint 
+    :: (NonEmpty Paint -> Paint)
+    -> Double 
+    -> Solid
+    -> Solid
+offsetWithPaint = offsetWithToleranceWithPaint defaultTolerance
 
 -- | Version of `offset` that returns an error on failure
 tryOffset  :: 
@@ -116,4 +167,12 @@ tryOffset  ::
     -> Solid        -- ^ the `Solid` to offset 
     -> Either WaterfallError Solid
 tryOffset = tryOffsetWithTolerance defaultTolerance
+
+tryOffsetWithPaint 
+    :: (NonEmpty Paint -> Paint)
+    -> Double 
+    -> Solid
+    -> Either WaterfallError Solid
+tryOffsetWithPaint = 
+    tryOffsetWithToleranceWithPaint defaultTolerance 
 

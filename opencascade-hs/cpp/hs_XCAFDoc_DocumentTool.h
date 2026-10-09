@@ -12,6 +12,16 @@ Handle (XCAFDoc_ShapeTool) * hs_XCAFDoc_DocumentTool_shapeTool(
     HSExceptionType* exType, void ** exPtr
 );
 
+Handle (XCAFDoc_ColorTool) * hs_XCAFDoc_DocumentTool_colorTool(
+    TDF_Label * label,
+    HSExceptionType* exType, void ** exPtr
+);
+
+Handle (XCAFDoc_VisMaterialTool) * hs_XCAFDoc_DocumentTool_visMaterialTool(
+    TDF_Label * label,
+    HSExceptionType* exType, void ** exPtr
+);
+
 #ifdef __cplusplus
 }
 #endif

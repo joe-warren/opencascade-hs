@@ -4,3 +4,6 @@
 void hs_delete_TDF_Label(TDF_Label * theLabel){
     delete theLabel;
 }
+bool hs_TDF_Label_isNull(TDF_Label * theLabel){
+    return theLabel->IsNull();
+}

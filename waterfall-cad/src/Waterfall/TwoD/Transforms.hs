@@ -29,6 +29,7 @@ import qualified OpenCascade.GP.Ax1 as GP.Ax1
 import qualified OpenCascade.GP.Ax2 as GP.Ax2
 import qualified OpenCascade.GP.Dir as GP.Dir
 import qualified OpenCascade.GP.Vec as GP.Vec
+import qualified OpenCascade.BRepBuilderAPI.MakeShape  as BRepBuilderAPI.MakeShape
 import qualified OpenCascade.BRepBuilderAPI.Transform  as BRepBuilderAPI.Transform
 import qualified OpenCascade.BRepBuilderAPI.GTransform  as BRepBuilderAPI.GTransform
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
@@ -64,7 +65,10 @@ fromTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Ptr GP.Trsf) -> Path2D -> P
 fromTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquire $ do 
     path <- toAcquire p
     trsf <- mkTrsf 
-    (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast path) trsf True 
+    (liftIO . unsafeDowncast) 
+        =<< BRepBuilderAPI.MakeShape.shape
+        =<< fmap upcast
+            (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
 fromTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $ (v & _xy %~ f)
 fromTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
 
@@ -72,14 +76,19 @@ fromTrsfShape :: Acquire (Ptr GP.Trsf) -> Shape -> Shape
 fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
     shape <- toAcquire theRawShape
     trsf <- mkTrsf 
-    BRepBuilderAPI.Transform.transform shape trsf True 
+    builder <- BRepBuilderAPI.Transform.fromShapeTrsfAndCopy shape trsf True 
+    BRepBuilderAPI.MakeShape.shape (upcast builder)
     
 fromGTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Maybe (Ptr GP.GTrsf)) -> Path2D -> Path2D
 fromGTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquire  $ do 
     path <- toAcquire p
     trsfMay <- mkTrsf 
     case trsfMay of
-        Just trsf -> (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
+        Just trsf -> 
+            (liftIO . unsafeDowncast) 
+                =<< BRepBuilderAPI.MakeShape.shape
+                =<< fmap upcast
+                    (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
         Nothing -> pure path
 fromGTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $ (v & _xy %~ f)
 fromGTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
@@ -89,21 +98,33 @@ fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do
     shape <- toAcquire theRawShape 
     trsfMay <- mkTrsf 
     case trsfMay of
-        Just trsf -> BRepBuilderAPI.GTransform.gtransform shape trsf True 
+        Just trsf -> 
+            BRepBuilderAPI.MakeShape.shape 
+                =<< fmap upcast
+                    (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy shape trsf True)
         Nothing -> pure shape
 
 fromTrsfDiagram :: Acquire (Ptr GP.Trsf) -> RawDiagram -> RawDiagram
 fromTrsfDiagram mkTrsf (RawDiagram runTheDiagram) = RawDiagram $ \lt v is3D -> do 
     edges <- runTheDiagram lt v is3D
     trsf <- mkTrsf 
-    forM edges $ \s -> (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast s) trsf True
+    forM edges $ \s -> 
+        (liftIO . unsafeDowncast) 
+            =<< BRepBuilderAPI.MakeShape.shape 
+            =<< fmap upcast
+                (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast s) trsf True)
 
 fromGTrsfDiagram :: Acquire (Maybe (Ptr GP.GTrsf)) -> RawDiagram -> RawDiagram
 fromGTrsfDiagram mkTrsf (RawDiagram runTheDiagram) = RawDiagram $ \lt v is3D -> do 
     edges <- runTheDiagram lt v is3D
     trsfMay <- mkTrsf 
     case trsfMay of
-        Just trsf -> forM edges $ \s -> (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast s) trsf True 
+        Just trsf -> 
+            forM edges $ \s -> 
+                (liftIO . unsafeDowncast) 
+                    =<< BRepBuilderAPI.MakeShape.shape
+                    =<< fmap upcast
+                        (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast s) trsf True)
         Nothing -> pure edges
 
 matrixGTrsf :: M23 Double -> Acquire (Maybe (Ptr GP.GTrsf))
