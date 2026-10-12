@@ -8,6 +8,7 @@ module Waterfall.Internal.Solid
 , PaintMap (..)
 , History (..)
 , emptyPaintMap
+, paintMapIsEmpty
 , acquireSolid
 , acquirePaints
 , solidFromAcquire
@@ -67,6 +68,10 @@ data PaintMap
 emptyPaintMap :: PaintMap
 emptyPaintMap = UniformPaint mempty
 
+paintMapIsEmpty :: PaintMap -> Bool
+paintMapIsEmpty (UniformPaint p) = p == mempty 
+paintMapIsEmpty _ = False
+ 
 -- | The Boundary Representation of a solid object.
 --
 -- Alternatively, a region of 3d Space.

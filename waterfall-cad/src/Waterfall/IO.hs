@@ -24,7 +24,7 @@ module Waterfall.IO
 , readOBJ
 ) where 
 
-import Waterfall.Internal.Solid (Solid(..), PaintMap(..), emptyPaintMap)
+import Waterfall.Internal.Solid (Solid(..), PaintMap(..), emptyPaintMap, acquireSolid, paintMapIsEmpty)
 import qualified Waterfall.Internal.Remesh as Remesh
 import qualified OpenCascade.BRepMesh.IncrementalMesh as BRepMesh.IncrementalMesh
 import qualified OpenCascade.StlAPI.Writer as StlWriter
@@ -70,6 +70,7 @@ import Waterfall.Paint (Colour(..), paintColour, defaultPaint)
 import qualified OpenCascade.XCAFDoc.ColorTool as XCafDoc.ColourTool
 import Control.Lens ((^.))
 import System.IO (hPutStrLn, stderr)
+import qualified OpenCascade.STEPCAFControl.Writer as StepCAFControl.Writer
 
 -- | The type of exceptions thrown by IO actions defined in `Waterfall.IO`
 data WaterfallIOException = 
@@ -157,12 +158,14 @@ writeAsciiSTL = writeSTLAsciiOrBinary True
 --
 -- STEP files can be imported by [FreeCAD](https://www.freecad.org/)
 writeSTEP :: FilePath -> Solid -> IO ()
-writeSTEP filepath (Solid ptr _paintMap) = (`withAcquire` pure) $ do
+writeSTEP filepath (Solid ptr paintMap) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
-    writer <- StepWriter.new
-    resTransfer <- liftIO $ StepWriter.transfer writer s StepModelType.Asls True
-    unless (resTransfer == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException BadGeometryError filepath)
-    resWrite <- liftIO $ StepWriter.write writer filepath
+    writer <- StepCAFControl.Writer.new
+    doc <- cafDocument s (paintMap)
+    liftIO $ StepCAFControl.Writer.setColorMode writer (not . paintMapIsEmpty $ paintMap)
+    resTransfer <- liftIO $ StepCAFControl.Writer.transfer writer doc StepModelType.Asls
+    unless resTransfer (liftIO . throwIO $ WaterfallIOException BadGeometryError filepath)
+    resWrite <- liftIO $ StepCAFControl.Writer.write writer filepath
     unless (resWrite == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
 
 colourToOCColor :: Colour -> Acquire (Ptr Quantity.Color)
@@ -189,26 +192,32 @@ addColourToCafWriter s shapeLabel paintMap = do
                         colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool (upcast face) ocColour XCAFDoc.ColorType.ColorSurf
                         liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Face not found in CAF document"
 
-cafWriter :: (FilePath -> Ptr (Handle TDocStd.Document) -> Ptr (NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString) -> Ptr Message.ProgressRange -> Acquire ()) -> Double -> FilePath -> Solid-> IO ()
-cafWriter write linDeflection filepath (Solid ptr paintMap) = (`withAcquire` pure) $ do
-    s <- toAcquire ptr
-    mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
-    liftIO $ BRepMesh.IncrementalMesh.perform mesh
+mesh :: Double -> Ptr (TopoDS.Shape) -> Acquire ()
+mesh linDeflection s = do
+    mesher <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
+    liftIO $ BRepMesh.IncrementalMesh.perform mesher
+
+cafDocument
+    :: Ptr TopoDS.Shape 
+    -> PaintMap 
+    -> Acquire (Ptr (Handle TDocStd.Document))
+cafDocument s paintMap = do
     doc <- TDocStd.Document.fromStorageFormat ""
     mainLabel <- TDocStd.Document.main doc
     shapeTool <- XCafDoc.DocumentTool.shapeTool mainLabel
     shapeLabel <- XCafDoc.ShapeTool.addShape shapeTool s True True
     addColourToCafWriter s shapeLabel paintMap
-    meta <- NCollection.IndexedDataMap.newAsciiStringMap
-    progress <- Message.ProgressRange.new
-    write filepath doc meta progress
+    return doc
 
 writeGLTFOrGLB :: Bool -> Double -> FilePath -> Solid -> IO ()
-writeGLTFOrGLB binary =
-    let write filepath doc meta progress = do 
-            writer <- RWGltf.CafWriter.new filepath binary
-            liftIO $ RWGltf.CafWriter.perform writer doc meta progress
-    in cafWriter write
+writeGLTFOrGLB binary linDeflection filepath solid = (`withAcquire` pure) $  do
+    writer <- RWGltf.CafWriter.new filepath binary
+    meta <- NCollection.IndexedDataMap.newAsciiStringMap
+    progress <- Message.ProgressRange.new
+    s <- acquireSolid solid
+    mesh linDeflection s
+    doc <- cafDocument s (solidPaintMap solid)
+    liftIO $ RWGltf.CafWriter.perform writer doc meta progress
 
 -- | Write a `Solid` to a glTF file at a given path
 --
@@ -245,11 +254,14 @@ writeGLB = writeGLTFOrGLB True
 --
 -- The deflection is the maximum allowable distance between a curve and the generated triangulation.
 writeOBJ :: Double -> FilePath -> Solid -> IO ()
-writeOBJ = 
-    let write filepath doc meta progress = do 
-            writer <- RWObj.CafWriter.new filepath
-            liftIO $ RWObj.CafWriter.perform writer doc meta progress
-    in cafWriter write
+writeOBJ linDeflection filepath solid = (`withAcquire` pure) $ do
+    writer <- RWObj.CafWriter.new filepath
+    meta <- NCollection.IndexedDataMap.newAsciiStringMap
+    progress <- Message.ProgressRange.new
+    s <- acquireSolid solid
+    mesh linDeflection s
+    doc <- cafDocument s (solidPaintMap solid)
+    liftIO $ RWObj.CafWriter.perform writer doc meta progress
 
 -- | Read a `Solid` from a file at a given path
 -- 
