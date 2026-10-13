@@ -95,3 +95,7 @@ bool hs_BOPAlgo_Builder_IsDeleted(
     },
     false);
 }
+
+void hs_BOPAlgo_Builder_SetFuzzyValue(BOPAlgo_Builder * builder, double fuzz){
+    builder->SetFuzzyValue(fuzz);
+}

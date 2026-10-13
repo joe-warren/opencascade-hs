@@ -25,6 +25,8 @@ TopoDS_Shape * hs_BOPAlgo_Builder_Shape(
 
 void hs_BOPAlgo_Builder_SetRunParallel(BOPAlgo_Builder * builder, bool runParallel);
 
+void hs_BOPAlgo_Builder_SetFuzzyValue(BOPAlgo_Builder * builder, double fuzz);
+
 void hs_BOPAlgo_Builder_Perform(
     BOPAlgo_Builder * builder,
     HSExceptionType* exType,

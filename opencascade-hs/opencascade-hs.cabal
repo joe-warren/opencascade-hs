@@ -25,6 +25,7 @@ extra-source-files:
     cpp/hs_Bnd_OBB.h
     cpp/hs_BOPAlgo_BOP.h
     cpp/hs_BOPAlgo_Builder.h
+    cpp/hs_BOPAlgo_Tools.h
     cpp/hs_BRep_Tool.h
     cpp/hs_BRepAdaptor_Curve.h
     cpp/hs_BRepAlgoAPI_Common.h
@@ -79,6 +80,7 @@ extra-source-files:
     cpp/hs_gp_Dir.h
     cpp/hs_gp_Dir2d.h
     cpp/hs_gp_GTrsf.h
+    cpp/hs_gp_Lin.h
     cpp/hs_gp_Pnt.h
     cpp/hs_gp_Pnt2d.h
     cpp/hs_gp_Trsf.h
@@ -90,6 +92,7 @@ extra-source-files:
     cpp/hs_HLRAlgo_Projector.h
     cpp/hs_HLRBRep_Algo.h
     cpp/hs_HLRBRep_HLRToShape.h
+    cpp/hs_IntCurvesFace_ShapeIntersector.h
     cpp/hs_Message_ProgressRange.h
     cpp/hs_NCollection_Array1.h
     cpp/hs_NCollection_IndexedDataMap.h
@@ -150,6 +153,7 @@ library
       OpenCascade.BOPAlgo.Builder
       OpenCascade.BOPAlgo.Internal.Destructors
       OpenCascade.BOPAlgo.Operation
+      OpenCascade.BOPAlgo.Tools
       OpenCascade.BOPAlgo.Types
       OpenCascade.BRep.Tool
       OpenCascade.BRepAdaptor
@@ -248,6 +252,7 @@ library
       OpenCascade.GP.Dir2d
       OpenCascade.GP.GTrsf
       OpenCascade.GP.Internal.Destructors
+      OpenCascade.GP.Lin
       OpenCascade.GP.Pnt
       OpenCascade.GP.Pnt2d
       OpenCascade.GP.Trsf
@@ -273,6 +278,9 @@ library
       OpenCascade.HLRBRep.Types
       OpenCascade.IFSelect.ReturnStatus
       OpenCascade.Inheritance
+      OpenCascade.IntCurvesFace.Internal.Destructors
+      OpenCascade.IntCurvesFace.ShapeIntersector
+      OpenCascade.IntCurvesFace.Types
       OpenCascade.Internal.Bool
       OpenCascade.Internal.Exception
       OpenCascade.Message.Internal.Destructors
@@ -406,6 +414,7 @@ library
         cpp/hs_Bnd_OBB.cpp
         cpp/hs_BOPAlgo_BOP.cpp
         cpp/hs_BOPAlgo_Builder.cpp
+        cpp/hs_BOPAlgo_Tools.cpp
         cpp/hs_BRep_Tool.cpp
         cpp/hs_BRepAdaptor_Curve.cpp
         cpp/hs_BRepAlgoAPI_Common.cpp
@@ -460,6 +469,7 @@ library
         cpp/hs_gp_Dir.cpp
         cpp/hs_gp_Dir2d.cpp
         cpp/hs_gp_GTrsf.cpp
+        cpp/hs_gp_Lin.cpp
         cpp/hs_gp_Pnt.cpp
         cpp/hs_gp_Pnt2d.cpp
         cpp/hs_gp_Trsf.cpp
@@ -471,6 +481,7 @@ library
         cpp/hs_HLRAlgo_Projector.cpp
         cpp/hs_HLRBRep_Algo.cpp
         cpp/hs_HLRBRep_HLRToShape.cpp
+        cpp/hs_IntCurvesFace_ShapeIntersector.cpp
         cpp/hs_Message_ProgressRange.cpp
         cpp/hs_NCollection_Array1.cpp
         cpp/hs_NCollection_IndexedDataMap.cpp

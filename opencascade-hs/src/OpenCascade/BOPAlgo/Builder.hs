@@ -4,6 +4,7 @@ module OpenCascade.BOPAlgo.Builder
 , new
 , addArgument
 , setRunParallel
+, setFuzzyValue
 , shape
 , perform
 , modified
@@ -19,7 +20,8 @@ import OpenCascade.Internal.Exception (wrapException)
 import qualified OpenCascade.NCollection.Types as NCollection
 import OpenCascade.NCollection.Internal.Destructors (deleteListOfShape)
 import Foreign.Ptr (Ptr)
-import Foreign.C (CBool (..), CInt)
+import Foreign.C (CBool (..), CInt, CDouble (..))
+import Data.Coerce (coerce)
 import Data.Acquire (Acquire, mkAcquire)
 import OpenCascade.Internal.Bool (boolToCBool, cBoolToBool)
 
@@ -92,3 +94,8 @@ foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_IsDeleted" r
 isDeleted :: Ptr Builder -> Ptr TopoDS.Shape -> IO Bool
 isDeleted builder shape' = cBoolToBool <$> wrapException (rawIsDeleted builder shape')
 
+
+foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_SetFuzzyValue" rawSetFuzzyValue :: Ptr Builder -> CDouble -> IO ()
+
+setFuzzyValue :: Ptr Builder -> Double -> IO ()
+setFuzzyValue builder = rawSetFuzzyValue builder . coerce
