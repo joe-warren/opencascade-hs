@@ -36,6 +36,7 @@ library
       Waterfall.Diagram
       Waterfall.Error
       Waterfall.Fillet
+      Waterfall.Internal.Diagram
       Waterfall.Internal.Edges
       Waterfall.Internal.Finalizers
       Waterfall.Internal.FromOpenCascade

@@ -16,7 +16,7 @@ import Linear.V3 (V3)
 import Linear.V2 (V2)
 import Linear (_xy)
 import Control.Lens ((^.))
-import Waterfall.Internal.Solid (Solid (), acquireSolid)
+import Waterfall.Internal.Solid (Solid (solidPaintMap), acquireSolid)
 import qualified OpenCascade.HLRBRep.TypeOfResultingEdge as HLRBRep
 import qualified OpenCascade.HLRBRep.Algo as HLRBRep.Algo
 import qualified OpenCascade.HLRAlgo.Projector as HLRAlgo.Projector
@@ -36,11 +36,12 @@ import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import OpenCascade.Inheritance (upcast)
 import Control.Monad (forM_, (<=<))
 import Data.Map (Map)
-import Waterfall.TwoD.Shape (Shape)
+import Waterfall.TwoD.Internal.Shape ( Shape )
 import Waterfall.Paint (Paint)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Either (partitionEithers)
+import Waterfall.Internal.Diagram (buildSolidDiagramFills)
 
 -- | `Diagram` of a Waterfall part
 --
@@ -139,9 +140,17 @@ solidDiagram projectionDirection solid =  unsafeFromAcquire $ do
         ]
         , visibility <- [Visible, Hidden]
         ]
+
+    fills <-  buildSolidDiagramFills 
+        (solidPaintMap solid) 
+        s' 
+        projectionDirection 
+        projector
+        extractor 
+
     return $ Diagram 
         { getDiagramLines = lines
-        , getDiagramFills = []
+        , getDiagramFills = fills
         }
 
 -- | Produce a `Diagram` from a `Path2D`
