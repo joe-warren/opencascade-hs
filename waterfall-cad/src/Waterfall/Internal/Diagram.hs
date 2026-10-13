@@ -155,7 +155,8 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
                                     _ -> do
                                         let (_, nearest) = maximum hits
                                         hit <- ShapeIntersector.face intersector nearest
-                                        liftIO $ ShapeMap.lookup paintMap (upcast hit)
+                                        found <- liftIO $ ShapeMap.lookup paintMap (upcast hit)
+                                        return $ Just (fromMaybe mempty found)
 
                                 shape <- fmap Shape . liftIO . fromAcquire $ TopoDS.Shape.copy (upcast region)
                                 return $ (, shape) <$> paint
