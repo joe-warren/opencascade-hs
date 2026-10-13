@@ -161,7 +161,7 @@ writeSTEP :: FilePath -> Solid -> IO ()
 writeSTEP filepath (Solid ptr paintMap) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
     writer <- StepCAFControl.Writer.new
-    doc <- cafDocument s (paintMap)
+    doc <- cafDocument s paintMap
     liftIO $ StepCAFControl.Writer.setColorMode writer (not . paintMapIsEmpty $ paintMap)
     resTransfer <- liftIO $ StepCAFControl.Writer.transfer writer doc StepModelType.Asls
     unless resTransfer (liftIO . throwIO $ WaterfallIOException BadGeometryError filepath)

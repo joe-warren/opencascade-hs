@@ -84,7 +84,7 @@ defaultPaint = paintWithColour (Colour 1 1 1)
     <> paintWithRoughness 0.5
 
 paintIsDefined :: Paint -> Bool
-paintIsDefined = (== mempty)
+paintIsDefined = (/= mempty)
 
 paintColour :: Lens' Paint (Maybe Colour)
 paintColour = 

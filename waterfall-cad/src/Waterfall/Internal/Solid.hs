@@ -56,7 +56,7 @@ import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
 import Data.Foldable (traverse_)
 import Data.Bifunctor.Flip (Flip (..))
 import Waterfall.Error (WaterfallError)
-import Waterfall.Paint (Paint)
+import Waterfall.Paint (Paint, paintIsDefined)
 import Data.Functor.Compose (Compose(..))
 import qualified OpenCascade.NCollection as NCollection
 import Control.Monad (filterM)
@@ -69,7 +69,7 @@ emptyPaintMap :: PaintMap
 emptyPaintMap = UniformPaint mempty
 
 paintMapIsEmpty :: PaintMap -> Bool
-paintMapIsEmpty (UniformPaint p) = p == mempty 
+paintMapIsEmpty (UniformPaint p) = not $ paintIsDefined p
 paintMapIsEmpty _ = False
  
 -- | The Boundary Representation of a solid object.
