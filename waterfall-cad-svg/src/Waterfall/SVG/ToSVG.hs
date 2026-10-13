@@ -13,7 +13,7 @@ import qualified Graphics.Svg as Svg
 import qualified Graphics.Svg.CssTypes as Svg.Css
 import Waterfall.Internal.NearZero (nearZero)
 import Linear (_xy, _x, _y, V2 (..))
-import Control.Lens ((^.), (&), (.~))
+import Control.Lens ((^.), (&), (.~), (<&>))
 import Foreign.Ptr (Ptr)
 import Control.Monad ((<=<)) 
 import Control.Monad.IO.Class (liftIO)
@@ -40,7 +40,7 @@ import Codec.Picture.Types (PixelRGBA8 (..))
 import Data.List (mapAccumL)
 import Data.Maybe (fromMaybe)
 import Control.Applicative ((<|>))
-import Graphics.Svg (HasGroup(groupChildren))
+import Control.Arrow ((>>>))
 
 lineToPathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
 lineToPathCommand edge = do
@@ -191,7 +191,10 @@ diagramToSvg diagram =
                         [ Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor $ PixelRGBA8 100 100 100 255]]]
                     , Svg.Css.CssRule
                         [[Svg.Css.AllOf [Svg.Css.OfClass "hidden"]]]
-                        [ Svg.Css.CssDeclaration "opacity" [[Svg.Css.CssNumber . Svg.Num $ 0.2]]]
+                        [ Svg.Css.CssDeclaration "opacity" [[Svg.Css.CssNumber . Svg.Num $ 0.4]]]
+                    , Svg.Css.CssRule
+                        [[Svg.Css.AllOf [Svg.Css.OfClass "fill"]]]
+                        [ Svg.Css.CssDeclaration "fill-rule" [[Svg.Css.CssIdent "nonzero"]]]
                     ]
                 document e = Svg.Document Nothing w h [e] mempty mempty styles mempty
                 pathOf lt visibility = 
@@ -200,7 +203,17 @@ diagramToSvg diagram =
                             & Svg.drawAttr . Svg.attrClass .~ ["edge"]
                             & Svg.PathTree
                     
-                fills = group $ Svg.PathTree . fillToPath <$> Waterfall.getDiagramFills d'
+                fills = 
+                    Svg.defaultSvg 
+                        & Svg.groupChildren .~ 
+                            (Waterfall.getDiagramFills d' 
+                                <&> (fillToPath
+                                    >>> Svg.drawAttr . Svg.attrClass .~ ["fill"]
+                                    >>> Svg.PathTree
+                                )
+                            )
+                        & Svg.GroupTree
+                    
 
                 group children = Svg.GroupTree $ Svg.Group mempty children Nothing Svg.defaultSvg
             in document . group . (fills :) $
