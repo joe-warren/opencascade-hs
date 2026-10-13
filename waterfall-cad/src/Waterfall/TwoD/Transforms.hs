@@ -39,9 +39,7 @@ import Foreign.Ptr
 import Waterfall.TwoD.Internal.Shape (Shape(..))
 import Data.Function ((&))
 import Control.Lens ((.~), (%~), Iso', iso)
-import Control.Monad (forM)
 import Waterfall.Internal.Path.Common (RawPath(..))
-import Waterfall.Internal.Diagram (RawDiagram (..))
 
 -- | Typeclass for objects that can be manipulated in 2D space
 class Transformable2D a where
@@ -103,29 +101,6 @@ fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do
                 =<< fmap upcast
                     (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy shape trsf True)
         Nothing -> pure shape
-
-fromTrsfDiagram :: Acquire (Ptr GP.Trsf) -> RawDiagram -> RawDiagram
-fromTrsfDiagram mkTrsf (RawDiagram runTheDiagram) = RawDiagram $ \lt v is3D -> do 
-    edges <- runTheDiagram lt v is3D
-    trsf <- mkTrsf 
-    forM edges $ \s -> 
-        (liftIO . unsafeDowncast) 
-            =<< BRepBuilderAPI.MakeShape.shape 
-            =<< fmap upcast
-                (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast s) trsf True)
-
-fromGTrsfDiagram :: Acquire (Maybe (Ptr GP.GTrsf)) -> RawDiagram -> RawDiagram
-fromGTrsfDiagram mkTrsf (RawDiagram runTheDiagram) = RawDiagram $ \lt v is3D -> do 
-    edges <- runTheDiagram lt v is3D
-    trsfMay <- mkTrsf 
-    case trsfMay of
-        Just trsf -> 
-            forM edges $ \s -> 
-                (liftIO . unsafeDowncast) 
-                    =<< BRepBuilderAPI.MakeShape.shape
-                    =<< fmap upcast
-                        (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast s) trsf True)
-        Nothing -> pure edges
 
 matrixGTrsf :: M23 Double -> Acquire (Maybe (Ptr GP.GTrsf))
 matrixGTrsf (V2 (V3 1 0 0) (V3 0 1 0)) = pure Nothing
@@ -224,25 +199,6 @@ instance Transformable2D Shape where
 
     mirror2D :: V2 Double -> Shape -> Shape
     mirror2D = fromTrsfShape . mirrorTrsf
-
-instance Transformable2D RawDiagram where
-    matTransform2D :: M23 Double -> RawDiagram -> RawDiagram
-    matTransform2D m = fromGTrsfDiagram (matrixGTrsf m)
-
-    rotate2D :: Double -> RawDiagram -> RawDiagram
-    rotate2D a = fromTrsfDiagram (rotateTrsf a)
-    
-    scale2D :: V2 Double -> RawDiagram -> RawDiagram
-    scale2D s = fromGTrsfDiagram (scaleGTrsf s)
-
-    uScale2D :: Double -> RawDiagram -> RawDiagram
-    uScale2D s = fromTrsfDiagram (uScaleTrsf s)
-
-    translate2D :: V2 Double -> RawDiagram -> RawDiagram
-    translate2D v = fromTrsfDiagram (translateTrsf v)
-
-    mirror2D :: V2 Double -> RawDiagram -> RawDiagram
-    mirror2D v = fromTrsfDiagram (mirrorTrsf v)
 
 instance Transformable2D (V2 Double) where
     matTransform2D :: M23 Double -> V2 Double -> V2 Double
