@@ -22,17 +22,17 @@ styles = [r|
   fill: None;
   fill-opacity: 0;
 }
-.edge.visible {
+.visible .edge {
   stroke: #000000;
 }
-.edge.hidden {
+.hidden .edge {
   stroke: #C8C8FF;
 }
 @media (prefers-color-scheme: dark) {
-    .edge.visible {
+    .visible .edge {
       stroke: #FFFFFF;
     }
-    .edge.hidden {
+    .hidden .edge {
       stroke: #A00000;
     }
 }
