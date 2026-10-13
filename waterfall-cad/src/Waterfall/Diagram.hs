@@ -44,6 +44,7 @@ import qualified Data.Map as M
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Either (partitionEithers)
 import Waterfall.Internal.Diagram (buildSolidDiagramFills)
+import Waterfall.TwoD.Shape (shapePaths)
 
 -- | `Diagram` of a Waterfall part
 --
@@ -175,7 +176,8 @@ diagramBoundingBox :: Diagram -> Maybe (V2 Double, V2 Double)
 diagramBoundingBox d = unsafeFromAcquire $ do
     let outline = diagramLines OutLine Visible d
     let sharpLine = diagramLines SharpLine Visible d
-    let allLines = outline <> sharpLine
+        fillLines = concatMap (shapePaths . snd) $ getDiagramFills d
+    let allLines = outline <> sharpLine <> fillLines
     let partitionLine (Path2D (ComplexRawPath wire)) = Just (Left wire)
         partitionLine (Path2D (SinglePointRawPath point)) = Just (Right point)
         partitionLine _ = Nothing
