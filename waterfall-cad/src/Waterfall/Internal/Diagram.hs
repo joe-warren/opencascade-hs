@@ -66,6 +66,7 @@ calcFuzzyTolerance edges = do
     let maxDim = max (d ^. _x) (d ^. _y)
     return (maxDim / 1000)
 
+-- recursively drop edges with a free end
 pruneDangling :: [Ptr TopoDS.Edge] -> Acquire [Ptr TopoDS.Edge]
 pruneDangling edges = do
     withVertices <- forM edges $ \e -> do
@@ -89,67 +90,75 @@ buildSolidDiagramFills'
     -> Acquire [(Paint, Shape)]
 buildSolidDiagramFills' s projectionDir projector extractor paints = do
     boundary <- boundaryEdges extractor
-    tolerance <- calcFuzzyTolerance boundary 
-    fuser <- BOPAlgo.Builder.new 
-    liftIO $ BOPAlgo.Builder.setFuzzyValue fuser tolerance
-    forM_ boundary (liftIO . BOPAlgo.Builder.addArgument fuser . upcast)
-    liftIO $ BOPAlgo.Builder.perform fuser
-    keptEdges <- pruneDangling 
-        =<< traverse (liftIO . unsafeDowncast)
-        =<<  allSubShapesWithCopy ShapeEnum.Edge 
-        =<< BOPAlgo.Builder.shape fuser
+    if null boundary 
+        then return []
+        else do
+            tolerance <- calcFuzzyTolerance boundary 
+            fuser <- BOPAlgo.Builder.new 
+            liftIO $ BOPAlgo.Builder.setFuzzyValue fuser tolerance
+            forM_ boundary (liftIO . BOPAlgo.Builder.addArgument fuser . upcast)
+            liftIO $ BOPAlgo.Builder.perform fuser
+            keptEdges <- pruneDangling 
+                =<< traverse (liftIO . unsafeDowncast)
+                =<<  allSubShapesWithCopy ShapeEnum.Edge 
+                =<< BOPAlgo.Builder.shape fuser
 
-    builder <- TopoDS.Builder.new
-    compound <- TopoDS.Compound.new
-    liftIO $ TopoDS.Builder.makeCompound builder compound
-    forM_ keptEdges $ liftIO . TopoDS.Builder.add builder (upcast compound) . upcast
+            builder <- TopoDS.Builder.new
+            compound <- TopoDS.Compound.new
+            liftIO $ TopoDS.Builder.makeCompound builder compound
+            forM_ keptEdges $ liftIO . TopoDS.Builder.add builder (upcast compound) . upcast
 
-    (_status, wires) <- BOPAlgo.Tools.edgesToWires (upcast compound) True 1e-8
-    (_ok, faces) <- BOPAlgo.Tools.wiresToFaces wires 1e-8
+            (status, wires) <- BOPAlgo.Tools.edgesToWires (upcast compound) True 1e-8
+            if status /= 0
+                then pure [] 
+                else do
+                    (ok, faces) <- BOPAlgo.Tools.wiresToFaces wires 1e-8
+                    if not ok
+                        then return [] 
+                        else do
+                            regions <- traverse (liftIO . unsafeDowncast)
+                                 =<< allSubShapesWithCopy ShapeEnum.Face faces
 
-    regions <- traverse (liftIO . unsafeDowncast)
-         =<< allSubShapesWithCopy ShapeEnum.Face faces
+                            inv <- Projector.invertedTransformation projector
+                            intersector <- ShapeIntersector.new
+                            liftIO $ ShapeIntersector.load intersector s 1e-6
 
-    inv <- Projector.invertedTransformation projector
-    intersector <- ShapeIntersector.new
-    liftIO $ ShapeIntersector.load intersector s 1e-6
+                            paintMap <- liftIO $ ShapeMap.fromList (first upcast <$> paints)
+                            
+                            d <- v3ToDir projectionDir
 
-    paintMap <- liftIO $ ShapeMap.fromList (first upcast <$> paints)
-    
-    d <- v3ToDir projectionDir
+                            fmap catMaybes $ forM regions $ \region -> do
+                                mesh <- IncrementalMesh.fromShapeAndLinDeflection (upcast region) tolerance
+                                liftIO $ IncrementalMesh.perform mesh
+                                loc <- TopLoc.Location.new
+                                tri <- BRep.Tool.triangulation region loc
+                                props <- GProps.new
+                                liftIO $ BRepGProp.surfaceProperties (upcast region) props False False
+                                noTriangulation <- liftIO $ Poly.Triangulation.isNull tri
+                                nTri <- if noTriangulation then pure 0 else liftIO $ Poly.Triangulation.nbTriangles tri
+                                V3 cx cy _ <- if nTri == 0
+                                    then liftIO . gpPntToV3 =<< GProps.centreOfMass props
+                                    else do
+                                        t <- Poly.Triangulation.triangle tri 1
+                                        indices <- traverse (liftIO . Poly.Triangle.value t) [1, 2, 3]
+                                        corners <- traverse (liftIO . gpPntToV3 <=< Poly.Triangulation.node tri) indices
+                                        pure (sum corners / 3)
+                                p2 <- v3ToPnt (V3 cx cy 0)
+                                p3 <- GP.Pnt.transformed p2 inv
+                                line <- GP.Lin.new p3 d
+                                liftIO $ ShapeIntersector.perform intersector line (-1e100) (1e100)
+                                
+                                n <- liftIO $ ShapeIntersector.nbPnt intersector
+                                hits <- forM [1 .. n] $ \i -> (, i) <$> liftIO (ShapeIntersector.wParameter intersector i)
+                                paint <- case hits of
+                                    [] -> pure Nothing
+                                    _ -> do
+                                        let (_, nearest) = maximum hits
+                                        hit <- ShapeIntersector.face intersector nearest
+                                        liftIO $ ShapeMap.lookup paintMap (upcast hit)
 
-    fmap catMaybes $ forM regions $ \region -> do
-        mesh <- IncrementalMesh.fromShapeAndLinDeflection (upcast region) tolerance
-        liftIO $ IncrementalMesh.perform mesh
-        loc <- TopLoc.Location.new
-        tri <- BRep.Tool.triangulation region loc
-        props <- GProps.new
-        liftIO $ BRepGProp.surfaceProperties (upcast region) props False False
-        noTriangulation <- liftIO $ Poly.Triangulation.isNull tri
-        nTri <- if noTriangulation then pure 0 else liftIO $ Poly.Triangulation.nbTriangles tri
-        V3 cx cy _ <- if nTri == 0
-            then liftIO . gpPntToV3 =<< GProps.centreOfMass props
-            else do
-                t <- Poly.Triangulation.triangle tri 1
-                indices <- traverse (liftIO . Poly.Triangle.value t) [1, 2, 3]
-                corners <- traverse (liftIO . gpPntToV3 <=< Poly.Triangulation.node tri) indices
-                pure (sum corners / 3)
-        p2 <- v3ToPnt (V3 cx cy 0)
-        p3 <- GP.Pnt.transformed p2 inv
-        line <- GP.Lin.new p3 d
-        liftIO $ ShapeIntersector.perform intersector line (-1e100) (1e100)
-        
-        n <- liftIO $ ShapeIntersector.nbPnt intersector
-        hits <- forM [1 .. n] $ \i -> (, i) <$> liftIO (ShapeIntersector.wParameter intersector i)
-        paint <- case hits of
-            [] -> pure Nothing
-            _ -> do
-                let (_, nearest) = maximum hits
-                hit <- ShapeIntersector.face intersector nearest
-                liftIO $ ShapeMap.lookup paintMap (upcast hit)
-
-        shape <- fmap Shape . liftIO . fromAcquire $ TopoDS.Shape.copy (upcast region)
-        return $ (, shape) <$> paint
+                                shape <- fmap Shape . liftIO . fromAcquire $ TopoDS.Shape.copy (upcast region)
+                                return $ (, shape) <$> paint
 
 buildSolidDiagramFills
     :: PaintMap 

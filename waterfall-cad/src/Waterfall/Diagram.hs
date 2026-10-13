@@ -3,7 +3,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 module Waterfall.Diagram
-( Diagram
+( Diagram (..)
 , LineType (..)
 , Visibility (..)
 , solidDiagram
@@ -64,10 +64,10 @@ instance Monoid Diagram where
     mempty = Diagram mempty mempty
 
 mapDiagram :: (forall a. Transformable2D a => a -> a) -> Diagram -> Diagram
-mapDiagram f (Diagram lines fills) =
+mapDiagram f (Diagram theLines theFills) =
     Diagram 
-        { getDiagramLines = fmap (fmap f) lines
-        , getDiagramFills = fmap (fmap f) fills
+        { getDiagramLines = fmap (fmap f) theLines
+        , getDiagramFills = fmap (fmap f) theFills
         }
 
 instance Transformable2D Diagram where
@@ -120,7 +120,7 @@ solidDiagram projectionDirection solid =  unsafeFromAcquire $ do
 
     extractor <- HLRBRep.HLRToShape.fromAlgo algo
 
-    lines <- fmap M.fromList . sequence $
+    theLines <- fmap M.fromList . sequence $
         [ do
             compoundOfEdges <- HLRBRep.HLRToShape.compoundOfEdges 
                 extractor 
@@ -141,7 +141,7 @@ solidDiagram projectionDirection solid =  unsafeFromAcquire $ do
         , visibility <- [Visible, Hidden]
         ]
 
-    fills <-  buildSolidDiagramFills 
+    theFills <-  buildSolidDiagramFills 
         (solidPaintMap solid) 
         s' 
         projectionDirection 
@@ -149,8 +149,8 @@ solidDiagram projectionDirection solid =  unsafeFromAcquire $ do
         extractor 
 
     return $ Diagram 
-        { getDiagramLines = lines
-        , getDiagramFills = fills
+        { getDiagramLines = theLines
+        , getDiagramFills = theFills
         }
 
 -- | Produce a `Diagram` from a `Path2D`
