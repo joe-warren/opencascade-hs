@@ -37,6 +37,7 @@ import OpenCascade.Handle (Handle)
 import OpenCascade.Inheritance (upcast)
 import Data.Acquire (Acquire)
 import Codec.Picture.Types (PixelRGBA8 (..))
+import Data.List (mapAccumL)
 
 lineToPathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
 lineToPathCommand edge = do
@@ -134,9 +135,7 @@ path2DToPathCommands (Path2D theRawPath) = case theRawPath of
     Internal.Path.Common.SinglePointRawPath _ -> []
     Internal.Path.Common.ComplexRawPath wire -> 
         Internal.Finalizers.unsafeFromAcquireT $
-            mconcat 
-                . fmap snd
-                . scanr (flip (edgeToPathCommand . fst)) (Nothing, []) 
+            concat . snd . mapAccumL edgeToPathCommand Nothing 
                 <$> Internal.Edges.wireEdges wire
 
 -- | Convert a `Waterfall.Diagram` into an SVG document
