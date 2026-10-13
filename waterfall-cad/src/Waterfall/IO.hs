@@ -170,7 +170,7 @@ writeSTEP filepath (Solid ptr paintMap) = (`withAcquire` pure) $ do
 
 colourToOCColor :: Colour -> Acquire (Ptr Quantity.Color)
 colourToOCColor (Colour r g b) =
-    Quantity.Color.new r g b Quantity.TypeOfColor.RGB
+    Quantity.Color.new r g b Quantity.TypeOfColor.SRGB
 
 addColourToCafWriter :: Ptr TopoDS.Shape -> Ptr Label -> PaintMap -> Acquire ()
 addColourToCafWriter s shapeLabel paintMap = do

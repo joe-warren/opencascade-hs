@@ -3,7 +3,9 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 module Waterfall.Diagram
-( Diagram (..)
+( Diagram
+, getDiagramFills
+, getDiagramLines
 , LineType (..)
 , Visibility (..)
 , solidDiagram

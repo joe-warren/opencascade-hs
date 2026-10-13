@@ -28,7 +28,7 @@ import Data.Maybe (catMaybes)
 import Data.List (intersperse)
 import Control.Lens (Lens', lens)
 
--- | Three Linear RGB values, in the range [0, 1]
+-- | Three sRGB values, in the range [0, 1]
 data Colour = Colour Double Double Double
     deriving (Eq, Ord, Show)
 
