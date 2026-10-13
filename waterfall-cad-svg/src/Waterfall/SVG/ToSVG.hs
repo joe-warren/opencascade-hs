@@ -40,6 +40,7 @@ import Codec.Picture.Types (PixelRGBA8 (..))
 import Data.List (mapAccumL)
 import Data.Maybe (fromMaybe)
 import Control.Applicative ((<|>))
+import Graphics.Svg (HasGroup(groupChildren))
 
 lineToPathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
 lineToPathCommand edge = do
@@ -179,27 +180,41 @@ diagramToSvg diagram =
                         [[Svg.Css.AllOf [Svg.Css.OfClass "edge"]]]
                         [ Svg.Css.CssDeclaration "fill" [[Svg.Css.CssIdent "None"]]
                         , Svg.Css.CssDeclaration "fill-opacity" [[Svg.Css.CssNumber (Svg.Num 0)]]
+                        , Svg.Css.CssDeclaration "stroke-linecap" [[Svg.Css.CssIdent "round"]]
+                        
                         ]
                     , Svg.Css.CssRule
-                        [[Svg.Css.AllOf [Svg.Css.OfClass "edge", Svg.Css.OfClass "visible"]]]
+                        [[Svg.Css.AllOf [Svg.Css.OfClass "visible"], Svg.Css.AllOf[Svg.Css.OfClass "edge"]]]
                         [Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor $ PixelRGBA8 0 0 0 255]]]
                     , Svg.Css.CssRule
-                        [[Svg.Css.AllOf [Svg.Css.OfClass "edge", Svg.Css.OfClass "hidden"]]]
-                        [ Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor $ PixelRGBA8 100 100 100 255]]
-                        , Svg.Css.CssDeclaration "stroke-opacity" [[Svg.Css.CssNumber . Svg.Num $ 0.3]]
-                        ]
+                        [[Svg.Css.AllOf [Svg.Css.OfClass "hidden"], Svg.Css.AllOf [Svg.Css.OfClass "edge"]]]
+                        [ Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor $ PixelRGBA8 100 100 100 255]]]
+                    , Svg.Css.CssRule
+                        [[Svg.Css.AllOf [Svg.Css.OfClass "hidden"]]]
+                        [ Svg.Css.CssDeclaration "opacity" [[Svg.Css.CssNumber . Svg.Num $ 0.2]]]
                     ]
                 document e = Svg.Document Nothing w h [e] mempty mempty styles mempty
-                drawAttrs classes = mempty 
-                    & Svg.attrClass .~ classes
-                pathOf lt visibility classes = Svg.PathTree $ Svg.Path (drawAttrs classes) (paths lt visibility)
+                pathOf lt visibility = 
+                        Svg.defaultSvg 
+                            & Svg.pathDefinition .~ paths lt visibility
+                            & Svg.drawAttr . Svg.attrClass .~ ["edge"]
+                            & Svg.PathTree
+                    
                 fills = group $ Svg.PathTree . fillToPath <$> Waterfall.getDiagramFills d'
 
                 group children = Svg.GroupTree $ Svg.Group mempty children Nothing Svg.defaultSvg
             in document . group . (fills :) $
-                    [ pathOf lineType visibility ["edge", ltClass, vClass]
-                        | (visibility, vClass) <- [(Waterfall.Hidden, "hidden"), (Waterfall.Visible, "visible")]
-                        , (lineType, ltClass) <- [(Waterfall.SharpLine, "sharp"), (Waterfall.OutLine, "outline")]
+                    [ Svg.defaultSvg 
+                        & Svg.groupChildren .~
+                            [ Svg.defaultSvg 
+                                & Svg.groupChildren .~ [ pathOf lineType visibility ]
+                                & Svg.drawAttr . Svg.attrClass .~ [ltClass]
+                                & Svg.GroupTree
+                            | (lineType, ltClass) <- [(Waterfall.SharpLine, "sharp"), (Waterfall.OutLine, "outline")]
+                            ]  
+                        & Svg.drawAttr . Svg.attrClass .~ [vClass]
+                        & Svg.GroupTree
+                    | (visibility, vClass) <- [(Waterfall.Hidden, "hidden"), (Waterfall.Visible, "visible")]
                     ]
                     
 -- | Write a `Waterfall.Diagram`, to an SVG file at the specified location 
