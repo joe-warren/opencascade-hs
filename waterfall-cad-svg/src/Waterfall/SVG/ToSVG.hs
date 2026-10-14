@@ -145,16 +145,22 @@ shapeToPathCommands =
     
 colourToPixel :: Waterfall.Colour -> PixelRGBA8
 colourToPixel (Waterfall.Colour r g b) =
-    let conv = round . (* 255)
+    let conv = round . (* 255) . min 1 . max 0
      in PixelRGBA8 (conv r) (conv g) (conv b) 255
 
 fillToPath :: (Waterfall.Paint, Waterfall.Shape) -> Svg.Path
 fillToPath (paint, shape) =
     let colour = fromMaybe (Waterfall.Colour 1 1 1) (paint ^. Waterfall.paintColour <|> Waterfall.defaultPaint ^. Waterfall.paintColour)
+        opacity = fromMaybe (1.0)  (paint ^. Waterfall.paintOpacity <|> Waterfall.defaultPaint ^. Waterfall.paintOpacity)
+        setOpacity = if opacity == 1.0 
+            then id 
+            else Svg.drawAttr . Svg.fillOpacity .~ (pure . realToFrac $ opacity)
+
     in Svg.defaultSvg
         & Svg.pathDefinition .~ shapeToPathCommands shape
         & Svg.drawAttr . Svg.fillColor .~ (pure . Svg.ColorRef . colourToPixel $ colour)
-
+        & setOpacity
+        
 -- | Convert a `Waterfall.Path2D` into a list of `Svg.PathCommands`
 path2DToPathCommands :: Waterfall.Path2D -> [Svg.PathCommand]
 path2DToPathCommands (Path2D theRawPath) = case theRawPath of  
