@@ -21,9 +21,6 @@ extra-source-files:
     LICENSE
     README.md
     CHANGELOG.md
-data-files:
-    test-data/fixture1.svg
-    test-data/fixture2.svg
 
 source-repository head
   type: git

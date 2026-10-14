@@ -23,6 +23,8 @@ module Waterfall
 -- 
 -- The `Waterfall.IO` module also supports reading `Solid`s from a variety of file formats.
 , module Waterfall.IO
+-- | Some basic colours, mostly used by `Waterfall.Paint`
+, module Waterfall.Colour
 -- | `Paint` can be applied to a `Solid` to affect how it appears 
 -- 
 -- (only supported by some file formats, see the documentation of `Waterfall.IO` for specifics)
@@ -70,6 +72,7 @@ import Waterfall.BoundingBox.Oriented
 import Waterfall.Diagram
 import Waterfall.Fillet
 import Waterfall.IO
+import Waterfall.Colour
 import Waterfall.Paint
 import Waterfall.Offset
 import Waterfall.Path.Common

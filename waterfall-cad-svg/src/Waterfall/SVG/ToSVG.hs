@@ -1,9 +1,13 @@
 {-# Language OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-|
 Convert "Waterfall" data into [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG)
 -}
 module Waterfall.SVG.ToSVG
 ( path2DToPathCommands
+, LineStyle (..)
+, lineStyleCss
+, diagramToSvgWithLineStyle
 , diagramToSvg
 , writeDiagramSVG
 ) where
@@ -161,14 +165,51 @@ path2DToPathCommands (Path2D theRawPath) = case theRawPath of
             concat . snd . mapAccumL edgeToPathCommand Nothing 
                 <$> Internal.Edges.wireEdges wire
 
+
+data LineStyle = LineStyle
+    { visibleLineColour :: Waterfall.Colour
+    , hiddenLineColour :: Waterfall.Colour
+    , hiddenLineOpacity :: Double
+    } deriving (Eq, Ord, Show)
+
+defaultLineStyle :: LineStyle
+defaultLineStyle = LineStyle
+    { visibleLineColour = Waterfall.Colour 0 0 0
+    , hiddenLineColour = Waterfall.Colour 0 0 0
+    , hiddenLineOpacity = 0.4
+    }
+
+lineStyleCss :: LineStyle -> [Svg.Css.CssRule]
+lineStyleCss (LineStyle {..}) = 
+    [ Svg.Css.CssRule 
+        [[Svg.Css.AllOf [Svg.Css.OfClass "edge"]]]
+        [ Svg.Css.CssDeclaration "fill" [[Svg.Css.CssIdent "None"]]
+        , Svg.Css.CssDeclaration "fill-opacity" [[Svg.Css.CssNumber (Svg.Num 0)]]
+        , Svg.Css.CssDeclaration "stroke-linecap" [[Svg.Css.CssIdent "round"]]
+        ]
+    , Svg.Css.CssRule
+        [[Svg.Css.AllOf [Svg.Css.OfClass "visible"], Svg.Css.AllOf[Svg.Css.OfClass "edge"]]]
+        [Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor . colourToPixel $ visibleLineColour]]]
+    , Svg.Css.CssRule
+        [[Svg.Css.AllOf [Svg.Css.OfClass "hidden"], Svg.Css.AllOf [Svg.Css.OfClass "edge"]]]
+        [ Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor . colourToPixel $ hiddenLineColour]]
+        , Svg.Css.CssDeclaration "stroke-opacity" [[Svg.Css.CssNumber . Svg.Num $ hiddenLineOpacity]]
+        ]
+    , Svg.Css.CssRule
+        [[Svg.Css.AllOf [Svg.Css.OfClass "fill"]]]
+        [ Svg.Css.CssDeclaration "fill-rule" [[Svg.Css.CssIdent "evenodd"]]
+        , Svg.Css.CssDeclaration "shape-rendering" [[Svg.Css.CssIdent "crispEdges"]]
+        ]
+    ]
+
 -- | Convert a `Waterfall.Diagram` into an SVG document
 -- 
 -- The diagram paths have the class "edge"
 -- and are grouped within elements with class "sharp"\/"outline" and "visible"\/"hidden"
 -- 
 -- The diagram fills have the class "fill"
-diagramToSvg :: Waterfall.Diagram -> Svg.Document
-diagramToSvg diagram = 
+diagramToSvgWithLineStyle :: LineStyle -> Waterfall.Diagram -> Svg.Document
+diagramToSvgWithLineStyle lineStyle diagram = 
     case Waterfall.diagramBoundingBox diagram of 
         Nothing -> Svg.Document Nothing Nothing Nothing [] mempty mempty mempty mempty
         Just (lo, hi) -> 
@@ -178,27 +219,7 @@ diagramToSvg diagram =
                 paths lt visibility =
                     path2DToPathCommands =<<
                         Waterfall.diagramLines lt visibility d'
-                styles = 
-                    [ Svg.Css.CssRule 
-                        [[Svg.Css.AllOf [Svg.Css.OfClass "edge"]]]
-                        [ Svg.Css.CssDeclaration "fill" [[Svg.Css.CssIdent "None"]]
-                        , Svg.Css.CssDeclaration "fill-opacity" [[Svg.Css.CssNumber (Svg.Num 0)]]
-                        , Svg.Css.CssDeclaration "stroke-linecap" [[Svg.Css.CssIdent "round"]]
-                        
-                        ]
-                    , Svg.Css.CssRule
-                        [[Svg.Css.AllOf [Svg.Css.OfClass "visible"], Svg.Css.AllOf[Svg.Css.OfClass "edge"]]]
-                        [Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor $ PixelRGBA8 0 0 0 255]]]
-                    , Svg.Css.CssRule
-                        [[Svg.Css.AllOf [Svg.Css.OfClass "hidden"], Svg.Css.AllOf [Svg.Css.OfClass "edge"]]]
-                        [ Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor $ PixelRGBA8 100 100 100 255]]]
-                    , Svg.Css.CssRule
-                        [[Svg.Css.AllOf [Svg.Css.OfClass "hidden"]]]
-                        [ Svg.Css.CssDeclaration "opacity" [[Svg.Css.CssNumber . Svg.Num $ 0.4]]]
-                    , Svg.Css.CssRule
-                        [[Svg.Css.AllOf [Svg.Css.OfClass "fill"]]]
-                        [ Svg.Css.CssDeclaration "fill-rule" [[Svg.Css.CssIdent "evenodd"]]]
-                    ]
+                styles = lineStyleCss lineStyle
                 document e = Svg.Document Nothing w h [e] mempty mempty styles mempty
                 pathOf lt visibility = 
                         Svg.defaultSvg 
@@ -217,8 +238,10 @@ diagramToSvg diagram =
                             )
                         & Svg.GroupTree
                     
-
-                group children = Svg.GroupTree $ Svg.Group mempty children Nothing Svg.defaultSvg
+                group children
+                     = Svg.defaultSvg
+                        & Svg.groupChildren .~ children
+                        & Svg.GroupTree 
             in document . group . (fills :) $
                     [ Svg.defaultSvg 
                         & Svg.groupChildren .~
@@ -233,6 +256,15 @@ diagramToSvg diagram =
                     | (visibility, vClass) <- [(Waterfall.Hidden, "hidden"), (Waterfall.Visible, "visible")]
                     ]
                     
+-- | Convert a `Waterfall.Diagram` into an SVG document
+-- 
+-- The diagram paths have the class "edge"
+-- and are grouped within elements with class "sharp"\/"outline" and "visible"\/"hidden"
+-- 
+-- The diagram fills have the class "fill"
+diagramToSvg :: Waterfall.Diagram -> Svg.Document
+diagramToSvg = diagramToSvgWithLineStyle defaultLineStyle
+
 -- | Write a `Waterfall.Diagram`, to an SVG file at the specified location 
 writeDiagramSVG :: FilePath -> Waterfall.Diagram -> IO ()
 writeDiagramSVG path = Svg.saveXmlFile path . diagramToSvg

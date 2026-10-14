@@ -23,8 +23,8 @@ import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
 import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
-import Control.Lens ((^.))
-import Linear (_x, _y, V3 (V3))
+import Control.Lens ((^.), (&), (.~))
+import Linear (_x, _y, _z, V3 (V3))
 import qualified Data.IntMap as IntMap
 import Data.Maybe (fromMaybe, catMaybes)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
@@ -131,33 +131,38 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
                                 mesh <- IncrementalMesh.fromShapeAndLinDeflection (upcast region) tolerance
                                 liftIO $ IncrementalMesh.perform mesh
                                 loc <- TopLoc.Location.new
-                                tri <- BRep.Tool.triangulation region loc
                                 props <- GProps.new
-                                liftIO $ BRepGProp.surfaceProperties (upcast region) props False False
-                                noTriangulation <- liftIO $ Poly.Triangulation.isNull tri
-                                nTri <- if noTriangulation then pure 0 else liftIO $ Poly.Triangulation.nbTriangles tri
-                                V3 cx cy _ <- if nTri == 0
-                                    then liftIO . gpPntToV3 =<< GProps.centreOfMass props
-                                    else do
-                                        t <- Poly.Triangulation.triangle tri 1
-                                        indices <- traverse (liftIO . Poly.Triangle.value t) [1, 2, 3]
-                                        corners <- traverse (liftIO . gpPntToV3 <=< Poly.Triangulation.node tri) indices
-                                        pure (sum corners / 3)
-                                p2 <- v3ToPnt (V3 cx cy 0)
-                                p3 <- GP.Pnt.transformed p2 inv
-                                line <- GP.Lin.new p3 d
-                                liftIO $ ShapeIntersector.perform intersector line (-1e100) (1e100)
-                                
-                                n <- liftIO $ ShapeIntersector.nbPnt intersector
-                                hits <- forM [1 .. n] $ \i -> (, i) <$> liftIO (ShapeIntersector.wParameter intersector i)
-                                paint <- case hits of
-                                    [] -> pure Nothing
-                                    _ -> do
-                                        let (_, nearest) = maximum hits
-                                        hit <- ShapeIntersector.face intersector nearest
-                                        found <- liftIO $ ShapeMap.lookup paintMap (upcast hit)
-                                        return $ Just (fromMaybe mempty found)
+                                liftIO $ BRepGProp.surfaceProperties (upcast region) props False False 
+                                tri <- BRep.Tool.triangulation region loc
+                                nullTriangulation <- liftIO $ Poly.Triangulation.isNull tri
+                                nTri <- if nullTriangulation then pure 0 else liftIO $ Poly.Triangulation.nbTriangles tri
 
+                                triangleCenters <- forM [1..nTri] $ \i -> do 
+                                    t <- Poly.Triangulation.triangle tri i
+                                    indices <- traverse (liftIO . Poly.Triangle.value t) [1, 2, 3]
+                                    corners <- traverse (liftIO . gpPntToV3 <=< Poly.Triangulation.node tri) indices
+                                    pure (sum corners / 3)
+                                centerOfMass <- liftIO . gpPntToV3 =<< GProps.centreOfMass props
+                                let candidatePoints = (triangleCenters <> [centerOfMass])
+                                        & (traverse . _z .~ 0)
+
+                                let lookupCandidatePaint [] = pure Nothing
+                                    lookupCandidatePaint (h:t) = do
+                                        pin <- v3ToPnt h
+                                        p <- GP.Pnt.transformed pin inv
+                                        line <- GP.Lin.new p d
+                                        liftIO $ ShapeIntersector.perform intersector line (-1e100) (1e100)
+                                        
+                                        n <- liftIO $ ShapeIntersector.nbPnt intersector
+                                        hits <- forM [1 .. n] $ \i -> (, i) <$> liftIO (ShapeIntersector.wParameter intersector i)
+                                        case hits of
+                                            [] -> lookupCandidatePaint t
+                                            _ -> do
+                                                let (_, nearest) = maximum hits
+                                                hit <- ShapeIntersector.face intersector nearest
+                                                found <- liftIO $ ShapeMap.lookup paintMap (upcast hit)
+                                                return $ Just (fromMaybe mempty found)
+                                paint <- lookupCandidatePaint candidatePoints
                                 shape <- fmap Shape . liftIO . fromAcquire $ TopoDS.Shape.copy (upcast region)
                                 return $ (, shape) <$> paint
 

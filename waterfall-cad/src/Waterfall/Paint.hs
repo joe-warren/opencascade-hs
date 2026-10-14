@@ -27,10 +27,7 @@ import GHC.Generics (Generically (..), Generic)
 import Data.Maybe (catMaybes)
 import Data.List (intersperse)
 import Control.Lens (Lens', lens)
-
--- | Three sRGB values, in the range [0, 1]
-data Colour = Colour Double Double Double
-    deriving (Eq, Ord, Show)
+import Waterfall.Colour (Colour (..))
 
 data DoubleSidedness = SingleSided | DoubleSided 
     deriving (Eq, Ord, Show) 

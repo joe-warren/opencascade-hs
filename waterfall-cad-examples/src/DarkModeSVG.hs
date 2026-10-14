@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings #-}
 module DarkModeSVG
 ( darkModeSVG
 , writeDarkModeSVG
@@ -7,37 +7,27 @@ module DarkModeSVG
 import qualified Waterfall.SVG
 import qualified Waterfall
 import qualified Graphics.Svg as Svg
+import qualified Graphics.Svg.CssTypes as Svg.Css
 import qualified Text.XML.Light.Types as XML
 import qualified Text.XML.Light.Proc as XML.Proc
 import qualified Text.XML.Light.Cursor as XML.Cursor
 import qualified Text.XML.Light.Output as XML.Output
-import Text.RawString.QQ
 import Data.Function ((&))
 import Data.Foldable (toList)
 import Data.Maybe (listToMaybe, fromMaybe)
 import Control.Monad (join)
-styles :: String
-styles = [r|
-.edge {
-  fill: None;
-  fill-opacity: 0;
-}
-.visible .edge {
-  stroke: #000000;
-}
-.hidden .edge {
-  stroke: #C8C8FF;
-}
-@media (prefers-color-scheme: dark) {
-    .visible .edge {
-      stroke: #FFFFFF;
-    }
-    .hidden .edge {
-      stroke: #A00000;
-    }
-}
-|]
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Builder as TextBuilder
+import qualified Graphics.Svg.CssTypes as Svg.Css
+import qualified Graphics.Svg.CssTypes as Svg
 
+combineStyles :: [Svg.Css.CssRule] -> [Svg.Css.CssRule] -> String
+combineStyles lightModeRules darkModeRules = TL.unpack . TextBuilder.toLazyText $
+  ( foldMap Svg.Css.tserialize lightModeRules 
+    <> "\n @media (prefers-color-scheme: dark) {\n"
+    <> foldMap Svg.Css.tserialize darkModeRules
+    <> "\n}"
+  )
 darkModeSVG :: Waterfall.Diagram -> XML.Element
 darkModeSVG diagram =
     let svgAsXML =
@@ -46,6 +36,31 @@ darkModeSVG diagram =
               & Svg.xmlOfDocument 
         nameIsStyle (XML.Elem e) = (== "style") . XML.qName . XML.elName $ e
         nameIsStyle _ = False
+        hasColour = not . null . Waterfall.getDiagramFills $ diagram
+
+        lightModeStyle = Waterfall.SVG.LineStyle
+            { Waterfall.SVG.visibleLineColour = Waterfall.black
+            , Waterfall.SVG.hiddenLineColour = 
+                if hasColour
+                  then Waterfall.black
+                  else Waterfall.colourFromRGB24 0xC8C8FF
+            , Waterfall.SVG.hiddenLineOpacity = 
+                if hasColour 
+                  then 0.2
+                  else 1
+            }
+        darkModeStyle = Waterfall.SVG.LineStyle
+            { Waterfall.SVG.visibleLineColour = Waterfall.white
+            , Waterfall.SVG.hiddenLineColour = 
+                if hasColour
+                  then Waterfall.white
+                  else Waterfall.colourFromRGB24 0xA00000
+            , Waterfall.SVG.hiddenLineOpacity = 
+                if hasColour 
+                  then 0.2
+                  else 1
+            }
+        styles = combineStyles (Waterfall.SVG.lineStyleCss lightModeStyle) (Waterfall.SVG.lineStyleCss darkModeStyle)
     in svgAsXML
             & XML.Cursor.fromElement
             & XML.Cursor.findChild (nameIsStyle . XML.Cursor.current)

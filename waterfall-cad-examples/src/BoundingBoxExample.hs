@@ -10,18 +10,22 @@ import qualified Waterfall.Solids as Solids
 import qualified Waterfall.BoundingBox.Oriented as OBB
 import qualified Waterfall.BoundingBox.AxisAligned as AABB
 import qualified Waterfall.Transforms as Transforms
+import qualified Waterfall.Colour as Colour
 import Linear (V3 (..), unit, _y, _z, (^*))
 
 boundingBoxExample :: Solids.Solid
 boundingBoxExample = 
-    let shape = Solids.unitSphere &
-            Transforms.scale (V3 0.5 3 5) &
-            Transforms.rotate (unit _z) 1 &
-            Transforms.rotate (unit _y) 0.5
-        obb = OBB.orientedBoundingBox shape &
-            maybe Solids.emptySolid OBB.obbToSolid
-        aabb = AABB.axisAlignedBoundingBox shape &
-            maybe Solids.emptySolid AABB.aabbToSolid
+    let shape = Solids.unitSphere 
+            & Transforms.scale (V3 0.5 3 5) 
+            & Transforms.rotate (unit _z) 1 
+            & Transforms.rotate (unit _y) 0.5
+            & Solids.colourSolid Colour.red
+        obb = OBB.orientedBoundingBox shape 
+            & maybe Solids.emptySolid OBB.obbToSolid
+            & Solids.colourSolid Colour.aqua
+        aabb = AABB.axisAlignedBoundingBox shape 
+            & maybe Solids.emptySolid AABB.aabbToSolid
+            & Solids.colourSolid Colour.lime
         in mconcat 
             [ Transforms.translate (unit _y ^* (-5)) shape
             , obb

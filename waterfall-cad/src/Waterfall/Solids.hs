@@ -13,6 +13,7 @@ module Waterfall.Solids
 , octahedron
 , dodecahedron
 , icosahedron
+, colourSolid
 , paintSolid
 , prism
 , volume
@@ -22,7 +23,7 @@ module Waterfall.Solids
 
 
 import Waterfall.Internal.Solid (Solid (..), PaintMap (..), solidFromAcquire, acquireSolid, emptySolid, emptyPaintMap)
-import Waterfall.Paint (Paint)
+import Waterfall.Paint (Paint, paintWithColour)
 import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
 import Waterfall.TwoD.Internal.Shape (rawShape)
 import Waterfall.Internal.ToOpenCascade (v3ToVertex)
@@ -31,6 +32,7 @@ import Waterfall.Internal.Remesh (makeSolidFromShell)
 import Waterfall.Transforms (translate, rotate)
 import Waterfall.Internal.NearZero (nearZero)
 import qualified Waterfall.TwoD.Shape as TwoD.Shape
+import Waterfall.Colour (Colour)
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
@@ -250,6 +252,13 @@ dodecahedron =
         , \x y -> [ green y (-1), green y 1, orange x y 1, pink x y, orange x y (-1)]  
         , \x z -> [ pink x (-1), pink x 1, orange x 1 z, blue x z, orange x (-1) z] 
         ] <*> plusMinusOne <*> plusMinusOne
+
+
+-- | Apply a `Colour` to a `Solid`
+--
+-- Replaces any previously applied paint
+colourSolid :: Colour -> Solid -> Solid
+colourSolid colour = paintSolid (paintWithColour colour)
 
 -- | Apply a `Paint` to a `Solid`
 --

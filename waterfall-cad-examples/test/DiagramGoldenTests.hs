@@ -55,7 +55,7 @@ pixelDiffThreshold :: Integer
 pixelDiffThreshold = 16
 
 pixelCountThreshold :: Integer
-pixelCountThreshold = 64
+pixelCountThreshold = 128
 
 comparePixels :: JP.PixelRGBA8 -> JP.PixelRGBA8 -> Bool
 comparePixels (JP.PixelRGBA8 r1 g1 b1 a1) (JP.PixelRGBA8 r2 g2 b2 a2) = 
