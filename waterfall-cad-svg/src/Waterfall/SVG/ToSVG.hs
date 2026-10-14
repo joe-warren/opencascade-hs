@@ -197,7 +197,7 @@ diagramToSvg diagram =
                         [ Svg.Css.CssDeclaration "opacity" [[Svg.Css.CssNumber . Svg.Num $ 0.4]]]
                     , Svg.Css.CssRule
                         [[Svg.Css.AllOf [Svg.Css.OfClass "fill"]]]
-                        [ Svg.Css.CssDeclaration "fill-rule" [[Svg.Css.CssIdent "nonzero"]]]
+                        [ Svg.Css.CssDeclaration "fill-rule" [[Svg.Css.CssIdent "evenodd"]]]
                     ]
                 document e = Svg.Document Nothing w h [e] mempty mempty styles mempty
                 pathOf lt visibility = 
