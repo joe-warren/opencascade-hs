@@ -274,7 +274,7 @@ cafDocument s paintMap = do
     doc <- TDocStd.Document.fromStorageFormat ""
     mainLabel <- TDocStd.Document.main doc
     shapeTool <- XCafDoc.DocumentTool.shapeTool mainLabel
-    shapeLabel <- XCafDoc.ShapeTool.addShape shapeTool s True True
+    shapeLabel <- XCafDoc.ShapeTool.addShape shapeTool s True False
     addColourToCafWriter s shapeLabel paintMap
     return doc
 
