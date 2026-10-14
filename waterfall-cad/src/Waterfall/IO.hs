@@ -34,12 +34,10 @@ import qualified OpenCascade.STEPControl.Reader as STEPReader
 import qualified OpenCascade.XSControl.Reader as XSControl.Reader
 import qualified OpenCascade.IFSelect.ReturnStatus as IFSelect.ReturnStatus
 import qualified OpenCascade.TDocStd.Document as TDocStd.Document
-import qualified OpenCascade.Message.Types as Message
 import qualified OpenCascade.Message.ProgressRange as Message.ProgressRange
 import qualified OpenCascade.RWGltf.CafWriter as RWGltf.CafWriter
 import qualified OpenCascade.NCollection.IndexedDataMap as NCollection.IndexedDataMap
 import qualified OpenCascade.NCollection.Types as NCollection
-import qualified OpenCascade.TCollection.Types as TCollection
 import qualified OpenCascade.RWGltf.CafReader as RWGltf.CafReader
 import qualified OpenCascade.RWObj.CafWriter as RWObj.CafWriter
 import qualified OpenCascade.RWObj.CafReader as RWObj.CafReader
@@ -190,7 +188,7 @@ colourToOCVec3 (Colour r g b) =
 paintLookup :: Alternative f => Paint -> Getting (f a) Paint (f a) -> f a
 paintLookup paint lens = paint ^. lens <|> defaultPaint ^. lens
 
-paintToMaterial ::  Ptr (Handle XCafDoc.VisMaterialTool) -> Paint ->  Acquire (Ptr Label)
+paintToMaterial :: Ptr (Handle XCafDoc.VisMaterialTool) -> Paint ->  Acquire (Ptr Label)
 paintToMaterial tool paint = do
     pbrMaterial <- XCafDoc.VisMaterialPBR.new
     material <- XCafDoc.VisMaterial.new
@@ -229,7 +227,7 @@ paintToMaterial tool paint = do
 
     XCafDoc.VisMaterialTool.addMaterial tool material name
 
-buildMaterialMap ::  Ptr (Handle XCafDoc.VisMaterialTool) -> [Paint] ->  Acquire (Map Paint (Ptr Label))
+buildMaterialMap :: Ptr (Handle XCafDoc.VisMaterialTool) -> [Paint] ->  Acquire (Map Paint (Ptr Label))
 buildMaterialMap tool paints = 
     let dup a = (a, a)
     in forM (M.fromList (dup <$> paints)) (paintToMaterial tool)

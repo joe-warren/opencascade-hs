@@ -18,8 +18,6 @@ import Data.Maybe (listToMaybe, fromMaybe)
 import Control.Monad (join)
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Builder as TextBuilder
-import qualified Graphics.Svg.CssTypes as Svg.Css
-import qualified Graphics.Svg.CssTypes as Svg
 
 combineStyles :: [Svg.Css.CssRule] -> [Svg.Css.CssRule] -> String
 combineStyles lightModeRules darkModeRules = TL.unpack . TextBuilder.toLazyText $
