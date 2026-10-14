@@ -122,6 +122,7 @@ typedef int BOPAlgo_Operation;
 typedef void IntCurvesFace_ShapeIntersector;
 typedef void GCPnts_AbscissaPoint;
 typedef void Standard_Failure;
+typedef void HS_STANDARD_FAILURE;
 typedef void STD_EXCEPTION;
 typedef void STD_RUNTIME_ERROR;
 
@@ -141,6 +142,8 @@ typedef int HSExceptionType;
 #define VEC3(X) NCollection_Vec3<X>
 #define INDEXED_DATA_MAP(K, V, Hasher) NCollection_IndexedDataMap<K, V, Hasher>
 #define DEFAULT_HASHER(K) NCollection_DefaultHasher<K>
+struct HSStandardFailure;
+typedef HSStandardFailure HS_STANDARD_FAILURE;
 typedef std::exception STD_EXCEPTION;
 typedef std::runtime_error STD_RUNTIME_ERROR;
 #endif // __cplusplus
