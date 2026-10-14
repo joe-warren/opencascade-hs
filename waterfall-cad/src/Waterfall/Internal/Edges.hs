@@ -67,13 +67,13 @@ edgeValue edge v = (`with` pure) $ do
 allWireEndpoints :: Ptr TopoDS.Wire -> IO [(V3 Double, V3 Double)]
 allWireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
     let runToEnd = do
-            edge <- WireExplorer.current explorer
-            points <- edgeEndpoints edge
-            WireExplorer.next explorer
             more <- WireExplorer.more explorer
-            if more 
-                then (points:) <$> runToEnd
-                else pure [points]
+            if more then do
+                edge <- WireExplorer.current explorer
+                points <- edgeEndpoints edge
+                WireExplorer.next explorer
+                (points:) <$> runToEnd
+            else pure []
     runToEnd
 
 allSubShapesWithCopy :: ShapeEnum.ShapeEnum -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
@@ -168,12 +168,13 @@ reverseWire wire = do
     explorer <- WireExplorer.fromWire wire
     makeWire <- MakeWire.new
     let runToEnd = do
-            edge <- liftIO $ WireExplorer.current explorer
-            edge' <- reverseEdge edge
-            liftIO $ WireExplorer.next explorer
             more <- liftIO $ WireExplorer.more explorer
-            when more runToEnd
-            liftIO $ MakeWire.addEdge makeWire edge'
+            when more $ do
+                edge <- liftIO $ WireExplorer.current explorer
+                edge' <- reverseEdge edge
+                liftIO $ WireExplorer.next explorer
+                runToEnd
+                liftIO $ MakeWire.addEdge makeWire edge'
     runToEnd
     MakeWire.wire makeWire
 
