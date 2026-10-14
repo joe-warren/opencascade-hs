@@ -112,13 +112,13 @@ discretizedEdgePathCommand edge = do
     return . pure .
         Svg.LineTo Svg.OriginAbsolute $ (^. _xy) <$> ps
 
-edgeToPathCommand :: Bool -> Maybe (V2 Double) -> Ptr TopoDS.Edge -> (Maybe (V2 Double), [Svg.PathCommand])
-edgeToPathCommand excludeMoves curPos edge = Internal.Finalizers.unsafeFromAcquire $ do
+edgeToPathCommand ::  Maybe (V2 Double) -> Ptr TopoDS.Edge -> (Maybe (V2 Double), [Svg.PathCommand])
+edgeToPathCommand curPos edge = Internal.Finalizers.unsafeFromAcquire $ do
     startPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 0
     endPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 1
     let hasntMoved = all nearZero . (startPos -) <$> curPos
     let addMoveCommand = 
-            case (|| excludeMoves) <$> hasntMoved of 
+            case hasntMoved of 
                 Just True -> id
                 _ -> ((Svg.MoveTo Svg.OriginAbsolute . pure $ startPos) :)
     adaptor <- BRepAdaptor.Curve.fromEdge edge
@@ -133,8 +133,11 @@ edgeToPathCommand excludeMoves curPos edge = Internal.Finalizers.unsafeFromAcqui
 
 shapeToPathCommands :: Waterfall.Shape -> [Svg.PathCommand]
 shapeToPathCommands = 
-    concatMap (path2DToPathCommands' True)
-    . Waterfall.shapePaths 
+    let stripMoveTo = take 1 <> filter (not . isMoveTo) . drop 1
+        isMoveTo (Svg.MoveTo _ _) = True
+        isMoveTo _ = False
+    in concatMap (stripMoveTo. path2DToPathCommands)
+        . Waterfall.shapePaths 
     
 colourToPixel :: Waterfall.Colour -> PixelRGBA8
 colourToPixel (Waterfall.Colour r g b) =
@@ -148,18 +151,15 @@ fillToPath (paint, shape) =
         & Svg.pathDefinition .~ shapeToPathCommands shape
         & Svg.drawAttr . Svg.fillColor .~ (pure . Svg.ColorRef . colourToPixel $ colour)
 
-path2DToPathCommands' :: Bool -> Waterfall.Path2D -> [Svg.PathCommand]
-path2DToPathCommands' excludeMoves (Path2D theRawPath) = case theRawPath of  
+-- | Convert a `Waterfall.Path2D` into a list of `Svg.PathCommands`
+path2DToPathCommands :: Waterfall.Path2D -> [Svg.PathCommand]
+path2DToPathCommands (Path2D theRawPath) = case theRawPath of  
     Internal.Path.Common.EmptyRawPath -> []
     Internal.Path.Common.SinglePointRawPath _ -> []
     Internal.Path.Common.ComplexRawPath wire -> 
         Internal.Finalizers.unsafeFromAcquireT $
-            concat . snd . mapAccumL (edgeToPathCommand excludeMoves) Nothing 
+            concat . snd . mapAccumL edgeToPathCommand Nothing 
                 <$> Internal.Edges.wireEdges wire
-
--- | Convert a `Waterfall.Path2D` into a list of `Svg.PathCommands`
-path2DToPathCommands :: Waterfall.Path2D -> [Svg.PathCommand]
-path2DToPathCommands = path2DToPathCommands' False 
 
 -- | Convert a `Waterfall.Diagram` into an SVG document
 -- 
