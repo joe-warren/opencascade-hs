@@ -24,7 +24,7 @@ import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Control.Lens ((^.), (&), (.~))
-import Linear (_x, _y, _z, V3 (V3))
+import Linear (_x, _y, _z, V3 (V3), norm)
 import qualified Data.IntMap as IntMap
 import Data.Maybe (fromMaybe, catMaybes)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
@@ -60,11 +60,20 @@ calcFuzzyTolerance edges = do
     forM_ edges $ \e -> do
         liftIO $ BRepBndLib.addOptimal (upcast e) theBox True False
 
-    p1 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMin theBox
-    p2 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax theBox
-    let d = p2 - p1
+    lo <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMin theBox
+    hi <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax theBox
+    let d = hi - lo
     let maxDim = max (d ^. _x) (d ^. _y)
     return (maxDim / 1000)
+
+calcRayBound :: Ptr TopoDS.Shape -> Acquire Double
+calcRayBound s = do
+    theBox <- Bnd.Box.new
+    liftIO $ BRepBndLib.addOptimal s theBox True False
+
+    lo <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMin theBox
+    hi <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax theBox
+    return ( 2 * (norm lo + norm hi))
 
 -- recursively drop edges with a free end
 pruneDangling :: [Ptr TopoDS.Edge] -> Acquire [Ptr TopoDS.Edge]
@@ -94,6 +103,8 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
         then return []
         else do
             tolerance <- calcFuzzyTolerance boundary 
+            rayBound <- calcRayBound s
+            let angularTolerance = 1e-8
             fuser <- BOPAlgo.Builder.new 
             liftIO $ BOPAlgo.Builder.setFuzzyValue fuser tolerance
             forM_ boundary (liftIO . BOPAlgo.Builder.addArgument fuser . upcast)
@@ -108,11 +119,11 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
             liftIO $ TopoDS.Builder.makeCompound builder compound
             forM_ keptEdges $ liftIO . TopoDS.Builder.add builder (upcast compound) . upcast
 
-            (status, wires) <- BOPAlgo.Tools.edgesToWires (upcast compound) True 1e-8
+            (status, wires) <- BOPAlgo.Tools.edgesToWires (upcast compound) True angularTolerance
             if status /= 0
                 then pure [] 
                 else do
-                    (ok, faces) <- BOPAlgo.Tools.wiresToFaces wires 1e-8
+                    (ok, faces) <- BOPAlgo.Tools.wiresToFaces wires angularTolerance
                     if not ok
                         then return [] 
                         else do
@@ -121,7 +132,7 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
 
                             inv <- Projector.invertedTransformation projector
                             intersector <- ShapeIntersector.new
-                            liftIO $ ShapeIntersector.load intersector s 1e-6
+                            liftIO $ ShapeIntersector.load intersector s (tolerance/1000)
 
                             paintMap <- liftIO $ ShapeMap.fromList (first upcast <$> paints)
                             
@@ -151,7 +162,7 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
                                         pin <- v3ToPnt h
                                         p <- GP.Pnt.transformed pin inv
                                         line <- GP.Lin.new p d
-                                        liftIO $ ShapeIntersector.perform intersector line (-1e100) (1e100)
+                                        liftIO $ ShapeIntersector.perform intersector line (-rayBound) rayBound
                                         
                                         n <- liftIO $ ShapeIntersector.nbPnt intersector
                                         hits <- forM [1 .. n] $ \i -> (, i) <$> liftIO (ShapeIntersector.wParameter intersector i)
