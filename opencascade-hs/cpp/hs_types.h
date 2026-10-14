@@ -93,6 +93,7 @@ typedef void XCAFDoc_VisMaterial;
 typedef void XCAFDoc_VisMaterialPBR;
 typedef int Graphic3d_AlphaMode;
 typedef void Quantity_Color;
+typedef void Quantity_ColorRGBA;
 typedef int Quantity_TypeOfColor;
 typedef void STEPCAFControl_Writer;
 typedef void ShapeFix_Solid;
@@ -128,6 +129,7 @@ typedef int HSExceptionType;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #define LIST(X) void
+#define VEC3(X) void
 #define INDEXED_DATA_MAP(K, V, Hasher) void
 #else // __cplusplus
 #include <exception>
@@ -135,6 +137,7 @@ typedef int HSExceptionType;
 
 #define ARRAY_1(X) NCollection_Array1<X>
 #define LIST(X) NCollection_List<X>
+#define VEC3(X) NCollection_Vec3<X>
 #define INDEXED_DATA_MAP(K, V, Hasher) NCollection_IndexedDataMap<K, V, Hasher>
 #define DEFAULT_HASHER(K) NCollection_DefaultHasher<K>
 typedef std::exception STD_EXCEPTION;

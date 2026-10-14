@@ -10,6 +10,8 @@ module OpenCascade.XCAFDoc.VisMaterialPBR
 ) where
 
 import OpenCascade.XCAFDoc.Types (VisMaterialPBR)
+import qualified OpenCascade.Quantity.Types as Quantity
+import qualified OpenCascade.NCollection.Types as NCollection
 import OpenCascade.XCAFDoc.Internal.Destructors (deleteVisMaterialPBR)
 import Foreign.Ptr (Ptr)
 import Foreign.C (CDouble (..))
@@ -21,10 +23,7 @@ foreign import capi unsafe "hs_XCAFDoc_VisMaterialPBR.h hs_new_XCAFDoc_VisMateri
 new :: Acquire (Ptr VisMaterialPBR)
 new = mkAcquire rawNew deleteVisMaterialPBR
 
-foreign import capi unsafe "hs_XCAFDoc_VisMaterialPBR.h hs_XCAFDoc_VisMaterialPBR_setBaseColor" rawSetBaseColor :: Ptr VisMaterialPBR -> CDouble -> CDouble -> CDouble -> CDouble -> IO ()
-
-setBaseColor :: Ptr VisMaterialPBR -> Double -> Double -> Double -> Double -> IO ()
-setBaseColor = coerce rawSetBaseColor
+foreign import capi unsafe "hs_XCAFDoc_VisMaterialPBR.h hs_XCAFDoc_VisMaterialPBR_setBaseColor" setBaseColor :: Ptr VisMaterialPBR -> Ptr Quantity.ColorRGBA -> IO ()
 
 foreign import capi unsafe "hs_XCAFDoc_VisMaterialPBR.h hs_XCAFDoc_VisMaterialPBR_setMetallic" rawSetMetallic :: Ptr VisMaterialPBR -> CDouble -> IO ()
 
@@ -36,10 +35,7 @@ foreign import capi unsafe "hs_XCAFDoc_VisMaterialPBR.h hs_XCAFDoc_VisMaterialPB
 setRoughness :: Ptr VisMaterialPBR -> Double -> IO ()
 setRoughness = coerce rawSetRoughness
 
-foreign import capi unsafe "hs_XCAFDoc_VisMaterialPBR.h hs_XCAFDoc_VisMaterialPBR_setEmissiveFactor" rawSetEmissiveFactor :: Ptr VisMaterialPBR -> CDouble -> CDouble -> CDouble -> IO ()
-
-setEmissiveFactor :: Ptr VisMaterialPBR -> Double -> Double -> Double -> IO ()
-setEmissiveFactor = coerce rawSetEmissiveFactor
+foreign import capi unsafe "hs_XCAFDoc_VisMaterialPBR.h hs_XCAFDoc_VisMaterialPBR_setEmissiveFactor" setEmissiveFactor :: Ptr VisMaterialPBR -> Ptr (NCollection.Vec3 Float) -> IO ()
 
 foreign import capi unsafe "hs_XCAFDoc_VisMaterialPBR.h hs_XCAFDoc_VisMaterialPBR_setRefractionIndex" rawSetRefractionIndex :: Ptr VisMaterialPBR -> CDouble -> IO ()
 

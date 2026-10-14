@@ -1,5 +1,6 @@
 #include <XCAFDoc_VisMaterial.hxx>
 #include <XCAFDoc_VisMaterialPBR.hxx>
+#include <TCollection_HAsciiString.hxx>
 #include "hs_Exception.h"
 #include "hs_XCAFDoc_VisMaterial.h"
 
@@ -26,5 +27,23 @@ void hs_XCAFDoc_VisMaterial_setAlphaMode(
 ){
     hs_handleExVoid(exType, exPtr, [material, mode, cutOff]{
         (*material)->SetAlphaMode(mode, (float) cutOff);
+    });
+}
+
+void hs_XCAFDoc_VisMaterial_setDoubleSided(
+        Handle(XCAFDoc_VisMaterial) * material, bool isDoubleSided,
+        HSExceptionType* exType, void ** exPtr
+){
+    hs_handleExVoid(exType, exPtr, [material, isDoubleSided]{
+        (*material)->SetDoubleSided(isDoubleSided);
+    });
+}
+
+void hs_XCAFDoc_VisMaterial_setRawName(
+        Handle(XCAFDoc_VisMaterial) * material, char * name,
+        HSExceptionType* exType, void ** exPtr
+){
+    hs_handleExVoid(exType, exPtr, [material, name]{
+        (*material)->SetRawName(new TCollection_HAsciiString(name));
     });
 }

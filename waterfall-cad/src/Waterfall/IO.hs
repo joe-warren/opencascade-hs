@@ -56,9 +56,10 @@ import OpenCascade.Handle (Handle)
 import OpenCascade.Inheritance (upcast)
 import qualified OpenCascade.Quantity as Quantity
 import qualified OpenCascade.Quantity.Color as Quantity.Color
+import qualified OpenCascade.Quantity.ColorRGBA as Quantity.ColorRGBA
 import qualified OpenCascade.Quantity.TypeOfColor as Quantity.TypeOfColor
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (unless, when, forM_)
+import Control.Monad (unless, when, forM, forM_, (<=<), void)
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
 import Data.Acquire ( Acquire, withAcquire )
 import Foreign.Ptr (Ptr)
@@ -66,11 +67,21 @@ import Data.Char (toLower)
 import System.FilePath (takeExtension)
 import Control.Exception (Exception, throwIO)
 import OpenCascade.TDF.Label (Label)
-import Waterfall.Paint (Colour(..), paintColour, defaultPaint)
+import Waterfall.Paint (Colour(..), paintColour, defaultPaint, Paint, DoubleSidedness(DoubleSided), paintName, paintOpacity, paintEmissiveColour, paintMetallic, paintDoubleSidedness, paintRoughness)
 import qualified OpenCascade.XCAFDoc.ColorTool as XCafDoc.ColourTool
-import Control.Lens ((^.))
+import Control.Lens ((^.), Getting)
 import System.IO (hPutStrLn, stderr)
 import qualified OpenCascade.STEPCAFControl.Writer as StepCAFControl.Writer
+import qualified OpenCascade.XCAFDoc.Types as XCafDoc
+import qualified OpenCascade.XCAFDoc.VisMaterial as XCafDoc.VisMaterial
+import qualified OpenCascade.XCAFDoc.VisMaterialPBR as XCafDoc.VisMaterialPBR
+import qualified OpenCascade.NCollection.Vec3 as NCollection.Vec3
+import Data.Maybe (fromMaybe)
+import qualified OpenCascade.XCAFDoc.VisMaterialTool as XCafDoc.VisMaterialTool
+import Control.Applicative ((<|>), Alternative)
+import qualified OpenCascade.Graphic3D.AlphaMode as AlphaMode
+import Data.Map (Map)
+import qualified Data.Map as M
 
 -- | The type of exceptions thrown by IO actions defined in `Waterfall.IO`
 data WaterfallIOException = 
@@ -171,28 +182,83 @@ writeSTEP filepath (Solid ptr paintMap) = (`withAcquire` pure) $ do
 colourToOCColor :: Colour -> Acquire (Ptr Quantity.Color)
 colourToOCColor (Colour r g b) =
     Quantity.Color.new r g b Quantity.TypeOfColor.SRGB
+    
+colourToOCVec3 :: Colour -> Acquire (Ptr (NCollection.Vec3 Float))
+colourToOCVec3 (Colour r g b) =
+    NCollection.Vec3.newVec3Float (realToFrac r) (realToFrac g) (realToFrac b)
+
+paintLookup :: Alternative f => Paint -> Getting (f a) Paint (f a) -> f a
+paintLookup paint lens = paint ^. lens <|> defaultPaint ^. lens
+
+paintToMaterial ::  Ptr (Handle XCafDoc.VisMaterialTool) -> Paint ->  Acquire (Ptr Label)
+paintToMaterial tool paint = do
+    pbrMaterial <- XCafDoc.VisMaterialPBR.new
+    material <- XCafDoc.VisMaterial.new
+
+    let opacity = fromMaybe 1.0 (paintLookup paint paintOpacity)
+
+    forM_ (paintLookup paint paintColour) 
+        (liftIO . XCafDoc.VisMaterialPBR.setBaseColor pbrMaterial 
+            <=< flip Quantity.ColorRGBA.new (1.0-opacity) 
+            <=< colourToOCColor
+        )
+    forM_ (paintLookup paint paintEmissiveColour) 
+        (liftIO . XCafDoc.VisMaterialPBR.setEmissiveFactor pbrMaterial 
+            <=< colourToOCVec3
+        )
+    forM_ (paintLookup paint paintMetallic)
+        (liftIO . XCafDoc.VisMaterialPBR.setMetallic pbrMaterial) 
+
+    forM_ (paintLookup paint paintRoughness)
+        (liftIO . XCafDoc.VisMaterialPBR.setRoughness pbrMaterial) 
+        
+    forM_ (paintLookup paint paintName)
+        (liftIO . XCafDoc.VisMaterial.setRawName material)
+
+    forM_ (paintLookup paint paintDoubleSidedness)
+        (liftIO . XCafDoc.VisMaterial.setDoubleSided material . (== DoubleSided))
+    
+    liftIO $ XCafDoc.VisMaterial.setPbrMaterial material pbrMaterial
+    let name = fromMaybe "" (paint ^. paintName)
+
+    let alphaMode = if opacity < 1.0 then AlphaMode.BlendAuto else AlphaMode.Opaque
+    liftIO $ XCafDoc.VisMaterial.setAlphaMode material alphaMode 0.5
+
+    XCafDoc.VisMaterialTool.addMaterial tool material name
+
+buildMaterialMap ::  Ptr (Handle XCafDoc.VisMaterialTool) -> [Paint] ->  Acquire (Map Paint (Ptr Label))
+buildMaterialMap tool paints = 
+    let dup a = (a, a)
+    in forM (M.fromList (dup <$> paints)) (paintToMaterial tool)
 
 addColourToCafWriter :: Ptr TopoDS.Shape -> Ptr Label -> PaintMap -> Acquire ()
 addColourToCafWriter s shapeLabel paintMap = do
     colourTool <- XCafDoc.DocumentTool.colorTool shapeLabel
+    materialTool <- XCafDoc.DocumentTool.visMaterialTool shapeLabel
     case paintMap of
-        UniformPaint paint -> 
+        UniformPaint paint -> do
             forM_ (paint ^. paintColour) $ \color -> do
                 ocColour <- colourToOCColor color
                 colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool s ocColour XCAFDoc.ColorType.ColorSurf
                 liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Base Shape not found in CAF document"
+
+            material <- paintToMaterial materialTool paint
+            void . liftIO $ XCafDoc.VisMaterialTool.setShapeMaterial materialTool shapeLabel material
         FacePaints facePaints -> do
             forM_ (defaultPaint ^. paintColour) $ \color -> do
                 ocColour <- colourToOCColor color
                 colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool s ocColour XCAFDoc.ColorType.ColorSurf
                 liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Base Shape not found in CAF document"
-            forM_ facePaints $ \(face, paint) -> 
+            materialMap <- buildMaterialMap materialTool (snd <$> facePaints)
+            forM_ facePaints $ \(face, paint) -> do
                 forM_ (paint ^. paintColour) $ \colour -> do
                         ocColour <- colourToOCColor colour
                         colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool (upcast face) ocColour XCAFDoc.ColorType.ColorSurf
                         liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Face not found in CAF document"
+                forM_ (M.lookup paint materialMap) 
+                    (liftIO . XCafDoc.VisMaterialTool.setShapeMaterialFromShape materialTool (upcast face))
 
-mesh :: Double -> Ptr (TopoDS.Shape) -> Acquire ()
+mesh :: Double -> Ptr TopoDS.Shape -> Acquire ()
 mesh linDeflection s = do
     mesher <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
     liftIO $ BRepMesh.IncrementalMesh.perform mesher

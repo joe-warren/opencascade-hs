@@ -21,6 +21,16 @@ void hs_XCAFDoc_VisMaterial_setAlphaMode(
     HSExceptionType* exType, void ** exPtr
 );
 
+void hs_XCAFDoc_VisMaterial_setDoubleSided(
+    Handle(XCAFDoc_VisMaterial) * material, bool isDoubleSided,
+    HSExceptionType* exType, void ** exPtr
+);
+
+void hs_XCAFDoc_VisMaterial_setRawName(
+    Handle(XCAFDoc_VisMaterial) * material, char * name,
+    HSExceptionType* exType, void ** exPtr
+);
+
 #ifdef __cplusplus
 }
 #endif
