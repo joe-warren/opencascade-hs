@@ -21,8 +21,8 @@ void hs_XCAFDoc_VisMaterial_setAlphaMode(
     HSExceptionType* exType, void ** exPtr
 );
 
-void hs_XCAFDoc_VisMaterial_setDoubleSided(
-    Handle(XCAFDoc_VisMaterial) * material, bool isDoubleSided,
+void hs_XCAFDoc_VisMaterial_setFaceCulling(
+    Handle(XCAFDoc_VisMaterial) * material, Graphic3d_TypeOfBackfacingModel faceCulling,
     HSExceptionType* exType, void ** exPtr
 );
 

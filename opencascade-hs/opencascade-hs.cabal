@@ -268,6 +268,7 @@ library
       OpenCascade.GProp.Types
       OpenCascade.Graphic3D.AlphaMode
       OpenCascade.Graphic3D.HorizontalTextAlignment
+      OpenCascade.Graphic3D.TypeOfBackfacingModel
       OpenCascade.Graphic3D.VerticalTextAlignment
       OpenCascade.Handle
       OpenCascade.HLRAlgo

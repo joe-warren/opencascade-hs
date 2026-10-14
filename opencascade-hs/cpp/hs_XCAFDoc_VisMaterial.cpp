@@ -30,12 +30,12 @@ void hs_XCAFDoc_VisMaterial_setAlphaMode(
     });
 }
 
-void hs_XCAFDoc_VisMaterial_setDoubleSided(
-        Handle(XCAFDoc_VisMaterial) * material, bool isDoubleSided,
+void hs_XCAFDoc_VisMaterial_setFaceCulling(
+        Handle(XCAFDoc_VisMaterial) * material, Graphic3d_TypeOfBackfacingModel faceCulling,
         HSExceptionType* exType, void ** exPtr
 ){
-    hs_handleExVoid(exType, exPtr, [material, isDoubleSided]{
-        (*material)->SetDoubleSided(isDoubleSided);
+    hs_handleExVoid(exType, exPtr, [material, faceCulling]{
+        (*material)->SetFaceCulling(faceCulling);
     });
 }
 

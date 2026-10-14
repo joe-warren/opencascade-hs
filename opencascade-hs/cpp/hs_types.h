@@ -92,6 +92,7 @@ typedef void XCAFDoc_VisMaterialTool;
 typedef void XCAFDoc_VisMaterial;
 typedef void XCAFDoc_VisMaterialPBR;
 typedef int Graphic3d_AlphaMode;
+typedef int Graphic3d_TypeOfBackfacingModel;
 typedef void Quantity_Color;
 typedef void Quantity_ColorRGBA;
 typedef int Quantity_TypeOfColor;

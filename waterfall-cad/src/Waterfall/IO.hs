@@ -29,7 +29,6 @@ import qualified Waterfall.Internal.Remesh as Remesh
 import qualified OpenCascade.BRepMesh.IncrementalMesh as BRepMesh.IncrementalMesh
 import qualified OpenCascade.StlAPI.Writer as StlWriter
 import qualified OpenCascade.StlAPI.Reader as StlReader
-import qualified OpenCascade.STEPControl.Writer as StepWriter
 import qualified OpenCascade.STEPControl.StepModelType as StepModelType
 import qualified OpenCascade.STEPControl.Reader as STEPReader
 import qualified OpenCascade.XSControl.Reader as XSControl.Reader
@@ -59,7 +58,7 @@ import qualified OpenCascade.Quantity.Color as Quantity.Color
 import qualified OpenCascade.Quantity.ColorRGBA as Quantity.ColorRGBA
 import qualified OpenCascade.Quantity.TypeOfColor as Quantity.TypeOfColor
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (unless, when, forM, forM_, (<=<), void)
+import Control.Monad (unless, when, forM, forM_, (<=<))
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
 import Data.Acquire ( Acquire, withAcquire )
 import Foreign.Ptr (Ptr)
@@ -67,7 +66,7 @@ import Data.Char (toLower)
 import System.FilePath (takeExtension)
 import Control.Exception (Exception, throwIO)
 import OpenCascade.TDF.Label (Label)
-import Waterfall.Paint (Colour(..), paintColour, defaultPaint, Paint, DoubleSidedness(DoubleSided), paintName, paintOpacity, paintEmissiveColour, paintMetallic, paintDoubleSidedness, paintRoughness)
+import Waterfall.Paint (Colour(..), paintColour, defaultPaint, Paint, DoubleSidedness(..), paintName, paintOpacity, paintEmissiveColour, paintMetallic, paintDoubleSidedness, paintRoughness)
 import qualified OpenCascade.XCAFDoc.ColorTool as XCafDoc.ColourTool
 import Control.Lens ((^.), Getting)
 import System.IO (hPutStrLn, stderr)
@@ -80,6 +79,8 @@ import Data.Maybe (fromMaybe)
 import qualified OpenCascade.XCAFDoc.VisMaterialTool as XCafDoc.VisMaterialTool
 import Control.Applicative ((<|>), Alternative)
 import qualified OpenCascade.Graphic3D.AlphaMode as AlphaMode
+import qualified OpenCascade.Graphic3D.TypeOfBackfacingModel as TypeOfBackfacingModel
+
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -136,8 +137,7 @@ writeSolid res filepath =
 writeSTLAsciiOrBinary :: Bool -> Double -> FilePath -> Solid -> IO ()
 writeSTLAsciiOrBinary asciiMode linDeflection filepath (Solid ptr _paintMap) = (`withAcquire` pure) $ do
     s <- toAcquire ptr
-    mesh <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
-    liftIO $ BRepMesh.IncrementalMesh.perform mesh
+    mesh linDeflection s
     writer <- StlWriter.new
     liftIO $ do
             StlWriter.setAsciiMode writer asciiMode
@@ -199,7 +199,7 @@ paintToMaterial tool paint = do
 
     forM_ (paintLookup paint paintColour) 
         (liftIO . XCafDoc.VisMaterialPBR.setBaseColor pbrMaterial 
-            <=< flip Quantity.ColorRGBA.new (1.0-opacity) 
+            <=< flip Quantity.ColorRGBA.new opacity
             <=< colourToOCColor
         )
     forM_ (paintLookup paint paintEmissiveColour) 
@@ -215,8 +215,11 @@ paintToMaterial tool paint = do
     forM_ (paintLookup paint paintName)
         (liftIO . XCafDoc.VisMaterial.setRawName material)
 
+    let backfacing DoubleSided = TypeOfBackfacingModel.DoubleSided
+        backfacing SingleSided = TypeOfBackfacingModel.BackCulled
+
     forM_ (paintLookup paint paintDoubleSidedness)
-        (liftIO . XCafDoc.VisMaterial.setDoubleSided material . (== DoubleSided))
+        (liftIO . XCafDoc.VisMaterial.setFaceCulling material . backfacing)
     
     liftIO $ XCafDoc.VisMaterial.setPbrMaterial material pbrMaterial
     let name = fromMaybe "" (paint ^. paintName)
@@ -243,7 +246,7 @@ addColourToCafWriter s shapeLabel paintMap = do
                 liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Base Shape not found in CAF document"
 
             material <- paintToMaterial materialTool paint
-            void . liftIO $ XCafDoc.VisMaterialTool.setShapeMaterial materialTool shapeLabel material
+            liftIO $ XCafDoc.VisMaterialTool.setShapeMaterial materialTool shapeLabel material
         FacePaints facePaints -> do
             forM_ (defaultPaint ^. paintColour) $ \color -> do
                 ocColour <- colourToOCColor color
