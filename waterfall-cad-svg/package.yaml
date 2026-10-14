@@ -17,9 +17,6 @@ extra-source-files:
 - README.md
 - CHANGELOG.md
 
-data-files:
- - test-data/*
-
 dependencies:
 - base >= 4.7 && < 5
 - *waterfall-cad-bound
