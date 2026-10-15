@@ -1,5 +1,23 @@
 {-# LANGUAGE TupleSections #-}
-module Waterfall.Offset 
+{-|
+Module: Waterfall.Offset
+
+Expand or contract a `Solid` by a certain amount.
+
+This is based on @MakeOffsetShape@ from the underlying OpenCascade library.
+And as such, only supports the same set of `Solid`s that @MakeOffsetShape@ does.
+
+The documentation for @MakeOffsetShape@ lists the following constraints
+( [link](https://dev.opencascade.org/doc/refman/html/class_b_rep_offset_a_p_i___make_offset_shape.html) ):
+
+* All the faces of the shape S should be based on the surfaces with continuity at least C1.
+* The offset value should be sufficiently small to avoid self-intersections in resulting shape.
+     Otherwise these self-intersections may appear inside an offset face if its initial surface is not plane or sphere or cylinder, also some non-adjacent offset faces may intersect each other. Also, some offset surfaces may "turn inside out".
+* The algorithm may fail if the shape S contains vertices where more than 3 edges converge.
+* Since 3d-offset algorithm involves intersection of surfaces, it is under limitations of surface intersection algorithm.
+* A result cannot be generated if the underlying geometry of S is BSpline with continuity C0.
+-}
+module Waterfall.Offset
 ( offset
 , offsetWithTolerance
 , offsetWithPaint
@@ -9,9 +27,9 @@ module Waterfall.Offset
 , tryOffsetWithTolerance
 , tryOffsetWithPaint
 , tryOffsetWithToleranceWithPaint
-) where 
+) where
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireTWithCatch, PaintMap (..), makeShapeHistory, solidFromAcquireTWithPaintMapWithCatch)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, PaintMap (..), makeShapeHistory, solidFromAcquireTWithPaintMapWithCatch)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
@@ -69,115 +87,101 @@ getCompoundAsSolids s = do
 filterPaintMap :: Ptr TopoDS.Shape -> PaintMap -> Acquire PaintMap
 filterPaintMap _ (UniformPaint paint) = pure (UniformPaint paint)
 filterPaintMap s (FacePaints paints) = do
-    faceSet <- liftIO . ShapeMap.fromList . fmap (,()) =<< allSubShapesWithCopy ShapeEnum.Face s 
+    faceSet <- liftIO . ShapeMap.fromList . fmap (,()) =<< allSubShapesWithCopy ShapeEnum.Face s
     liftIO $ FacePaints <$> filterM (fmap isJust . ShapeMap.lookup faceSet . upcast . fst) paints
-    
-offsetOneWithTolerance :: 
-    Double       
+
+offsetOneWithTolerance ::
+    Double
     -> Double
     -> (NonEmpty Paint -> Paint)
-    -> PaintMap   
+    -> PaintMap
     -> Ptr TopoDS.Shape
     -> Acquire (PaintMap, Ptr TopoDS.Shape)
 offsetOneWithTolerance tolerance value paintFn paintMap s = do
     builder <- MakeOffsetShape.new
     allEdges <- traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Edge s
-    liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False 
+    liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False
     shell <- MakeShape.shape (upcast builder)
     newPaintMap <- remapWithBlendFunction paintFn s allEdges (makeShapeHistory $ upcast builder)
         =<< filterPaintMap s paintMap
     (newPaintMap,) <$> combineShellsToSolid shell
 
 
--- | PLACEHOLDER
-tryOffsetWithToleranceWithPaint :: 
-    Double       
-    -> (NonEmpty Paint -> Paint)
-    -> Double
-    -> Solid   
+-- | Version of `tryOffsetWithTolerance` that exposes how to assign `Paint` to the generated parts of the surface
+tryOffsetWithToleranceWithPaint
+    :: Double -- ^ Tolerance, this can be relatively small
+    -> (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a generated surface to the `Paint` used for the surface
+    -> Double -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid -- ^ The `Solid` to offset
     -> Either WaterfallError Solid
 tryOffsetWithToleranceWithPaint tolerance paintFn value solid
     | nearZero value = Right solid
-    | otherwise = 
-        fmap mconcat 
+    | otherwise =
+        fmap mconcat
         . solidFromAcquireTWithPaintMapWithCatch
-        $ traverse (offsetOneWithTolerance tolerance value paintFn (solidPaintMap solid)) 
-        =<< getCompoundAsSolids 
+        $ traverse (offsetOneWithTolerance tolerance value paintFn (solidPaintMap solid))
+        =<< getCompoundAsSolids
         =<< acquireSolid solid
 
 -- | Version of `offsetWithTolerance` that returns an error on failure
-tryOffsetWithTolerance :: 
-    Double       
-    -> Double   
-    -> Solid   
+tryOffsetWithTolerance
+    :: Double -- ^ Tolerance, this can be relatively small
+    -> Double -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid -- ^ The `Solid` to offset
     -> Either WaterfallError Solid
-tryOffsetWithTolerance tolerance 
+tryOffsetWithTolerance tolerance
     = tryOffsetWithToleranceWithPaint tolerance NE.head
 
--- | PLACEHOLDER
-offsetWithTolerance :: 
-    Double       -- ^ Tolerance, this can be relatively small
-    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
-    -> Solid        -- ^ the `Solid` to offset 
+-- | Version of `offset` that exposes the tolerance value used by the offset algorithm
+offsetWithTolerance
+    :: Double -- ^  Tolerance, this can be relatively small
+    -> Double -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid -- ^ The `Solid` to offset
     -> Solid
-offsetWithTolerance tolerance value solid = 
+offsetWithTolerance tolerance value solid =
     fromRight mempty $ tryOffsetWithTolerance tolerance value solid
 
-    
--- | PLACEHOLDER
-offsetWithToleranceWithPaint :: 
-    Double       -- ^ Tolerance, this can be relatively small
-    -> (NonEmpty Paint -> Paint)
-    -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
-    -> Solid        -- ^ the `Solid` to offset 
+-- | Version of `offsetWithTolerance` that exposes how to assign `Paint` to the generated parts of the surface
+offsetWithToleranceWithPaint
+    :: Double -- ^ Tolerance, this can be relatively small
+    -> (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a generated surface to the `Paint` used for the surface
+    -> Double -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid -- ^ The `Solid` to offset
     -> Solid
-offsetWithToleranceWithPaint tolerance paintFn value solid = 
+offsetWithToleranceWithPaint tolerance paintFn value solid =
     fromRight mempty $ tryOffsetWithToleranceWithPaint tolerance paintFn value solid
 
 defaultTolerance :: Double
 defaultTolerance = 1e-6
 
 -- | Expand or contract a `Solid` by a certain amount.
--- 
--- This is based on @MakeOffsetShape@ from the underlying OpenCascade library.
--- And as such, only supports the same set of `Solid`s that @MakeOffsetShape@ does.
---
--- The documentation for @MakeOffsetShape@ lists the following constraints
--- ( [link](https://dev.opencascade.org/doc/refman/html/class_b_rep_offset_a_p_i___make_offset_shape.html) ):
---
--- * All the faces of the shape S should be based on the surfaces with continuity at least C1.
--- * The offset value should be sufficiently small to avoid self-intersections in resulting shape.
---      Otherwise these self-intersections may appear inside an offset face if its initial surface is not plane or sphere or cylinder, also some non-adjacent offset faces may intersect each other. Also, some offset surfaces may "turn inside out".
--- * The algorithm may fail if the shape S contains vertices where more than 3 edges converge.
--- * Since 3d-offset algorithm involves intersection of surfaces, it is under limitations of surface intersection algorithm.
--- * A result cannot be generated if the underlying geometry of S is BSpline with continuity C0.
-offset :: 
-    Double    -- ^ Amount to offset by, positive values expand, negative values contract
-    -> Solid        -- ^ the `Solid` to offset 
+offset
+    :: Double -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid -- ^ The `Solid` to offset
     -> Solid
 offset = offsetWithTolerance defaultTolerance
 
-offsetWithPaint 
-    :: (NonEmpty Paint -> Paint)
-    -> Double 
+
+-- | Version of `offset` that exposes how to assign `Paint` to the generated parts of the surface
+offsetWithPaint
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a generated surface to the `Paint` used for the surface
+    -> Double -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid -- ^ The `Solid` to offset
     -> Solid
-    -> Solid
--- | PLACEHOLDER
 offsetWithPaint = offsetWithToleranceWithPaint defaultTolerance
 
 -- | Version of `offset` that returns an error on failure
-tryOffset  :: 
-    Double    -- ^ Amount to offset by, positive values expand, negative values contract
-    -> Solid        -- ^ the `Solid` to offset 
+tryOffset
+    :: Double -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid -- ^ The `Solid` to offset
     -> Either WaterfallError Solid
 tryOffset = tryOffsetWithTolerance defaultTolerance
 
-tryOffsetWithPaint 
-    :: (NonEmpty Paint -> Paint)
-    -> Double 
-    -> Solid
+-- | Version of `tryOffset` that exposes how to assign `Paint` to the generated parts of the surface
+tryOffsetWithPaint
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a generated surface to the `Paint` used for the surface
+    -> Double -- ^ Amount to offset by, positive values expand, negative values contract
+    -> Solid -- ^ The `Solid` to offset
     -> Either WaterfallError Solid
--- | PLACEHOLDER
-tryOffsetWithPaint = 
-    tryOffsetWithToleranceWithPaint defaultTolerance 
-
+tryOffsetWithPaint =
+    tryOffsetWithToleranceWithPaint defaultTolerance
