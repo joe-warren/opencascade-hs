@@ -172,7 +172,9 @@ path2DToPathCommands (Path2D theRawPath) = case theRawPath of
                 <$> Internal.Edges.wireEdges wire
 
 
--- | PLACEHOLDER
+-- | How lines should appear
+-- 
+-- These values are used to generate inline CSS
 data LineStyle = LineStyle
     { visibleLineColour :: Waterfall.Colour
     , hiddenLineColour :: Waterfall.Colour
@@ -186,7 +188,7 @@ defaultLineStyle = LineStyle
     , hiddenLineOpacity = 0.4
     }
 
--- | PLACEHOLDER
+-- | The inline CSS used to style an SVG diagram
 lineStyleCss :: LineStyle -> [Svg.Css.CssRule]
 lineStyleCss (LineStyle {..}) = 
     [ Svg.Css.CssRule 
