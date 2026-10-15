@@ -2,9 +2,11 @@
 {-| 
 Module: Waterfall.Internal.Finalizers
 
-These functions exist because the underlying `opencascade-hs` library, 
-makes heavy use of `Data.Acquire` from `resourcet` to handle memory management.
-However `waterfall-cad` does not (at the highest level) keep values in the `Acquire` monad. 
+These functions exist because the underlying @opencascade-hs@ library, 
+makes heavy use of @Data.Acquire@ from @resourcet@ to handle memory management.
+
+However @waterfall-cad@ does not (at the highest level) keep values in the @Acquire@ monad. 
+
 (This is required to support functions like `Waterfall.Solids.volume`, which return pure Haskell primitives.)
 
 -}
@@ -29,7 +31,6 @@ import Control.Monad (forM, when)
 import Data.IORef (newIORef, atomicModifyIORef)
 import Control.Exception (try)
 import Control.Arrow (left)
-import OpenCascade.Internal.Exception (OpenCascadeException)
 import Waterfall.Error (WaterfallError (..))
 
 -- | Convert a resource in the `Data.Acquire.Acquire` monad to a value in IO

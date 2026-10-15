@@ -2,7 +2,7 @@
 {-|
 Module: Waterfall.Paint
 
-`Paint` can be applied to change the appearance of the surface of a `Solid` (with `paintSolid`).
+`Paint` can be applied to change the appearance of the surface of a `Waterfall.Solids.Solid` (with `Waterfall.Solids.paintSolid`).
 
 `Paint` values can be constructed from the @paintWith*@ functions and can be combined monoidally (with `<>`), e.g.
 
