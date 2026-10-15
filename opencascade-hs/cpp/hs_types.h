@@ -98,6 +98,7 @@ typedef void Quantity_ColorRGBA;
 typedef int Quantity_TypeOfColor;
 typedef void STEPCAFControl_Writer;
 typedef void ShapeFix_Solid;
+typedef void ShapeUpgrade_UnifySameDomain;
 typedef void ShapeExtend_WireData;
 typedef int ShapeExtend_Status;
 typedef void Poly_Triangulation;

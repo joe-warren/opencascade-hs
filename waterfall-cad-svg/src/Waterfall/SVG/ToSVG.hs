@@ -203,9 +203,7 @@ lineStyleCss (LineStyle {..}) =
         ]
     , Svg.Css.CssRule
         [[Svg.Css.AllOf [Svg.Css.OfClass "fill"]]]
-        [ Svg.Css.CssDeclaration "fill-rule" [[Svg.Css.CssIdent "evenodd"]]
-        , Svg.Css.CssDeclaration "shape-rendering" [[Svg.Css.CssIdent "crispEdges"]]
-        ]
+        [ Svg.Css.CssDeclaration "fill-rule" [[Svg.Css.CssIdent "evenodd"]]]
     ]
 
 -- | Convert a `Waterfall.Diagram` into an SVG document

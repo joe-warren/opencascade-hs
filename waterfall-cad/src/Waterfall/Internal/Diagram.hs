@@ -14,7 +14,7 @@ import Waterfall.Internal.Edges (allEdges, buildEdgeCurve3D, allSubShapesWithCop
 import Data.Traversable (forM)
 import qualified OpenCascade.HLRBRep.HLRToShape as HLRBRep.HLRToShape
 import qualified OpenCascade.Bnd.Box as Bnd.Box
-import Data.Foldable (forM_)
+import Data.Foldable (forM_, traverse_)
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.BRepBndLib as BRepBndLib
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
@@ -23,8 +23,8 @@ import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
 import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
-import Control.Lens ((^.), (&), (.~))
-import Linear (_x, _y, _z, V3 (V3), norm)
+import Control.Lens ((^.), (&), (.~), (<&>))
+import Linear (_x, _y, _z, V3, norm)
 import qualified Data.IntMap as IntMap
 import Data.Maybe (fromMaybe, catMaybes)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
@@ -44,8 +44,12 @@ import Control.Monad ((<=<))
 import Waterfall.Internal.ToOpenCascade (v3ToPnt, v3ToDir)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Lin as GP.Lin
-import Waterfall.Internal.Finalizers (fromAcquire)
+import Waterfall.Internal.Finalizers (fromAcquire, fromAcquireT)
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import qualified Data.Map as M
+import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
+import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
+import qualified OpenCascade.ShapeUpgrade.UnifySameDomain as UnifySameDomain
 
 boundaryEdges :: Ptr HLRBRep.HLRToShape -> Acquire [Ptr TopoDS.Edge]
 boundaryEdges extractor = 
@@ -89,6 +93,23 @@ pruneDangling edges = do
                 keep = [ (e, vs) | (e, vs, labels) <- labelled, all (\l -> IntMap.findWithDefault 0 l counts >= 2) labels ]
             if length keep == length current then pure (fst <$> keep) else loop keep
     loop withVertices
+
+mergeRegions :: [Ptr TopoDS.Face] -> Acquire [Shape]
+mergeRegions [] = pure []
+mergeRegions [s] = liftIO $ pure . Shape <$> fromAcquire (TopoDS.Shape.copy . upcast $ s)
+mergeRegions (h:t) = do
+    bop <- BOPAlgo.BOP.new
+    let builder = upcast bop
+    liftIO $ do
+        BOPAlgo.BOP.setOperation bop  BOPAlgo.Operation.Fuse
+        BOPAlgo.Builder.addArgument builder (upcast h)
+        traverse_ (BOPAlgo.BOP.addTool bop . upcast) t
+        BOPAlgo.Builder.perform builder
+    fused <- BOPAlgo.Builder.shape builder
+    unifier <- UnifySameDomain.fromShape fused True True False
+    liftIO $ UnifySameDomain.build unifier
+    sameDomain <- UnifySameDomain.shape unifier
+    liftIO . fmap (fmap Shape) . fromAcquireT $ allSubShapesWithCopy ShapeEnum.Face sameDomain
 
 buildSolidDiagramFills' 
     :: Ptr TopoDS.Shape
@@ -138,7 +159,7 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
                             
                             d <- v3ToDir projectionDir
 
-                            fmap catMaybes $ forM regions $ \region -> do
+                            paintRegionMap <- fmap (M.fromListWith (<>) . catMaybes) $ forM regions $ \region -> do
                                 mesh <- IncrementalMesh.fromShapeAndLinDeflection (upcast region) tolerance
                                 liftIO $ IncrementalMesh.perform mesh
                                 loc <- TopLoc.Location.new
@@ -174,8 +195,10 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
                                                 found <- liftIO $ ShapeMap.lookup paintMap (upcast hit)
                                                 return $ Just (fromMaybe mempty found)
                                 paint <- lookupCandidatePaint candidatePoints
-                                shape <- fmap Shape . liftIO . fromAcquire $ TopoDS.Shape.copy (upcast region)
-                                return $ (, shape) <$> paint
+                                return $ (, [region]) <$> paint
+
+                            traverse mergeRegions paintRegionMap
+                                <&> foldMap sequence . M.toList
 
 buildSolidDiagramFills
     :: PaintMap 
