@@ -5,7 +5,7 @@ module Waterfall.Fillet
 (
  -- * Rounds
 -- | Fillet that adds radiused faces that are tangent to the two faces either side of an edge.
--- 
+--
 -- Sometimes, it may not be possible to construct a fillet because there is not enough space next to one of the fillet edges,
 -- Or because the geometry is too complicated for the fillet algorithm.
   roundFillet
@@ -77,7 +77,7 @@ trySomeIndexedConditionalFilletWithPaint
     -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid
     -> Either WaterfallError Solid
-trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiusFunction solid = 
+trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiusFunction solid =
     solidFromAcquireWithPaintMapWithCatch $ do
         s <- acquireSolid solid
         builder <- makeBuilder s
@@ -88,8 +88,8 @@ trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiu
 
         resultShape <- MakeShape.shape (upcast builder)
 
-        newPaintMap <- 
-            remapWithBlendFunction 
+        newPaintMap <-
+            remapWithBlendFunction
                 paintFunction
                 s
                 (snd <$> edgesWithRadius)
@@ -98,204 +98,241 @@ trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiu
 
         pure (newPaintMap, resultShape)
 
+-- | Version of `tryRoundIndexedConditionalFillet`
+--
+-- Exposes how to assign `Paint` to the fillet surface
 tryRoundIndexedConditionalFilletWithPaint
-    :: (NonEmpty Paint -> Paint)
-    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a fillet surface to the `Paint` used for the surface
+    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the fillet radius
     -> Solid
     -> Either WaterfallError Solid
--- | PLACEHOLDER
-tryRoundIndexedConditionalFilletWithPaint = 
+tryRoundIndexedConditionalFilletWithPaint =
     trySomeIndexedConditionalFilletWithPaint MakeFillet.fromShape MakeFillet.addEdgeWithRadius
-        
+
 -- | Version of `roundIndexedConditionalFillet` that returns an `Either` on failure
 tryRoundIndexedConditionalFillet
-    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
+    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the fillet radius
     -> Solid
     -> Either WaterfallError Solid
 tryRoundIndexedConditionalFillet =
     tryRoundIndexedConditionalFilletWithPaint NE.head
 
 -- | Add rounds with the given radius to each edge of a solid, conditional on the endpoints of the edge, and the index of the edge.
--- 
+--
 -- This can be used to selectively round\/fillet a `Solid`.
 --
 -- In general, relying on the edge index is inelegant,
--- however, if you consider a Solid with a semicircular face, 
+-- however, if you consider a Solid with a semicircular face,
 -- there's no way to select either the curved or the flat edge of the semicircle based on just the endpoints.
 --
--- Being able to selectively round\/fillet based on edge index is an \"easy\" way to round\/fillet these shapes. 
+-- Being able to selectively round\/fillet based on edge index is an \"easy\" way to round\/fillet these shapes.
 roundIndexedConditionalFillet
-    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
+    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the fillet radius
     -> Solid
     -> Solid
 roundIndexedConditionalFillet radiusFunction solid = fromRight mempty $ tryRoundIndexedConditionalFillet radiusFunction solid
 
 
-roundIndexedConditionalFilletWithPaint 
-    :: (NonEmpty Paint -> Paint)
-    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
+-- | Version of `roundIndexedConditionalFillet`
+--
+-- Exposes how to assign `Paint` to the fillet surface
+roundIndexedConditionalFilletWithPaint
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a fillet surface to the `Paint` used for the surface
+    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the fillet radius
     -> Solid
     -> Solid
--- | PLACEHOLDER
-roundIndexedConditionalFilletWithPaint paintFn radiusFunction solid = 
+roundIndexedConditionalFilletWithPaint paintFn radiusFunction solid =
     fromRight mempty $ tryRoundIndexedConditionalFilletWithPaint paintFn radiusFunction solid
 
 -- | Version of `roundConditionalFillet` that returns an `Either` on failure
-tryRoundConditionalFillet 
-    :: ((V3 Double, V3 Double) -> Maybe Double)
-    -> Solid 
+tryRoundConditionalFillet
+    :: ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the fillet radius
+    -> Solid
     -> Either WaterfallError Solid
 tryRoundConditionalFillet f = tryRoundIndexedConditionalFillet (const f)
 
+-- | Version of `tryRoundConditionalFillet`
+--
+-- Exposes how to assign `Paint` to the fillet surface
 tryRoundConditionalFilletWithPaint
-    :: (NonEmpty Paint -> Paint)
-    -> ((V3 Double, V3 Double) -> Maybe Double)
-    -> Solid 
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a fillet surface to the `Paint` used for the surface
+    -> ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the fillet radius
+    -> Solid
     -> Either WaterfallError Solid
--- | PLACEHOLDER
 tryRoundConditionalFilletWithPaint paintFn f = tryRoundIndexedConditionalFilletWithPaint paintFn (const f)
 
 -- | Add rounds with the given radius to each edge of a solid, conditional on the endpoints of the edge.
--- 
+--
 -- This can be used to selectively round\/fillet a `Solid`.
-roundConditionalFillet :: ((V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
+roundConditionalFillet
+    :: ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the fillet radius
+    -> Solid -> Solid
 roundConditionalFillet f = roundIndexedConditionalFillet (const f)
 
-roundConditionalFilletWithPaint 
-    :: (NonEmpty Paint -> Paint) 
-    -> ((V3 Double, V3 Double) -> Maybe Double) 
+-- | Version of `roundConditionalFillet`
+--
+-- Exposes how to assign `Paint` to the fillet surface
+roundConditionalFilletWithPaint
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a fillet surface to the `Paint` used for the surface
+    -> ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the fillet radius
     -> Solid -> Solid
--- | PLACEHOLDER
 roundConditionalFilletWithPaint paintFn f =
     roundIndexedConditionalFilletWithPaint paintFn (const f)
 
 -- | Add a round with a given radius to every edge of a solid
 --
 -- Because this is applied to both internal (concave) and external (convex) edges, it may technically produce both Rounds and Fillets
-roundFillet :: Double -> Solid -> Solid
+roundFillet
+    :: Double -- ^ The fillet radius
+    -> Solid -> Solid
 roundFillet r = roundConditionalFillet (const . pure $ r)
 
-roundFilletWithPaint 
-    :: (NonEmpty Paint -> Paint) 
-    -> Double
+
+-- | Version of `roundFillet`
+--
+-- Exposes how to assign `Paint` to the fillet surface
+roundFilletWithPaint
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a fillet surface to the `Paint` used for the surface
+    -> Double -- ^ The fillet radius
     -> Solid -> Solid
--- | PLACEHOLDER
-roundFilletWithPaint paintFn r 
+roundFilletWithPaint paintFn r
     = roundConditionalFilletWithPaint paintFn (const . pure $ r)
 
 -- | Version of `roundFillet` that returns an `Either` on failure
-tryRoundFillet :: Double -> Solid -> Either WaterfallError Solid
+tryRoundFillet
+    :: Double -- ^ The fillet radius
+    -> Solid -> Either WaterfallError Solid
 tryRoundFillet r = tryRoundConditionalFillet (const . pure $ r)
 
-tryRoundFilletWithPaint 
-    :: (NonEmpty Paint -> Paint)
-    -> Double
+-- | Version of `tryRoundFillet`
+--
+-- Exposes how to assign `Paint` to the fillet surface
+tryRoundFilletWithPaint
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a fillet surface to the `Paint` used for the surface
+    -> Double -- ^ The fillet radius
     -> Solid
     -> Either WaterfallError Solid
--- | PLACEHOLDER
 tryRoundFilletWithPaint paintFn r =
-    tryRoundConditionalFilletWithPaint paintFn (const . pure $ r) 
+    tryRoundConditionalFilletWithPaint paintFn (const . pure $ r)
 
+-- | Version of `tryIndexedConditionalChamfer`
+--
+-- Exposes how to assign `Paint` to the chamfer surface
 tryIndexedConditionalChamferWithPaint
-    :: (NonEmpty Paint -> Paint)
-    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a chamfer surface to the `Paint` used for the surface
+    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the chamfer size
     -> Solid
     -> Either WaterfallError Solid
--- | PLACEHOLDER
-tryIndexedConditionalChamferWithPaint = 
+tryIndexedConditionalChamferWithPaint =
     trySomeIndexedConditionalFilletWithPaint MakeChamfer.fromShape MakeChamfer.addEdgeWithDistance
 
 -- | Version of `indexedConditionalChamfer` that returns an `Either` on failure
-tryIndexedConditionalChamfer 
-    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
-    -> Solid 
+tryIndexedConditionalChamfer
+    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the chamfer size
+    -> Solid
     -> Either WaterfallError Solid
-tryIndexedConditionalChamfer = 
+tryIndexedConditionalChamfer =
     tryIndexedConditionalChamferWithPaint NE.head
 
 -- | Add chamfers of the given size to each edge of a solid, conditional on the endpoints of the edge, and the index of the edge.
--- 
+--
 -- This can be used to selectively chamfer a `Solid`.
 --
 -- In general, relying on the edge index is inelegant,
--- however, if you consider a Solid with a semicircular face, 
+-- however, if you consider a Solid with a semicircular face,
 -- there's no way to select either the curved or the flat edge of the semicircle based on just the endpoints.
 --
--- Being able to selectively chamfer based on edge index is an \"easy\" way to chamfer these shapes. 
+-- Being able to selectively chamfer based on edge index is an \"easy\" way to chamfer these shapes.
 indexedConditionalChamfer
-    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double)
-    -> Solid 
+    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the chamfer size
+    -> Solid
     -> Solid
 indexedConditionalChamfer radiusFunction solid =
     fromRight mempty $ tryIndexedConditionalChamfer radiusFunction solid
 
+-- | Version of `indexedConditionalChamfer`
+--
+-- Exposes how to assign `Paint` to the chamfer surface
 indexedConditionalChamferWithPaint
-    :: (NonEmpty Paint -> Paint)
-    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
-    -> Solid 
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a chamfer surface to the `Paint` used for the surface
+    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the chamfer size
     -> Solid
--- | PLACEHOLDER
+    -> Solid
 indexedConditionalChamferWithPaint paintFn radiusFunction solid =
     fromRight mempty $ tryIndexedConditionalChamferWithPaint paintFn radiusFunction solid
 
 -- | Version of `conditionalChamfer` that returns an `Either` on failure
-tryConditionalChamfer 
-    :: ((V3 Double, V3 Double) -> Maybe Double) 
+tryConditionalChamfer
+    :: ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the chamfer size
     -> Solid
     -> Either WaterfallError Solid
 tryConditionalChamfer f = tryIndexedConditionalChamfer (const f)
 
 
+-- | Version of `tryConditionalChamfer`
+--
+-- Exposes how to assign `Paint` to the chamfer surface
 tryConditionalChamferWithPaint
-    :: (NonEmpty Paint -> Paint)
-    -> ((V3 Double, V3 Double) -> Maybe Double) 
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a chamfer surface to the `Paint` used for the surface
+    -> ((V3 Double, V3 Double) -> Maybe Double)  -- ^ Maps the edge endpoints to the chamfer size
     -> Solid
     -> Either WaterfallError Solid
--- | PLACEHOLDER
 tryConditionalChamferWithPaint paintFn f = tryIndexedConditionalChamferWithPaint paintFn (const f)
 
 -- | Add chamfers with the given size to each edge of a solid, conditional on the endpoints of the edge.
--- 
+--
 -- This can be used to selectively chamfer a `Solid`.
-conditionalChamfer :: ((V3 Double, V3 Double) -> Maybe Double) -> Solid -> Solid
+conditionalChamfer
+    :: ((V3 Double, V3 Double) -> Maybe Double)  -- ^ Maps the edge endpoints to the chamfer size
+    -> Solid
+    -> Solid
 conditionalChamfer f = indexedConditionalChamfer (const f)
 
 
-conditionalChamferWithPaint 
-    :: (NonEmpty Paint -> Paint)
-    -> ((V3 Double, V3 Double) 
-    -> Maybe Double) 
+-- | Version of `conditionalChamfer`
+--
+-- Exposes how to assign `Paint` to the chamfer surface
+conditionalChamferWithPaint
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a chamfer surface to the `Paint` used for the surface
+    -> ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the chamfer size
     -> Solid -> Solid
--- | PLACEHOLDER
 conditionalChamferWithPaint paintFn f = indexedConditionalChamferWithPaint paintFn (const f)
 
 -- | Version of `chamfer` that returns an `Either` on failure
 tryChamfer :: Double -> Solid -> Either WaterfallError Solid
 tryChamfer d = tryConditionalChamfer (const . pure $ d)
 
-tryChamferWithPaint 
-    :: (NonEmpty Paint -> Paint) 
-    -> Double 
-    -> Solid 
+
+-- | Version of `tryChamfer`
+--
+-- Exposes how to assign `Paint` to the chamfer surface
+tryChamferWithPaint
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a chamfer surface to the `Paint` used for the surface
+    -> Double -- ^ The chamfer size
+    -> Solid
     -> Either WaterfallError Solid
--- | PLACEHOLDER
 tryChamferWithPaint paintFn d = tryConditionalChamferWithPaint paintFn (const . pure $ d)
 
 -- | Add a chamfer with a given size to every edge of a solid
 --
 -- This is applied to both internal (concave) and external (convex) edges
-chamfer :: Double -> Solid -> Solid
+chamfer
+    :: Double -- ^ The chamfer size
+    -> Solid -> Solid
 chamfer d = conditionalChamfer (const . pure $ d)
 
-chamferWithPaint 
-    :: (NonEmpty Paint -> Paint)
-    -> Double -> Solid -> Solid
--- | PLACEHOLDER
-chamferWithPaint paintFunction d = 
-    conditionalChamferWithPaint paintFunction (const . pure $ d ) 
+-- | Version of `chamfer`
+--
+-- Exposes how to assign `Paint` to the chamfer surface
+chamferWithPaint
+    :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a chamfer surface to the `Paint` used for the surface
+    -> Double  -- ^ The chamfer size
+    -> Solid -> Solid
+chamferWithPaint paintFunction d =
+    conditionalChamferWithPaint paintFunction (const . pure $ d )
 
 -- | Returns a value when the target of a lens on two points are close to one another.
--- 
+--
 -- This can be used in combination with `roundConditionalFillet`/`conditionalChamfer`.
 --
 -- Selecting only horizontal edges:
@@ -308,4 +345,4 @@ chamferWithPaint paintFunction d =
 whenNearlyEqual :: Epsilon a => Lens' point a -> r -> (point, point) -> Maybe r
 whenNearlyEqual l res (s, e)
     | nearZero ((s ^. l) - (e ^. l))  = Just res
-    | otherwise = Nothing                         
+    | otherwise = Nothing
