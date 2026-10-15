@@ -252,6 +252,7 @@ closeLoop p =
             else p <> line e s
         Nothing -> p
 
+-- | PLACEHOLDER
 reversePath :: (AnyPath point path) => path -> path
 reversePath p = 
     case deconstructPath p of

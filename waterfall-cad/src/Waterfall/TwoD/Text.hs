@@ -19,6 +19,7 @@ import Control.Monad (unless)
 import OpenCascade.Font.FontAspect (FontAspect (..))
 import Control.Exception (throwIO)
 
+-- | PLACEHOLDER
 newtype Font = Font { rawFont :: Ptr BRepFont.BRepFont }
 
 -- | Create a font from a filepath and a font size 

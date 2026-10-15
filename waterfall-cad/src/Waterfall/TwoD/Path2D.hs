@@ -39,6 +39,7 @@ import Control.Lens ((^.))
 import Linear ((^*), _xy, distance, normalize, unangle)
 import Waterfall.Path.Common
 
+-- | PLACEHOLDER
 data Sense = Clockwise | Counterclockwise deriving (Eq, Show)
 
 -- | Section of a circle, with a given radius, that lies between two points.

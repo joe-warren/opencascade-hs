@@ -1,4 +1,4 @@
-cabal-version: 1.12
+cabal-version: 1.18
 
 -- This file has been generated from package.yaml by hpack version 0.39.6.
 --
@@ -21,6 +21,23 @@ extra-source-files:
     LICENSE
     README.md
     CHANGELOG.md
+extra-doc-files:
+    doc-images/aqua.svg
+    doc-images/black.svg
+    doc-images/blue.svg
+    doc-images/fuchsia.svg
+    doc-images/green.svg
+    doc-images/grey.svg
+    doc-images/lime.svg
+    doc-images/maroon.svg
+    doc-images/navy.svg
+    doc-images/olive.svg
+    doc-images/purple.svg
+    doc-images/red.svg
+    doc-images/silver.svg
+    doc-images/teal.svg
+    doc-images/white.svg
+    doc-images/yellow.svg
 
 source-repository head
   type: git

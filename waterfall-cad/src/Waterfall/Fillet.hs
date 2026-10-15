@@ -103,6 +103,7 @@ tryRoundIndexedConditionalFilletWithPaint
     -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid
     -> Either WaterfallError Solid
+-- | PLACEHOLDER
 tryRoundIndexedConditionalFilletWithPaint = 
     trySomeIndexedConditionalFilletWithPaint MakeFillet.fromShape MakeFillet.addEdgeWithRadius
         
@@ -135,6 +136,7 @@ roundIndexedConditionalFilletWithPaint
     -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid
     -> Solid
+-- | PLACEHOLDER
 roundIndexedConditionalFilletWithPaint paintFn radiusFunction solid = 
     fromRight mempty $ tryRoundIndexedConditionalFilletWithPaint paintFn radiusFunction solid
 
@@ -150,6 +152,7 @@ tryRoundConditionalFilletWithPaint
     -> ((V3 Double, V3 Double) -> Maybe Double)
     -> Solid 
     -> Either WaterfallError Solid
+-- | PLACEHOLDER
 tryRoundConditionalFilletWithPaint paintFn f = tryRoundIndexedConditionalFilletWithPaint paintFn (const f)
 
 -- | Add rounds with the given radius to each edge of a solid, conditional on the endpoints of the edge.
@@ -162,6 +165,7 @@ roundConditionalFilletWithPaint
     :: (NonEmpty Paint -> Paint) 
     -> ((V3 Double, V3 Double) -> Maybe Double) 
     -> Solid -> Solid
+-- | PLACEHOLDER
 roundConditionalFilletWithPaint paintFn f =
     roundIndexedConditionalFilletWithPaint paintFn (const f)
 
@@ -175,6 +179,7 @@ roundFilletWithPaint
     :: (NonEmpty Paint -> Paint) 
     -> Double
     -> Solid -> Solid
+-- | PLACEHOLDER
 roundFilletWithPaint paintFn r 
     = roundConditionalFilletWithPaint paintFn (const . pure $ r)
 
@@ -187,6 +192,7 @@ tryRoundFilletWithPaint
     -> Double
     -> Solid
     -> Either WaterfallError Solid
+-- | PLACEHOLDER
 tryRoundFilletWithPaint paintFn r =
     tryRoundConditionalFilletWithPaint paintFn (const . pure $ r) 
 
@@ -195,6 +201,7 @@ tryIndexedConditionalChamferWithPaint
     -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid
     -> Either WaterfallError Solid
+-- | PLACEHOLDER
 tryIndexedConditionalChamferWithPaint = 
     trySomeIndexedConditionalFilletWithPaint MakeChamfer.fromShape MakeChamfer.addEdgeWithDistance
 
@@ -227,6 +234,7 @@ indexedConditionalChamferWithPaint
     -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
     -> Solid 
     -> Solid
+-- | PLACEHOLDER
 indexedConditionalChamferWithPaint paintFn radiusFunction solid =
     fromRight mempty $ tryIndexedConditionalChamferWithPaint paintFn radiusFunction solid
 
@@ -243,6 +251,7 @@ tryConditionalChamferWithPaint
     -> ((V3 Double, V3 Double) -> Maybe Double) 
     -> Solid
     -> Either WaterfallError Solid
+-- | PLACEHOLDER
 tryConditionalChamferWithPaint paintFn f = tryIndexedConditionalChamferWithPaint paintFn (const f)
 
 -- | Add chamfers with the given size to each edge of a solid, conditional on the endpoints of the edge.
@@ -257,6 +266,7 @@ conditionalChamferWithPaint
     -> ((V3 Double, V3 Double) 
     -> Maybe Double) 
     -> Solid -> Solid
+-- | PLACEHOLDER
 conditionalChamferWithPaint paintFn f = indexedConditionalChamferWithPaint paintFn (const f)
 
 -- | Version of `chamfer` that returns an `Either` on failure
@@ -268,6 +278,7 @@ tryChamferWithPaint
     -> Double 
     -> Solid 
     -> Either WaterfallError Solid
+-- | PLACEHOLDER
 tryChamferWithPaint paintFn d = tryConditionalChamferWithPaint paintFn (const . pure $ d)
 
 -- | Add a chamfer with a given size to every edge of a solid
@@ -279,6 +290,7 @@ chamfer d = conditionalChamfer (const . pure $ d)
 chamferWithPaint 
     :: (NonEmpty Paint -> Paint)
     -> Double -> Solid -> Solid
+-- | PLACEHOLDER
 chamferWithPaint paintFunction d = 
     conditionalChamferWithPaint paintFunction (const . pure $ d ) 
 

@@ -29,6 +29,7 @@ import Data.List (intersperse)
 import Control.Lens (Lens', lens)
 import Waterfall.Colour (Colour (..))
 
+-- | PLACEHOLDER
 data DoubleSidedness = SingleSided | DoubleSided 
     deriving (Eq, Ord, Show) 
 
@@ -73,6 +74,7 @@ instance Show Paint where
             . intersperse (showString " <> ") 
             $ terms
 
+-- | PLACEHOLDER
 defaultPaint :: Paint
 defaultPaint = paintWithColour (Colour 1 1 1)
     <> paintWithOpacity 1 
@@ -80,69 +82,84 @@ defaultPaint = paintWithColour (Colour 1 1 1)
     <> paintWithMetallic 0
     <> paintWithRoughness 0.5
 
+-- | PLACEHOLDER
 paintIsDefined :: Paint -> Bool
 paintIsDefined = (/= mempty)
 
+-- | PLACEHOLDER
 paintColour :: Lens' Paint (Maybe Colour)
 paintColour = 
     lens
         (getLast . _paintColour) 
         (\p c -> p { _paintColour = Last c })
 
+-- | PLACEHOLDER
 paintWithColour :: Colour -> Paint
 paintWithColour c = mempty { _paintColour = Last (Just c) }
 
+-- | PLACEHOLDER
 paintOpacity :: Lens' Paint (Maybe Double)
 paintOpacity = 
     lens
         (getLast . _paintOpacity) 
         (\p c -> p { _paintOpacity = Last c })
 
+-- | PLACEHOLDER
 paintWithOpacity :: Double -> Paint
 paintWithOpacity o = mempty { _paintOpacity = Last (Just o) }
 
+-- | PLACEHOLDER
 paintMetallic :: Lens' Paint (Maybe Double)
 paintMetallic = 
     lens
         (getLast . _paintMetallic) 
         (\p c -> p { _paintMetallic = Last c })
 
+-- | PLACEHOLDER
 paintWithMetallic :: Double -> Paint
 paintWithMetallic m = mempty { _paintMetallic = Last (Just m) }
 
 
+-- | PLACEHOLDER
 paintRoughness :: Lens' Paint (Maybe Double)
 paintRoughness = 
     lens
         (getLast . _paintRoughness) 
         (\p c -> p { _paintRoughness = Last c })
 
+-- | PLACEHOLDER
 paintWithRoughness :: Double -> Paint
 paintWithRoughness r = mempty { _paintRoughness= Last (Just r) }
 
+-- | PLACEHOLDER
 paintEmissiveColour :: Lens' Paint (Maybe Colour)
 paintEmissiveColour = 
     lens
         (getLast . _paintEmissiveColour) 
         (\p c -> p { _paintEmissiveColour = Last c })
 
+-- | PLACEHOLDER
 paintWithEmissiveColour :: Colour -> Paint
 paintWithEmissiveColour c = mempty { _paintEmissiveColour = Last (Just c) }
 
+-- | PLACEHOLDER
 paintName :: Lens' Paint (Maybe String)
 paintName = 
     lens
         (getLast . _paintName) 
         (\p c -> p { _paintName = Last c })
 
+-- | PLACEHOLDER
 paintWithName :: String -> Paint
 paintWithName n = mempty { _paintName = Last (Just n) }
 
+-- | PLACEHOLDER
 paintDoubleSidedness :: Lens' Paint (Maybe DoubleSidedness)
 paintDoubleSidedness = 
     lens
         (getLast . _paintDoubleSidedness) 
         (\p c -> p { _paintDoubleSidedness = Last c })
 
+-- | PLACEHOLDER
 paintWithDoubleSidedness :: DoubleSidedness -> Paint
 paintWithDoubleSidedness ds = mempty { _paintDoubleSidedness = Last (Just ds) }

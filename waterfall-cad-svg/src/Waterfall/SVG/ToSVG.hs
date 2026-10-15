@@ -172,6 +172,7 @@ path2DToPathCommands (Path2D theRawPath) = case theRawPath of
                 <$> Internal.Edges.wireEdges wire
 
 
+-- | PLACEHOLDER
 data LineStyle = LineStyle
     { visibleLineColour :: Waterfall.Colour
     , hiddenLineColour :: Waterfall.Colour
@@ -185,6 +186,7 @@ defaultLineStyle = LineStyle
     , hiddenLineOpacity = 0.4
     }
 
+-- | PLACEHOLDER
 lineStyleCss :: LineStyle -> [Svg.Css.CssRule]
 lineStyleCss (LineStyle {..}) = 
     [ Svg.Css.CssRule 

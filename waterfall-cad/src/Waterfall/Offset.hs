@@ -89,6 +89,7 @@ offsetOneWithTolerance tolerance value paintFn paintMap s = do
     (newPaintMap,) <$> combineShellsToSolid shell
 
 
+-- | PLACEHOLDER
 tryOffsetWithToleranceWithPaint :: 
     Double       
     -> (NonEmpty Paint -> Paint)
@@ -113,6 +114,7 @@ tryOffsetWithTolerance ::
 tryOffsetWithTolerance tolerance 
     = tryOffsetWithToleranceWithPaint tolerance NE.head
 
+-- | PLACEHOLDER
 offsetWithTolerance :: 
     Double       -- ^ Tolerance, this can be relatively small
     -> Double    -- ^ Amount to offset by, positive values expand, negative values contract
@@ -122,6 +124,7 @@ offsetWithTolerance tolerance value solid =
     fromRight mempty $ tryOffsetWithTolerance tolerance value solid
 
     
+-- | PLACEHOLDER
 offsetWithToleranceWithPaint :: 
     Double       -- ^ Tolerance, this can be relatively small
     -> (NonEmpty Paint -> Paint)
@@ -159,6 +162,7 @@ offsetWithPaint
     -> Double 
     -> Solid
     -> Solid
+-- | PLACEHOLDER
 offsetWithPaint = offsetWithToleranceWithPaint defaultTolerance
 
 -- | Version of `offset` that returns an error on failure
@@ -173,6 +177,7 @@ tryOffsetWithPaint
     -> Double 
     -> Solid
     -> Either WaterfallError Solid
+-- | PLACEHOLDER
 tryOffsetWithPaint = 
     tryOffsetWithToleranceWithPaint defaultTolerance 
 

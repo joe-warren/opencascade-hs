@@ -53,7 +53,9 @@ import Waterfall.TwoD.Shape (shapePaths)
 -- * A collection of `Path2D` indexed by `LineType` and `Visibility`
 -- * A collection of pairs of `Paint` and `Shape`, representing flat regions of colour
 data Diagram = Diagram
+     -- | PLACEHOLDER
      { getDiagramLines :: Map (LineType, Visibility) [Path2D]
+     -- | PLACEHOLDER
      , getDiagramFills :: [(Paint, Shape)]
      }
 

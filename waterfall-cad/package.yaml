@@ -35,5 +35,8 @@ dependencies:
 
 ghc-options: *ghc-options
 
+extra-doc-files:
+    - doc-images/*.svg
+
 library:
     source-dirs: src
