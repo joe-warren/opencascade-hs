@@ -1,4 +1,25 @@
 {-# LANGUAGE DerivingVia, DeriveGeneric #-}
+{-|
+Module: Waterfall.Paint
+
+`Paint` can be applied to change the appearance of the surface of a `Solid` (with `paintSolid`).
+
+`Paint` values can be constructed from the @paintWith*@ functions and can be combined monoidally (with `<>`), e.g.
+
+@
+redShinyPaint =
+    paintWithColour (Colour 1 0 0)
+    <> paintWithRoughness 0.01
+    <> paintWithMetallic 1
+    <> paintWithDoubleSidedness SingleSided
+@
+
+Not all `Paint` properties are supported by every file format:
+
+* glTF and OBJ use the full set
+* STEP only uses the colour
+* SVG uses colour and opacity
+-}
 module Waterfall.Paint 
 ( Colour (..)
 , Paint
@@ -29,16 +50,16 @@ import Data.List (intersperse)
 import Control.Lens (Lens', lens)
 import Waterfall.Colour (Colour (..))
 
--- | PLACEHOLDER
+-- | Whether to display a surface as Double or Single Sided
+--
+-- In most formats and viewers this will be implemented using backface culling 
 data DoubleSidedness = SingleSided | DoubleSided 
     deriving (Eq, Ord, Show) 
 
 -- | Can be applied to change the appearance of the surface of a `Solid`
 -- 
--- `Paint` values can be constructed from the `paintWith*` functions
--- and can be combined Monoidally (with `<>`).
---
--- The Monoid instance takes the rightmost defined value of each property
+-- `Paint` values can be constructed from the @paintWith*@ functions
+-- and can be combined monoidally (with `<>`).
 data Paint = Paint 
     { _paintColour :: Last Colour
     , _paintOpacity :: Last Double
@@ -48,7 +69,10 @@ data Paint = Paint
     , _paintName :: Last String
     , _paintDoubleSidedness :: Last DoubleSidedness
     } deriving (Eq, Ord, Generic)
-    deriving (Semigroup, Monoid) via (Generically Paint)
+    deriving 
+        ( Semigroup -- ^ `(<>)` takes the rightmost defined value of each property.
+        , Monoid  
+        ) via (Generically Paint)
 
 instance Show Paint where
   showsPrec d p = 
@@ -74,7 +98,11 @@ instance Show Paint where
             . intersperse (showString " <> ") 
             $ terms
 
--- | PLACEHOLDER
+-- | Fallback values used when a paint is unset
+--
+-- @
+-- defaultPaint /= mempty
+-- @
 defaultPaint :: Paint
 defaultPaint = paintWithColour (Colour 1 1 1)
     <> paintWithOpacity 1 
@@ -82,84 +110,92 @@ defaultPaint = paintWithColour (Colour 1 1 1)
     <> paintWithMetallic 0
     <> paintWithRoughness 0.5
 
--- | PLACEHOLDER
+-- | Test whether a paint is storing any values
 paintIsDefined :: Paint -> Bool
 paintIsDefined = (/= mempty)
 
--- | PLACEHOLDER
+-- | The paint colour
 paintColour :: Lens' Paint (Maybe Colour)
 paintColour = 
     lens
         (getLast . _paintColour) 
         (\p c -> p { _paintColour = Last c })
 
--- | PLACEHOLDER
+-- | Create a paint with a given colour
 paintWithColour :: Colour -> Paint
 paintWithColour c = mempty { _paintColour = Last (Just c) }
 
--- | PLACEHOLDER
+-- | The paint opacity
 paintOpacity :: Lens' Paint (Maybe Double)
 paintOpacity = 
     lens
         (getLast . _paintOpacity) 
         (\p c -> p { _paintOpacity = Last c })
 
--- | PLACEHOLDER
+-- | Create a paint with a given opacity
+--
+-- Opacity is in the range [0, 1]
 paintWithOpacity :: Double -> Paint
 paintWithOpacity o = mempty { _paintOpacity = Last (Just o) }
 
--- | PLACEHOLDER
+-- | The paint "Metalness" value, in a [PBR](https://en.wikipedia.org/wiki/Physically_based_rendering) model.
 paintMetallic :: Lens' Paint (Maybe Double)
 paintMetallic = 
     lens
         (getLast . _paintMetallic) 
         (\p c -> p { _paintMetallic = Last c })
 
--- | PLACEHOLDER
+-- | Create a paint with a given "Metalness"
+--
+-- In the range [0, 1], 1 is fully metal.
 paintWithMetallic :: Double -> Paint
 paintWithMetallic m = mempty { _paintMetallic = Last (Just m) }
 
 
--- | PLACEHOLDER
+-- | The paint "Roughness" value, in a [PBR](https://en.wikipedia.org/wiki/Physically_based_rendering) model.
 paintRoughness :: Lens' Paint (Maybe Double)
 paintRoughness = 
     lens
         (getLast . _paintRoughness) 
         (\p c -> p { _paintRoughness = Last c })
 
--- | PLACEHOLDER
+-- | Create a paint with a given roughness
+-- 
+-- In the range [0, 1], 0 is perfectly smooth, 1 fully diffuse
 paintWithRoughness :: Double -> Paint
 paintWithRoughness r = mempty { _paintRoughness= Last (Just r) }
 
--- | PLACEHOLDER
+-- | The paint "Emissive" factor, in a [PBR](https://en.wikipedia.org/wiki/Physically_based_rendering) model.
+--
+-- EmissiveColour is written as linear RGB, rather than converted to sRGB.
 paintEmissiveColour :: Lens' Paint (Maybe Colour)
 paintEmissiveColour = 
     lens
         (getLast . _paintEmissiveColour) 
         (\p c -> p { _paintEmissiveColour = Last c })
 
--- | PLACEHOLDER
+-- | Create a paint with a given emissive factor
 paintWithEmissiveColour :: Colour -> Paint
 paintWithEmissiveColour c = mempty { _paintEmissiveColour = Last (Just c) }
 
--- | PLACEHOLDER
+-- | The paint name
 paintName :: Lens' Paint (Maybe String)
 paintName = 
     lens
         (getLast . _paintName) 
         (\p c -> p { _paintName = Last c })
 
--- | PLACEHOLDER
+-- | Create a paint with a given name
 paintWithName :: String -> Paint
 paintWithName n = mempty { _paintName = Last (Just n) }
 
--- | PLACEHOLDER
+-- | Whether to display a surface as Double or Single Sided
 paintDoubleSidedness :: Lens' Paint (Maybe DoubleSidedness)
 paintDoubleSidedness = 
     lens
         (getLast . _paintDoubleSidedness) 
         (\p c -> p { _paintDoubleSidedness = Last c })
 
--- | PLACEHOLDER
+-- | Create a paint with a given `DoubleSidedness`
 paintWithDoubleSidedness :: DoubleSidedness -> Paint
 paintWithDoubleSidedness ds = mempty { _paintDoubleSidedness = Last (Just ds) }
