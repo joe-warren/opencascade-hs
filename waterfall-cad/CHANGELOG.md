@@ -8,7 +8,38 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added
+
 - Add support for OpenCASCADE-8.x.x
+- Added `Waterfall.Colour`
+- Added `Waterfall.Paint`
+- Added `Waterfall.Solids.paintSolid` and `Waterfall.Solids.colourSolid`
+- Added functions to `Waterfall.Fillet`
+    - `roundFilletWithPaint`
+    - `roundConditionalFilletWithPaint`
+    - `roundIndexedConditionalFilletWithPaint`
+    - `tryRoundFilletWithPaint`
+    - `tryRoundConditionalFilletWithPaint`
+    - `tryRoundIndexedConditionalFilletWithPaint`
+    - `chamferWithPaint`
+    - `conditionalChamferWithPaint`
+    - `indexedConditionalChamferWithPaint`
+    - `tryChamferWithPaint`
+    - `tryConditionalChamferWithPaint`
+    - `tryIndexedConditionalChamferWithPaint`
+- Added functions to `Waterfall.Offset`
+    - `offsetWithPaint`
+    - `offsetWithToleranceWithPaint`
+    - `tryOffsetWithPaint`
+    - `tryOffsetWithToleranceWithPaint`
+- Added `Waterfall.Diagram.getDiagramLines` and `Waterfall.Diagram.getDiagramFills`
+- Added `Waterfall.Diagram.shapeDiagram`
+
+### Changed
+
+- `writeGLTF`/`writeGLB`/`writeOBJ` produce files with colours and material data
+- `writeSTEP` produces files with colours
+- Models may render differently based on this new colour and material data, even when they have not had a paint applied
 
 ## 0.6.3.2
 
