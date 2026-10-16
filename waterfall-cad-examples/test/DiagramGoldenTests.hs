@@ -67,7 +67,7 @@ size a = (JP.imageWidth a, JP.imageHeight a)
 
 similarSizes :: JP.Image px -> JP.Image px -> Bool
 similarSizes a b =
-    let within1 a b = abs (a - b) <= 1
+    let within1 x y = abs (x - y) <= 1
      in (within1 `on` JP.imageWidth) a b 
         && (within1 `on` JP.imageHeight) a b
 
