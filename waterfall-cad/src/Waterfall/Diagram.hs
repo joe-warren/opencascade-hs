@@ -10,6 +10,7 @@ module Waterfall.Diagram
 , Visibility (..)
 , solidDiagram
 , pathDiagram
+, shapeDiagram
 , diagramLines
 , diagramBoundingBox
 ) where
@@ -165,6 +166,15 @@ pathDiagram :: LineType -> Visibility -> Path2D -> Diagram
 pathDiagram lt v path = Diagram
     { getDiagramLines = M.singleton (normaliseLineType lt, v) [path]
     , getDiagramFills = []
+    }
+
+-- | Produce a `Diagram` from a `Shape` and `Paint`
+--
+-- @ getDiagramFills . uncurry shapeDiagram = pure @
+shapeDiagram :: Paint -> Shape -> Diagram
+shapeDiagram paint shape = Diagram
+    { getDiagramLines = mempty
+    , getDiagramFills = [(paint, shape)]
     }
 
 -- | Access the lines in a `Diagram` as `Path2D`
