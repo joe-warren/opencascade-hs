@@ -41,18 +41,13 @@ foreign import capi unsafe "hs_NCollection_List.h hs_NCollection_List_TopoDS_Sha
     -> Ptr (Ptr ())
     -> IO (Ptr TopoDS.Shape)
 
--- | The element at a (0-based) index.
---
--- Throws @Standard_OutOfRange@ if the index is out of bounds.
---
--- The underlying list has no indexed access, so this is \(O(n)\).
 valueListOfShape :: Ptr (List TopoDS.Shape) -> Int -> Acquire (Ptr TopoDS.Shape)
 valueListOfShape list index = mkAcquire (wrapException $ rawValueListOfShape list (fromIntegral index)) deleteShape
 
 -- | Read every element of the list into a Haskell list.
 --
--- Each element is a fresh copy of the @TopoDS_Shape@ handle,
--- so the result outlives the @NCollection_List@ it was read from.
+-- Each element is a copy of the @TopoDS_Shape@ handle,
+-- so the result lifetime outlives the @NCollection_List@.
 fromListOfShape :: Ptr (List TopoDS.Shape) -> Acquire [Ptr TopoDS.Shape]
 fromListOfShape list = do
     n <- liftIO $ extentListOfShape list

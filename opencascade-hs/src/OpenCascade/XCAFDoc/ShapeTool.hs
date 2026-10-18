@@ -37,7 +37,8 @@ foreign import capi unsafe "hs_XCAFDoc_ShapeTool.h hs_XCAFDoc_ShapeTool_addSubSh
     -> Ptr (Ptr ())
     -> IO (Ptr Label)
 
--- the returned Label may be null, if the sub shape is not valid for the shape at the given label
+-- | the returned Label may be null
+-- if the sub shape is not valid for the shape at the given label
 addSubShape :: Ptr (Handle ShapeTool) -> Ptr Label -> Ptr TopoDS.Shape -> Acquire (Ptr Label)
 addSubShape tool shapeLabel subShape = mkAcquire (wrapException $ rawAddSubShape tool shapeLabel subShape) deleteLabel
 
@@ -49,6 +50,7 @@ foreign import capi unsafe "hs_XCAFDoc_ShapeTool.h hs_XCAFDoc_ShapeTool_findShap
     -> Ptr (Ptr ())
     -> IO (Ptr Label)
 
--- the returned Label may be null, if the shape is not in the document
+-- | the returned Label may be null,
+-- if the shape is not in the document
 findShape :: Ptr (Handle ShapeTool) -> Ptr TopoDS.Shape -> Bool -> Acquire (Ptr Label)
 findShape tool shape findInstance = mkAcquire (wrapException $ rawFindShape tool shape (boolToCBool findInstance)) deleteLabel

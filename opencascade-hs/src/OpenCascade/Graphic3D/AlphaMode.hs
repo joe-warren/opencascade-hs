@@ -3,9 +3,9 @@ module OpenCascade.Graphic3D.AlphaMode
 ) where
 
 -- Should match the values in Graphic3D_AlphaMode.hxx
--- this can't derive Enum, because Graphic3d_AlphaMode_BlendAuto is defined as -1
 data AlphaMode = BlendAuto | Opaque | Mask | Blend | MaskBlend deriving (Show, Eq)
 
+-- this can't derive Enum, because Graphic3d_AlphaMode_BlendAuto is defined as -1
 instance Enum AlphaMode where
     fromEnum BlendAuto = -1
     fromEnum Opaque = 0

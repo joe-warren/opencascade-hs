@@ -52,9 +52,6 @@ foreign import capi unsafe "hs_NCollection_IndexedDataMap.h hs_NCollection_Index
     -> Ptr (Ptr ())
     -> IO (Ptr (List TopoDS.Shape))
 
--- | The list associated with a key.
---
--- Throws @NoSuchObject@ if the key is not in the map; check with 'containsShapeListOfShapeMap' first.
 findFromKeyShapeListOfShapeMap :: Ptr (IndexedDataMap TopoDS.Shape (List TopoDS.Shape)) -> Ptr TopoDS.Shape -> Acquire (Ptr (List TopoDS.Shape))
 findFromKeyShapeListOfShapeMap theMap shape = mkAcquire (wrapException $ rawFindFromKeyShapeListOfShapeMap theMap shape) deleteListOfShape
 
