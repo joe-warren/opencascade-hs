@@ -132,6 +132,7 @@ typedef int HSExceptionType;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #define LIST(X) void
+#define LIST_ITERATOR(X) void
 #define VEC3(X) void
 #define INDEXED_DATA_MAP(K, V, Hasher) void
 #else // __cplusplus
@@ -140,6 +141,7 @@ typedef int HSExceptionType;
 
 #define ARRAY_1(X) NCollection_Array1<X>
 #define LIST(X) NCollection_List<X>
+#define LIST_ITERATOR(X) NCollection_List<X>::Iterator
 #define VEC3(X) NCollection_Vec3<X>
 #define INDEXED_DATA_MAP(K, V, Hasher) NCollection_IndexedDataMap<K, V, Hasher>
 #define DEFAULT_HASHER(K) NCollection_DefaultHasher<K>

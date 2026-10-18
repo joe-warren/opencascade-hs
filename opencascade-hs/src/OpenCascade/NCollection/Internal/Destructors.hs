@@ -2,6 +2,7 @@
 module OpenCascade.NCollection.Internal.Destructors
 ( deletePntArray
 , deleteListOfShape
+, deleteListOfShapeIterator
 , deleteAsciiStringMap
 , deleteIndexedDataMapOfShapeListOfShape
 , deleteVec3Float
@@ -22,3 +23,5 @@ foreign import capi unsafe "hs_NCollection_IndexedDataMap.h hs_delete_NCollectio
 foreign import capi unsafe "hs_NCollection_IndexedDataMap.h hs_delete_NCollection_IndexedDataMap_TopoDS_Shape_NCollection_List_TopoDS_Shape" deleteIndexedDataMapOfShapeListOfShape :: Ptr (IndexedDataMap TopoDS.Shape (List TopoDS.Shape)) -> IO ()
 
 foreign import capi unsafe "hs_NCollection_Vec3.h hs_delete_NCollection_Vec3_float" deleteVec3Float :: Ptr (Vec3 Float) -> IO ()
+
+foreign import capi unsafe "hs_NCollection_List.h hs_delete_NCollection_List_TopoDS_Shape_Iterator" deleteListOfShapeIterator :: Ptr (ListIterator TopoDS.Shape) -> IO ()

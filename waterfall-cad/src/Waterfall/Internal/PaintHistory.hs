@@ -19,12 +19,12 @@ import Data.Foldable (toList)
 import qualified OpenCascade.NCollection.IndexedDataMap as NCollection.IndexedDataMap
 import qualified OpenCascade.TopExp as TopExp
 import Control.Arrow (first)
-import qualified OpenCascade.NCollection.List as NCollection.List
 import Data.Maybe (catMaybes)
 import qualified Data.List.NonEmpty as NE
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import Control.Monad (filterM)
+import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
 
 getUniqueVertexes :: [Ptr TopoDS.Edge] -> Acquire [Ptr TopoDS.Vertex]
 getUniqueVertexes edges = 
@@ -49,10 +49,10 @@ remapWithBlendFunction' paintFunction s edges history paints = do
     let filletSurfacesFor :: Ptr TopoDS.Shape -> Acquire [(Ptr TopoDS.Face, Paint)]
         filletSurfacesFor edge = do
             faces <- liftIO . filterM (fmap (== ShapeEnum.Face) . TopoDS.Shape.shapeType)
-                =<< NCollection.List.fromListOfShape 
+                =<< shapesFromListOfShape 
                 =<< historyGenerated history edge
             if null faces then pure [] else do
-                neighbours <- NCollection.List.fromListOfShape =<<
+                neighbours <- shapesFromListOfShape =<<
                     NCollection.IndexedDataMap.findFromKeyShapeListOfShapeMap ancestorMap edge
                 neighbouringPaints <- liftIO . fmap catMaybes $ traverse (ShapeMap.lookup paintMap) neighbours
                 case NE.nonEmpty neighbouringPaints of 

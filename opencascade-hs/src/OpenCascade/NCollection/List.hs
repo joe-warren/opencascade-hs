@@ -1,22 +1,15 @@
 {-# LANGUAGE CApiFFI #-}
--- | Bindings to @NCollection_List@.
---
--- Currently only instantiated for @TopoDS_Shape@
--- (the type that was historically spelled @TopTools_ListOfShape@).
 module OpenCascade.NCollection.List
 ( List
 , newListOfShape
 , extentListOfShape
 , appendListOfShape
-, valueListOfShape
-, fromListOfShape
 ) where
 
 import OpenCascade.NCollection.Types (List)
 import OpenCascade.NCollection.Internal.Destructors (deleteListOfShape)
+import OpenCascade.NCollection.List.Iterator (newListOfShapeIterator, moreListOfShapeIterator, nextListOfShapeIterator, valueListOfShapeIterator)
 import qualified OpenCascade.TopoDS.Types as TopoDS
-import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
-import OpenCascade.Internal.Exception (wrapException)
 import Control.Monad.IO.Class (liftIO)
 import Foreign.Ptr (Ptr)
 import Foreign.C (CInt (..))
@@ -34,21 +27,3 @@ extentListOfShape = fmap fromIntegral . rawExtentListOfShape
 
 foreign import capi unsafe "hs_NCollection_List.h hs_NCollection_List_TopoDS_Shape_append" appendListOfShape :: Ptr (List TopoDS.Shape) -> Ptr TopoDS.Shape -> IO ()
 
-foreign import capi unsafe "hs_NCollection_List.h hs_NCollection_List_TopoDS_Shape_value" rawValueListOfShape
-    :: Ptr (List TopoDS.Shape)
-    -> CInt
-    -> Ptr CInt
-    -> Ptr (Ptr ())
-    -> IO (Ptr TopoDS.Shape)
-
-valueListOfShape :: Ptr (List TopoDS.Shape) -> Int -> Acquire (Ptr TopoDS.Shape)
-valueListOfShape list index = mkAcquire (wrapException $ rawValueListOfShape list (fromIntegral index)) deleteShape
-
--- | Read every element of the list into a Haskell list.
---
--- Each element is a copy of the @TopoDS_Shape@ handle,
--- so the result lifetime outlives the @NCollection_List@.
-fromListOfShape :: Ptr (List TopoDS.Shape) -> Acquire [Ptr TopoDS.Shape]
-fromListOfShape list = do
-    n <- liftIO $ extentListOfShape list
-    traverse (valueListOfShape list) [0 .. n - 1]

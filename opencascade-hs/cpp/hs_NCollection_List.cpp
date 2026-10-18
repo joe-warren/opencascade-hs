@@ -1,7 +1,5 @@
 #include <NCollection_List.hxx>
 #include <TopoDS_Shape.hxx>
-#include <Standard_OutOfRange.hxx>
-#include "hs_Exception.h"
 #include "hs_NCollection_List.h"
 
 LIST(TopoDS_Shape) * hs_new_NCollection_List_TopoDS_Shape(){
@@ -20,19 +18,22 @@ void hs_NCollection_List_TopoDS_Shape_append(LIST(TopoDS_Shape) * list, TopoDS_S
     list->Append(*shape);
 }
 
-// index is 0 based, as the underlying list doesn't support indexed access
-TopoDS_Shape * hs_NCollection_List_TopoDS_Shape_value(
-        LIST(TopoDS_Shape) * list, int index,
-        HSExceptionType* exType, void ** exPtr
-    ){
-    return hs_handleEx(exType, exPtr, [list, index]{
-        NCollection_List<TopoDS_Shape>::Iterator iterator(*list);
-        for(int i = 0; i < index && iterator.More(); i++){
-            iterator.Next();
-        }
-        if(!iterator.More()){
-            throw Standard_OutOfRange();
-        }
-        return new TopoDS_Shape(iterator.Value());
-    });
+LIST_ITERATOR(TopoDS_Shape) * hs_new_NCollection_List_TopoDS_Shape_Iterator(LIST(TopoDS_Shape) * list){
+    return new NCollection_List<TopoDS_Shape>::Iterator(*list);
+}
+
+void hs_delete_NCollection_List_TopoDS_Shape_Iterator(LIST_ITERATOR(TopoDS_Shape) * iterator){
+    delete iterator;
+}
+
+bool hs_NCollection_List_TopoDS_Shape_Iterator_more(LIST_ITERATOR(TopoDS_Shape) * iterator){
+    return iterator->More();
+}
+
+void hs_NCollection_List_TopoDS_Shape_Iterator_next(LIST_ITERATOR(TopoDS_Shape) * iterator){
+    iterator->Next();
+}
+
+TopoDS_Shape * hs_NCollection_List_TopoDS_Shape_Iterator_value(LIST_ITERATOR(TopoDS_Shape) * iterator){
+    return new TopoDS_Shape(iterator->Value());
 }

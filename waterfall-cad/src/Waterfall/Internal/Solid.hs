@@ -48,7 +48,6 @@ import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
 import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
-import qualified OpenCascade.NCollection.List as NCollection.List
 import OpenCascade.Inheritance (SubTypeOf(..), upcast, unsafeDowncast)
 import Waterfall.Internal.Finalizers (toAcquire, fromAcquireT, unsafeFromAcquire, unsafeFromAcquireWithCatch, unsafeFromAcquireTWithCatch, unsafeFromAcquireT)
 import Waterfall.Internal.Edges (allSubShapesWithCopy)
@@ -60,6 +59,7 @@ import Waterfall.Paint (Paint, paintIsDefined)
 import Data.Functor.Compose (Compose(..))
 import qualified OpenCascade.NCollection as NCollection
 import Control.Monad (filterM)
+import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
 
 data PaintMap 
     = UniformPaint Paint
@@ -196,9 +196,9 @@ bopBuilderHistory builder =
 -- * otherwise, return the shape
 remap :: History -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
 remap history s = do
-        modified <- NCollection.List.fromListOfShape
+        modified <- shapesFromListOfShape
                 =<< historyModified history s
-        generated <- NCollection.List.fromListOfShape
+        generated <- shapesFromListOfShape
                 =<< historyGenerated history s
         inputShapeType <- liftIO $ TopoDS.Shape.shapeType s
         sameTypeGenerated <- liftIO $ 
