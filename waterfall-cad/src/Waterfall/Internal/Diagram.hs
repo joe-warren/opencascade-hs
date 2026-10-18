@@ -140,11 +140,13 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
             liftIO $ TopoDS.Builder.makeCompound builder compound
             forM_ keptEdges $ liftIO . TopoDS.Builder.add builder (upcast compound) . upcast
 
-            (status, wires) <- BOPAlgo.Tools.edgesToWires (upcast compound) True angularTolerance
+            wires <- TopoDS.Shape.new
+            status <- liftIO $ BOPAlgo.Tools.edgesToWires (upcast compound) wires True angularTolerance
             if status /= 0
                 then pure [] 
                 else do
-                    (ok, faces) <- BOPAlgo.Tools.wiresToFaces wires angularTolerance
+                    faces <- TopoDS.Shape.new
+                    ok <- liftIO $ BOPAlgo.Tools.wiresToFaces wires faces angularTolerance
                     if not ok
                         then return [] 
                         else do

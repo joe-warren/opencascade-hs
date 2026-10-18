@@ -7,9 +7,9 @@
 extern "C" {
 #endif
 
-TopoDS_Shape * hs_BOPAlgo_Tools_EdgesToWires(TopoDS_Shape * edges, bool shared, double angTol, int * status, HSExceptionType* exType, void ** exPtr);
+int hs_BOPAlgo_Tools_EdgesToWires(TopoDS_Shape * edges, TopoDS_Shape * wires, bool shared, double angTol, HSExceptionType* exType, void ** exPtr);
 
-TopoDS_Shape * hs_BOPAlgo_Tools_WiresToFaces(TopoDS_Shape * wires, double angTol, bool * success, HSExceptionType* exType, void ** exPtr);
+bool hs_BOPAlgo_Tools_WiresToFaces(TopoDS_Shape * wires, TopoDS_Shape * faces, double angTol, HSExceptionType* exType, void ** exPtr);
 
 #ifdef __cplusplus
 }
