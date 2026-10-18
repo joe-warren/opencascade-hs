@@ -14,7 +14,7 @@ import Waterfall.Fillet
     , chamfer
     , conditionalChamfer
     , indexedConditionalChamfer
-    , whenNearlyEqual
+    , whenEndpointsNearlyEqual
     )
 import Linear (V3 (..), _xy)
 import Control.Monad (guard)
@@ -36,14 +36,14 @@ filletExample =
          -- round every edge
         [[ roundFillet 0.1 centeredCube
             -- round horizontal edges 
-         , roundConditionalFillet (whenNearlyEqual _xy 0.1) centeredCube
+         , roundConditionalFillet (whenEndpointsNearlyEqual _xy 0.1) centeredCube
          -- round edges with odd indices by a variable radius depending on the edge index
          , roundIndexedConditionalFillet (\i _ -> (fromIntegral i * 0.04) <$ guard (odd i)) centeredCube
         ], 
         -- chamfer every edge
         [ chamfer 0.1 centeredCube
          -- chamfer horizontal edges 
-         , conditionalChamfer (whenNearlyEqual _xy 0.1) centeredCube
+         , conditionalChamfer (whenEndpointsNearlyEqual _xy 0.1) centeredCube
          -- chamfer edges with odd indices by a variable amount depending on the edge index
          , indexedConditionalChamfer (\i _ -> (fromIntegral i * 0.04) <$ guard (odd i)) centeredCube
         ]]
