@@ -34,12 +34,17 @@ and this project adheres to the
     - `tryOffsetWithToleranceWithPaint`
 - Added `Waterfall.Diagram.getDiagramLines` and `Waterfall.Diagram.getDiagramFills`
 - Added `Waterfall.Diagram.shapeDiagram`
+- Added `Waterfall.Fillet.whenEndpointsNearlyEqual` (replacement for `whenNearlyEqual`)
 
 ### Changed
 
 - `writeGLTF`/`writeGLB`/`writeOBJ` produce files with colours and material data
 - `writeSTEP` produces files with colours
 - Models may render differently based on this new colour and material data, even when they have not had a paint applied
+- Functions in `Waterfall.Fillet` that used to take a predicate over endpoints (as a `(V3 Double, V3 Double) -> Maybe Double`) now take a `Path` (in the form `Path -> Maybe Double`)
+
+### Removed
+- `Waterfall.Fillet.whenNearlyEqual`
 
 ## 0.6.3.2
 

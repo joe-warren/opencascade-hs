@@ -35,11 +35,13 @@ module Waterfall.Fillet
 , tryIndexedConditionalChamfer
 , tryIndexedConditionalChamferWithPaint
 -- * Utility Methods
-, whenNearlyEqual
+, whenEndpointsNearlyEqual
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, PaintMap (..), solidFromAcquireWithPaintMapWithCatch, materialiseFacePaints, makeShapeHistory)
-import Waterfall.Internal.Edges (edgeEndpoints, allEdges)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireWithPaintMapWithCatch, makeShapeHistory)
+import Waterfall.Internal.Edges (allEdges)
+import Waterfall.Internal.Path (Path (..))
+import Waterfall.Path (pathEndpoints) 
 import Waterfall.Error (WaterfallError)
 import qualified OpenCascade.BRepFilletAPI.MakeFillet as MakeFillet
 import qualified OpenCascade.BRepFilletAPI.MakeChamfer as MakeChamfer
@@ -48,10 +50,10 @@ import qualified OpenCascade.TopoDS.Types as TopoDS
 import Foreign.Ptr (Ptr)
 import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (liftIO)
-import OpenCascade.Inheritance (upcast, SubTypeOf)
+import OpenCascade.Inheritance (upcast, SubTypeOf, unsafeDowncast)
 import Linear.V3 (V3 (..))
-import Linear.Epsilon (Epsilon, nearZero)
-import Control.Lens (Lens', (^.))
+import Linear.Epsilon ( nearZero, Epsilon)
+import Control.Lens ((^.), Getter)
 import Data.Either (fromRight)
 import Waterfall.Paint (Paint)
 import Data.List.NonEmpty (NonEmpty)
@@ -59,22 +61,34 @@ import qualified Data.List.NonEmpty as NE
 import Data.Acquire (Acquire)
 import Data.Maybe (catMaybes)
 import Data.Foldable (find)
-import qualified OpenCascade.BRepBuilderAPI.MakeShape as BRepBuilderAPI
+import qualified OpenCascade.BRepBuilderAPI as BRepBuilderAPI
+import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import Waterfall.Internal.PaintHistory (remapWithBlendFunction)
+import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
+import Waterfall.Internal.Finalizers (fromAcquire)
 
-getEdgesWithRadius :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -> Ptr TopoDS.Shape -> Acquire [(Double, Ptr TopoDS.Edge)]
+edgeToPath :: Ptr TopoDS.Edge -> IO Path
+edgeToPath edge = fmap (Path . ComplexRawPath) . fromAcquire $ do
+    builder <- MakeWire.new
+    liftIO . MakeWire.addEdge builder 
+        =<<  liftIO . unsafeDowncast 
+        =<< TopoDS.Shape.copy (upcast edge)
+    MakeWire.wire builder
+
+getEdgesWithRadius :: (Integer -> Path -> Maybe Double) -> Ptr TopoDS.Shape -> Acquire [(Double, Ptr TopoDS.Edge)]
 getEdgesWithRadius f s = do
     edges <- allEdges s
     fmap catMaybes . forM (zip [0..] edges) $ \(i, e) -> do
-        endpoints <- liftIO $ edgeEndpoints e
-        return $ (, e) <$> find (> 0) (f i endpoints)
+        path <- liftIO . edgeToPath $ e
+        return $ (, e) <$> find (> 0) (f i path)
 
 trySomeIndexedConditionalFilletWithPaint
     :: (SubTypeOf BRepBuilderAPI.MakeShape a)
     => (Ptr TopoDS.Shape -> Acquire (Ptr a))
     -> (Ptr a -> Double -> Ptr TopoDS.Edge -> IO ())
     -> (NonEmpty Paint -> Paint)
-    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double)
+    -> (Integer -> Path -> Maybe Double)
     -> Solid
     -> Either WaterfallError Solid
 trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiusFunction solid =
@@ -103,7 +117,7 @@ trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiu
 -- Exposes how to assign `Paint` to the fillet surface
 tryRoundIndexedConditionalFilletWithPaint
     :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a fillet surface to the `Paint` used for the surface
-    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the fillet radius
+    -> (Integer -> Path -> Maybe Double) -- ^ Maps the edge index and the edge path to the fillet radius
     -> Solid
     -> Either WaterfallError Solid
 tryRoundIndexedConditionalFilletWithPaint =
@@ -111,23 +125,28 @@ tryRoundIndexedConditionalFilletWithPaint =
 
 -- | Version of `roundIndexedConditionalFillet` that returns an `Either` on failure
 tryRoundIndexedConditionalFillet
-    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the fillet radius
+    :: (Integer -> Path -> Maybe Double) -- ^ Maps the edge index and the edge path to the fillet radius
     -> Solid
     -> Either WaterfallError Solid
 tryRoundIndexedConditionalFillet =
     tryRoundIndexedConditionalFilletWithPaint NE.head
 
--- | Add rounds with the given radius to each edge of a solid, conditional on the endpoints of the edge, and the index of the edge.
+-- | Add rounds with the given radius to each edge of a solid, conditional on the path of the edge, and the index of the edge.
 --
 -- This can be used to selectively round\/fillet a `Solid`.
 --
 -- In general, relying on the edge index is inelegant,
--- however, if you consider a Solid with a semicircular face,
--- there's no way to select either the curved or the flat edge of the semicircle based on just the endpoints.
 --
--- Being able to selectively round\/fillet based on edge index is an \"easy\" way to round\/fillet these shapes.
+-- In an earlier version of Waterfall-CAD, fillets were controlled by the edge *endpoints*, rather than the edge path
+--  
+-- If you consider a Solid with a semicircular face,
+-- there's no way to select either the curved or the flat edge of the semicircle based on just the endpoints
+--
+-- Now that fillets can be constructed based on the whole `Path` of the edge, this argument holds less water.
+--
+-- But being able to selectively round\/fillet based on edge index is still an \"easy\" way to round\/fillet these shapes.
 roundIndexedConditionalFillet
-    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the fillet radius
+    :: (Integer -> Path -> Maybe Double) -- ^ Maps the edge index and the edge `Path` to the fillet radius
     -> Solid
     -> Solid
 roundIndexedConditionalFillet radiusFunction solid = fromRight mempty $ tryRoundIndexedConditionalFillet radiusFunction solid
@@ -138,7 +157,7 @@ roundIndexedConditionalFillet radiusFunction solid = fromRight mempty $ tryRound
 -- Exposes how to assign `Paint` to the fillet surface
 roundIndexedConditionalFilletWithPaint
     :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a fillet surface to the `Paint` used for the surface
-    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the fillet radius
+    -> (Integer -> Path -> Maybe Double) -- ^ Maps the edge index and the edge `Path` to the fillet radius
     -> Solid
     -> Solid
 roundIndexedConditionalFilletWithPaint paintFn radiusFunction solid =
@@ -146,7 +165,7 @@ roundIndexedConditionalFilletWithPaint paintFn radiusFunction solid =
 
 -- | Version of `roundConditionalFillet` that returns an `Either` on failure
 tryRoundConditionalFillet
-    :: ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the fillet radius
+    :: (Path -> Maybe Double) -- ^ Maps the edge `Path` to the fillet radius
     -> Solid
     -> Either WaterfallError Solid
 tryRoundConditionalFillet f = tryRoundIndexedConditionalFillet (const f)
@@ -156,16 +175,16 @@ tryRoundConditionalFillet f = tryRoundIndexedConditionalFillet (const f)
 -- Exposes how to assign `Paint` to the fillet surface
 tryRoundConditionalFilletWithPaint
     :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a fillet surface to the `Paint` used for the surface
-    -> ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the fillet radius
+    -> (Path -> Maybe Double) -- ^ Maps the edge `Path` to the fillet radius
     -> Solid
     -> Either WaterfallError Solid
 tryRoundConditionalFilletWithPaint paintFn f = tryRoundIndexedConditionalFilletWithPaint paintFn (const f)
 
--- | Add rounds with the given radius to each edge of a solid, conditional on the endpoints of the edge.
+-- | Add rounds with the given radius to each edge of a solid, conditional on the `Path` of the edge.
 --
 -- This can be used to selectively round\/fillet a `Solid`.
 roundConditionalFillet
-    :: ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the fillet radius
+    :: (Path -> Maybe Double) -- ^ Maps the edge `Path` to the fillet radius
     -> Solid -> Solid
 roundConditionalFillet f = roundIndexedConditionalFillet (const f)
 
@@ -174,7 +193,7 @@ roundConditionalFillet f = roundIndexedConditionalFillet (const f)
 -- Exposes how to assign `Paint` to the fillet surface
 roundConditionalFilletWithPaint
     :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a fillet surface to the `Paint` used for the surface
-    -> ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the fillet radius
+    -> (Path -> Maybe Double) -- ^ Maps the edge `Path` to the fillet radius
     -> Solid -> Solid
 roundConditionalFilletWithPaint paintFn f =
     roundIndexedConditionalFilletWithPaint paintFn (const f)
@@ -220,7 +239,7 @@ tryRoundFilletWithPaint paintFn r =
 -- Exposes how to assign `Paint` to the chamfer surface
 tryIndexedConditionalChamferWithPaint
     :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a chamfer surface to the `Paint` used for the surface
-    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the chamfer size
+    -> (Integer -> Path -> Maybe Double) -- ^ Maps the edge index and the edge `Path` to the chamfer size
     -> Solid
     -> Either WaterfallError Solid
 tryIndexedConditionalChamferWithPaint =
@@ -228,23 +247,23 @@ tryIndexedConditionalChamferWithPaint =
 
 -- | Version of `indexedConditionalChamfer` that returns an `Either` on failure
 tryIndexedConditionalChamfer
-    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the chamfer size
+    :: (Integer -> Path -> Maybe Double) -- ^ Maps the edge index and the edge `Path` to the chamfer size
     -> Solid
     -> Either WaterfallError Solid
 tryIndexedConditionalChamfer =
     tryIndexedConditionalChamferWithPaint NE.head
 
--- | Add chamfers of the given size to each edge of a solid, conditional on the endpoints of the edge, and the index of the edge.
+-- | Add chamfers of the given size to each edge of a solid, conditional on the `Path` of the edge, and the index of the edge.
 --
 -- This can be used to selectively chamfer a `Solid`.
 --
 -- In general, relying on the edge index is inelegant,
 -- however, if you consider a Solid with a semicircular face,
--- there's no way to select either the curved or the flat edge of the semicircle based on just the endpoints.
+-- there's no way to select either the curved or the flat edge of the semicircle based on just the `Path`.
 --
 -- Being able to selectively chamfer based on edge index is an \"easy\" way to chamfer these shapes.
 indexedConditionalChamfer
-    :: (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the chamfer size
+    :: (Integer -> Path -> Maybe Double) -- ^ Maps the edge index and the edge `Path` to the chamfer size
     -> Solid
     -> Solid
 indexedConditionalChamfer radiusFunction solid =
@@ -255,7 +274,7 @@ indexedConditionalChamfer radiusFunction solid =
 -- Exposes how to assign `Paint` to the chamfer surface
 indexedConditionalChamferWithPaint
     :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a chamfer surface to the `Paint` used for the surface
-    -> (Integer -> (V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge index and the edge endpoints to the chamfer size
+    -> (Integer -> Path -> Maybe Double) -- ^ Maps the edge index and the edge `Path` to the chamfer size
     -> Solid
     -> Solid
 indexedConditionalChamferWithPaint paintFn radiusFunction solid =
@@ -263,7 +282,7 @@ indexedConditionalChamferWithPaint paintFn radiusFunction solid =
 
 -- | Version of `conditionalChamfer` that returns an `Either` on failure
 tryConditionalChamfer
-    :: ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the chamfer size
+    :: (Path -> Maybe Double) -- ^ Maps the edge `Path` to the chamfer size
     -> Solid
     -> Either WaterfallError Solid
 tryConditionalChamfer f = tryIndexedConditionalChamfer (const f)
@@ -274,16 +293,16 @@ tryConditionalChamfer f = tryIndexedConditionalChamfer (const f)
 -- Exposes how to assign `Paint` to the chamfer surface
 tryConditionalChamferWithPaint
     :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a chamfer surface to the `Paint` used for the surface
-    -> ((V3 Double, V3 Double) -> Maybe Double)  -- ^ Maps the edge endpoints to the chamfer size
+    -> (Path -> Maybe Double)  -- ^ Maps the edge `Path` to the chamfer size
     -> Solid
     -> Either WaterfallError Solid
 tryConditionalChamferWithPaint paintFn f = tryIndexedConditionalChamferWithPaint paintFn (const f)
 
--- | Add chamfers with the given size to each edge of a solid, conditional on the endpoints of the edge.
+-- | Add chamfers with the given size to each edge of a solid, conditional on the `Path` of the edge.
 --
 -- This can be used to selectively chamfer a `Solid`.
 conditionalChamfer
-    :: ((V3 Double, V3 Double) -> Maybe Double)  -- ^ Maps the edge endpoints to the chamfer size
+    :: (Path -> Maybe Double)  -- ^ Maps the edge `Path` to the chamfer size
     -> Solid
     -> Solid
 conditionalChamfer f = indexedConditionalChamfer (const f)
@@ -294,7 +313,7 @@ conditionalChamfer f = indexedConditionalChamfer (const f)
 -- Exposes how to assign `Paint` to the chamfer surface
 conditionalChamferWithPaint
     :: (NonEmpty Paint -> Paint) -- ^ Maps the `Paint` on the neighbouring faces of a chamfer surface to the `Paint` used for the surface
-    -> ((V3 Double, V3 Double) -> Maybe Double) -- ^ Maps the edge endpoints to the chamfer size
+    -> (Path -> Maybe Double) -- ^ Maps the edge `Path` to the chamfer size
     -> Solid -> Solid
 conditionalChamferWithPaint paintFn f = indexedConditionalChamferWithPaint paintFn (const f)
 
@@ -331,18 +350,22 @@ chamferWithPaint
 chamferWithPaint paintFunction d =
     conditionalChamferWithPaint paintFunction (const . pure $ d )
 
--- | Returns a value when the target of a lens on two points are close to one another.
+-- | Returns a value when the target of a lens, when applied to the edge's `Path`'s endpoints are close to one another.
 --
 -- This can be used in combination with `roundConditionalFillet`/`conditionalChamfer`.
 --
 -- Selecting only horizontal edges:
 --
--- > roundConditionalFillet (whenNearlyEqual _z 2)
+-- > roundConditionalFillet (whenEndpointsNearlyEqual _z 2)
 --
 -- Selecting only vertical edges:
 --
--- > roundConditionalFillet (whenNearlyEqual _xy 2)
-whenNearlyEqual :: Epsilon a => Lens' point a -> r -> (point, point) -> Maybe r
-whenNearlyEqual l res (s, e)
-    | nearZero ((s ^. l) - (e ^. l))  = Just res
-    | otherwise = Nothing
+-- > roundConditionalFillet (whenEndpointsNearlyEqual _xy 2)
+whenEndpointsNearlyEqual :: (Epsilon v) => Getter (V3 Double) v -> r -> Path -> Maybe r
+whenEndpointsNearlyEqual l res path = 
+    case pathEndpoints path of 
+        Nothing -> Nothing
+        Just (s, e) | nearZero ((s ^. l) - (e ^. l)) -> Just res
+                    | otherwise -> Nothing
+
+
