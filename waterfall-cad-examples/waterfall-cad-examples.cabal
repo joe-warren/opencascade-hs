@@ -53,6 +53,7 @@ library
       CsgExample
       DarkModeSVG
       FilletExample
+      FlagExample
       GearExample
       LoftExample
       OffsetExample
