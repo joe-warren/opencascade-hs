@@ -41,7 +41,7 @@ darkModeSVG diagram =
             , Waterfall.SVG.hiddenLineColour = 
                 if hasColour
                   then Waterfall.black
-                  else Waterfall.colourFromRGB24 0xC8C8FF
+                  else Waterfall.rgb24 0xC8C8FF
             , Waterfall.SVG.hiddenLineOpacity = 
                 if hasColour 
                   then 0.2
@@ -52,7 +52,7 @@ darkModeSVG diagram =
             , Waterfall.SVG.hiddenLineColour = 
                 if hasColour
                   then Waterfall.white
-                  else Waterfall.colourFromRGB24 0xA00000
+                  else Waterfall.rgb24 0xA00000
             , Waterfall.SVG.hiddenLineOpacity = 
                 if hasColour 
                   then 0.2
