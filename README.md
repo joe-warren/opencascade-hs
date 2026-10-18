@@ -88,10 +88,10 @@ If you've found the project useful, or interesting, or if you've built anything 
 
 ## Examples 
 
-[![](waterfall-cad-examples/test-data/revolution.svg)](waterfall-cad-examples/src/RevolutionExample.hs)
 [![](waterfall-cad-examples/test-data/csg.svg)](waterfall-cad-examples/src/CsgExample.hs)
-&ThinSpace;[![](waterfall-cad-examples/test-data/sweep.svg)](waterfall-cad-examples/src/SweepExample.hs)
+[![](waterfall-cad-examples/test-data/revolution.svg)](waterfall-cad-examples/src/RevolutionExample.hs)
 &ThinSpace;[![](waterfall-cad-examples/test-data/bounding-boxes.svg)](waterfall-cad-examples/src/BoundingBoxExample.hs)
+&ThinSpace;[![](waterfall-cad-examples/test-data/sweep.svg)](waterfall-cad-examples/src/SweepExample.hs)
 
 [![](waterfall-cad-examples/test-data/gear.svg)](waterfall-cad-examples/src/GearExample.hs)
 
@@ -106,6 +106,9 @@ If you've found the project useful, or interesting, or if you've built anything 
 [![](waterfall-cad-examples/test-data/platonic.svg)](waterfall-cad-examples/src/PlatonicSolidsExample.hs)
 
 [![](waterfall-cad-examples/test-data/takePathFraction.svg)](waterfall-cad-examples/src/TakePathFractionExample.hs)
+
+[![](waterfall-cad-examples/test-data/flags.svg)](waterfall-cad-examples/src/FlagExample.hs)
+
 
 ## External Projects
 

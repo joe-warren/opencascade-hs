@@ -2,9 +2,11 @@
 {-| 
 Module: Waterfall.Internal.Finalizers
 
-These functions exist because the underlying `opencascade-hs` library, 
-makes heavy use of `Data.Acquire` from `resourcet` to handle memory management.
-However `waterfall-cad` does not (at the highest level) keep values in the `Acquire` monad. 
+These functions exist because the underlying @opencascade-hs@ library, 
+makes heavy use of @Data.Acquire@ from @resourcet@ to handle memory management.
+
+However @waterfall-cad@ does not (at the highest level) keep values in the @Acquire@ monad. 
+
 (This is required to support functions like `Waterfall.Solids.volume`, which return pure Haskell primitives.)
 
 -}
@@ -29,7 +31,6 @@ import Control.Monad (forM, when)
 import Data.IORef (newIORef, atomicModifyIORef)
 import Control.Exception (try)
 import Control.Arrow (left)
-import OpenCascade.Internal.Exception (OpenCascadeException)
 import Waterfall.Error (WaterfallError (..))
 
 -- | Convert a resource in the `Data.Acquire.Acquire` monad to a value in IO
@@ -55,10 +56,11 @@ fromAcquireT a = runResourceT $ do
     let finalize = do
             isLast <- atomicModifyIORef ref (\count -> (count - 1, count == 1))
             when isLast release
-            
+    liftIO $ when (null v) release
     forM v $ \v' -> do 
         liftIO $ addFinalizer v' finalize
         return v'
+    
 
 -- | Converting to a value in the `Data.Acquire.Acquire` monad, to a raw value.
 -- Analagous to calling `unsafePerformIO` to extract a value in the `IO` monad.

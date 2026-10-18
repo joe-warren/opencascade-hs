@@ -13,6 +13,7 @@ module OpenCascade.GP.Types
 , Trsf
 , Trsf2d
 , GTrsf
+, Lin
 , XYZ
 ) where
 
@@ -29,4 +30,5 @@ data Vec2d
 data Trsf
 data Trsf2d
 data GTrsf
+data Lin
 data XYZ

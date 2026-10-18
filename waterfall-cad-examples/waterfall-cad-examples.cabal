@@ -26,6 +26,7 @@ data-files:
     test-data/bounding-boxes.svg
     test-data/csg.svg
     test-data/fillet.svg
+    test-data/flags.svg
     test-data/gear.svg
     test-data/loft.svg
     test-data/negativeScaledCube-II.svg
@@ -53,6 +54,7 @@ library
       CsgExample
       DarkModeSVG
       FilletExample
+      FlagExample
       GearExample
       LoftExample
       OffsetExample
@@ -81,6 +83,7 @@ library
     , parser-combinators >=1.2 && <1.4
     , raw-strings-qq >=1.1 && <2
     , svg-tree >=0.6 && <1
+    , text ==2.*
     , waterfall-cad >=0.6.3.2 && <0.7
     , waterfall-cad-svg >=0.6.3.2 && <0.7
     , xml ==1.*
@@ -103,6 +106,7 @@ executable waterfall-cad-examples
     , parser-combinators >=1.2 && <1.4
     , raw-strings-qq >=1.1 && <2
     , svg-tree >=0.6 && <1
+    , text ==2.*
     , waterfall-cad >=0.6.3.2 && <0.7
     , waterfall-cad-examples
     , waterfall-cad-svg >=0.6.3.2 && <0.7
@@ -115,6 +119,7 @@ test-suite waterfall-cad-tests
   other-modules:
       DiagramGoldenTests
       ExceptionTests
+      PaintTests
       Paths_waterfall_cad_examples
   hs-source-dirs:
       test
@@ -140,6 +145,7 @@ test-suite waterfall-cad-tests
     , tasty-golden
     , tasty-hunit
     , temporary
+    , text ==2.*
     , waterfall-cad >=0.6.3.2 && <0.7
     , waterfall-cad-examples
     , waterfall-cad-svg >=0.6.3.2 && <0.7

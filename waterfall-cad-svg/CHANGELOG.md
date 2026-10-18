@@ -8,6 +8,20 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added
+
+- Added paths for painted regions of a `Diagram`, with class `fill`
+- Added `Waterfall.SVG.ToSVG.LineStyle`, `Waterfall.SVG.ToSVG.lineStyleCss` and `Waterfall.SVG.ToSVG.diagramToSvgWithLineStyle`
+
+### Changed
+
+- Edge paths carry only the class `edge`: `visible`/`hidden` and `sharp`/`outline` are now classes on the enclosing groups
+- The default hidden-line colour and opacity changed from light blue at full opacity to black at 0.4 opacity
+
+### Fixed
+
+- `path2DToPathCommands` generated extraneous `MoveTo` commands, and incorrectly omitted the `MoveTo` command before the first segment of loops with two edges
+
 ## 0.6.3.2
 
 ## 0.6.3.1

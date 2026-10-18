@@ -22,7 +22,7 @@ data ExceptionType = NoException | StandardFailureException | StdException | Oth
     deriving (Show, Eq, Ord, Enum, Bounded)
 
 data OpenCascadeException 
-    = OpenCascadeStandardFailure String String
+    = OpenCascadeStandardFailure String String String
     | OpenCascadeStdException String
     | OpenCascadeOtherException
     deriving (Eq, Ord, Typeable, Show)
@@ -42,10 +42,11 @@ handleError flagPtr exPtr = do
         NoException -> pure ()
         StandardFailureException -> do
             stdFailure <- castPtr <$> peek exPtr
+            typeString <- safePeekCString =<< Standard.Failure.getTypeName stdFailure
             msgString <- safePeekCString =<< Standard.Failure.getMessageString stdFailure
             stackString <- safePeekCString =<< Standard.Failure.getStackString stdFailure
             deleteFailure stdFailure
-            throw (OpenCascadeStandardFailure msgString stackString)
+            throw (OpenCascadeStandardFailure typeString msgString stackString)
         StdException -> do
             stdException <- castPtr <$> peek exPtr
             msgString <- safePeekCString =<< Std.Exception.what stdException

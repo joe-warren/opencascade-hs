@@ -1,4 +1,4 @@
-cabal-version: 1.12
+cabal-version: 1.18
 
 -- This file has been generated from package.yaml by hpack version 0.39.6.
 --
@@ -21,6 +21,23 @@ extra-source-files:
     LICENSE
     README.md
     CHANGELOG.md
+extra-doc-files:
+    doc-images/aqua.svg
+    doc-images/black.svg
+    doc-images/blue.svg
+    doc-images/fuchsia.svg
+    doc-images/green.svg
+    doc-images/grey.svg
+    doc-images/lime.svg
+    doc-images/maroon.svg
+    doc-images/navy.svg
+    doc-images/olive.svg
+    doc-images/purple.svg
+    doc-images/red.svg
+    doc-images/silver.svg
+    doc-images/teal.svg
+    doc-images/white.svg
+    doc-images/yellow.svg
 
 source-repository head
   type: git
@@ -33,6 +50,7 @@ library
       Waterfall.Booleans.Operators
       Waterfall.BoundingBox.AxisAligned
       Waterfall.BoundingBox.Oriented
+      Waterfall.Colour
       Waterfall.Diagram
       Waterfall.Error
       Waterfall.Fillet
@@ -41,14 +59,17 @@ library
       Waterfall.Internal.Finalizers
       Waterfall.Internal.FromOpenCascade
       Waterfall.Internal.NearZero
+      Waterfall.Internal.PaintHistory
       Waterfall.Internal.Path
       Waterfall.Internal.Path.Common
       Waterfall.Internal.Remesh
+      Waterfall.Internal.ShapeMap
       Waterfall.Internal.Solid
       Waterfall.Internal.ToOpenCascade
       Waterfall.IO
       Waterfall.Loft
       Waterfall.Offset
+      Waterfall.Paint
       Waterfall.Path
       Waterfall.Path.Common
       Waterfall.Revolution
@@ -68,7 +89,9 @@ library
       src
   ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration
   build-depends:
-      base >=4.7 && <5
+      base >=4.17 && <5
+    , bifunctors ==5.*
+    , containers >=0.6 && <1
     , filepath >=1.4 && <1.6
     , lattices >=2.0 && <3
     , lens ==5.*

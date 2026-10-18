@@ -4,6 +4,7 @@ module OpenCascade.Poly.Triangulation
 , new
 , nbNodes
 , nbTriangles
+, isNull
 , node 
 , setNode
 , triangle
@@ -17,7 +18,7 @@ import OpenCascade.GP.Internal.Destructors (deletePnt)
 import OpenCascade.Handle (Handle)
 import Foreign.Ptr (Ptr)
 import Foreign.C (CInt (..), CBool (..))
-import OpenCascade.Internal.Bool (boolToCBool)
+import OpenCascade.Internal.Bool (boolToCBool, cBoolToBool)
 import OpenCascade.Internal.Exception (wrapException)
 import Data.Acquire (Acquire, mkAcquire)
 
@@ -84,3 +85,8 @@ foreign import capi unsafe "hs_Poly_Triangulation.h hs_Poly_Triangulation_setTri
 
 setTriangle :: Ptr (Handle Triangulation) -> Int -> Ptr Triangle -> IO ()
 setTriangle tri index theTriangle = wrapException $ rawSetTriangle tri (fromIntegral index) theTriangle
+
+foreign import capi unsafe "hs_Poly_Triangulation.h hs_Poly_Triangulation_isNull" rawIsNull :: Ptr (Handle Triangulation) -> IO CBool
+
+isNull :: Ptr (Handle Triangulation) -> IO Bool
+isNull tri = cBoolToBool <$> rawIsNull tri

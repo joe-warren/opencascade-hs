@@ -3,7 +3,7 @@
 #include "hs_Exception.h"
 #include "hs_BRepBuilderAPI_Transform.h"
 
-TopoDS_Shape * hs_BRepBuilderAPI_Transform_transform(
+BRepBuilderAPI_Transform * hs_new_BRepBuilderAPI_Transform_fromShapeTrsfAndCopy(
         TopoDS_Shape * shape, gp_Trsf * trsf, bool copy,
         HSExceptionType* exType,
         void** exPtr
@@ -12,9 +12,10 @@ TopoDS_Shape * hs_BRepBuilderAPI_Transform_transform(
         exType,
         exPtr,
         [shape, trsf, copy]{
-        auto builder = BRepBuilderAPI_Transform(*shape, *trsf, copy);
-        return new TopoDS_Shape(builder.Shape());
+        return new BRepBuilderAPI_Transform(*shape, *trsf, copy);
     });
 }
 
-
+void hs_delete_BRepBuilderAPI_Transform(BRepBuilderAPI_Transform * builder){
+    delete builder;
+}

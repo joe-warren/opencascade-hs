@@ -28,10 +28,12 @@ typedef void gp_Vec;
 typedef void gp_Vec2d;
 typedef void gp_Trsf;
 typedef void gp_GTrsf;
+typedef void gp_Lin;
 typedef void gp_Trsf2d;
 typedef void gp_XYZ;
 typedef void BRep_Builder;
 typedef void BRepBuilderAPI_Transform;
+typedef void BRepBuilderAPI_GTransform;
 typedef void BRepBuilderAPI_MakeVertex;
 typedef void BRepBuilderAPI_MakeWire;
 typedef void BRepBuilderAPI_MakeFace;
@@ -84,7 +86,19 @@ typedef void RWMesh_CafReader;
 typedef void TDF_Label;
 typedef void TDocStd_Document;
 typedef void XCAFDoc_ShapeTool;
+typedef void XCAFDoc_ColorTool;
+typedef int XCAFDoc_ColorType;
+typedef void XCAFDoc_VisMaterialTool;
+typedef void XCAFDoc_VisMaterial;
+typedef void XCAFDoc_VisMaterialPBR;
+typedef int Graphic3d_AlphaMode;
+typedef int Graphic3d_TypeOfBackfacingModel;
+typedef void Quantity_Color;
+typedef void Quantity_ColorRGBA;
+typedef int Quantity_TypeOfColor;
+typedef void STEPCAFControl_Writer;
 typedef void ShapeFix_Solid;
+typedef void ShapeUpgrade_UnifySameDomain;
 typedef void ShapeExtend_WireData;
 typedef int ShapeExtend_Status;
 typedef void Poly_Triangulation;
@@ -100,11 +114,16 @@ typedef void HLRAlgo_Projector;
 typedef void HLRBRep_Algo;
 typedef void HLRBRep_HLRToShape;
 typedef int HLRBRep_TypeOfResultingEdge;
+typedef void BRepAlgoAPI_Fuse;
+typedef void BRepAlgoAPI_Cut;
+typedef void BRepAlgoAPI_Common;
 typedef void BOPAlgo_Builder;
 typedef void BOPAlgo_BOP;
 typedef int BOPAlgo_Operation;
+typedef void IntCurvesFace_ShapeIntersector;
 typedef void GCPnts_AbscissaPoint;
 typedef void Standard_Failure;
+typedef void HS_STANDARD_FAILURE;
 typedef void STD_EXCEPTION;
 typedef void STD_RUNTIME_ERROR;
 
@@ -113,14 +132,21 @@ typedef int HSExceptionType;
 #define Handle(X) void
 #define ARRAY_1(X) void
 #define LIST(X) void
-#define INDEXED_DATA_MAP(K, V) void
+#define LIST_ITERATOR(X) void
+#define VEC3(X) void
+#define INDEXED_DATA_MAP(K, V, Hasher) void
 #else // __cplusplus
 #include <exception>
 #include <stdexcept>
 
 #define ARRAY_1(X) NCollection_Array1<X>
 #define LIST(X) NCollection_List<X>
-#define INDEXED_DATA_MAP(K, V) NCollection_IndexedDataMap<K, V>
+#define LIST_ITERATOR(X) NCollection_List<X>::Iterator
+#define VEC3(X) NCollection_Vec3<X>
+#define INDEXED_DATA_MAP(K, V, Hasher) NCollection_IndexedDataMap<K, V, Hasher>
+#define DEFAULT_HASHER(K) NCollection_DefaultHasher<K>
+struct HSStandardFailure;
+typedef HSStandardFailure HS_STANDARD_FAILURE;
 typedef std::exception STD_EXCEPTION;
 typedef std::runtime_error STD_RUNTIME_ERROR;
 #endif // __cplusplus

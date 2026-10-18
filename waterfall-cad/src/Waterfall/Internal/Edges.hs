@@ -2,6 +2,7 @@ module Waterfall.Internal.Edges
 ( edgeEndpoints
 , edgeValue
 , wireEndpoints
+, allSubShapesWithCopy
 , allWireEndpoints
 , allWires
 , allEdges
@@ -25,7 +26,6 @@ import qualified OpenCascade.Geom.Curve as Geom.Curve
 import qualified OpenCascade.BRepTools.WireExplorer as WireExplorer
 import qualified OpenCascade.TopExp.Explorer as Explorer 
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
-import qualified OpenCascade.TopTools.ShapeMapHasher as TopTools.ShapeMapHasher
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import qualified OpenCascade.BRepLib as BRepLib
 import Waterfall.Internal.NearZero (nearZero)
@@ -44,6 +44,8 @@ import Control.Monad (when)
 import Waterfall.Internal.ToOpenCascade (v3ToPnt)
 import Data.Foldable (traverse_)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
+import qualified Waterfall.Internal.ShapeMap as ShapeMap
+import qualified OpenCascade.TopAbs.Orientation as TopAbs.Orientation
 
 edgeEndpoints :: Ptr TopoDS.Edge -> IO (V3 Double, V3 Double)
 edgeEndpoints edge = (`with` pure) $ do
@@ -65,33 +67,34 @@ edgeValue edge v = (`with` pure) $ do
 allWireEndpoints :: Ptr TopoDS.Wire -> IO [(V3 Double, V3 Double)]
 allWireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
     let runToEnd = do
-            edge <- WireExplorer.current explorer
-            points <- edgeEndpoints edge
-            WireExplorer.next explorer
             more <- WireExplorer.more explorer
-            if more 
-                then (points:) <$> runToEnd
-                else pure [points]
+            if more then do
+                edge <- WireExplorer.current explorer
+                points <- edgeEndpoints edge
+                WireExplorer.next explorer
+                (points:) <$> runToEnd
+            else pure []
     runToEnd
 
 allSubShapesWithCopy :: ShapeEnum.ShapeEnum -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
 allSubShapesWithCopy t s = do 
     explorer <- Explorer.new s t
-    let go visited = do
+    let go acc = do
             isMore <- liftIO $ Explorer.more explorer
             if isMore 
                 then do
                     v <- liftIO $ Explorer.value explorer
-                    hash <- liftIO $ TopTools.ShapeMapHasher.hash v
-                    add <- if hash `elem` visited 
-                        then pure id 
-                        else do
+                    isPresent <- liftIO $ ShapeMap.lookup acc v
+                    (newAcc, add) <- case isPresent of 
+                        Nothing -> do 
                             v' <- TopoDS.Shape.copy v
-                            return (v':) 
+                            newMap <- liftIO $ ShapeMap.addIfAbsent (v', ()) acc
+                            return (newMap, (v':))
+                        Just _ -> pure (acc, id) 
                     liftIO $ Explorer.next explorer
-                    add <$> go visited
+                    add <$> go newAcc
                 else return []
-    go []
+    go ShapeMap.empty
 
 
 allEdges :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Edge]
@@ -146,13 +149,18 @@ wireEdges :: Ptr TopoDS.Wire -> Acquire [Ptr TopoDS.Edge]
 wireEdges wire = do
     explorer <- WireExplorer.fromWire wire
     let runToEnd = do
-            edge <- liftIO $ WireExplorer.current explorer
-            edge' <- (liftIO . unsafeDowncast) =<< TopoDS.Shape.copy (upcast edge)
-            liftIO $ WireExplorer.next explorer
             more <- liftIO $ WireExplorer.more explorer
-            if more 
-                then (edge' :) <$> runToEnd
-                else pure [edge']
+            if not more
+                then pure []
+                else do
+                    edge <- liftIO $ WireExplorer.current explorer
+                    edge' <- (liftIO . unsafeDowncast) =<< TopoDS.Shape.copy (upcast edge)
+                    orientation <- liftIO $ TopoDS.Shape.orientation (upcast edge')
+                    edge'' <- if orientation == TopAbs.Orientation.Reversed
+                        then reverseEdge edge'
+                        else return edge'
+                    liftIO $ WireExplorer.next explorer
+                    (edge'' :) <$> runToEnd
     runToEnd
 
 reverseWire :: Ptr TopoDS.Wire -> Acquire (Ptr TopoDS.Wire) 
@@ -160,12 +168,13 @@ reverseWire wire = do
     explorer <- WireExplorer.fromWire wire
     makeWire <- MakeWire.new
     let runToEnd = do
-            edge <- liftIO $ WireExplorer.current explorer
-            edge' <- reverseEdge edge
-            liftIO $ WireExplorer.next explorer
             more <- liftIO $ WireExplorer.more explorer
-            when more runToEnd
-            liftIO $ MakeWire.addEdge makeWire edge'
+            when more $ do
+                edge <- liftIO $ WireExplorer.current explorer
+                edge' <- reverseEdge edge
+                liftIO $ WireExplorer.next explorer
+                runToEnd
+                liftIO $ MakeWire.addEdge makeWire edge'
     runToEnd
     MakeWire.wire makeWire
 

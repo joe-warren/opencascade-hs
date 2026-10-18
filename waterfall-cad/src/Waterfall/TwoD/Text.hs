@@ -26,7 +26,7 @@ fontFromPath :: FilePath -> Double -> IO Font
 fontFromPath fontpath size = do
     bRepFont <- fromAcquire $ BRepFont.new
     fontOk <- BRepFont.initFromPathAndSize bRepFont fontpath size
-    unless (fontOk) $ throwIO (WaterfallIOException FileError fontpath)
+    unless fontOk $ throwIO (WaterfallIOException FileError fontpath)
     return $ Font bRepFont
 
 -- | Create a font from a system font name, aspect, and size
