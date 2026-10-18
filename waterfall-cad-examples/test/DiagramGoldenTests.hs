@@ -40,6 +40,7 @@ import qualified TwoDBooleansExample
 import qualified PlatonicSolidsExample
 import qualified TakePathFractionExample
 import qualified Paths_waterfall_cad_examples as Paths
+import qualified FlagExample
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
@@ -213,6 +214,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
     , smallSolidTest "2D Booleans" "2d-booleans.svg"  TwoDBooleansExample.twoDBooleansExample
     , solidTest "Platonic Solids" "platonic.svg" PlatonicSolidsExample.platonicSolidsExample
     , solidTest "Take Path Fraction" "takePathFraction.svg" TakePathFractionExample.takePathFractionExample
+    , solidTest "Flags" "flags.svg" FlagExample.flagExample
     , solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
         (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
     , solidTest "Negative Scaled Cube II" "negativeScaledCube-II.svg" 

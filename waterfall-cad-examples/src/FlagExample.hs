@@ -234,11 +234,13 @@ welshFlag =
 
         sky = Solids.unitCube 
             & Transforms.scale (flagDims & _y %~ (/2))
+            & (`Booleans.difference` outline)
             & Solids.colourSolid Colour.white
 
         field = Solids.unitCube 
             & Transforms.scale (flagDims & _y %~ (/2))
             & Transforms.translate (flagDims ^* 0.5 & _xz .~ zero)
+            & (`Booleans.difference` outline)
             & Solids.colourSolid green
 
     in (sky <> field <> outline <> inner)
@@ -307,7 +309,7 @@ flagsOnPole flags =
             & Transforms.translate ((flagDims ^. _y * 0.95) *^ unit _z)
             & (<> pole)
             & Transforms.rotate (unit _y) (0.2)
-        base = Solids.unitCylinder 
+        base = Solids.centeredCylinder 
             & Transforms.scale (V3 60 60 160)
             & Solids.paintSolid metalicPaint
         in base <> mconcat [

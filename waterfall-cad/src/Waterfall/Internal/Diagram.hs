@@ -14,7 +14,7 @@ import Waterfall.Internal.Edges (allEdges, buildEdgeCurve3D, allSubShapesWithCop
 import Data.Traversable (forM)
 import qualified OpenCascade.HLRBRep.HLRToShape as HLRBRep.HLRToShape
 import qualified OpenCascade.Bnd.Box as Bnd.Box
-import Data.Foldable (forM_, traverse_)
+import Data.Foldable (forM_)
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.BRepBndLib as BRepBndLib
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
@@ -40,15 +40,13 @@ import qualified OpenCascade.BRepGProp as BRepGProp
 import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.Poly.Triangulation as Poly.Triangulation
 import qualified OpenCascade.Poly.Triangle as Poly.Triangle
-import Control.Monad ((<=<))
+import Control.Monad ((<=<), filterM)
 import Waterfall.Internal.ToOpenCascade (v3ToPnt, v3ToDir)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Lin as GP.Lin
 import Waterfall.Internal.Finalizers (fromAcquire, fromAcquireT)
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified Data.Map as M
-import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
-import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
 import qualified OpenCascade.ShapeUpgrade.UnifySameDomain as UnifySameDomain
 
 boundaryEdges :: Ptr HLRBRep.HLRToShape -> Acquire [Ptr TopoDS.Edge]
@@ -68,7 +66,7 @@ calcFuzzyTolerance edges = do
     hi <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax theBox
     let d = hi - lo
     let maxDim = max (d ^. _x) (d ^. _y)
-    return (maxDim / 1000)
+    return (maxDim / 10000)
 
 calcRayBound :: Ptr TopoDS.Shape -> Acquire Double
 calcRayBound s = do
@@ -97,19 +95,21 @@ pruneDangling edges = do
 mergeRegions :: [Ptr TopoDS.Face] -> Acquire [Shape]
 mergeRegions [] = pure []
 mergeRegions [s] = liftIO $ pure . Shape <$> fromAcquire (TopoDS.Shape.copy . upcast $ s)
-mergeRegions (h:t) = do
-    bop <- BOPAlgo.BOP.new
-    let builder = upcast bop
-    liftIO $ do
-        BOPAlgo.BOP.setOperation bop  BOPAlgo.Operation.Fuse
-        BOPAlgo.Builder.addArgument builder (upcast h)
-        traverse_ (BOPAlgo.BOP.addTool bop . upcast) t
-        BOPAlgo.Builder.perform builder
-    fused <- BOPAlgo.Builder.shape builder
-    unifier <- UnifySameDomain.fromShape fused True True False
+mergeRegions regions = do
+    builder <- TopoDS.Builder.new
+    compound <- TopoDS.Compound.new
+    liftIO $ TopoDS.Builder.makeCompound builder compound
+    forM_ regions $ liftIO . TopoDS.Builder.add builder (upcast compound) . upcast
+    unifier <- UnifySameDomain.fromShape (upcast compound) False True False
     liftIO $ UnifySameDomain.build unifier
     sameDomain <- UnifySameDomain.shape unifier
     liftIO . fmap (fmap Shape) . fromAcquireT $ allSubShapesWithCopy ShapeEnum.Face sameDomain
+
+faceArea :: Ptr TopoDS.Face -> Acquire Double
+faceArea face = do
+    props <- GProps.new
+    liftIO $ BRepGProp.surfaceProperties (upcast face) props False False
+    liftIO $ GProps.mass props
 
 buildSolidDiagramFills' 
     :: Ptr TopoDS.Shape
@@ -159,7 +159,8 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
                             
                             d <- v3ToDir projectionDir
 
-                            paintRegionMap <- fmap (M.fromListWith (<>) . catMaybes) $ forM regions $ \region -> do
+                            forwardFacingRegions <- filterM (fmap (> 0) . faceArea) regions
+                            paintRegionMap <- fmap (M.fromListWith (<>) . catMaybes) $ forM forwardFacingRegions $ \region -> do
                                 mesh <- IncrementalMesh.fromShapeAndLinDeflection (upcast region) tolerance
                                 liftIO $ IncrementalMesh.perform mesh
                                 loc <- TopLoc.Location.new

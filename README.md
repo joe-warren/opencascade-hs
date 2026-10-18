@@ -107,6 +107,9 @@ If you've found the project useful, or interesting, or if you've built anything 
 
 [![](waterfall-cad-examples/test-data/takePathFraction.svg)](waterfall-cad-examples/src/TakePathFractionExample.hs)
 
+[![](waterfall-cad-examples/test-data/flags.svg)](waterfall-cad-examples/src/FlagExample.hs)
+
+
 ## External Projects
 
 * There are some examples of small Waterfall-CAD projects on [my website](https://doscienceto.it/blog/waterfall/)

@@ -26,6 +26,7 @@ data-files:
     test-data/bounding-boxes.svg
     test-data/csg.svg
     test-data/fillet.svg
+    test-data/flags.svg
     test-data/gear.svg
     test-data/loft.svg
     test-data/negativeScaledCube-II.svg
