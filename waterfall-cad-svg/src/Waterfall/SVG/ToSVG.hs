@@ -44,7 +44,27 @@ import Codec.Picture.Types (PixelRGBA8 (..))
 import Data.List (mapAccumL)
 import Data.Maybe (fromMaybe)
 import Control.Applicative ((<|>))
-import Control.Arrow ((>>>))
+import Control.Arrow ((>>>), second)
+import Control.DeepSeq (NFData (rnf), rwhnf)
+
+-- SVG.PathCommand doesn't have an NFData instance
+-- which is needed for it to be the target of an `unsafeFromAcquire`
+newtype ForceablePathCommand = ForceablePathCommand 
+    { getForceablePathCommand :: Svg.PathCommand
+    }
+
+instance NFData ForceablePathCommand where
+    rnf (ForceablePathCommand (Svg.MoveTo o ps)) = (o `seq` ()) `seq` rnf ps
+    rnf (ForceablePathCommand (Svg.LineTo o ps)) = (o `seq` ()) `seq` rnf ps
+    rnf (ForceablePathCommand (Svg.HorizontalTo o cs)) = (o `seq` ()) `seq` rnf cs
+    rnf (ForceablePathCommand (Svg.VerticalTo o cs)) = (o `seq` ()) `seq` rnf cs
+    rnf (ForceablePathCommand (Svg.CurveTo o ps)) = (o `seq` ()) `seq` rnf ps
+    rnf (ForceablePathCommand (Svg.SmoothCurveTo o ps)) = (o `seq` ()) `seq` rnf ps
+    rnf (ForceablePathCommand (Svg.QuadraticBezier o ps)) = (o `seq` ()) `seq` rnf ps
+    rnf (ForceablePathCommand (Svg.SmoothQuadraticBezierCurveTo o ps)) = (o `seq` ()) `seq` rnf ps
+    rnf (ForceablePathCommand (Svg.EllipticalArc o as)) = (o `seq` ()) `seq` rnf as
+    rnf (ForceablePathCommand Svg.EndPath) = ()
+
 
 lineToPathCommand :: Ptr TopoDS.Edge -> IO [Svg.PathCommand]
 lineToPathCommand edge = do
@@ -117,23 +137,24 @@ discretizedEdgePathCommand edge = do
         Svg.LineTo Svg.OriginAbsolute $ (^. _xy) <$> ps
 
 edgeToPathCommand ::  Maybe (V2 Double) -> Ptr TopoDS.Edge -> (Maybe (V2 Double), [Svg.PathCommand])
-edgeToPathCommand curPos edge = Internal.Finalizers.unsafeFromAcquire $ do
-    startPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 0
-    endPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 1
-    let hasntMoved = all nearZero . (startPos -) <$> curPos
-    let addMoveCommand = 
-            case hasntMoved of 
-                Just True -> id
-                _ -> ((Svg.MoveTo Svg.OriginAbsolute . pure $ startPos) :)
-    adaptor <- BRepAdaptor.Curve.fromEdge edge
-    curveType <- liftIO $ BRepAdaptor.Curve.curveType adaptor
-    thisSegment <-
-        case curveType of 
-            GeomAbs.CurveType.Line -> liftIO $ lineToPathCommand edge
-            GeomAbs.CurveType.BezierCurve -> bezierToPathCommand edge adaptor
-            -- GeomAbs.CurveType.BSplineCurve -> There's some argument for special casing this, but we don't need to
-            _ -> approximateCurveToPathCommand edge
-    return (Just endPos, addMoveCommand thisSegment)
+edgeToPathCommand curPos edge = second (fmap getForceablePathCommand) 
+    . Internal.Finalizers.unsafeFromAcquire $ do
+        startPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 0
+        endPos <- liftIO $ (^. _xy) <$> Internal.Edges.edgeValue edge 1
+        let hasntMoved = all nearZero . (startPos -) <$> curPos
+        let addMoveCommand = 
+                case hasntMoved of 
+                    Just True -> id
+                    _ -> ((Svg.MoveTo Svg.OriginAbsolute . pure $ startPos) :)
+        adaptor <- BRepAdaptor.Curve.fromEdge edge
+        curveType <- liftIO $ BRepAdaptor.Curve.curveType adaptor
+        thisSegment <-
+            case curveType of 
+                GeomAbs.CurveType.Line -> liftIO $ lineToPathCommand edge
+                GeomAbs.CurveType.BezierCurve -> bezierToPathCommand edge adaptor
+                -- GeomAbs.CurveType.BSplineCurve -> There's some argument for special casing this, but we don't need to
+                _ -> approximateCurveToPathCommand edge
+        return (Just endPos, ForceablePathCommand <$> addMoveCommand thisSegment)
 
 shapeToPathCommands :: Waterfall.Shape -> [Svg.PathCommand]
 shapeToPathCommands = 
@@ -167,9 +188,14 @@ path2DToPathCommands (Path2D theRawPath) = case theRawPath of
     Internal.Path.Common.EmptyRawPath -> []
     Internal.Path.Common.SinglePointRawPath _ -> []
     Internal.Path.Common.ComplexRawPath wire -> 
-        Internal.Finalizers.unsafeFromAcquireT $
-            concat . snd . mapAccumL edgeToPathCommand Nothing 
-                <$> Internal.Edges.wireEdges wire
+        fmap getForceablePathCommand 
+            . Internal.Finalizers.unsafeFromAcquire $
+                fmap ForceablePathCommand 
+                . concat 
+                . snd 
+                . mapAccumL edgeToPathCommand Nothing 
+                <$> (Internal.Edges.wireEdges 
+                    =<< Internal.Finalizers.acquireForeignPtr wire)
 
 
 -- | How lines should appear
