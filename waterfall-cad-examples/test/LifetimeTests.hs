@@ -3,12 +3,13 @@ module LifetimeTests
 ) where
 
 import qualified Waterfall
-import Linear (V2 (..), V3 (..), (*^), unit, _x, _y, zero)
+import Linear (V2 (..), V3 (..), (*^), unit, _x, _y, _z, zero)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit ( testCase, assertBool )
-import Control.Exception (evaluate)
+import Control.Exception (evaluate, bracket)
 import System.Mem (performMajorGC)
-import Control.Monad (forM, forM_)
+import Control.Monad (forM, forM_, forever)
+import Control.Concurrent (killThread, forkIO)
 
 gcEvaluate :: a -> IO a
 gcEvaluate x = do
@@ -60,4 +61,24 @@ lifetimeTests = testGroup "Lifetime Tests"
                 ] :: Waterfall.Path2D
         v <- gcEvaluate . Waterfall.volume . Waterfall.prism 1 . Waterfall.makeShape $ square
         assertBool "prism from path has unit volume" (abs (v - 1) < 1e-6)
+    , testCase "booleans while gc is running concurrently" $
+        bracket 
+            (forkIO . forever $ performMajorGC)
+            killThread 
+            . const $ do
+                let frame i =
+                        let t = fromIntegral i / 10
+                            base = Waterfall.scale (V3 10 10 1) Waterfall.centeredCube
+                            holes = mconcat [ Waterfall.translate (V3 (fromIntegral j - 4) t 0) (Waterfall.scale (V3 0.4 0.4 3) Waterfall.centeredCylinder) | j <- [0..8 :: Int] ]
+                            painted = Waterfall.colourSolid Waterfall.red (Waterfall.translate (V3 0 0 1) (Waterfall.scale (V3 2 2 2) Waterfall.centeredCube))
+                        in Waterfall.rotate (unit _z) t ((base `Waterfall.difference` holes) <> painted)
+                        
+                forM_ [0 .. 100 :: Int] $ \i -> do
+                    let s = frame i
+                    v <- evaluate (Waterfall.volume s)
+                    let run = " ( run no. " <> show i <> ")"
+                    assertBool ("volume is positive" <> run) (v > 0)
+                    ls <- evaluate (Waterfall.diagramLines Waterfall.SharpLine Waterfall.Visible (Waterfall.solidDiagram (V3 1 1 1) s))
+                    lineLength <- evaluate (sum (map Waterfall.pathLength ls))
+                    assertBool ("diagram has lines" <> run) (lineLength > 0)
     ]
