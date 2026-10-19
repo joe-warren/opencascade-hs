@@ -9,7 +9,7 @@ import Test.Tasty.HUnit ( testCase, assertBool )
 import Control.Exception (evaluate, bracket)
 import System.Mem (performMajorGC)
 import Control.Monad (forM, forM_, forever)
-import Control.Concurrent (killThread, forkIO)
+import Control.Concurrent (killThread, forkIO, threadDelay)
 
 gcEvaluate :: a -> IO a
 gcEvaluate x = do
@@ -63,7 +63,7 @@ lifetimeTests = testGroup "Lifetime Tests"
         assertBool "prism from path has unit volume" (abs (v - 1) < 1e-6)
     , testCase "booleans while gc is running concurrently" $
         bracket 
-            (forkIO . forever $ performMajorGC)
+            (forkIO . forever $ (performMajorGC <> threadDelay 500))
             killThread 
             . const $ do
                 let frame i =
@@ -73,7 +73,7 @@ lifetimeTests = testGroup "Lifetime Tests"
                             painted = Waterfall.colourSolid Waterfall.red (Waterfall.translate (V3 0 0 1) (Waterfall.scale (V3 2 2 2) Waterfall.centeredCube))
                         in Waterfall.rotate (unit _z) t ((base `Waterfall.difference` holes) <> painted)
                         
-                forM_ [0 .. 100 :: Int] $ \i -> do
+                forM_ [0 .. 1000 :: Int] $ \i -> do
                     let s = frame i
                     v <- evaluate (Waterfall.volume s)
                     let run = " ( run no. " <> show i <> ")"
