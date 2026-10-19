@@ -20,8 +20,14 @@ import Data.Maybe (mapMaybe)
 import Data.Semigroup (sconcat)
 import Data.List.NonEmpty (NonEmpty ())
 import Data.Foldable (toList)
+import Control.DeepSeq (NFData (rnf), rwhnf)
 
 data RawPath = EmptyRawPath | SinglePointRawPath (V3 Double) | ComplexRawPath (ForeignPtr TopoDS.Wire)
+
+instance NFData RawPath where
+    rnf EmptyRawPath = ()
+    rnf (SinglePointRawPath v) = rnf v
+    rnf (ComplexRawPath fp) = rwhnf fp
 
 rawPathWire :: RawPath -> Acquire (Maybe (Ptr TopoDS.Wire))
 rawPathWire (ComplexRawPath wire) = Just <$> acquireForeignPtr wire

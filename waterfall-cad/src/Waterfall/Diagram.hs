@@ -1,7 +1,6 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE DeriveGeneric #-}
 module Waterfall.Diagram
 ( Diagram
 , getDiagramFills
@@ -31,7 +30,7 @@ import qualified OpenCascade.BRepBndLib as BRepBndLib
 import Waterfall.Internal.ToOpenCascade (v3ToDir, v3ToVertex)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Control.Monad.IO.Class (liftIO)
-import Waterfall.Internal.Finalizers (unsafeFromAcquire, unsafeFromAcquirePtr, unsafeFromAcquirePtrT, acquireForeignPtr, fromAcquirePtrT)
+import Waterfall.Internal.Finalizers (unsafeFromAcquire, acquireForeignPtr, fromAcquirePtrT)
 import Waterfall.Internal.Edges (allEdges, buildEdgeCurve3D, edgeToWire)
 import Waterfall.Internal.Path.Common (RawPath (..))
 import Waterfall.TwoD.Transforms (Transformable2D (..))
@@ -46,9 +45,8 @@ import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Either (partitionEithers)
 import Waterfall.Internal.Diagram (buildSolidDiagramFills)
 import Waterfall.TwoD.Shape (shapePaths)
-import Data.Acquire (withAcquire)
-import System.IO.Unsafe (unsafePerformIO)
-import Data.Functor.Compose (Compose (..))
+import GHC.Generics (Generic)
+import Control.DeepSeq (NFData (rnf), rwhnf)
 
 -- | `Diagram` of a Waterfall part
 --
@@ -61,7 +59,9 @@ data Diagram = Diagram
      { getDiagramLines :: Map (LineType, Visibility) [Path2D]
      -- | Flat regions of colour
      , getDiagramFills :: [(Paint, Shape)]
-     }
+     } deriving Generic
+
+instance NFData Diagram
 
 instance Semigroup Diagram where
     a <> b = Diagram 
@@ -98,6 +98,10 @@ data LineType =
     | RawLine HLRBRep.TypeOfResultingEdge
     deriving (Eq, Ord, Show)
 
+instance NFData LineType where
+    rnf (RawLine t) = rwhnf t
+    rnf other = rwhnf other
+
 normaliseLineType :: LineType -> LineType
 normaliseLineType (RawLine HLRBRep.Sharp) = SharpLine
 normaliseLineType (RawLine HLRBRep.OutLine) = OutLine
@@ -111,75 +115,59 @@ lineTypeToOpenCascade (RawLine lt) = lt
 -- | Whether an edge is visible in a given projection, or not
 data Visibility = Visible | Hidden deriving (Eq, Ord, Show)
 
+instance NFData Visibility where rnf = rwhnf
+
 -- | Produce a diagram of a `Solid`
 -- 
 -- Uses an orthographic projection, viewed from the provided direction
 solidDiagram :: V3 Double -> Solid -> Diagram
-solidDiagram projectionDirection solid =
-    
-    let algoPtr  = unsafeFromAcquirePtr $ do
-            s' <- acquireSolid solid
-            algo <- HLRBRep.Algo.new
-            liftIO $ HLRBRep.Algo.add algo s'
-            return algo
-        projectorPtr = unsafeFromAcquirePtr $ do
-            o <- GP.origin
-            d <- v3ToDir projectionDirection
-            algo <- acquireForeignPtr algoPtr
-            projector' <- HLRAlgo.Projector.fromAx2 =<< GP.Ax2.newAutoX o d
-            liftIO $ do 
-                HLRBRep.Algo.projector algo projector'
-                HLRBRep.Algo.update algo
-                HLRBRep.Algo.hide algo
-            return projector'
-        extractorPtr = unsafeFromAcquirePtr $ HLRBRep.HLRToShape.fromAlgo =<< acquireForeignPtr algoPtr
+solidDiagram projectionDirection solid =  unsafeFromAcquire $ do
+    s' <- acquireSolid solid
+    algo <- HLRBRep.Algo.new
+    liftIO $ HLRBRep.Algo.add algo s'
+    o <- GP.origin
+    d <- v3ToDir projectionDirection
+    projector <- HLRAlgo.Projector.fromAx2 =<< GP.Ax2.newAutoX o d
+    liftIO $ do 
+        HLRBRep.Algo.projector algo projector
+        HLRBRep.Algo.update algo
+        HLRBRep.Algo.hide algo
 
-        theLines = getCompose 
-            . fmap (Path2D . ComplexRawPath) 
-            . unsafeFromAcquirePtrT 
-            . fmap (Compose . M.fromList)
-            . sequence $
-            [ do
-                _ <- acquireForeignPtr projectorPtr
-                extractor <- acquireForeignPtr extractorPtr
-                compoundOfEdges <- HLRBRep.HLRToShape.compoundOfEdges 
-                    extractor 
-                    (lineTypeToOpenCascade lt) 
-                    (visibility == Visible) 
-                    False
-                rawEdges <- allEdges compoundOfEdges
-                wires <- traverse ( edgeToWire <=< buildEdgeCurve3D) rawEdges
-                return ((lt, visibility), wires)
+    extractor <- HLRBRep.HLRToShape.fromAlgo algo
 
-            | lt <- 
-                [ OutLine
-                , SharpLine
-                , RawLine HLRBRep.IsoLine
-                , RawLine HLRBRep.Rg1Line
-                , RawLine HLRBRep.RgNLine
-            ]
-            , visibility <- [Visible, Hidden]
-            ]
+    theLines <- fmap M.fromList . sequence $
+        [ do
+            compoundOfEdges <- HLRBRep.HLRToShape.compoundOfEdges 
+                extractor 
+                (lineTypeToOpenCascade lt) 
+                (visibility == Visible) 
+                False
+            rawEdges <- allEdges compoundOfEdges
+            wires <- liftIO . fromAcquirePtrT $ traverse ( edgeToWire <=< buildEdgeCurve3D) rawEdges
+            return ((lt, visibility), Path2D . ComplexRawPath <$> wires)
 
-        theFills = getCompose
-            . fmap Shape
-            . unsafeFromAcquirePtrT 
-            . fmap Compose $ do 
-                s' <- acquireSolid solid
-                projector <- acquireForeignPtr projectorPtr
-                extractor <- acquireForeignPtr extractorPtr
-                fills <- buildSolidDiagramFills 
-                    (solidPaintMap solid) 
-                    s' 
-                    projectionDirection 
-                    projector
-                    extractor 
-                return $ fmap (fmap upcast) fills
+        | lt <- 
+            [ OutLine
+            , SharpLine
+            , RawLine HLRBRep.IsoLine
+            , RawLine HLRBRep.Rg1Line
+            , RawLine HLRBRep.RgNLine
+        ]
+        , visibility <- [Visible, Hidden]
+        ]
 
-    in Diagram 
+    theFills <-  buildSolidDiagramFills 
+        (solidPaintMap solid) 
+        s' 
+        projectionDirection 
+        projector
+        extractor 
+
+    return $ Diagram 
         { getDiagramLines = theLines
         , getDiagramFills = theFills
         }
+        
 
 -- | Produce a `Diagram` from a `Path2D`
 -- 

@@ -31,6 +31,7 @@ import OpenCascade.Inheritance (SubTypeOf, upcast)
 import Control.Monad.IO.Class (liftIO)
 import Data.Foldable (traverse_)
 import Foreign.ForeignPtr (ForeignPtr)
+import Control.DeepSeq (NFData (rnf), rwhnf)
 
 -- | A Region in 2D Space 
 -- 
@@ -44,6 +45,9 @@ import Foreign.ForeignPtr (ForeignPtr)
 -- which does not lie on this plane (without using Internal functions).
 -- Or which is not either a `TopoDS.Face`, or a composite of faces.
 newtype Shape = Shape { rawShape :: ForeignPtr TopoDS.Shape }
+
+instance NFData Shape where
+    rnf = rwhnf . rawShape
 
 acquireShape :: Shape -> Acquire (Ptr TopoDS.Shape)
 acquireShape (Shape ptr) = acquireForeignPtr ptr

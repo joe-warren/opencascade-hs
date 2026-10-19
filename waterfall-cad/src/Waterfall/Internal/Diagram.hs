@@ -4,6 +4,7 @@ module Waterfall.Internal.Diagram
 ) where
 import Waterfall.Internal.Solid (PaintMap(..), materialiseFacePaints, paintMapIsEmpty)
 import Waterfall.Paint (Paint)
+import Waterfall.TwoD.Internal.Shape (Shape (..))
 import Data.Acquire (Acquire)
 import Foreign (Ptr)
 import qualified OpenCascade.HLRBRep.Types as HLRBRep
@@ -91,9 +92,9 @@ pruneDangling edges = do
             if length keep == length current then pure (fst <$> keep) else loop keep
     loop withVertices
 
-mergeRegions :: [Ptr TopoDS.Face] -> Acquire [Ptr TopoDS.Face]
+mergeRegions :: [Ptr TopoDS.Face] -> Acquire [Shape]
 mergeRegions [] = pure []
-mergeRegions [s] = pure [s]
+mergeRegions [s] = liftIO $ pure . Shape <$> fromAcquirePtr (TopoDS.Shape.copy . upcast $ s)
 mergeRegions regions = do
     builder <- TopoDS.Builder.new
     compound <- TopoDS.Compound.new
@@ -102,7 +103,7 @@ mergeRegions regions = do
     unifier <- UnifySameDomain.fromShape (upcast compound) False True False
     liftIO $ UnifySameDomain.build unifier
     sameDomain <- UnifySameDomain.shape unifier
-    traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Face sameDomain
+    liftIO . fmap (fmap Shape) . fromAcquirePtrT $ allSubShapesWithCopy ShapeEnum.Face sameDomain
 
 faceArea :: Ptr TopoDS.Face -> Acquire Double
 faceArea face = do
@@ -116,7 +117,7 @@ buildSolidDiagramFills'
     -> Ptr HLRAlgo.Projector
     -> Ptr HLRBRep.HLRToShape
     -> [(Ptr TopoDS.Face, Paint)]
-    -> Acquire [(Paint, Ptr TopoDS.Face)]
+    -> Acquire [(Paint, Shape)]
 buildSolidDiagramFills' s projectionDir projector extractor paints = do
     boundary <- boundaryEdges extractor
     if null boundary 
@@ -208,7 +209,7 @@ buildSolidDiagramFills
     -> V3 Double
     -> Ptr HLRAlgo.Projector
     -> Ptr HLRBRep.HLRToShape
-    -> Acquire [(Paint, Ptr TopoDS.Face)]
+    -> Acquire [(Paint, Shape)]
 buildSolidDiagramFills paints s d projector extractor
     | paintMapIsEmpty paints = pure []
     | otherwise =    

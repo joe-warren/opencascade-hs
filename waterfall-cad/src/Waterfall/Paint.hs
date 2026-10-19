@@ -1,4 +1,5 @@
 {-# LANGUAGE DerivingVia, DeriveGeneric #-}
+{-# LANGUAGE InstanceSigs #-}
 {-|
 Module: Waterfall.Paint
 
@@ -49,12 +50,15 @@ import Data.Maybe (catMaybes)
 import Data.List (intersperse)
 import Control.Lens (Lens', lens)
 import Waterfall.Colour (Colour (..))
+import Control.DeepSeq (NFData (rnf), rwhnf)
 
 -- | Whether to display a surface as Double or Single Sided
 --
 -- In most formats and viewers this will be implemented using backface culling 
 data DoubleSidedness = SingleSided | DoubleSided 
     deriving (Eq, Ord, Show) 
+
+instance NFData DoubleSidedness where rnf = rwhnf
 
 -- | Can be applied to change the appearance of the surface of a `Solid`
 -- 
@@ -71,10 +75,13 @@ data Paint = Paint
     } deriving (Eq, Ord, Generic)
     deriving 
         ( Semigroup -- ^ `(<>)` takes the rightmost defined value of each property.
-        , Monoid  
+        , Monoid
         ) via (Generically Paint)
 
+instance NFData Paint
+
 instance Show Paint where
+  showsPrec :: Int -> Paint -> ShowS
   showsPrec d p = 
     let term name field = 
             let fv v = 
