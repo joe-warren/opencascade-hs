@@ -16,7 +16,7 @@ import qualified OpenCascade.TopoDS as TopoDS
 import Foreign.Ptr
 import Data.Acquire (Acquire)
 import Algebra.Lattice
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr)
 import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
 import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
@@ -30,6 +30,7 @@ import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import OpenCascade.Inheritance (SubTypeOf, upcast)
 import Control.Monad.IO.Class (liftIO)
 import Data.Foldable (traverse_)
+import Foreign.ForeignPtr (ForeignPtr)
 
 -- | A Region in 2D Space 
 -- 
@@ -42,18 +43,18 @@ import Data.Foldable (traverse_)
 -- Please feel free to report a bug if you're able to construct a `Shape`
 -- which does not lie on this plane (without using Internal functions).
 -- Or which is not either a `TopoDS.Face`, or a composite of faces.
-newtype Shape = Shape { rawShape :: Ptr TopoDS.Shape }
+newtype Shape = Shape { rawShape :: ForeignPtr TopoDS.Shape }
 
 acquireShape :: Shape -> Acquire (Ptr TopoDS.Shape)
-acquireShape (Shape ptr) = toAcquire ptr
+acquireShape (Shape ptr) = acquireForeignPtr ptr
 
 shapeFromAcquire :: Acquire (Ptr TopoDS.Shape) -> Shape
-shapeFromAcquire = Shape . unsafeFromAcquire
+shapeFromAcquire = Shape . unsafeFromAcquirePtr
 
 toBoolean2D :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape.Shape -> Ptr TopoDS.Shape.Shape -> Acquire (Ptr a)) -> Shape -> Shape -> Shape
-toBoolean2D f (Shape ptrA) (Shape ptrB) = Shape . unsafeFromAcquire $ do
-    a <- toAcquire ptrA
-    b <- toAcquire ptrB
+toBoolean2D f (Shape ptrA) (Shape ptrB) = Shape . unsafeFromAcquirePtr $ do
+    a <- acquireForeignPtr ptrA
+    b <- acquireForeignPtr ptrB
     MakeShape.shape =<< fmap upcast (f a b)
 
 -- | Take the union of two 2D shapes.
@@ -74,9 +75,9 @@ intersection2D = toBoolean2D Common.fromShapes
 toBooleans2D :: BOPAlgo.Operation.Operation -> [Shape] -> Shape
 toBooleans2D _ [] = emptyShape
 toBooleans2D _ [x] = x
-toBooleans2D op (h:shapes) = Shape . unsafeFromAcquire $ do
-    firstPtr <- toAcquire . rawShape $ h
-    ptrs <- traverse (toAcquire . rawShape) shapes
+toBooleans2D op (h:shapes) = Shape . unsafeFromAcquirePtr $ do
+    firstPtr <- acquireForeignPtr . rawShape $ h
+    ptrs <- traverse (acquireForeignPtr . rawShape) shapes
     bop <- BOPAlgo.BOP.new
     let builder = upcast bop
     liftIO $ do
@@ -99,7 +100,7 @@ intersections2D = toBooleans2D BOPAlgo.Operation.Common
 
 -- | An empty 2D shape
 emptyShape :: Shape
-emptyShape = Shape . unsafeFromAcquire $ 
+emptyShape = Shape . unsafeFromAcquirePtr $ 
     upcast <$> (MakeFace.face =<< MakeFace.new)
 
 -- defining these boolean operators here, rather than in Waterfall.TwoD.Booleans 

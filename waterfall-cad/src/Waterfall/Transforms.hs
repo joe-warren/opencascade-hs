@@ -18,7 +18,7 @@ module Waterfall.Transforms
 , _mirrored
 ) where
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireMappingPaintMap, makeShapeHistory)
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire) 
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr) 
 import Waterfall.Internal.Path.Common (RawPath(..))
 import Waterfall.Internal.NearZero (nearZero)
 import Linear.V3 (V3 (..))
@@ -79,8 +79,8 @@ transformPathSinglePointPaths f (Path (SinglePointRawPath v)) = Path . SinglePoi
 transformPathSinglePointPaths _ p = p 
 
 fromTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.Trsf) -> Path -> Path
-fromTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquire $ do 
-    path <- toAcquire p
+fromTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquirePtr $ do 
+    path <- acquireForeignPtr p
     trsf <- mkTrsf 
     (liftIO . unsafeDowncast)
         =<< BRepBuilderAPI.MakeShape.shape
@@ -90,8 +90,8 @@ fromTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $
 fromTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 
 fromGTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.GTrsf) -> Path -> Path
-fromGTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquire $ do 
-    path <- toAcquire p
+fromGTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquirePtr $ do 
+    path <- acquireForeignPtr p
     trsf <- mkTrsf 
     (liftIO . unsafeDowncast) 
         =<< BRepBuilderAPI.MakeShape.shape

@@ -10,7 +10,7 @@ module Waterfall.BoundingBox.Oriented
 
 import Linear (V3 (..), normalize, (^*))
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, emptyPaintMap)
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquire)
 import Waterfall.Internal.FromOpenCascade (gpXYZToV3)
 import Foreign.Ptr (Ptr)
 import Waterfall.Solids (volume, box)
@@ -28,24 +28,25 @@ import OpenCascade.Inheritance (upcast)
 import Data.Acquire (Acquire)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad ((<=<))
+import Foreign.ForeignPtr (ForeignPtr)
 
 -- | An OrientedBoundingBox may be a tighter fit for a Shape than an axis aligned bounding box would be
 -- 
-data OrientedBoundingBox = OrientedBoundingBox { rawOBB :: Ptr OBB }
+data OrientedBoundingBox = OrientedBoundingBox { rawOBB :: ForeignPtr OBB }
 
 -- | Compute an OrientedBoundingBox for a solid
 orientedBoundingBox :: Solid -> Maybe OrientedBoundingBox
 orientedBoundingBox s = 
     if volume s == 0
         then Nothing 
-        else Just . OrientedBoundingBox . unsafeFromAcquire $ do
+        else Just . OrientedBoundingBox . unsafeFromAcquirePtr $ do
             obb <- OBB.new
             solid <- acquireSolid s
             liftIO $ BRepBndLib.addOBB solid obb True True True
             return obb
 
 queryOBB :: (Ptr OBB -> Acquire (V3 Double)) -> OrientedBoundingBox -> V3 Double
-queryOBB f = unsafeFromAcquire . ( f <=< toAcquire . rawOBB)
+queryOBB f = unsafeFromAcquire . ( f <=< acquireForeignPtr . rawOBB)
 
 -- | The center point of an `OrientedBoundingBox`
 obbCenter :: OrientedBoundingBox -> V3 Double
@@ -81,7 +82,7 @@ obbSideZ =  getSide OBB.zDirection OBB.zHSize
 -- | Reify an `OrientedBoundingBox` as a `Solid`
 obbToSolid :: OrientedBoundingBox -> Solid
 obbToSolid obb = solidFromAcquire emptyPaintMap $ do
-    obb' <- toAcquire . rawOBB $ obb
+    obb' <- acquireForeignPtr . rawOBB $ obb
     x <- liftIO . OBB.xHSize $ obb'
     y <- liftIO . OBB.yHSize $ obb'
     z <- liftIO . OBB.zHSize $ obb'

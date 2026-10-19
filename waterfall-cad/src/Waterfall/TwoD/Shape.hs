@@ -18,7 +18,7 @@ module Waterfall.TwoD.Shape
 import Waterfall.TwoD.Internal.Shape (Shape (..), union2D, difference2D, intersection2D, unions2D, intersections2D, emptyShape)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.TwoD.Transforms (translate2D, rotate2D)
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire, unsafeFromAcquireT)
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquirePtrT)
 import Waterfall.Internal.Edges (allWires)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import OpenCascade.Inheritance (upcast)
@@ -28,10 +28,10 @@ import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
 
 -- | Construct a 2D Shape from a closed path 
 makeShape :: Path2D -> Shape
-makeShape (Path2D (ComplexRawPath r)) = Shape . unsafeFromAcquire  $ do
-    p <- toAcquire r
+makeShape (Path2D (ComplexRawPath r)) = Shape . unsafeFromAcquirePtr  $ do
+    p <- acquireForeignPtr r
     upcast <$> (MakeFace.face =<< MakeFace.fromWire p False)
-makeShape _ = Shape . unsafeFromAcquire $
+makeShape _ = Shape . unsafeFromAcquirePtr $
     upcast <$> (MakeFace.face =<< MakeFace.new)
 
 -- | Get the paths back from a 2D shape
@@ -45,8 +45,8 @@ makeShape _ = Shape . unsafeFromAcquire $
 -- Although this can only hold when the shape has one boundary path, 
 -- and is not guaranteed
 shapePaths :: Shape -> [Path2D] 
-shapePaths (Shape r) = fmap (Path2D . ComplexRawPath) . unsafeFromAcquireT $ do
-    s <- toAcquire r 
+shapePaths (Shape r) = fmap (Path2D . ComplexRawPath) . unsafeFromAcquirePtrT $ do
+    s <- acquireForeignPtr r 
     allWires s 
 
 -- | Circle with radius 1, centered on the origin

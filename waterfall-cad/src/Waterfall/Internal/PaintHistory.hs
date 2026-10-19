@@ -10,7 +10,7 @@ import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
 import Waterfall.Paint (Paint)
 import Control.Monad.IO.Class (liftIO)
-import Waterfall.Internal.Solid (remapPaints, History (historyGenerated), acquirePaints, PaintMap (FacePaints, UniformPaint), materialiseFacePaints)
+import Waterfall.Internal.Solid (remapPaints, History (historyGenerated), fromAcquirePaints, PaintMap (FacePaints, UniformPaint), materialiseFacePaints, acquireFacePaints)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
 import qualified OpenCascade.NCollection as NCollection
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
@@ -61,16 +61,16 @@ remapWithBlendFunction' paintFunction s edges history paints = do
                         let newPaint = paintFunction (NE.nub . NE.sort $ ps)
                         in traverse (fmap (, newPaint) . liftIO . unsafeDowncast) faces
 
-    filletSurfacesEdges <- liftIO . acquirePaints $ concat <$> traverse (filletSurfacesFor . upcast) edges
+    filletSurfacesEdges <- liftIO . fromAcquirePaints $ concat <$> traverse (filletSurfacesFor . upcast) edges
     verts <- getUniqueVertexes edges
-    filletSurfacesVerts <-liftIO . acquirePaints $ concat <$> traverse (filletSurfacesFor . upcast) verts
+    filletSurfacesVerts <-liftIO . fromAcquirePaints $ concat <$> traverse (filletSurfacesFor . upcast) verts
 
     return $ FacePaints (mappedPaints <> filletSurfacesEdges <> filletSurfacesVerts)
 
 
 remapWithBlendFunction :: (NE.NonEmpty Paint -> Paint) -> Ptr TopoDS.Shape -> [Ptr TopoDS.Edge] -> History -> PaintMap -> Acquire PaintMap
 remapWithBlendFunction paintFunction s edges history (FacePaints paints) = 
-    remapWithBlendFunction' paintFunction s edges history paints
+    remapWithBlendFunction' paintFunction s edges history =<< acquireFacePaints paints
 remapWithBlendFunction paintFunction s edges history (UniformPaint paint) 
     | paintFunction (NE.singleton paint) == paint = pure $ UniformPaint paint
     | otherwise = remapWithBlendFunction' paintFunction s edges history =<< materialiseFacePaints s (UniformPaint paint) 

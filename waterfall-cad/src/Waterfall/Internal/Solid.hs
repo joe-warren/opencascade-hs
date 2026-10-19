@@ -10,7 +10,8 @@ module Waterfall.Internal.Solid
 , emptyPaintMap
 , paintMapIsEmpty
 , acquireSolid
-, acquirePaints
+, fromAcquirePaints
+, acquireFacePaints
 , solidFromAcquire
 , solidFromAcquireWithCatch
 , solidFromAcquireTWithCatch
@@ -49,7 +50,7 @@ import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import OpenCascade.Inheritance (SubTypeOf(..), upcast, unsafeDowncast)
-import Waterfall.Internal.Finalizers (toAcquire, fromAcquireT, unsafeFromAcquire, unsafeFromAcquireWithCatch, unsafeFromAcquireTWithCatch, unsafeFromAcquireT)
+import Waterfall.Internal.Finalizers (acquireForeignPtr, fromAcquirePtrT, unsafeFromAcquire, unsafeFromAcquirePtr, unsafeFromAcquirePtrTWithCatch, unsafeFromAcquirePtrWithCatch, unsafeFromAcquirePtrT)
 import Waterfall.Internal.Edges (allSubShapesWithCopy)
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
 import Data.Foldable (traverse_)
@@ -60,10 +61,11 @@ import Data.Functor.Compose (Compose(..))
 import qualified OpenCascade.NCollection as NCollection
 import Control.Monad (filterM)
 import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
+import Foreign.ForeignPtr (ForeignPtr)
 
 data PaintMap 
     = UniformPaint Paint
-    | FacePaints [(Ptr TopoDS.Face, Paint)]
+    | FacePaints [(ForeignPtr TopoDS.Face, Paint)]
 
 emptyPaintMap :: PaintMap
 emptyPaintMap = UniformPaint mempty
@@ -83,36 +85,36 @@ paintMapIsEmpty _ = False
 -- please feel free to report a bug if you're able to construct a `Solid`
 -- where this isn't the case (without using internal functions).
 data Solid = Solid 
-    { rawSolid :: Ptr TopoDS.Shape.Shape 
+    { rawSolid :: ForeignPtr TopoDS.Shape.Shape 
     , solidPaintMap :: PaintMap
     }
 
 acquireSolid :: Solid -> Acquire (Ptr TopoDS.Shape.Shape)
-acquireSolid (Solid ptr _) = toAcquire ptr
+acquireSolid (Solid ptr _) = acquireForeignPtr ptr
 
 solidFromAcquire :: PaintMap -> Acquire (Ptr TopoDS.Shape.Shape) -> Solid
-solidFromAcquire paintMap = (`Solid` paintMap) . unsafeFromAcquire
+solidFromAcquire paintMap = (`Solid` paintMap) . unsafeFromAcquirePtr
 
 solidFromAcquireWithPaintMap ::  Acquire (PaintMap, Ptr TopoDS.Shape.Shape) -> Solid
 solidFromAcquireWithPaintMap f = 
-    let (paintMap, ptr) = unsafeFromAcquireT f 
+    let (paintMap, ptr) = unsafeFromAcquirePtrT f 
     in Solid ptr paintMap
 
 solidFromAcquireWithPaintMapWithCatch ::  Acquire (PaintMap, Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
 solidFromAcquireWithPaintMapWithCatch f = do
-    (paintMap, ptr) <-unsafeFromAcquireTWithCatch f 
+    (paintMap, ptr) <- unsafeFromAcquirePtrTWithCatch f 
     return $ Solid ptr paintMap
 
     
 solidFromAcquireTWithPaintMapWithCatch :: Traversable t => Acquire (t (PaintMap, Ptr TopoDS.Shape.Shape)) -> Either WaterfallError (t Solid)
 solidFromAcquireTWithPaintMapWithCatch = 
-    fmap (fmap (uncurry (flip Solid))) . unsafeFromAcquireTWithCatch 
+    fmap (fmap (uncurry (flip Solid)) . getCompose) . unsafeFromAcquirePtrTWithCatch . fmap Compose
 
 solidFromAcquireWithCatch :: PaintMap -> Acquire (Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
-solidFromAcquireWithCatch paintMap = fmap (`Solid` paintMap) . unsafeFromAcquireWithCatch
+solidFromAcquireWithCatch paintMap = fmap (`Solid` paintMap) . unsafeFromAcquirePtrWithCatch
 
 solidFromAcquireTWithCatch :: Traversable t => PaintMap -> Acquire (t (Ptr TopoDS.Shape.Shape)) -> Either WaterfallError (t Solid)
-solidFromAcquireTWithCatch paintMap  = fmap (fmap (`Solid` paintMap)) . unsafeFromAcquireTWithCatch
+solidFromAcquireTWithCatch paintMap  = fmap (fmap (`Solid` paintMap)) . unsafeFromAcquirePtrTWithCatch
 
 -- | print debug information about a Solid when it's evaluated 
 -- exposes the properties of the underlying OpenCacade.TopoDS.Shape
@@ -136,7 +138,7 @@ debug (Solid ptr _) =
             , ("nbChildren", fshow . TopoDS.Shape.nbChildren)
             ]
     in unsafeFromAcquire $ do
-        s <- toAcquire ptr
+        s <- acquireForeignPtr ptr
         liftIO $ (`foldMap` actions) $ \(actionName, value) -> 
                 (return $ "\t" <> actionName <> "\t\t") <> value s <> (return "\n")
 
@@ -153,13 +155,13 @@ everywhere = complement $ emptySolid
 --
 -- Be warned that @complement emptySolid@ does not appear to work correctly.
 complement :: Solid -> Solid
-complement (Solid ptr paintMap) = (`Solid` paintMap) . unsafeFromAcquire $ TopoDS.Shape.complemented =<< toAcquire ptr
+complement (Solid ptr paintMap) = (`Solid` paintMap) . unsafeFromAcquirePtr $ TopoDS.Shape.complemented =<< acquireForeignPtr ptr
 
 -- | An empty solid
 --
 -- Be warned that @complement emptySolid@ does not appear to work correctly.
 emptySolid :: Solid 
-emptySolid =  (`Solid` emptyPaintMap) . unsafeFromAcquire $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
+emptySolid =  (`Solid` emptyPaintMap) . unsafeFromAcquirePtr $ upcast <$> (MakeSolid.solid =<< MakeSolid.new)
 
 -- defining the boolean CSG operators here, rather than in Waterfall.Booleans 
 -- means that we can use them in typeclass instances without resorting to orphans
@@ -210,20 +212,26 @@ remap history s = do
                     isDeleted <- liftIO $ historyIsDeleted history s
                     pure [s | not isDeleted]
 
-acquirePaints :: Acquire [(Ptr TopoDS.Face, Paint)] -> IO [(Ptr TopoDS.Face, Paint)]
-acquirePaints paints = 
+fromAcquirePaints :: Acquire [(Ptr TopoDS.Face, Paint)] -> IO [(ForeignPtr TopoDS.Face, Paint)]
+fromAcquirePaints paints = 
     let wrap = fmap (Compose . fmap Flip)
         unwrap = fmap runFlip . getCompose
-    in fmap unwrap . fromAcquireT . wrap  $ paints
+    in fmap unwrap . fromAcquirePtrT . wrap  $ paints
 
-remapPaints :: History -> [(Ptr TopoDS.Face, Paint)] -> IO [(Ptr TopoDS.Face, Paint)]
+remapPaints :: History -> [(Ptr TopoDS.Face, Paint)] -> IO [(ForeignPtr TopoDS.Face, Paint)]
 remapPaints history facePaints = 
     let remapPaint (f, p) = fmap (,p) <$> (liftIO . traverse unsafeDowncast =<< remap history (upcast f))
         remappedPaints = concat <$> traverse remapPaint facePaints
-    in acquirePaints remappedPaints 
+    in fromAcquirePaints remappedPaints 
+
+acquireFacePaints :: [(ForeignPtr TopoDS.Face, Paint)] -> Acquire [(Ptr TopoDS.Face, Paint)]
+acquireFacePaints = 
+    let wrap = Compose . fmap Flip
+        unwrap = fmap runFlip . getCompose
+    in fmap unwrap . traverse acquireForeignPtr . wrap
 
 materialiseFacePaints :: Ptr TopoDS.Shape -> PaintMap -> Acquire [(Ptr TopoDS.Face, Paint)]
-materialiseFacePaints _ (FacePaints facePaints) = pure facePaints
+materialiseFacePaints _ (FacePaints facePaints) = acquireFacePaints facePaints 
 materialiseFacePaints solid (UniformPaint paint) = do
     faces <- traverse (liftIO . unsafeDowncast)
         =<< allSubShapesWithCopy ShapeEnum.Face solid
@@ -241,7 +249,7 @@ mapPaintMap (paintMap, history) = do
     remappedPaintMap <- case paintMap of
         UniformPaint _ -> pure paintMap
         FacePaints oldFacePaints -> 
-            liftIO $ FacePaints <$> remapPaints history oldFacePaints
+            FacePaints <$> (liftIO . remapPaints history =<< acquireFacePaints oldFacePaints)
             
     return (remappedPaintMap, shape)
 
@@ -256,13 +264,13 @@ solidFromAcquireMappingPaintMapWithCatch f =
 
 toBoolean :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr a)) -> Solid -> Solid -> Solid
 toBoolean f (Solid ptrA paintMapA) (Solid ptrB paintMapB) = solidFromAcquireMappingPaintMap $ do
-    a <- toAcquire ptrA
-    b <- toAcquire ptrB
+    a <- acquireForeignPtr ptrA
+    b <- acquireForeignPtr ptrB
     builder <- f a b
     
     materialisedPaintMap <- case (paintMapA, paintMapB) of
         (UniformPaint paintA, UniformPaint paintB) | paintA == paintB -> pure paintMapA
-        _ -> FacePaints <$> (
+        _ -> liftIO $ FacePaints <$> fromAcquirePaints (
                 (<>) <$> materialiseFacePaints a paintMapA <*> materialiseFacePaints b paintMapB
             )
 
@@ -278,8 +286,8 @@ toBooleans :: BOPAlgo.Operation.Operation -> [Solid] -> Solid
 toBooleans _ [] = emptySolid
 toBooleans _ [x] = x
 toBooleans op solids@(h:t) = solidFromAcquireMappingPaintMap $ do
-    firstPtr <- toAcquire . rawSolid $ h
-    ptrs <- traverse (toAcquire . rawSolid) t
+    firstPtr <- acquireSolid $ h
+    ptrs <- traverse acquireSolid t
     bop <- BOPAlgo.BOP.new
     let builder = upcast bop
     liftIO $ do
@@ -296,7 +304,7 @@ toBooleans op solids@(h:t) = solidFromAcquireMappingPaintMap $ do
         case solidPaintMap h of
             UniformPaint p | all (matchesUniformPaint p . solidPaintMap) t -> 
                 pure $ UniformPaint p
-            _ -> FacePaints . concat <$> traverse materialiseSolidFacePaints solids
+            _ -> liftIO $ FacePaints <$> fromAcquirePaints (concat <$> traverse materialiseSolidFacePaints solids)
             
     return  (combinedPaintMap, bopBuilderHistory builder)
 

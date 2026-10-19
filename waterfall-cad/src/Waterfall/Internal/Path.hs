@@ -5,7 +5,7 @@ module Waterfall.Internal.Path
 , allPathEndpoints
 ) where
 
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire) 
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquire) 
 import Control.Monad.IO.Class (liftIO)
 import Linear (V3 (..))
 import Waterfall.Internal.Path.Common (RawPath (..))
@@ -21,7 +21,7 @@ newtype Path = Path { rawPath :: RawPath } deriving (Semigroup, Monoid) via RawP
 -- | Exposing this because I found it useful for debugging
 allPathEndpoints :: Path -> [(V3 Double, V3 Double)]
 allPathEndpoints (Path (ComplexRawPath raw)) = unsafeFromAcquire $ do
-    wire <- toAcquire raw
+    wire <- acquireForeignPtr raw
     liftIO $ allWireEndpoints wire
 allPathEndpoints (Path (SinglePointRawPath point)) = pure (point, point)
 allPathEndpoints (Path EmptyRawPath) = []

@@ -31,7 +31,7 @@ import qualified OpenCascade.BRepBndLib as BRepBndLib
 import Waterfall.Internal.ToOpenCascade (v3ToDir, v3ToVertex)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Control.Monad.IO.Class (liftIO)
-import Waterfall.Internal.Finalizers (unsafeFromAcquire, toAcquire, fromAcquireT)
+import Waterfall.Internal.Finalizers (unsafeFromAcquire, unsafeFromAcquirePtr, unsafeFromAcquirePtrT, acquireForeignPtr, fromAcquirePtrT)
 import Waterfall.Internal.Edges (allEdges, buildEdgeCurve3D, edgeToWire)
 import Waterfall.Internal.Path.Common (RawPath (..))
 import Waterfall.TwoD.Transforms (Transformable2D (..))
@@ -39,13 +39,16 @@ import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import OpenCascade.Inheritance (upcast)
 import Control.Monad (forM_, (<=<))
 import Data.Map (Map)
-import Waterfall.TwoD.Internal.Shape ( Shape )
+import Waterfall.TwoD.Internal.Shape (Shape (..))
 import Waterfall.Paint (Paint)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Either (partitionEithers)
 import Waterfall.Internal.Diagram (buildSolidDiagramFills)
 import Waterfall.TwoD.Shape (shapePaths)
+import Data.Acquire (withAcquire)
+import System.IO.Unsafe (unsafePerformIO)
+import Data.Functor.Compose (Compose (..))
 
 -- | `Diagram` of a Waterfall part
 --
@@ -112,49 +115,68 @@ data Visibility = Visible | Hidden deriving (Eq, Ord, Show)
 -- 
 -- Uses an orthographic projection, viewed from the provided direction
 solidDiagram :: V3 Double -> Solid -> Diagram
-solidDiagram projectionDirection solid =  unsafeFromAcquire $ do
-    s' <- acquireSolid solid
-    algo <- HLRBRep.Algo.new
-    liftIO $ HLRBRep.Algo.add algo s'
-    o <- GP.origin
-    d <- v3ToDir projectionDirection
-    projector <- HLRAlgo.Projector.fromAx2 =<< GP.Ax2.newAutoX o d
-    liftIO $ do 
-        HLRBRep.Algo.projector algo projector
-        HLRBRep.Algo.update algo
-        HLRBRep.Algo.hide algo
+solidDiagram projectionDirection solid =
+    
+    let algoPtr  = unsafeFromAcquirePtr $ do
+            s' <- acquireSolid solid
+            algo <- HLRBRep.Algo.new
+            liftIO $ HLRBRep.Algo.add algo s'
+            return algo
+        projectorPtr = unsafeFromAcquirePtr $ do
+            o <- GP.origin
+            d <- v3ToDir projectionDirection
+            algo <- acquireForeignPtr algoPtr
+            projector' <- HLRAlgo.Projector.fromAx2 =<< GP.Ax2.newAutoX o d
+            liftIO $ do 
+                HLRBRep.Algo.projector algo projector'
+                HLRBRep.Algo.update algo
+                HLRBRep.Algo.hide algo
+            return projector'
+        extractorPtr = unsafeFromAcquirePtr $ HLRBRep.HLRToShape.fromAlgo =<< acquireForeignPtr algoPtr
 
-    extractor <- HLRBRep.HLRToShape.fromAlgo algo
+        theLines = getCompose 
+            . fmap (Path2D . ComplexRawPath) 
+            . unsafeFromAcquirePtrT 
+            . fmap (Compose . M.fromList)
+            . sequence $
+            [ do
+                _ <- acquireForeignPtr projectorPtr
+                extractor <- acquireForeignPtr extractorPtr
+                compoundOfEdges <- HLRBRep.HLRToShape.compoundOfEdges 
+                    extractor 
+                    (lineTypeToOpenCascade lt) 
+                    (visibility == Visible) 
+                    False
+                rawEdges <- allEdges compoundOfEdges
+                wires <- traverse ( edgeToWire <=< buildEdgeCurve3D) rawEdges
+                return ((lt, visibility), wires)
 
-    theLines <- fmap M.fromList . sequence $
-        [ do
-            compoundOfEdges <- HLRBRep.HLRToShape.compoundOfEdges 
-                extractor 
-                (lineTypeToOpenCascade lt) 
-                (visibility == Visible) 
-                False
-            rawEdges <- allEdges compoundOfEdges
-            wires <- liftIO . fromAcquireT $ traverse ( edgeToWire <=< buildEdgeCurve3D) rawEdges
-            return ((lt, visibility), Path2D . ComplexRawPath <$> wires)
+            | lt <- 
+                [ OutLine
+                , SharpLine
+                , RawLine HLRBRep.IsoLine
+                , RawLine HLRBRep.Rg1Line
+                , RawLine HLRBRep.RgNLine
+            ]
+            , visibility <- [Visible, Hidden]
+            ]
 
-        | lt <- 
-            [ OutLine
-            , SharpLine
-            , RawLine HLRBRep.IsoLine
-            , RawLine HLRBRep.Rg1Line
-            , RawLine HLRBRep.RgNLine
-        ]
-        , visibility <- [Visible, Hidden]
-        ]
+        theFills = getCompose
+            . fmap Shape
+            . unsafeFromAcquirePtrT 
+            . fmap Compose $ do 
+                s' <- acquireSolid solid
+                projector <- acquireForeignPtr projectorPtr
+                extractor <- acquireForeignPtr extractorPtr
+                fills <- buildSolidDiagramFills 
+                    (solidPaintMap solid) 
+                    s' 
+                    projectionDirection 
+                    projector
+                    extractor 
+                return $ fmap (fmap upcast) fills
 
-    theFills <-  buildSolidDiagramFills 
-        (solidPaintMap solid) 
-        s' 
-        projectionDirection 
-        projector
-        extractor 
-
-    return $ Diagram 
+    in Diagram 
         { getDiagramLines = theLines
         , getDiagramFills = theFills
         }
@@ -199,7 +221,7 @@ diagramBoundingBox d = unsafeFromAcquire $ do
         else do
             theBox <- Bnd.Box.new
             forM_ allWires $ \wire -> do
-                w <- toAcquire wire
+                w <- acquireForeignPtr wire
                 liftIO $ BRepBndLib.addOptimal (upcast w) theBox True False
             forM_ allPoints $ \point -> do
                 v <- v3ToVertex point

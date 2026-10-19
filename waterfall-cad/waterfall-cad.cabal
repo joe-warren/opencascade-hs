@@ -92,6 +92,7 @@ library
       base >=4.17 && <5
     , bifunctors ==5.*
     , containers >=0.6 && <1
+    , deepseq >=1.4 && <2
     , filepath >=1.4 && <1.6
     , lattices >=2.0 && <3
     , lens ==5.*

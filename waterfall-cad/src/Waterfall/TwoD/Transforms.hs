@@ -19,7 +19,7 @@ module Waterfall.TwoD.Transforms
 ) where
 
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr)
 import Waterfall.Internal.NearZero (nearZero)
 import Linear ((*^), normalize, dot, V3 (..), V2 (..), (!*), _xy, _z, unit, M23)
 import qualified OpenCascade.GP.Trsf as GP.Trsf
@@ -60,8 +60,8 @@ class Transformable2D a where
     mirror2D :: V2 Double -> a -> a
 
 fromTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Ptr GP.Trsf) -> Path2D -> Path2D
-fromTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquire $ do 
-    path <- toAcquire p
+fromTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquirePtr $ do 
+    path <- acquireForeignPtr p
     trsf <- mkTrsf 
     (liftIO . unsafeDowncast) 
         =<< BRepBuilderAPI.MakeShape.shape
@@ -71,15 +71,15 @@ fromTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $
 fromTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
 
 fromTrsfShape :: Acquire (Ptr GP.Trsf) -> Shape -> Shape
-fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
-    shape <- toAcquire theRawShape
+fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquirePtr $ do 
+    shape <- acquireForeignPtr theRawShape
     trsf <- mkTrsf 
     builder <- BRepBuilderAPI.Transform.fromShapeTrsfAndCopy shape trsf True 
     BRepBuilderAPI.MakeShape.shape (upcast builder)
     
 fromGTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Maybe (Ptr GP.GTrsf)) -> Path2D -> Path2D
-fromGTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquire  $ do 
-    path <- toAcquire p
+fromGTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquirePtr  $ do 
+    path <- acquireForeignPtr p
     trsfMay <- mkTrsf 
     case trsfMay of
         Just trsf -> 
@@ -92,8 +92,8 @@ fromGTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath 
 fromGTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
 
 fromGTrsfShape :: Acquire (Maybe (Ptr GP.GTrsf)) -> Shape -> Shape
-fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
-    shape <- toAcquire theRawShape 
+fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquirePtr $ do 
+    shape <- acquireForeignPtr theRawShape 
     trsfMay <- mkTrsf 
     case trsfMay of
         Just trsf -> 

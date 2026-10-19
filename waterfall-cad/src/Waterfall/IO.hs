@@ -57,7 +57,7 @@ import qualified OpenCascade.Quantity.ColorRGBA as Quantity.ColorRGBA
 import qualified OpenCascade.Quantity.TypeOfColor as Quantity.TypeOfColor
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (unless, when, forM, forM_, (<=<))
-import Waterfall.Internal.Finalizers (toAcquire, fromAcquire)
+import Waterfall.Internal.Finalizers (acquireForeignPtr, fromAcquirePtr)
 import Data.Acquire ( Acquire, withAcquire )
 import Foreign.Ptr (Ptr)
 import Data.Char (toLower)
@@ -134,7 +134,7 @@ writeSolid res filepath =
 
 writeSTLAsciiOrBinary :: Bool -> Double -> FilePath -> Solid -> IO ()
 writeSTLAsciiOrBinary asciiMode linDeflection filepath (Solid ptr _paintMap) = (`withAcquire` pure) $ do
-    s <- toAcquire ptr
+    s <- acquireForeignPtr ptr
     mesh linDeflection s
     writer <- StlWriter.new
     liftIO $ do
@@ -168,7 +168,7 @@ writeAsciiSTL = writeSTLAsciiOrBinary True
 -- STEP files can be imported by [FreeCAD](https://www.freecad.org/)
 writeSTEP :: FilePath -> Solid -> IO ()
 writeSTEP filepath (Solid ptr paintMap) = (`withAcquire` pure) $ do
-    s <- toAcquire ptr
+    s <- acquireForeignPtr ptr
     writer <- StepCAFControl.Writer.new
     doc <- cafDocument s paintMap
     liftIO $ StepCAFControl.Writer.setColorMode writer (not . paintMapIsEmpty $ paintMap)
@@ -252,12 +252,13 @@ addColourToCafWriter s shapeLabel paintMap = do
                 liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Base Shape not found in CAF document"
             materialMap <- buildMaterialMap materialTool (snd <$> facePaints)
             forM_ facePaints $ \(face, paint) -> do
+                face' <- acquireForeignPtr face
                 forM_ (paint ^. paintColour) $ \colour -> do
                         ocColour <- colourToOCColor colour
-                        colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool (upcast face) ocColour XCAFDoc.ColorType.ColorSurf
+                        colourWasSet <- liftIO $ XCafDoc.ColourTool.setShapeColor colourTool (upcast face') ocColour XCAFDoc.ColorType.ColorSurf
                         liftIO . unless colourWasSet $ hPutStrLn stderr "Inconsistency: Face not found in CAF document"
                 forM_ (M.lookup paint materialMap) 
-                    (liftIO . XCafDoc.VisMaterialTool.setShapeMaterialFromShape materialTool (upcast face))
+                    (liftIO . XCafDoc.VisMaterialTool.setShapeMaterialFromShape materialTool (upcast face'))
 
 mesh :: Double -> Ptr TopoDS.Shape -> Acquire ()
 mesh linDeflection s = do
@@ -349,7 +350,7 @@ remeshOrThrow filepath shape = do
 
 -- | Read a `Solid` from an STL file at a given path
 readSTL :: FilePath -> IO Solid
-readSTL filepath = fmap (`Solid` emptyPaintMap) . fromAcquire $ do
+readSTL filepath = fmap (`Solid` emptyPaintMap) . fromAcquirePtr $ do
     shape <- TopoDS.Shape.new
     reader <- StlReader.new
     res <- liftIO $ StlReader.read reader shape filepath
@@ -358,7 +359,7 @@ readSTL filepath = fmap (`Solid` emptyPaintMap) . fromAcquire $ do
 
 -- | Read a `Solid` from a STEP file at a given path
 readSTEP :: FilePath -> IO Solid
-readSTEP filepath = fmap (`Solid` emptyPaintMap) . fromAcquire $ do
+readSTEP filepath = fmap (`Solid` emptyPaintMap) . fromAcquirePtr $ do
     reader <- STEPReader.new
     status <- liftIO $ XSControl.Reader.readFile (upcast reader) filepath
     _ <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
@@ -369,7 +370,7 @@ readSTEP filepath = fmap (`Solid` emptyPaintMap) . fromAcquire $ do
     return shape
 
 cafReader :: Acquire (Ptr RWMesh.CafReader) -> FilePath -> IO Solid
-cafReader mkReader filepath = fmap (`Solid` emptyPaintMap) . fromAcquire $ do
+cafReader mkReader filepath = fmap (`Solid` emptyPaintMap) . fromAcquirePtr $ do
     reader <- mkReader
     doc <- TDocStd.Document.fromStorageFormat ""
     progress <- Message.ProgressRange.new

@@ -7,7 +7,7 @@ import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, sol
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.Internal.Path.Common (RawPath (..))
 import Waterfall.Internal.Edges (wireTangentStart, wireEndpoints)
-import Waterfall.Internal.Finalizers (toAcquire)
+import Waterfall.Internal.Finalizers (acquireForeignPtr)
 import Waterfall.Internal.NearZero (nearZero)
 import Waterfall.Transforms (rotate, translate)
 import Waterfall.TwoD.Internal.Shape (Shape (..))
@@ -43,8 +43,8 @@ positionFace p = acquireSolid . translate p . solidFromAcquire emptyPaintMap . p
 -- | Version of `sweep` that returns an Error on Failure
 trySweep :: Path -> Shape -> Either WaterfallError Solid
 trySweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = solidFromAcquireWithCatch emptyPaintMap $ do
-    path <- toAcquire theRawPath
-    shape <- toAcquire theRawShape
+    path <- acquireForeignPtr theRawPath
+    shape <- acquireForeignPtr theRawShape
     tangent <- liftIO $ wireTangentStart path
     (start,_)  <- liftIO $ wireEndpoints path
     adjustedFace <- positionFace start =<< rotateFace tangent shape
