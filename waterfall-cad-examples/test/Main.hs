@@ -5,6 +5,7 @@ module Main
 import DiagramGoldenTests (diagramGoldenTests)
 import ExceptionTests (exceptionTests)
 import PaintTests (paintTests)
+import LifetimeTests (lifetimeTests)
 import Test.Tasty (defaultMain, testGroup)
 
 
@@ -13,4 +14,5 @@ main = defaultMain $ testGroup "tests"
     [ diagramGoldenTests
     , exceptionTests
     , paintTests
+    , lifetimeTests
     ]
