@@ -62,10 +62,15 @@ import qualified OpenCascade.NCollection as NCollection
 import Control.Monad (filterM)
 import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
 import Foreign.ForeignPtr (ForeignPtr)
+import Control.DeepSeq (NFData (rnf), liftRnf, liftRnf2, rwhnf)
 
 data PaintMap 
     = UniformPaint Paint
     | FacePaints [(ForeignPtr TopoDS.Face, Paint)]
+
+instance NFData PaintMap where 
+    rnf (UniformPaint p) = rnf p
+    rnf (FacePaints fs) = liftRnf (liftRnf2 rwhnf rnf) fs
 
 emptyPaintMap :: PaintMap
 emptyPaintMap = UniformPaint mempty
@@ -88,6 +93,9 @@ data Solid = Solid
     { rawSolid :: ForeignPtr TopoDS.Shape.Shape 
     , solidPaintMap :: PaintMap
     }
+
+instance NFData Solid where
+    rnf (Solid s paints) = rwhnf s `seq` rnf paints
 
 acquireSolid :: Solid -> Acquire (Ptr TopoDS.Shape.Shape)
 acquireSolid (Solid ptr _) = acquireForeignPtr ptr

@@ -29,10 +29,14 @@ import Data.Acquire (Acquire)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad ((<=<))
 import Foreign.ForeignPtr (ForeignPtr)
+import Control.DeepSeq (NFData (rnf), rwhnf)
 
 -- | An OrientedBoundingBox may be a tighter fit for a Shape than an axis aligned bounding box would be
 -- 
-data OrientedBoundingBox = OrientedBoundingBox { rawOBB :: ForeignPtr OBB }
+newtype OrientedBoundingBox = OrientedBoundingBox { rawOBB :: ForeignPtr OBB }
+
+instance NFData OrientedBoundingBox where 
+    rnf (OrientedBoundingBox obb) = rwhnf obb
 
 -- | Compute an OrientedBoundingBox for a solid
 orientedBoundingBox :: Solid -> Maybe OrientedBoundingBox

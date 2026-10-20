@@ -19,8 +19,12 @@ import Control.Monad (unless)
 import OpenCascade.Font.FontAspect (FontAspect (..))
 import Control.Monad.IO.Class (liftIO)
 import Control.Exception (throwIO)
+import Control.DeepSeq (NFData (rnf), rwhnf)
 
 newtype Font = Font { rawFont :: ForeignPtr BRepFont.BRepFont }
+
+instance NFData Font where
+    rnf (Font ptr) = rwhnf ptr
 
 -- | Create a font from a filepath and a font size 
 fontFromPath :: FilePath -> Double -> IO Font 

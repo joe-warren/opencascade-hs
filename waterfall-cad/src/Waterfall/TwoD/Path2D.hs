@@ -38,9 +38,13 @@ import Linear.V2 (V2(..))
 import Control.Lens ((^.))
 import Linear ((^*), _xy, distance, normalize, unangle)
 import Waterfall.Path.Common
+import Control.DeepSeq (NFData (rnf), rwhnf)
 
 -- | The direction of a 2D rotation
 data Sense = Clockwise | Counterclockwise deriving (Eq, Show)
+
+instance NFData Sense where
+    rnf = rwhnf
 
 -- | Section of a circle, with a given radius, that lies between two points.
 --

@@ -1,5 +1,6 @@
 {-# Language OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-|
 Convert "Waterfall" data into [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG)
 -}
@@ -46,6 +47,7 @@ import Data.Maybe (fromMaybe)
 import Control.Applicative ((<|>))
 import Control.Arrow ((>>>))
 import Control.DeepSeq (NFData (rnf))
+import GHC.Generics (Generic)
 
 -- SVG.PathCommand doesn't have an NFData instance
 -- which is needed for it to be the target of an `unsafeFromAcquire`
@@ -205,7 +207,11 @@ data LineStyle = LineStyle
     { visibleLineColour :: Waterfall.Colour
     , hiddenLineColour :: Waterfall.Colour
     , hiddenLineOpacity :: Double
-    } deriving (Eq, Ord, Show)
+    } deriving (Eq, Ord, Show, Generic)
+
+instance NFData LineStyle
+
+
 
 defaultLineStyle :: LineStyle
 defaultLineStyle = LineStyle
