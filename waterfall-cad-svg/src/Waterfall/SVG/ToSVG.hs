@@ -1,12 +1,10 @@
 {-# Language OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-|
 Convert "Waterfall" data into [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG)
 -}
 module Waterfall.SVG.ToSVG
 ( path2DToPathCommands
-, LineStyle (..)
+, module Waterfall.SVG.ToSVG.LineStyle
 , lineStyleCss
 , diagramToSvgWithLineStyle
 , diagramToSvg
@@ -14,6 +12,7 @@ module Waterfall.SVG.ToSVG
 ) where
 
 import qualified Waterfall
+import Waterfall.SVG.ToSVG.LineStyle
 import qualified Graphics.Svg as Svg
 import qualified Graphics.Svg.CssTypes as Svg.Css
 import Waterfall.Internal.NearZero (nearZero)
@@ -47,7 +46,6 @@ import Data.Maybe (fromMaybe)
 import Control.Applicative ((<|>))
 import Control.Arrow ((>>>))
 import Control.DeepSeq (NFData (rnf))
-import GHC.Generics (Generic)
 
 -- SVG.PathCommand doesn't have an NFData instance
 -- which is needed for it to be the target of an `unsafeFromAcquire`
@@ -200,30 +198,18 @@ path2DToPathCommands (Path2D theRawPath) = case theRawPath of
                     =<< Internal.Finalizers.acquireForeignPtr wire)
 
 
--- | How lines should appear
--- 
--- These values are used to generate inline CSS
-data LineStyle = LineStyle
-    { visibleLineColour :: Waterfall.Colour
-    , hiddenLineColour :: Waterfall.Colour
-    , hiddenLineOpacity :: Double
-    } deriving (Eq, Ord, Show, Generic)
-
-instance NFData LineStyle
-
-
-
-defaultLineStyle :: LineStyle
-defaultLineStyle = LineStyle
-    { visibleLineColour = Waterfall.Colour 0 0 0
-    , hiddenLineColour = Waterfall.Colour 0 0 0
-    , hiddenLineOpacity = 0.4
-    }
 
 -- | The inline CSS used to style an SVG diagram
-lineStyleCss :: LineStyle -> [Svg.Css.CssRule]
-lineStyleCss (LineStyle {..}) = 
-    [ Svg.Css.CssRule 
+lineStyleCss :: DiagramStyle -> [Svg.Css.CssRule]
+lineStyleCss style =
+    let resolve l fallback line defaultLine = fromMaybe fallback (line ^. l <|> defaultLine ^. l)
+        strokeDeclarations line defaultLine =
+            [ Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor . colourToPixel $ resolve lineColour (Waterfall.Colour 0 0 0) line defaultLine]]
+            , Svg.Css.CssDeclaration "stroke-opacity" [[Svg.Css.CssNumber . Svg.Num $ resolve lineOpacity 1 line defaultLine]]
+            , Svg.Css.CssDeclaration "stroke-width" [[Svg.Css.CssNumber . Svg.Num $ resolve lineWidth 1 line defaultLine]]
+            ]
+    in
+    [ Svg.Css.CssRule
         [[Svg.Css.AllOf [Svg.Css.OfClass "edge"]]]
         [ Svg.Css.CssDeclaration "fill" [[Svg.Css.CssIdent "None"]]
         , Svg.Css.CssDeclaration "fill-opacity" [[Svg.Css.CssNumber (Svg.Num 0)]]
@@ -231,12 +217,10 @@ lineStyleCss (LineStyle {..}) =
         ]
     , Svg.Css.CssRule
         [[Svg.Css.AllOf [Svg.Css.OfClass "visible"], Svg.Css.AllOf[Svg.Css.OfClass "edge"]]]
-        [Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor . colourToPixel $ visibleLineColour]]]
+        (strokeDeclarations (style ^. diagramVisibleLine) (defaultDiagramStyle ^. diagramVisibleLine))
     , Svg.Css.CssRule
         [[Svg.Css.AllOf [Svg.Css.OfClass "hidden"], Svg.Css.AllOf [Svg.Css.OfClass "edge"]]]
-        [ Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor . colourToPixel $ hiddenLineColour]]
-        , Svg.Css.CssDeclaration "stroke-opacity" [[Svg.Css.CssNumber . Svg.Num $ hiddenLineOpacity]]
-        ]
+        (strokeDeclarations (style ^. diagramHiddenLine) (defaultDiagramStyle ^. diagramHiddenLine))
     , Svg.Css.CssRule
         [[Svg.Css.AllOf [Svg.Css.OfClass "fill"]]]
         [ Svg.Css.CssDeclaration "fill-rule" [[Svg.Css.CssIdent "evenodd"]]]
@@ -248,7 +232,7 @@ lineStyleCss (LineStyle {..}) =
 -- and are grouped within elements with class "sharp"\/"outline" and "visible"\/"hidden"
 -- 
 -- The diagram fills have the class "fill"
-diagramToSvgWithLineStyle :: LineStyle -> Waterfall.Diagram -> Svg.Document
+diagramToSvgWithLineStyle :: DiagramStyle -> Waterfall.Diagram -> Svg.Document
 diagramToSvgWithLineStyle lineStyle diagram = 
     case Waterfall.diagramBoundingBox diagram of 
         Nothing -> Svg.Document Nothing Nothing Nothing [] mempty mempty mempty mempty
@@ -306,7 +290,7 @@ diagramToSvgWithLineStyle lineStyle diagram =
 -- 
 -- The diagram fills have the class "fill"
 diagramToSvg :: Waterfall.Diagram -> Svg.Document
-diagramToSvg = diagramToSvgWithLineStyle defaultLineStyle
+diagramToSvg = diagramToSvgWithLineStyle defaultDiagramStyle
 
 -- | Write a `Waterfall.Diagram`, to an SVG file at the specified location 
 writeDiagramSVG :: FilePath -> Waterfall.Diagram -> IO ()

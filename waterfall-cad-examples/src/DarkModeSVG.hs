@@ -36,28 +36,38 @@ darkModeSVG diagram =
         nameIsStyle _ = False
         hasColour = not . null . Waterfall.getDiagramFills $ diagram
 
-        lightModeStyle = Waterfall.SVG.LineStyle
-            { Waterfall.SVG.visibleLineColour = Waterfall.black
-            , Waterfall.SVG.hiddenLineColour = 
-                if hasColour
+        lightModeStyle =
+          Waterfall.SVG.diagramWithVisibleLine 
+            ( Waterfall.SVG.lineWithColour Waterfall.black
+            ) 
+          <> Waterfall.SVG.diagramWithHiddenLine 
+            ( Waterfall.SVG.lineWithColour 
+              ( if hasColour
                   then Waterfall.black
                   else Waterfall.rgb24 0xC8C8FF
-            , Waterfall.SVG.hiddenLineOpacity = 
-                if hasColour 
-                  then 0.2
-                  else 1
-            }
-        darkModeStyle = Waterfall.SVG.LineStyle
-            { Waterfall.SVG.visibleLineColour = Waterfall.white
-            , Waterfall.SVG.hiddenLineColour = 
-                if hasColour
+              )
+              <> Waterfall.SVG.lineWithOpacity
+                ( if hasColour 
+                    then 0.2
+                    else 1
+                )
+            )
+        darkModeStyle = 
+          Waterfall.SVG.diagramWithVisibleLine 
+            ( Waterfall.SVG.lineWithColour Waterfall.white
+            ) 
+          <> Waterfall.SVG.diagramWithHiddenLine 
+            ( Waterfall.SVG.lineWithColour 
+              ( if hasColour
                   then Waterfall.white
                   else Waterfall.rgb24 0xA00000
-            , Waterfall.SVG.hiddenLineOpacity = 
-                if hasColour 
-                  then 0.2
-                  else 1
-            }
+              )
+              <> Waterfall.SVG.lineWithOpacity
+                ( if hasColour 
+                    then 0.2
+                    else 1
+                )
+            )
         styles = combineStyles (Waterfall.SVG.lineStyleCss lightModeStyle) (Waterfall.SVG.lineStyleCss darkModeStyle)
     in svgAsXML
             & XML.Cursor.fromElement
