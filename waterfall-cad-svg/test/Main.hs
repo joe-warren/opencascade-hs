@@ -6,6 +6,7 @@ import Paths_waterfall_cad_svg (getDataFileName)
 import Test.Tasty
 import Test.Tasty.HUnit
 import Waterfall.SVG
+import LineStyleTests (lineStyleTests)
 
 readTestFile :: FilePath -> IO (Either SVGError ())
 readTestFile = fmap void . readSVG <=< getDataFileName
@@ -15,6 +16,13 @@ shouldSatisfy x p = assertBool ("predicate failed for " <> show x) $ p x
 
 main :: IO ()
 main = defaultMain $
+  testGroup "tests"
+    [ readSVGTests
+    , lineStyleTests
+    ]
+
+readSVGTests :: TestTree
+readSVGTests =
   testGroup "readSVG" $
     [ testCase "reads a good file successfully" $ do
         result <- readTestFile "test-data/fixture1.svg"

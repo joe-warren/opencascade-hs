@@ -34,6 +34,7 @@ library
       Waterfall.SVG
       Waterfall.SVG.FromSVG
       Waterfall.SVG.ToSVG
+      Waterfall.SVG.ToSVG.LineStyle
   other-modules:
       Paths_waterfall_cad_svg
   hs-source-dirs:
@@ -57,6 +58,7 @@ test-suite tests
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      LineStyleTests
       Paths_waterfall_cad_svg
   hs-source-dirs:
       test
