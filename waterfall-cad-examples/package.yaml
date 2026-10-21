@@ -57,6 +57,13 @@ tests:
   waterfall-cad-tests:
     main: Main.hs
     source-dirs: test
+    # use the threaded RTS with multiple capabilities
+    # so that finalizers run concurrently with the tests 
+    # in order to reveal object lifetime bugs
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
     dependencies:
     - waterfall-cad-examples
     - tasty

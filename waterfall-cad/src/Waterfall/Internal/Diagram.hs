@@ -44,7 +44,7 @@ import Control.Monad ((<=<), filterM)
 import Waterfall.Internal.ToOpenCascade (v3ToPnt, v3ToDir)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Lin as GP.Lin
-import Waterfall.Internal.Finalizers (fromAcquire, fromAcquireT)
+import Waterfall.Internal.Finalizers (fromAcquirePtr, fromAcquirePtrT)
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified Data.Map as M
 import qualified OpenCascade.ShapeUpgrade.UnifySameDomain as UnifySameDomain
@@ -94,7 +94,7 @@ pruneDangling edges = do
 
 mergeRegions :: [Ptr TopoDS.Face] -> Acquire [Shape]
 mergeRegions [] = pure []
-mergeRegions [s] = liftIO $ pure . Shape <$> fromAcquire (TopoDS.Shape.copy . upcast $ s)
+mergeRegions [s] = liftIO $ pure . Shape <$> fromAcquirePtr (TopoDS.Shape.copy . upcast $ s)
 mergeRegions regions = do
     builder <- TopoDS.Builder.new
     compound <- TopoDS.Compound.new
@@ -103,7 +103,7 @@ mergeRegions regions = do
     unifier <- UnifySameDomain.fromShape (upcast compound) False True False
     liftIO $ UnifySameDomain.build unifier
     sameDomain <- UnifySameDomain.shape unifier
-    liftIO . fmap (fmap Shape) . fromAcquireT $ allSubShapesWithCopy ShapeEnum.Face sameDomain
+    liftIO . fmap (fmap Shape) . fromAcquirePtrT $ allSubShapesWithCopy ShapeEnum.Face sameDomain
 
 faceArea :: Ptr TopoDS.Face -> Acquire Double
 faceArea face = do

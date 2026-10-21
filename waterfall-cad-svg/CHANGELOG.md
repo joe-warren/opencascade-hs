@@ -12,6 +12,10 @@ and this project adheres to the
 
 - Added paths for painted regions of a `Diagram`, with class `fill`
 - Added `Waterfall.SVG.ToSVG.LineStyle`, `Waterfall.SVG.ToSVG.lineStyleCss` and `Waterfall.SVG.ToSVG.diagramToSvgWithLineStyle`
+- Added `Generic` and [`NFData`](https://hackage-content.haskell.org/package/deepseq/docs/Control-DeepSeq.html#t:NFData) instances for the following
+  - `Waterfall.SVG.ToSVG.LineStyle`
+  - `Waterfall.SVG.FromSVG.SVGError`
+  - `Waterfall.SVG.FromSVG.SVGErrorKind`
 
 ### Changed
 

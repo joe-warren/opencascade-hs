@@ -36,7 +36,7 @@ import Foreign.Ptr
 import Waterfall.Internal.Path.Common (RawPath (..))
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
-import Waterfall.Internal.Finalizers (unsafeFromAcquire, toAcquire, unsafeFromAcquireT)
+import Waterfall.Internal.Finalizers (unsafeFromAcquire, unsafeFromAcquirePtr, acquireForeignPtr, unsafeFromAcquirePtrT)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Waterfall.Internal.Edges (wireEndpoints, reverseWire, splitWires, wireLength, truncateWire)
 import Waterfall.Internal.NearZero (nearZero)
@@ -75,7 +75,7 @@ pointToGPPnt proxy pnt =
     in GP.Pnt.new x y z 
 
 fromWire :: AnyPath point path => Acquire (Ptr TopoDS.Wire) -> path
-fromWire = reconstructPath . ComplexRawPath . unsafeFromAcquire
+fromWire = reconstructPath . ComplexRawPath . unsafeFromAcquirePtr
 
 edgeToPath :: (AnyPath point path) => Acquire (Ptr TopoDS.Edge) -> path
 edgeToPath es = fromWire $ do
@@ -207,10 +207,10 @@ pathEndpoints :: forall point path. (AnyPath point path) => path -> Maybe (point
 pathEndpoints path = 
     case deconstructPath path of 
         ComplexRawPath p -> 
-            unsafeFromAcquire $ do
-                wire <- toAcquire p
-                (s, e) <- liftIO $ wireEndpoints wire
-                return . Just $ (v3ToPoint (Proxy :: Proxy path) s, v3ToPoint (Proxy :: Proxy path) e)
+            let (s, e) = unsafeFromAcquire $ do
+                    wire <- acquireForeignPtr p
+                    liftIO $ wireEndpoints wire
+            in Just (v3ToPoint (Proxy :: Proxy path) s, v3ToPoint (Proxy :: Proxy path) e)
         SinglePointRawPath p -> let x = v3ToPoint (Proxy :: Proxy path) p in Just (x, x)
         EmptyRawPath -> Nothing
             
@@ -223,8 +223,8 @@ splice :: forall point path. (AnyPath point path, Num point) => path -> point ->
 splice path pnt =
     case deconstructPath path of
         ComplexRawPath unacquiredWire ->  
-            let res = unsafeFromAcquire $ do
-                    wire <- toAcquire unacquiredWire
+            let res = unsafeFromAcquirePtrT $ do
+                    wire <- acquireForeignPtr unacquiredWire
                     (s, e) <- liftIO $ wireEndpoints wire
                     let s' = v3ToPoint (Proxy :: Proxy path) s
                         e' = v3ToPoint (Proxy :: Proxy path) e
@@ -236,11 +236,10 @@ splice path pnt =
                     liftIO $ GP.Trsf.setTranslation trsf vec
                     newWire <- 
                         (liftIO . unsafeDowncast) 
-                            =<< BRepBuilderAPI.MakeShape.shape
-                            =<< fmap upcast 
-                                (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast wire) trsf True)
+                            =<< BRepBuilderAPI.MakeShape.shape . upcast
+                            =<< BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast wire) trsf True
                     return (pnt + e' - s', newWire)
-            in (fst res, fromWire (fmap snd . toAcquire $ res))
+            in (fst res, fromWire (fmap snd . traverse acquireForeignPtr $ res))
         _ -> (pnt, reconstructPath EmptyRawPath)
 
 -- | Given a path, return a new path with the endpoints joined by a straight line.
@@ -256,21 +255,21 @@ closeLoop p =
 reversePath :: (AnyPath point path) => path -> path
 reversePath p = 
     case deconstructPath p of
-        ComplexRawPath r -> fromWire . reverseWire $ r
+        ComplexRawPath r -> fromWire (reverseWire =<< acquireForeignPtr r)
         _ -> p
 
 -- | Break a path apart at any "non smooth" point
 splitPath :: (AnyPath point path) => path -> [path]
 splitPath p = 
     case deconstructPath p of 
-        ComplexRawPath r -> fmap (reconstructPath . ComplexRawPath) . unsafeFromAcquireT . splitWires $ r
+        ComplexRawPath r -> fmap (reconstructPath . ComplexRawPath) . unsafeFromAcquirePtrT $ (splitWires =<< acquireForeignPtr r)
         _ -> [p]
 
 -- | Measure a path
 pathLength :: AnyPath point path => path -> Double
 pathLength p =
     case deconstructPath p of
-        ComplexRawPath r -> unsafeFromAcquire $ liftIO . wireLength =<< toAcquire r
+        ComplexRawPath r -> unsafeFromAcquire $ liftIO . wireLength =<< acquireForeignPtr r
         _ -> 0
 
 -- | Truncate a path to a fraction of its total length.
@@ -288,7 +287,7 @@ takePathFraction fraction p
     | otherwise =
         case deconstructPath p of
             ComplexRawPath r -> fromWire $ do
-                wire <- toAcquire r
+                wire <- acquireForeignPtr r
                 totalLength <- liftIO $ wireLength wire
                 let targetLength = fraction * totalLength
                 truncateWire targetLength wire

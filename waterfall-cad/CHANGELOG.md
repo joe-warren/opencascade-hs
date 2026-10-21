@@ -35,6 +35,24 @@ and this project adheres to the
 - Added `Waterfall.Diagram.getDiagramLines` and `Waterfall.Diagram.getDiagramFills`
 - Added `Waterfall.Diagram.shapeDiagram`
 - Added `Waterfall.Fillet.whenEndpointsNearlyEqual` (replacement for `whenNearlyEqual`)
+- Added [`NFData`](https://hackage-content.haskell.org/package/deepseq/docs/Control-DeepSeq.html#t:NFData) instances for the following
+  - `Waterfall.Solids.Solid`
+  - `Waterfall.Path.Path`
+  - `Waterfall.TwoD.Path2D.Path2D`
+  - `Waterfall.TwoD.Path2D.Sense`
+  - `Waterfall.TwoD.Shape.Shape`
+  - `Waterfall.TwoD.Text.Font`
+  - `Waterfall.BoundingBox.Oriented.OrientedBoundingBox`
+  - `Waterfall.Diagram.Diagram`
+  - `Waterfall.Diagram.LineType`
+  - `Waterfall.Diagram.Visibility`
+  - `Waterfall.Paint.Paint`
+  - `Waterfall.Paint.DoubleSidedness`
+  - `Waterfall.Colour.Colour`
+  - `Waterfall.Error.WaterfallError`
+- Added `Generic` instances for the following
+  - `Waterfall.Diagram.Diagram`
+  - `Waterfall.Colour.Colour`
 
 ### Changed
 
@@ -45,6 +63,11 @@ and this project adheres to the
 
 ### Removed
 - `Waterfall.Fillet.whenNearlyEqual`
+
+### Fixed 
+- Fixed a "use after free" bug, where OpenCascade objects could be destructed while still in use.
+  - Specifically, the code that links OpenCascade destructors into the Haskell Garbage Collector no longer allows destructors to be associated to any object: they now must be associated to a `ForeignPtr`. This should eliminate a category of bugs.
+
 
 ## 0.6.3.2
 

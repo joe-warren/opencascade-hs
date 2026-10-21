@@ -119,11 +119,12 @@ test-suite waterfall-cad-tests
   other-modules:
       DiagramGoldenTests
       ExceptionTests
+      LifetimeTests
       PaintTests
       Paths_waterfall_cad_examples
   hs-source-dirs:
       test
-  ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration
+  ghc-options: -Wall -Werror=compat -Werror=identities -Werror=incomplete-record-updates -Werror=incomplete-uni-patterns -Werror=missing-home-modules -Werror=missing-export-lists -Werror=partial-fields -Werror=redundant-constraints -optc -Werror-implicit-function-declaration -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       FontyFruity
     , JuicyPixels

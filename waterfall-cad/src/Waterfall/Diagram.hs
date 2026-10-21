@@ -1,7 +1,6 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE DeriveGeneric #-}
 module Waterfall.Diagram
 ( Diagram
 , getDiagramFills
@@ -31,7 +30,7 @@ import qualified OpenCascade.BRepBndLib as BRepBndLib
 import Waterfall.Internal.ToOpenCascade (v3ToDir, v3ToVertex)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Control.Monad.IO.Class (liftIO)
-import Waterfall.Internal.Finalizers (unsafeFromAcquire, toAcquire, fromAcquireT)
+import Waterfall.Internal.Finalizers (unsafeFromAcquire, acquireForeignPtr, fromAcquirePtrT)
 import Waterfall.Internal.Edges (allEdges, buildEdgeCurve3D, edgeToWire)
 import Waterfall.Internal.Path.Common (RawPath (..))
 import Waterfall.TwoD.Transforms (Transformable2D (..))
@@ -39,13 +38,15 @@ import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import OpenCascade.Inheritance (upcast)
 import Control.Monad (forM_, (<=<))
 import Data.Map (Map)
-import Waterfall.TwoD.Internal.Shape ( Shape )
+import Waterfall.TwoD.Internal.Shape (Shape (..))
 import Waterfall.Paint (Paint)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Either (partitionEithers)
 import Waterfall.Internal.Diagram (buildSolidDiagramFills)
 import Waterfall.TwoD.Shape (shapePaths)
+import GHC.Generics (Generic)
+import Control.DeepSeq (NFData (rnf), rwhnf)
 
 -- | `Diagram` of a Waterfall part
 --
@@ -58,7 +59,9 @@ data Diagram = Diagram
      { getDiagramLines :: Map (LineType, Visibility) [Path2D]
      -- | Flat regions of colour
      , getDiagramFills :: [(Paint, Shape)]
-     }
+     } deriving Generic
+
+instance NFData Diagram
 
 instance Semigroup Diagram where
     a <> b = Diagram 
@@ -95,6 +98,10 @@ data LineType =
     | RawLine HLRBRep.TypeOfResultingEdge
     deriving (Eq, Ord, Show)
 
+instance NFData LineType where
+    rnf (RawLine t) = rwhnf t
+    rnf other = rwhnf other
+
 normaliseLineType :: LineType -> LineType
 normaliseLineType (RawLine HLRBRep.Sharp) = SharpLine
 normaliseLineType (RawLine HLRBRep.OutLine) = OutLine
@@ -107,6 +114,8 @@ lineTypeToOpenCascade (RawLine lt) = lt
 
 -- | Whether an edge is visible in a given projection, or not
 data Visibility = Visible | Hidden deriving (Eq, Ord, Show)
+
+instance NFData Visibility where rnf = rwhnf
 
 -- | Produce a diagram of a `Solid`
 -- 
@@ -134,7 +143,7 @@ solidDiagram projectionDirection solid =  unsafeFromAcquire $ do
                 (visibility == Visible) 
                 False
             rawEdges <- allEdges compoundOfEdges
-            wires <- liftIO . fromAcquireT $ traverse ( edgeToWire <=< buildEdgeCurve3D) rawEdges
+            wires <- liftIO . fromAcquirePtrT $ traverse ( edgeToWire <=< buildEdgeCurve3D) rawEdges
             return ((lt, visibility), Path2D . ComplexRawPath <$> wires)
 
         | lt <- 
@@ -158,6 +167,7 @@ solidDiagram projectionDirection solid =  unsafeFromAcquire $ do
         { getDiagramLines = theLines
         , getDiagramFills = theFills
         }
+        
 
 -- | Produce a `Diagram` from a `Path2D`
 -- 
@@ -199,7 +209,7 @@ diagramBoundingBox d = unsafeFromAcquire $ do
         else do
             theBox <- Bnd.Box.new
             forM_ allWires $ \wire -> do
-                w <- toAcquire wire
+                w <- acquireForeignPtr wire
                 liftIO $ BRepBndLib.addOptimal (upcast w) theBox True False
             forM_ allPoints $ \point -> do
                 v <- v3ToVertex point

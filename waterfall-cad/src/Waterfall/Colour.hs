@@ -1,3 +1,4 @@
+{-#LANGUAGE DeriveGeneric #-}
 module Waterfall.Colour
 ( Colour (..)
 , rgb24
@@ -21,10 +22,14 @@ module Waterfall.Colour
 
 import Data.Word (Word32)
 import Data.Bits (shiftR, (.&.))
+import GHC.Generics (Generic)
+import Control.DeepSeq (NFData)
 
 -- | Three sRGB values, in the range [0, 1]
 data Colour = Colour Double Double Double
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Generic)
+
+instance NFData Colour
 
 -- | Convert an integer into a Colour
 --

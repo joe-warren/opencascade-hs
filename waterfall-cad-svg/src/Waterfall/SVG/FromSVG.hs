@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-|
 Load [SVG Data](https://developer.mozilla.org/en-US/docs/Web/SVG) into `Waterfall.Path2D`
 -}
@@ -29,6 +30,8 @@ import Control.Monad (join, (<=<))
 import Data.Bifunctor (first)
 import Data.Maybe (catMaybes)
 import Data.Function ((&))
+import GHC.Generics (Generic)
+import Control.DeepSeq (NFData)
 
 -- | Categories of error that may occur when processing an SVG
 data SVGErrorKind
@@ -38,11 +41,15 @@ data SVGErrorKind
     | SVGPathError
     | SVGTransformError
     | SVGNumberError
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Generic)
+
+instance NFData SVGErrorKind
 
 -- | Type representing an error that occured when processing an SVG
 data SVGError = SVGError SVGErrorKind String
-        deriving (Eq, Ord, Show)
+        deriving (Eq, Ord, Show, Generic)
+
+instance NFData SVGError
 
 uncurry6 :: (a -> b -> c -> d -> e -> f -> g) -> (a, b, c, d, e, f) -> g
 uncurry6 fn (a, b, c, d, e, f) = fn a b c d e f
