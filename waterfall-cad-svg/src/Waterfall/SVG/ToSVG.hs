@@ -253,14 +253,17 @@ diagramToSvgWithLineStyle lineStyle diagram =
     case Waterfall.diagramBoundingBox diagram of 
         Nothing -> Svg.Document Nothing Nothing Nothing [] mempty mempty mempty mempty
         Just (lo, hi) -> 
-            let w = Just . Svg.Num $ (hi - lo) ^. _x + 4
-                h = Just . Svg.Num $ (hi - lo) ^. _y + 4
-                d' = Waterfall.translate2D (2 + negate lo) diagram
+            let 
+                w' = (hi - lo) ^. _x + 4
+                h' = (hi - lo) ^. _y + 4           
+                w = Just . Svg.Num $ w'
+                h = Just . Svg.Num $ h'
+                viewbox = Just (lo ^. _x - 2, lo ^. _y - 2, w', h')
                 paths lt visibility =
                     path2DToPathCommands =<<
-                        Waterfall.diagramLines lt visibility d'
+                        Waterfall.diagramLines lt visibility diagram
                 styles = lineStyleCss lineStyle
-                document e = Svg.Document Nothing w h [e] mempty mempty styles mempty
+                document e = Svg.Document viewbox w h [e] mempty mempty styles mempty
                 pathOf lt visibility = 
                         Svg.defaultSvg 
                             & Svg.pathDefinition .~ paths lt visibility
@@ -270,7 +273,7 @@ diagramToSvgWithLineStyle lineStyle diagram =
                 fills = 
                     Svg.defaultSvg 
                         & Svg.groupChildren .~ 
-                            (Waterfall.getDiagramFills d' 
+                            (Waterfall.getDiagramFills diagram
                                 <&> (fillToPath
                                     >>> Svg.drawAttr . Svg.attrClass .~ ["fill"]
                                     >>> Svg.PathTree
