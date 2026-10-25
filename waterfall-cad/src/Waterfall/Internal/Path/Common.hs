@@ -11,22 +11,29 @@ import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import Waterfall.Internal.Edges (joinWires, wireEndpoints)
 import Waterfall.Internal.ToOpenCascade (v3ToPnt)
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtrT)
 import Control.Monad.IO.Class (liftIO)
 import Linear (V3 (..), distance)
 import Foreign.Ptr
-import Data.Maybe (catMaybes)
+import Foreign.ForeignPtr (ForeignPtr)
+import Data.Maybe (mapMaybe)
 import Data.Semigroup (sconcat)
 import Data.List.NonEmpty (NonEmpty ())
 import Data.Foldable (toList)
+import Control.DeepSeq (NFData (rnf), rwhnf)
 
-data RawPath = EmptyRawPath | SinglePointRawPath (V3 Double) | ComplexRawPath (Ptr TopoDS.Wire)
+data RawPath = EmptyRawPath | SinglePointRawPath (V3 Double) | ComplexRawPath (ForeignPtr TopoDS.Wire)
 
-rawPathWire :: RawPath -> Maybe (Ptr TopoDS.Wire)
-rawPathWire (ComplexRawPath wire) = Just wire
-rawPathWire _ = Nothing
+instance NFData RawPath where
+    rnf EmptyRawPath = ()
+    rnf (SinglePointRawPath v) = rnf v
+    rnf (ComplexRawPath fp) = rwhnf fp
 
-rawPathToEither :: RawPath -> Maybe (Either (V3 Double) (Ptr TopoDS.Wire))
+rawPathWire :: RawPath -> Acquire (Maybe (Ptr TopoDS.Wire))
+rawPathWire (ComplexRawPath wire) = Just <$> acquireForeignPtr wire
+rawPathWire _ = pure Nothing
+
+rawPathToEither :: RawPath -> Maybe (Either (V3 Double) (ForeignPtr TopoDS.Wire))
 rawPathToEither EmptyRawPath = Nothing
 rawPathToEither (SinglePointRawPath p) = Just . Left $ p
 rawPathToEither (ComplexRawPath wire) = Just . Right $ wire
@@ -48,8 +55,7 @@ intersperseLines (a:b:xs) = do
     ea <- case a of 
             Left pnt -> pure pnt
             Right wire -> do
-                wire' <- toAcquire wire
-                liftIO $ snd <$> wireEndpoints wire'
+                liftIO $ snd <$> wireEndpoints wire
     sb <- case b of
             Left pnt -> pure pnt 
             Right wire -> liftIO $ fst <$> wireEndpoints wire
@@ -60,14 +66,17 @@ intersperseLines (a:b:xs) = do
 
 joinRawPaths :: [RawPath] -> RawPath
 joinRawPaths paths = 
-    case catMaybes (rawPathToEither <$> paths) of
+    case mapMaybe rawPathToEither paths of
         [] -> EmptyRawPath
         [Left pnt] -> SinglePointRawPath pnt
-        path@(h:_) -> unsafeFromAcquire $ do
-            interspersed <- intersperseLines path
-            case interspersed of 
-                [] -> pure . either SinglePointRawPath ComplexRawPath $ h
-                wires -> ComplexRawPath <$> joinWires wires
+        path@(h:_) ->
+            let joined = unsafeFromAcquirePtrT $ do
+                    acquired <- traverse (traverse acquireForeignPtr) path
+                    interspersed <- intersperseLines acquired
+                    case interspersed of 
+                        [] -> pure Nothing
+                        wires -> Just <$> joinWires wires
+            in maybe (either SinglePointRawPath ComplexRawPath h) ComplexRawPath joined
 
 instance Semigroup RawPath where
     sconcat :: NonEmpty RawPath -> RawPath

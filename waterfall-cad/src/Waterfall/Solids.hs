@@ -24,7 +24,8 @@ module Waterfall.Solids
 
 import Waterfall.Internal.Solid (Solid (..), PaintMap (..), solidFromAcquire, acquireSolid, emptySolid, emptyPaintMap)
 import Waterfall.Paint (Paint, paintWithColour)
-import Waterfall.Internal.Finalizers (toAcquire, unsafeFromAcquire)
+import Waterfall.Internal.Finalizers (NoPtr, acquireForeignPtr, unsafeFromAcquire)
+import Control.DeepSeq (NFData)
 import Waterfall.TwoD.Internal.Shape (rawShape)
 import Waterfall.Internal.ToOpenCascade (v3ToVertex)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
@@ -135,7 +136,7 @@ prism :: Double -> TwoD.Shape.Shape -> Solid
 prism len face 
     | nearZero len = mempty
     | otherwise = solidFromAcquire emptyPaintMap $ do
-        p <- toAcquire . rawShape $ face
+        p <- acquireForeignPtr . rawShape $ face
         v <- GP.Vec.new 0 0 len
         MakePrism.fromVec p v True True
 
@@ -267,7 +268,7 @@ paintSolid :: Paint -> Solid -> Solid
 paintSolid paint (Solid s _) = 
     Solid s (UniformPaint paint )
 
-gPropQuery :: (Ptr GProps.GProps -> Acquire a) -> Solid -> a
+gPropQuery :: (NoPtr a, NFData a) => (Ptr GProps.GProps -> Acquire a) -> Solid -> a
 gPropQuery f s = unsafeFromAcquire $ do
     solid <- acquireSolid s
     gProp <- GProps.new

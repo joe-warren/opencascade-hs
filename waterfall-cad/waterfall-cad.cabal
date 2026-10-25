@@ -92,11 +92,11 @@ library
       base >=4.17 && <5
     , bifunctors ==5.*
     , containers >=0.6 && <1
+    , deepseq >=1.4 && <2
     , filepath >=1.4 && <1.6
     , lattices >=2.0 && <3
     , lens ==5.*
     , linear >=1.21 && <2
     , opencascade-hs >=0.6.3.2 && <0.7
-    , primitive >=0.7 && <0.10
     , resourcet >=1.2 && <1.4
   default-language: Haskell2010

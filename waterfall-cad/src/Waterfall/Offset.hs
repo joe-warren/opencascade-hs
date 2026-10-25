@@ -29,7 +29,7 @@ module Waterfall.Offset
 , tryOffsetWithToleranceWithPaint
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, PaintMap (..), makeShapeHistory, solidFromAcquireTWithPaintMapWithCatch)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, acquireFacePaints, fromAcquirePaints, PaintMap (..), makeShapeHistory, solidFromAcquireTWithPaintMapWithCatch)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
@@ -88,7 +88,10 @@ filterPaintMap :: Ptr TopoDS.Shape -> PaintMap -> Acquire PaintMap
 filterPaintMap _ (UniformPaint paint) = pure (UniformPaint paint)
 filterPaintMap s (FacePaints paints) = do
     faceSet <- liftIO . ShapeMap.fromList . fmap (,()) =<< allSubShapesWithCopy ShapeEnum.Face s
-    liftIO $ FacePaints <$> filterM (fmap isJust . ShapeMap.lookup faceSet . upcast . fst) paints
+    fmap FacePaints . liftIO . fromAcquirePaints $
+        ( filterM (liftIO . fmap isJust . ShapeMap.lookup faceSet . upcast . fst) 
+            =<< acquireFacePaints paints
+        )
 
 offsetOneWithTolerance ::
     Double
