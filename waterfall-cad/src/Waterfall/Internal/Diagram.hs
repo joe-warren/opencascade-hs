@@ -66,7 +66,7 @@ calcFuzzyTolerance edges = do
     hi <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax theBox
     let d = hi - lo
     let maxDim = max (d ^. _x) (d ^. _y)
-    return (maxDim / 10000)
+    return $ max 1e-6 (maxDim / 10000)
 
 calcRayBound :: Ptr TopoDS.Shape -> Acquire Double
 calcRayBound s = do
