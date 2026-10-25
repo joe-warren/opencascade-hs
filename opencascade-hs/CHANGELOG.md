@@ -8,18 +8,57 @@ and this project adheres to the
 
 ## Unreleased
 
-
 ### Added
 
 - Support for OpenCASCADE 8.x
 - Added `OpenCascade.TCollection.AsciiString`
 - Added `OpenCascade.NCollection.IndexedDataMap`
+- Added `OpenCascade.NCollection.List`
+- Added `OpenCascade.TopExp.mapShapesAndAncestors`
+- Added `modified`, `generated` and `isDeleted` to `OpenCascade.BRepBuilderAPI.MakeShape` and `OpenCascade.BOPAlgo.Builder`
+- Added builder versions of some functions that used to be one-shot:
+  - `OpenCascade.BRepAlgoAPI.Fuse` 
+  - `OpenCascade.BRepAlgoAPI.Cut`
+  - `OpenCascade.BRepAlgoAPI.Common`
+  - `OpenCascade.BRepBuilderAPI.Transform` 
+  - `OpenCascade.BRepBuilderAPI.GTransform`
+- Added `OpenCascade.BRepBuilderAPI.Types.Transform`
+- Added `OpenCascade.BRepBuilderAPI.Types.GTransform`
+- Added `OpenCascade.TDF.Label.isNull`
+- Added `addSubShape` and `findShape` to `OpenCascade.XCAFDoc.ShapeTool`
+- Added `OpenCascade.BRepAlgoAPI`
+- Added `OpenCascade.Quantity`
+- Added `OpenCascade.HLRAlgo`
+- Added `OpenCascade.Quantity.Color`, `OpenCascade.Quantity.TypeOfColor`, `OpenCascade.XCAFDoc.ColorTool`,
+  `OpenCascade.XCAFDoc.ColorType`, `OpenCascade.XCAFDoc.VisMaterial`, `OpenCascade.XCAFDoc.VisMaterialPBR`,
+  `OpenCascade.XCAFDoc.VisMaterialTool`, `OpenCascade.Graphic3D.AlphaMode`, `OpenCascade.Quantity.ColorRGBA` 
+- Added `colorTool` and `visMaterialTool` to `OpenCascade.XCAFDoc.DocumentTool`
+- Added `OpenCascade.STEPCAFControl.Writer`
+- Added `OpenCascade.BOPAlgo.Tools` 
+- Added `OpenCascade.BOPAlgo.Builder.setFuzzyValue`
+- Added `OpenCascade.GP.Lin`
+- Added `OpenCascade.HLRAlgo.Projector.transformation` and `OpenCascade.HLRAlgo.Projector.invertedTransformation`
+- Added `OpenCascade.IntCurvesFace.ShapeIntersector`
+- Added `OpenCascade.IntCurvesFace.Types`
+- Added `OpenCascade.Poly.Triangulation.isNull`
+- Added `OpenCascade.NCollection.Vec3`
+- Added `OpenCascade.ShapeUpgrade.UnifySameDomain`
+- Added `OpenCascade.ShapeUpgrade.Types`
+- Added `OpenCascade.XCAFDoc.VisMaterial.setFaceCulling` and `OpenCascade.XCAFDoc.VisMaterial.setRawName`
+- Added `OpenCascade.Graphic3D.TypeOfBackfacingModel`
+- Added `OpenCascade.Standard.Failure.getTypeName`
+- Added `OpenCascade.BRepAlgoAPI.Types`
+- Added `OpenCascade.NCollection.List`
+
+### Changed
+
+- `OpenCascadeStandardFailure` now has an extra field, for a total of three fields: "type name", "message", "stack trace". "type name" is new.
 
 ### Removed
 
 - In order to support building against OpenCASCADE 8.x:
-  - Removed `OpenCascade.TopTools.ListOfShape` (replaced by `OpenCascade.NCollection.List TopoDS.Shape`)
   - Removed `OpenCascade.TColStd.IndexedDataMapOfStringString` ( replaced by `OpenCascade.NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString` + `OpenCascade.NCollection.IndexedDataMap.newAsciiStringMap`)
+- Removed `fuse`, `cut`, `common`, `transform` and `gtransform`, in favour of `fromShapes` in `OpenCascade.BRepAlgoAPI.Fuse`, `OpenCascade.BRepAlgoAPI.Cut` and `OpenCascade.BRepAlgoAPI.Common`, `fromShapeTrsfAndCopy` in `OpenCascade.BRepBuilderAPI.Transform` and `fromShapeGTrsfAndCopy` in `OpenCascade.BRepBuilderAPI.GTransform`
 
 ## 0.6.3.2
 

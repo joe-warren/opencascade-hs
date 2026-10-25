@@ -7,6 +7,22 @@
 
 #include <stdexcept>
 #include <Standard_Failure.hxx>
+#include <Standard_Version.hxx>
+#include <string>
+
+struct HSStandardFailure {
+  std::string typeName;
+  Standard_Failure failure;
+};
+
+inline HSStandardFailure* hs_copyStandardFailure(const Standard_Failure& e) {
+#if OCC_VERSION_HEX >= 0x080000
+  const char* typeName = e.ExceptionType();
+#else
+  const char* typeName = e.DynamicType()->Name();
+#endif
+  return new HSStandardFailure{ typeName ? typeName : "", Standard_Failure(e) };
+}
 
 enum HSExceptionType {
     NoException = 0,
@@ -23,7 +39,7 @@ void hs_handleExVoid(HSExceptionType* theType, void ** exPtr, T&& f) {
   }
   catch (Standard_Failure &e) {
     *theType = StandardFailureEx;
-    *exPtr = new Standard_Failure(e);
+    *exPtr = hs_copyStandardFailure(e);
   }
   catch (std::exception &e) {
     *theType = StdExceptionEx;
@@ -48,7 +64,7 @@ auto hs_handleExWithDefault(HSExceptionType* theType, void ** exPtr, T&& f, decl
   }
   catch (Standard_Failure &e) {
     *theType = StandardFailureEx;
-    *exPtr = new Standard_Failure(e);
+    *exPtr = hs_copyStandardFailure(e);
   }
   catch (std::exception &e) {
     *theType = StdExceptionEx;

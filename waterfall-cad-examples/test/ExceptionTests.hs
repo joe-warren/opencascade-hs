@@ -61,7 +61,7 @@ exceptionTests = testGroup "Exception Tests"
                 e -> Just $ "Expected WaterfallIOException\ngot: " <> show e
     , testCase "Bad Fillet" $ assertEqual "Bad Fillet"
         (fromLeft (error "expected failure") $ Fillet.tryRoundFillet 2 Solids.centeredCube)
-        (WaterfallError $ OpenCascadeStandardFailure "BRep_API: command not done" "")
+        (WaterfallError $ OpenCascadeStandardFailure "StdFail_NotDone" "BRep_API: command not done" "")
     , testCase "Bad Revolution" $ assertEqual "Bad Revolution"
         (fromLeft (error "expected failure") $ Revolution.tryRevolution
             (Path2D.pathFrom (V2 (-1) 0)
@@ -69,7 +69,7 @@ exceptionTests = testGroup "Exception Tests"
                 , Path2D.lineTo (V2 1 2)
                 , Path2D.lineTo (V2 (-1) 2)
                 ]))
-        (WaterfallError $ OpenCascadeStandardFailure "BRep_API: command not done" "")
+        (WaterfallError $ OpenCascadeStandardFailure "StdFail_NotDone" "BRep_API: command not done" "")
     , testCase "Throw Std Exception" $ with (RuntimeError.new "Some Exception Text") $ \re -> 
         expectFailure (testThrow (upcast re)) (OpenCascadeStdException "Some Exception Text")
     ]

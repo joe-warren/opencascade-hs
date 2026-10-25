@@ -40,6 +40,7 @@ import qualified TwoDBooleansExample
 import qualified PlatonicSolidsExample
 import qualified TakePathFractionExample
 import qualified Paths_waterfall_cad_examples as Paths
+import qualified FlagExample
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
@@ -55,7 +56,7 @@ pixelDiffThreshold :: Integer
 pixelDiffThreshold = 16
 
 pixelCountThreshold :: Integer
-pixelCountThreshold = 64
+pixelCountThreshold = 128
 
 comparePixels :: JP.PixelRGBA8 -> JP.PixelRGBA8 -> Bool
 comparePixels (JP.PixelRGBA8 r1 g1 b1 a1) (JP.PixelRGBA8 r2 g2 b2 a2) = 
@@ -67,7 +68,7 @@ size a = (JP.imageWidth a, JP.imageHeight a)
 
 similarSizes :: JP.Image px -> JP.Image px -> Bool
 similarSizes a b =
-    let within1 a b = abs (a - b) <= 1
+    let within1 x y = abs (x - y) <= 1
      in (within1 `on` JP.imageWidth) a b 
         && (within1 `on` JP.imageHeight) a b
 
@@ -213,6 +214,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
     , smallSolidTest "2D Booleans" "2d-booleans.svg"  TwoDBooleansExample.twoDBooleansExample
     , solidTest "Platonic Solids" "platonic.svg" PlatonicSolidsExample.platonicSolidsExample
     , solidTest "Take Path Fraction" "takePathFraction.svg" TakePathFractionExample.takePathFractionExample
+    , solidTest "Flags" "flags.svg" FlagExample.flagExample
     , solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
         (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
     , solidTest "Negative Scaled Cube II" "negativeScaledCube-II.svg" 

@@ -1,0 +1,17 @@
+# from within a dev container
+
+wasm32-wasi-cabal build opencascade-hs waterfall-cad waterfall-cad-svg
+./playground/build_playground.sh
+
+# the dev container forwards port 8080
+
+python3 -m http.server 8080 -d playground/dist
+
+# To build for deployment, setting the URL to the wasm blog
+
+./playground/build_playground.sh https://waterpark.proceduralfurniture.net/
+
+# The assets live in playground/dist which is mounted
+# rootfs.<hash>.tar.zst needs to be uploaded to the CDN (FloudClare)
+# everything else goes to the main webserver directory
+

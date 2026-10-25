@@ -18,6 +18,8 @@ int hs_Poly_Triangulation_nbNodes(Handle(Poly_Triangulation) * triangulation);
 
 int hs_Poly_Triangulation_nbTriangles(Handle(Poly_Triangulation) * triangulation);
 
+bool hs_Poly_Triangulation_isNull(Handle(Poly_Triangulation) * triangulation);
+
 gp_Pnt * hs_Poly_Triangulation_node(
     Handle(Poly_Triangulation) * triangulation, int index,
     HSExceptionType* exType, void ** exPtr

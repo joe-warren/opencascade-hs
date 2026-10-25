@@ -25,8 +25,28 @@ TopoDS_Shape * hs_BOPAlgo_Builder_Shape(
 
 void hs_BOPAlgo_Builder_SetRunParallel(BOPAlgo_Builder * builder, bool runParallel);
 
+void hs_BOPAlgo_Builder_SetFuzzyValue(BOPAlgo_Builder * builder, double fuzz);
+
 void hs_BOPAlgo_Builder_Perform(
     BOPAlgo_Builder * builder,
+    HSExceptionType* exType,
+    void** exPtr
+);
+
+LIST(TopoDS_Shape) * hs_BOPAlgo_Builder_Modified(
+    BOPAlgo_Builder * builder, TopoDS_Shape * shape,
+    HSExceptionType* exType,
+    void** exPtr
+);
+
+LIST(TopoDS_Shape) * hs_BOPAlgo_Builder_Generated(
+    BOPAlgo_Builder * builder, TopoDS_Shape * shape,
+    HSExceptionType* exType,
+    void** exPtr
+);
+
+bool hs_BOPAlgo_Builder_IsDeleted(
+    BOPAlgo_Builder * builder, TopoDS_Shape * shape,
     HSExceptionType* exType,
     void** exPtr
 );

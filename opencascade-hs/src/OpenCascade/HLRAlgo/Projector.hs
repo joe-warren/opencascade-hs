@@ -2,8 +2,11 @@
 module OpenCascade.HLRAlgo.Projector
 ( Projector
 , fromAx2
+, transformation
+, invertedTransformation
 ) where
 import qualified OpenCascade.GP.Types as GP
+import OpenCascade.GP.Internal.Destructors (deleteTrsf)
 import OpenCascade.HLRAlgo.Types (Projector)
 import OpenCascade.HLRAlgo.Internal.Destructors (deleteProjector)
 import Foreign.Ptr 
@@ -14,3 +17,12 @@ foreign import capi unsafe "hs_HLRAlgo_Projector.h hs_new_HLRAlgo_Projector_from
 fromAx2 :: Ptr GP.Ax2 -> Acquire (Ptr Projector)
 fromAx2 ax2 = mkAcquire (rawFromAx2 ax2) deleteProjector
 
+foreign import capi unsafe "hs_HLRAlgo_Projector.h hs_HLRAlgo_Projector_Transformation" rawTransformation :: Ptr Projector -> IO (Ptr GP.Trsf)
+
+transformation :: Ptr Projector -> Acquire (Ptr GP.Trsf)
+transformation projector = mkAcquire (rawTransformation projector) deleteTrsf
+
+foreign import capi unsafe "hs_HLRAlgo_Projector.h hs_HLRAlgo_Projector_InvertedTransformation" rawInvertedTransformation :: Ptr Projector -> IO (Ptr GP.Trsf)
+
+invertedTransformation :: Ptr Projector -> Acquire (Ptr GP.Trsf)
+invertedTransformation projector = mkAcquire (rawInvertedTransformation projector) deleteTrsf

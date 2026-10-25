@@ -79,3 +79,6 @@ void hs_Poly_Triangulation_setTriangle(
         }
     );
 }
+bool hs_Poly_Triangulation_isNull(Handle(Poly_Triangulation) * triangulation){
+    return triangulation->IsNull();
+}

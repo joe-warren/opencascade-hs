@@ -29,6 +29,7 @@ import qualified OpenCascade.GP.Ax1 as GP.Ax1
 import qualified OpenCascade.GP.Ax2 as GP.Ax2
 import qualified OpenCascade.GP.Dir as GP.Dir
 import qualified OpenCascade.GP.Vec as GP.Vec
+import qualified OpenCascade.BRepBuilderAPI.MakeShape  as BRepBuilderAPI.MakeShape
 import qualified OpenCascade.BRepBuilderAPI.Transform  as BRepBuilderAPI.Transform
 import qualified OpenCascade.BRepBuilderAPI.GTransform  as BRepBuilderAPI.GTransform
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
@@ -38,9 +39,7 @@ import Foreign.Ptr
 import Waterfall.TwoD.Internal.Shape (Shape(..))
 import Data.Function ((&))
 import Control.Lens ((.~), (%~), Iso', iso)
-import Control.Monad (forM)
 import Waterfall.Internal.Path.Common (RawPath(..))
-import Waterfall.Internal.Diagram (RawDiagram (..))
 
 -- | Typeclass for objects that can be manipulated in 2D space
 class Transformable2D a where
@@ -64,7 +63,10 @@ fromTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Ptr GP.Trsf) -> Path2D -> P
 fromTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquire $ do 
     path <- toAcquire p
     trsf <- mkTrsf 
-    (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast path) trsf True 
+    (liftIO . unsafeDowncast) 
+        =<< BRepBuilderAPI.MakeShape.shape
+        =<< fmap upcast
+            (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
 fromTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $ (v & _xy %~ f)
 fromTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
 
@@ -72,14 +74,19 @@ fromTrsfShape :: Acquire (Ptr GP.Trsf) -> Shape -> Shape
 fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do 
     shape <- toAcquire theRawShape
     trsf <- mkTrsf 
-    BRepBuilderAPI.Transform.transform shape trsf True 
+    builder <- BRepBuilderAPI.Transform.fromShapeTrsfAndCopy shape trsf True 
+    BRepBuilderAPI.MakeShape.shape (upcast builder)
     
 fromGTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Maybe (Ptr GP.GTrsf)) -> Path2D -> Path2D
 fromGTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquire  $ do 
     path <- toAcquire p
     trsfMay <- mkTrsf 
     case trsfMay of
-        Just trsf -> (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast path) trsf True 
+        Just trsf -> 
+            (liftIO . unsafeDowncast) 
+                =<< BRepBuilderAPI.MakeShape.shape
+                =<< fmap upcast
+                    (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
         Nothing -> pure path
 fromGTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $ (v & _xy %~ f)
 fromGTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
@@ -89,22 +96,11 @@ fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquire $ do
     shape <- toAcquire theRawShape 
     trsfMay <- mkTrsf 
     case trsfMay of
-        Just trsf -> BRepBuilderAPI.GTransform.gtransform shape trsf True 
+        Just trsf -> 
+            BRepBuilderAPI.MakeShape.shape 
+                =<< fmap upcast
+                    (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy shape trsf True)
         Nothing -> pure shape
-
-fromTrsfDiagram :: Acquire (Ptr GP.Trsf) -> RawDiagram -> RawDiagram
-fromTrsfDiagram mkTrsf (RawDiagram runTheDiagram) = RawDiagram $ \lt v is3D -> do 
-    edges <- runTheDiagram lt v is3D
-    trsf <- mkTrsf 
-    forM edges $ \s -> (liftIO . unsafeDowncast) =<< BRepBuilderAPI.Transform.transform (upcast s) trsf True
-
-fromGTrsfDiagram :: Acquire (Maybe (Ptr GP.GTrsf)) -> RawDiagram -> RawDiagram
-fromGTrsfDiagram mkTrsf (RawDiagram runTheDiagram) = RawDiagram $ \lt v is3D -> do 
-    edges <- runTheDiagram lt v is3D
-    trsfMay <- mkTrsf 
-    case trsfMay of
-        Just trsf -> forM edges $ \s -> (liftIO . unsafeDowncast) =<< BRepBuilderAPI.GTransform.gtransform (upcast s) trsf True 
-        Nothing -> pure edges
 
 matrixGTrsf :: M23 Double -> Acquire (Maybe (Ptr GP.GTrsf))
 matrixGTrsf (V2 (V3 1 0 0) (V3 0 1 0)) = pure Nothing
@@ -203,25 +199,6 @@ instance Transformable2D Shape where
 
     mirror2D :: V2 Double -> Shape -> Shape
     mirror2D = fromTrsfShape . mirrorTrsf
-
-instance Transformable2D RawDiagram where
-    matTransform2D :: M23 Double -> RawDiagram -> RawDiagram
-    matTransform2D m = fromGTrsfDiagram (matrixGTrsf m)
-
-    rotate2D :: Double -> RawDiagram -> RawDiagram
-    rotate2D a = fromTrsfDiagram (rotateTrsf a)
-    
-    scale2D :: V2 Double -> RawDiagram -> RawDiagram
-    scale2D s = fromGTrsfDiagram (scaleGTrsf s)
-
-    uScale2D :: Double -> RawDiagram -> RawDiagram
-    uScale2D s = fromTrsfDiagram (uScaleTrsf s)
-
-    translate2D :: V2 Double -> RawDiagram -> RawDiagram
-    translate2D v = fromTrsfDiagram (translateTrsf v)
-
-    mirror2D :: V2 Double -> RawDiagram -> RawDiagram
-    mirror2D v = fromTrsfDiagram (mirrorTrsf v)
 
 instance Transformable2D (V2 Double) where
     matTransform2D :: M23 Double -> V2 Double -> V2 Double

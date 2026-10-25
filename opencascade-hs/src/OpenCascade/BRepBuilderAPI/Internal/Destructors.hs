@@ -5,6 +5,8 @@ module OpenCascade.BRepBuilderAPI.Internal.Destructors
 , deleteMakeFace
 , deleteMakeSolid
 , deleteSewing
+, deleteTransform
+, deleteGTransform
 ) where
 
 import OpenCascade.BRepBuilderAPI.Types
@@ -16,5 +18,5 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeWire.h hs_delete_BRepBuilderAP
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_delete_BRepBuilderAPI_MakeFace" deleteMakeFace :: Ptr MakeFace -> IO ()
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeSolid.h hs_delete_BRepBuilderAPI_MakeSolid" deleteMakeSolid :: Ptr MakeSolid -> IO ()
 foreign import capi unsafe "hs_BRepBuilderAPI_Sewing.h hs_delete_BRepBuilderAPI_Sewing" deleteSewing :: Ptr Sewing -> IO ()
-
-
+foreign import capi unsafe "hs_BRepBuilderAPI_Transform.h hs_delete_BRepBuilderAPI_Transform" deleteTransform :: Ptr Transform -> IO ()
+foreign import capi unsafe "hs_BRepBuilderAPI_GTransform.h hs_delete_BRepBuilderAPI_GTransform" deleteGTransform :: Ptr GTransform -> IO ()
