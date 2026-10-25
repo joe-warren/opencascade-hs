@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.7.0.0
+
 ### Added
 
 - Added paths for painted regions of a `Diagram`, with class `fill`

@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.7.0.0
+
 ### Added
 
 - Support for OpenCASCADE 8.x
