@@ -8,7 +8,7 @@ and this project adheres to the
 
 ## Unreleased
 
-# 0.7.0.0
+# 0.8.0.0
 
 ## Added 
 

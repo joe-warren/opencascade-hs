@@ -8,7 +8,7 @@ and this project adheres to the
 
 ## Unreleased
 
-## 0.7.0.0
+## 0.8.0.0
 
 ### Added
 
@@ -17,7 +17,7 @@ and this project adheres to the
 - Added `Generic` and [`NFData`](https://hackage-content.haskell.org/package/deepseq/docs/Control-DeepSeq.html#t:NFData) instances for the following
   - `Waterfall.SVG.ToSVG.LineStyle`
   - `Waterfall.SVG.FromSVG.SVGError`
-  - `Waterfall.SVG.FromSVG.SVGErrorKind`
+  - `Waterfall.SVG.FVromSVG.SVGErrorKind`
 
 ### Changed
 
