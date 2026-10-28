@@ -40,6 +40,8 @@ data-files:
     test-data/sweep.svg
     test-data/takePathFraction.svg
     test-data/text.svg
+    test-data/union2D.svg
+    test-data/union2Ddiagram.svg
     test-data/fonts/varela/OFL.txt
     test-data/fonts/varela/VarelaRound-Regular.ttf
     test-results/.keep
