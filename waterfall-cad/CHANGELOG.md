@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+### Fixed
+
+- Boolean operations on `Shape` now correctly merge neighbouring edges (Github issue #52)
+
 ## 0.8.0.0
 
 ### Added
