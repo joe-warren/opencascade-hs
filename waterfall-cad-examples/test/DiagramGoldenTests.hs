@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module DiagramGoldenTests
 ( diagramGoldenTests
 ) where
@@ -76,11 +77,11 @@ similarSizes a b =
 
 render :: Svg.Document -> IO (JP.Image JP.PixelRGBA8, RSvg.LoadedElements)
 render doc = 
-    let roundSize (Svg.Num w, Svg.Num h) = (round w, round h)
-        roundSize _ = (0, 0)
+    let roundSize (Just (Svg.Num w, Svg.Num h)) = Just (round w, round h)
+        roundSize _ = Nothing
         -- setting an explicit size helps work around floating point rounding issues
         -- which were causing the tests to behave differently on intel/arm
-        size = roundSize <$> ((,) <$>  doc ^. Svg.width <*> doc ^. Svg.height)
+        size = roundSize ((,) <$>  doc ^. Svg.width <*> doc ^. Svg.height)
     in RSvg.renderSvgDocument
         FF.emptyFontCache
         size
@@ -247,10 +248,20 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         )
     , diagramTest "Union 2D Diagram" "union2Ddiagram.svg" 
         ( Shape.unitCircle
-            & TwoD.Transforms.translate2D 0.5
+            & TwoD.Transforms.translate2D (V2 0.5 0.5)
             & Booleans.union Shape.unitCircle
             & TwoD.Transforms.scale2D 50
             & Shape.shapePaths
             & foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible)
+        )
+    , diagramTest "mconcat 2D Diagram" "mconcat2Ddiagram.svg" 
+        ( foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible) 
+            . Shape.shapePaths
+            . mconcat $
+            [ Shape.unitCircle
+                & TwoD.Transforms.translate2D (V2 0.5 0.5 ^* fromIntegral i)
+                & TwoD.Transforms.scale2D 50
+            | i :: Int <- [0 .. 3]
+            ]
         )
     ]

@@ -94,7 +94,10 @@ toBooleans2D op (h:shapes) = Shape . unsafeFromAcquirePtr $ do
         traverse_ (BOPAlgo.BOP.addTool bop) ptrs
         BOPAlgo.Builder.setRunParallel builder True
         BOPAlgo.Builder.perform builder
-    BOPAlgo.Builder.shape builder
+    r <- BOPAlgo.Builder.shape builder
+    unifier <- UnifySameDomain.fromShape r False True False
+    liftIO $ UnifySameDomain.build unifier
+    UnifySameDomain.shape unifier
 
 -- | Take the union of a list of 2D shapes
 -- May be more performant than chaining multiple applications of `union2D`
