@@ -29,6 +29,7 @@ data-files:
     test-data/flags.svg
     test-data/gear.svg
     test-data/loft.svg
+    test-data/mconcat2Ddiagram.svg
     test-data/negativeScaledCube-II.svg
     test-data/negativeScaledCube-III.svg
     test-data/negativeScaledCube.svg

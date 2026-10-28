@@ -10,7 +10,7 @@ and this project adheres to the
 
 ### Fixed
 
-- Boolean operations on `Shape` now correctly merge neighbouring edges (Github issue #52)
+- Boolean operations on `Shape` now correctly merge neighbouring faces (Github issue #52)
 
 ## 0.8.0.0
 
