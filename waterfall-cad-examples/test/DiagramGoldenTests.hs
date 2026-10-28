@@ -15,6 +15,8 @@ import Waterfall.Solids (Solid)
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.Offset as Offset
+import qualified Waterfall.Booleans as Booleans
+import qualified Waterfall.TwoD.Shape as Shape
 import Linear
 import qualified CsgExample
 import Control.Monad.Except (runExceptT, liftEither)
@@ -73,10 +75,17 @@ similarSizes a b =
         && (within1 `on` JP.imageHeight) a b
 
 render :: Svg.Document -> IO (JP.Image JP.PixelRGBA8, RSvg.LoadedElements)
-render = RSvg.renderSvgDocument
-    FF.emptyFontCache
-    Nothing -- Document Size 
-    72 -- DPI, a so-so DPI for screens, higher would just mean making the test less sensitive
+render doc = 
+    let roundSize (Svg.Num w, Svg.Num h) = (round w, round h)
+        roundSize _ = (0, 0)
+        -- setting an explicit size helps work around floating point rounding issues
+        -- which were causing the tests to behave differently on intel/arm
+        size = roundSize <$> ((,) <$>  doc ^. Svg.width <*> doc ^. Svg.height)
+    in RSvg.renderSvgDocument
+        FF.emptyFontCache
+        size
+        72 -- DPI, a so-so DPI for screens, higher would just mean making the test less sensitive
+        doc
 
 countMismatchedPixel :: (JP.PixelRGBA8, JP.PixelRGBA8) -> Sum Integer
 countMismatchedPixel (x, y) = if comparePixels x y then 0 else 1
@@ -186,13 +195,17 @@ withHeight = normalizeSize (^. _y)
 withWidth :: Double -> Diagram -> Diagram
 withWidth = normalizeSize (^. _x) 
 
+diagramTest :: TestName -> FilePath -> Diagram -> TestTree
+diagramTest name filepath =
+    doTest name filepath . pure
+
 solidTest :: TestName -> FilePath -> Solid -> TestTree
-solidTest name filepath solid =
-    doTest name filepath (pure . standardSolidDiagram $ solid)
+solidTest name filepath = 
+    diagramTest name filepath . standardSolidDiagram
 
 smallSolidTest :: TestName -> FilePath -> Solid -> TestTree
-smallSolidTest name filepath solid =
-    doTest name filepath (pure . withHeight 200 . standardSolidDiagram $ solid)
+smallSolidTest name filepath =
+    diagramTest name filepath . withHeight 200 . standardSolidDiagram
 
 diagramGoldenTests :: TestTree
 diagramGoldenTests = testGroup "Diagram Golden Tests" 
@@ -225,4 +238,19 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         (Transforms.scale (V3 (negate 1) 2 3) Solids.unitCube)
     , solidTest "Offset of Compound" "offsetOfCompound.svg" 
         (Offset.offset 1 $ (id <> Transforms.translate (unit _x ^* 3)) Solids.unitCube)
+    , solidTest "Union 2D" "union2D.svg" 
+        ( Shape.unitCircle
+            & TwoD.Transforms.translate2D (V2 0.5 0.5)
+            & Booleans.union Shape.unitCircle
+            & TwoD.Transforms.scale2D 10
+            &  Solids.prism 5
+        )
+    , diagramTest "Union 2D Diagram" "union2Ddiagram.svg" 
+        ( Shape.unitCircle
+            & TwoD.Transforms.translate2D 0.5
+            & Booleans.union Shape.unitCircle
+            & TwoD.Transforms.scale2D 50
+            & Shape.shapePaths
+            & foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible)
+        )
     ]

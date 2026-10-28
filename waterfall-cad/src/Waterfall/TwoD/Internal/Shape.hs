@@ -27,6 +27,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
 import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
+import qualified OpenCascade.ShapeUpgrade.UnifySameDomain as UnifySameDomain
 import OpenCascade.Inheritance (SubTypeOf, upcast)
 import Control.Monad.IO.Class (liftIO)
 import Data.Foldable (traverse_)
@@ -59,7 +60,10 @@ toBoolean2D :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape.Shape -> Ptr TopoDS.
 toBoolean2D f (Shape ptrA) (Shape ptrB) = Shape . unsafeFromAcquirePtr $ do
     a <- acquireForeignPtr ptrA
     b <- acquireForeignPtr ptrB
-    MakeShape.shape =<< fmap upcast (f a b)
+    r <- MakeShape.shape =<< fmap upcast (f a b)
+    unifier <- UnifySameDomain.fromShape r False True False
+    liftIO $ UnifySameDomain.build unifier
+    UnifySameDomain.shape unifier
 
 -- | Take the union of two 2D shapes.
 -- The region occupied by either one of them
