@@ -175,7 +175,6 @@ scaleTrsfs v@(V2 x y) =
                         GP.GTrsf.setValue trsf 1 1 x
                         GP.GTrsf.setValue trsf 2 2 y
                         GP.GTrsf.setValue trsf 3 3 1
-                        GP.GTrsf.setForm trsf
                         return trsf
 
 
