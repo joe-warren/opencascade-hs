@@ -82,10 +82,10 @@ render doc =
         roundSize _ = Nothing
         -- setting an explicit size helps work around floating point rounding issues
         -- which were causing the tests to behave differently on intel/arm
-        size = roundSize ((,) <$>  doc ^. Svg.width <*> doc ^. Svg.height)
+        docSize = roundSize ((,) <$>  doc ^. Svg.width <*> doc ^. Svg.height)
     in RSvg.renderSvgDocument
         FF.emptyFontCache
-        size
+        docSize
         72 -- DPI, a so-so DPI for screens, higher would just mean making the test less sensitive
         doc
 
@@ -279,5 +279,19 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 (V4 (cos 1) 0 (-sin 1) 0))
             Solids.unitCylinder
             <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
+        )
+    , solidTest "scale near unity (twoD)" "nearUnityScaleTwoD.svg" 
+        . Solids.colourSolid Colour.red . Solids.prism 2 $
+        ( TwoD.Transforms.scale2D (V2 0.9999999999999998 1) Shape.unitCircle
+            <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
+        )
+    , solidTest "orthogonal matrix (twoD)" "orthogonalMatrixTwoD.svg"
+        . Solids.colourSolid Colour.red . Solids.prism 2 $
+        ( TwoD.Transforms.matTransform2D 
+            (V2 (V3 (sin 1) (cos 1) 0)
+                (V3 (cos 1) (-sin 1) 0)
+            )
+        Shape.unitSquare
+            <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
         )
     ]
