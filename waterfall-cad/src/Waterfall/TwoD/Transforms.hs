@@ -21,7 +21,7 @@ module Waterfall.TwoD.Transforms
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr)
 import Waterfall.Internal.NearZero (nearZero)
-import Linear (M23, M22, (*^), normalize, dot, V3 (..), V2 (..), (!*), _xy, _z, _x, unit, transpose, (!*!), (!-!), (*!!), identity)
+import Linear (M23, M22, (*^), normalize, dot, V3 (..), V2 (..), (!*), _xy, _z, _y, _x, unit, transpose, (!*!), (!-!), (*!!), identity)
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.GTrsf as GP.GTrsf
@@ -38,9 +38,10 @@ import Data.Acquire
 import Foreign.Ptr
 import Waterfall.TwoD.Internal.Shape (Shape(..))
 import Data.Function ((&))
-import Control.Lens ((.~), (%~), Iso', iso, (^.))
+import Control.Lens ((.~), (%~), Iso', iso, (^.), over)
 import Waterfall.Internal.Path.Common (RawPath(..))
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import Control.Monad (when)
 
 -- | Typeclass for objects that can be manipulated in 2D space
 class Transformable2D a where
@@ -137,18 +138,49 @@ rotateTrsf angle = do
     liftIO $ GP.Trsf.setRotationAboutAxisAngle trsf axis angle
     return trsf
 
-scaleGTrsf :: V2 Double -> Maybe (Either (Acquire (Ptr GP.Trsf)) (Acquire (Ptr GP.GTrsf)))
-scaleGTrsf v@(V2 x y) = 
-    if v == V2 1 1 
-        then Nothing
-        else Just . Right $ do
-            trsf <- GP.GTrsf.new 
-            liftIO $ do
-                GP.GTrsf.setValue trsf 1 1 x
-                GP.GTrsf.setValue trsf 2 2 y
-                GP.GTrsf.setValue trsf 3 3 1
-                GP.GTrsf.setForm trsf
-                return trsf
+applyScaleTrsfs :: 
+    (Acquire (Ptr GP.Trsf) -> a -> a) 
+    -> (Acquire (Ptr GP.GTrsf) -> a -> a)
+    -> (Maybe (Acquire (Ptr GP.Trsf)), Maybe (Acquire (Ptr GP.GTrsf)))
+    -> a -> a
+applyScaleTrsfs applyTrsf applyGTrsf (maybeTrsf, maybeGTrsf) = 
+     maybe id applyTrsf maybeTrsf . maybe id applyGTrsf maybeGTrsf
+
+scaleTrsfs :: V2 Double -> (Maybe (Acquire (Ptr GP.Trsf)), Maybe (Acquire (Ptr GP.GTrsf)))
+scaleTrsfs (V2 1 1) = (Nothing, Nothing)
+scaleTrsfs v@(V2 x y) = 
+    let isUniform = nearZero (abs x - abs y)
+        bothArePositive = x >= 0 && y >= 0
+    in if isUniform && bothArePositive 
+        then (Just $ uScaleTrsf x, Nothing)
+        else ( if bothArePositive
+                then Nothing 
+                else Just $ do
+                    trsf <- if isUniform 
+                        then uScaleTrsf (abs x)
+                        else GP.Trsf.new
+                    when (x < 0) $ do
+                        mirrorX <- mirrorTrsf (unit _x)
+                        liftIO $ GP.Trsf.multiply trsf mirrorX
+                    when (y < 0) $ do
+                        mirrorY <- mirrorTrsf (unit _y)
+                        liftIO $ GP.Trsf.multiply trsf mirrorY
+                    return trsf
+
+            , if isUniform 
+                then Nothing
+                else Just $ do
+                    trsf <- GP.GTrsf.new 
+                    liftIO $ do
+                        GP.GTrsf.setValue trsf 1 1 x
+                        GP.GTrsf.setValue trsf 2 2 y
+                        GP.GTrsf.setValue trsf 3 3 1
+                        GP.GTrsf.setForm trsf
+                        return trsf
+
+
+        ) 
+            
 
 uScaleTrsf :: Double -> Acquire (Ptr GP.Trsf) 
 uScaleTrsf factor = do
@@ -174,6 +206,10 @@ mirrorTrsf (V2 x y) = do
         GP.Trsf.setMirrorAboutAx2 trsf axis
     return trsf
 
+transformPathSinglePointPaths :: (V3 Double -> V3 Double) -> Path2D -> Path2D
+transformPathSinglePointPaths f (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath . f $ v 
+transformPathSinglePointPaths _ p = p 
+
 instance Transformable2D Path2D where
     matTransform2D :: M23 Double -> Path2D -> Path2D
     matTransform2D m = 
@@ -185,8 +221,9 @@ instance Transformable2D Path2D where
     
     scale2D :: V2 Double -> Path2D -> Path2D
     scale2D s = 
-        let transformPnt = scale2D s
-         in maybe id (either (fromTrsfPath transformPnt) (fromGTrsfPath transformPnt)) $ scaleGTrsf s
+        let transformPnt = over _xy (scale2D s)
+         in transformPathSinglePointPaths transformPnt 
+            . applyScaleTrsfs (fromTrsfPath id) (fromGTrsfPath id) (scaleTrsfs s)
 
     uScale2D :: Double -> Path2D -> Path2D
     uScale2D s = fromTrsfPath (uScale2D s) (uScaleTrsf s)
@@ -205,7 +242,7 @@ instance Transformable2D Shape where
     rotate2D = fromTrsfShape . rotateTrsf  
     
     scale2D :: V2 Double -> Shape -> Shape
-    scale2D = maybe id (either fromTrsfShape fromGTrsfShape) . scaleGTrsf
+    scale2D = applyScaleTrsfs fromTrsfShape fromGTrsfShape . scaleTrsfs
 
     uScale2D :: Double -> Shape -> Shape
     uScale2D = fromTrsfShape . uScaleTrsf

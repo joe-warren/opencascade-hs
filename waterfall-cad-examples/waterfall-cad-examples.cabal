@@ -31,6 +31,8 @@ data-files:
     test-data/loft.svg
     test-data/mconcat2Ddiagram.svg
     test-data/nearUnityScale.svg
+    test-data/nearUnityScaleTwoD.svg
+    test-data/negativeDeterminantGTrsfTwoD.svg
     test-data/negativeScaledCube-II.svg
     test-data/negativeScaledCube-III.svg
     test-data/negativeScaledCube.svg
@@ -38,6 +40,7 @@ data-files:
     test-data/offset.svg
     test-data/offsetOfCompound.svg
     test-data/orthogonalMatrix.svg
+    test-data/orthogonalMatrixTwoD.svg
     test-data/platonic.svg
     test-data/revolution.svg
     test-data/sweep.svg
