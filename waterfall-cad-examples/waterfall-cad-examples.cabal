@@ -30,12 +30,19 @@ data-files:
     test-data/gear.svg
     test-data/loft.svg
     test-data/mconcat2Ddiagram.svg
+    test-data/nearUnityScale.svg
+    test-data/nearUnityScaleTwoD.svg
+    test-data/negativeDeterminantGTrsfTwoD.svg
+    test-data/negativeNonUniformScaleTwoD.svg
     test-data/negativeScaledCube-II.svg
     test-data/negativeScaledCube-III.svg
     test-data/negativeScaledCube.svg
     test-data/negativeScaledCuboid.svg
+    test-data/negativeUniformScaleTwoD.svg
     test-data/offset.svg
     test-data/offsetOfCompound.svg
+    test-data/orthogonalMatrix.svg
+    test-data/orthogonalMatrixTwoD.svg
     test-data/platonic.svg
     test-data/revolution.svg
     test-data/sweep.svg

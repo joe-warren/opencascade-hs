@@ -22,3 +22,10 @@ void hs_gp_GTrsf_setForm(gp_GTrsf * trsf, HSExceptionType* exType, void ** exPtr
         trsf->SetForm();
     });
 }
+
+
+bool hs_gp_GTrsf_isNegative(gp_GTrsf * trsf, HSExceptionType* exType, void ** exPtr){
+    return hs_handleExWithDefault(exType, exPtr, [trsf]{
+        return trsf->IsNegative();
+    }, false);
+}

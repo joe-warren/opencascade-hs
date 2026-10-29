@@ -17,7 +17,9 @@ import qualified Waterfall.Solids as Solids
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.Offset as Offset
 import qualified Waterfall.Booleans as Booleans
+import Waterfall.TwoD.Shape (Shape)
 import qualified Waterfall.TwoD.Shape as Shape
+import qualified Waterfall.Colour as Colour
 import Linear
 import qualified CsgExample
 import Control.Monad.Except (runExceptT, liftEither)
@@ -81,10 +83,10 @@ render doc =
         roundSize _ = Nothing
         -- setting an explicit size helps work around floating point rounding issues
         -- which were causing the tests to behave differently on intel/arm
-        size = roundSize ((,) <$>  doc ^. Svg.width <*> doc ^. Svg.height)
+        docSize = roundSize ((,) <$>  doc ^. Svg.width <*> doc ^. Svg.height)
     in RSvg.renderSvgDocument
         FF.emptyFontCache
-        size
+        docSize
         72 -- DPI, a so-so DPI for screens, higher would just mean making the test less sensitive
         doc
 
@@ -200,6 +202,13 @@ diagramTest :: TestName -> FilePath -> Diagram -> TestTree
 diagramTest name filepath =
     doTest name filepath . pure
 
+shapeTest :: TestName -> FilePath -> Shape -> TestTree
+shapeTest name filepath = 
+    diagramTest name filepath
+        . foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible)
+        . Shape.shapePaths
+        . TwoD.Transforms.uScale2D 100
+
 solidTest :: TestName -> FilePath -> Solid -> TestTree
 solidTest name filepath = 
     diagramTest name filepath . standardSolidDiagram
@@ -263,5 +272,44 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 & TwoD.Transforms.scale2D 50
             | i :: Int <- [0 .. 3]
             ]
+        )
+    , solidTest "scale near unity" "nearUnityScale.svg" 
+        . Solids.colourSolid Colour.red $
+        (Transforms.scale (V3 0.9999999999999998 1 1) Solids.unitCylinder
+            <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
+        )
+    , solidTest "orthogonal matrix" "orthogonalMatrix.svg"
+        . Solids.colourSolid Colour.red $
+        -- rotation by 1 radian around the -y axis
+        ( Transforms.matTransform 
+            (V3 (V4 (sin 1) 0 (cos 1) 0)
+                (V4 0 1 0 0)
+                (V4 (cos 1) 0 (-sin 1) 0))
+            Solids.unitCylinder
+            <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
+        )
+    , shapeTest "scale near unity (twoD)" "nearUnityScaleTwoD.svg" 
+        ( TwoD.Transforms.scale2D (V2 0.9999999999999998 1) Shape.unitCircle
+            <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
+        )
+    , shapeTest "orthogonal matrix (twoD)" "orthogonalMatrixTwoD.svg" 
+        ( TwoD.Transforms.matTransform2D 
+            (V2 (V3 (sin 1) (cos 1) 0)
+                (V3 (cos 1) (-sin 1) 0)
+            )
+        Shape.unitSquare
+            <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
+        )
+    , shapeTest "negative determinant GTrsf (twoD)" "negativeDeterminantGTrsfTwoD.svg"
+        ( TwoD.Transforms.matTransform2D (V2 (V3 1 1 0) (V3 1 0 0)) Shape.centeredSquare
+            <> TwoD.Transforms.translate2D (V2 0.5 0) Shape.centeredSquare
+        )
+    , shapeTest "negative non-uniform scale (twoD)" "negativeNonUniformScaleTwoD.svg"
+        ( TwoD.Transforms.scale2D (V2 2 (-1)) Shape.unitSquare
+            <> TwoD.Transforms.translate2D (V2 1.5 0) Shape.centeredSquare
+        )
+    , shapeTest "negative uniform scale (twoD)" "negativeUniformScaleTwoD.svg"
+        ( TwoD.Transforms.scale2D (V2 (-1) (-1)) Shape.unitSquare
+            <> TwoD.Transforms.translate2D (V2 (-1) 0) Shape.centeredSquare
         )
     ]

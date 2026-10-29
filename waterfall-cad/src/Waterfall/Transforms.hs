@@ -23,7 +23,7 @@ import Waterfall.Internal.Path.Common (RawPath(..))
 import Waterfall.Internal.NearZero (nearZero)
 import Linear.V3 (V3 (..))
 import Linear.V4 (V4 (..))
-import Linear (M34, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z)
+import Linear (M34, M33, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z, (!*!), transpose, (!-!), (*!!), identity)
 import qualified Linear.Quaternion as Quaternion
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
@@ -42,7 +42,7 @@ import Foreign.Ptr
 import Waterfall.Internal.Path (Path(..))
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Data.Function ((&))
-import Control.Lens ((.~), Iso', iso)
+import Control.Lens ((.~), Iso', iso, (^.))
 
 -- | Typeclass for objects that can be manipulated in 3D space
 class Transformable a where
@@ -111,7 +111,7 @@ applyScaleTrsf applyTrsf applyGTrsf (maybeTrsf, maybeGTrsf) =
 scaleTrsf :: V3 Double -> (Maybe (Acquire (Ptr GP.Trsf)), Maybe (Acquire (Ptr GP.GTrsf)))
 scaleTrsf (V3 1 1 1) = (Nothing, Nothing)
 scaleTrsf (V3 x y z ) =
-    let isUniform = abs x == abs y && abs y == abs z 
+    let isUniform = nearZero (abs x - abs y) && nearZero (abs y - abs z)
         isAllPositive = x >= 0 && y >= 0 && z >= 0
     in if isUniform && isAllPositive
         then (Just $ uScaleTrsf x, Nothing)
@@ -139,7 +139,6 @@ scaleTrsf (V3 x y z ) =
                         GP.GTrsf.setValue gtrsf 1 1 (abs x)
                         GP.GTrsf.setValue gtrsf 2 2 (abs y)
                         GP.GTrsf.setValue gtrsf 3 3 (abs z)
-                        GP.GTrsf.setForm gtrsf
                         return gtrsf
             )
 
@@ -176,26 +175,37 @@ mirrorTrsf (V3 x y z) = do
         GP.Trsf.setMirrorAboutAx2 trsf axis
     return trsf
 
+-- is a matrix a combination of an Orthogonal Matrix + a uniform Scale
+isOrthogonalAndScale :: M33 Double -> Bool
+isOrthogonalAndScale m = 
+    let p = m !*! transpose m
+        s = p ^. _x . _x
+        in not (nearZero s) && all (all (nearZero . (/s))) (p !-! (s *!! identity))
+
 matrixGTrsf :: M34 Double -> Maybe (Either (Acquire (Ptr GP.Trsf)) (Acquire (Ptr GP.GTrsf)))
 matrixGTrsf (V3 (V4 1 0 0 0) (V4 0 1 0 0) (V4 0 0 1 0)) = Nothing
 matrixGTrsf (V3 (V4 x 0 0 0) (V4 0 y 0 0) (V4 0 0 z 0)) | x == y && y == z = Just . Left . uScaleTrsf $ x
-matrixGTrsf (V3 (V4 v11 v12 v13 v14) (V4 v21 v22 v23 v24) (V4 v31 v32 v33 v34)) = Just . Right $ do
-    trsf <- GP.GTrsf.new
-    liftIO $ do  
-        GP.GTrsf.setValue trsf 1 1 v11
-        GP.GTrsf.setValue trsf 1 2 v12
-        GP.GTrsf.setValue trsf 1 3 v13
-        GP.GTrsf.setValue trsf 1 4 v14
-        GP.GTrsf.setValue trsf 2 1 v21
-        GP.GTrsf.setValue trsf 2 2 v22
-        GP.GTrsf.setValue trsf 2 3 v23
-        GP.GTrsf.setValue trsf 2 4 v24
-        GP.GTrsf.setValue trsf 3 1 v31
-        GP.GTrsf.setValue trsf 3 2 v32
-        GP.GTrsf.setValue trsf 3 3 v33
-        GP.GTrsf.setValue trsf 3 4 v34
-        GP.GTrsf.setForm trsf
+matrixGTrsf m@(V3 (V4 v11 v12 v13 v14) (V4 v21 v22 v23 v24) (V4 v31 v32 v33 v34)) 
+    | isOrthogonalAndScale (fmap (^. _xyz) m) = Just . Left $ do
+        trsf <- GP.Trsf.new
+        liftIO $ GP.Trsf.setValues trsf v11 v12 v13 v14 v21 v22 v23 v24 v31 v32 v33 v34
         return trsf
+    | otherwise = Just . Right $ do
+        trsf <- GP.GTrsf.new
+        liftIO $ do  
+            GP.GTrsf.setValue trsf 1 1 v11
+            GP.GTrsf.setValue trsf 1 2 v12
+            GP.GTrsf.setValue trsf 1 3 v13
+            GP.GTrsf.setValue trsf 1 4 v14
+            GP.GTrsf.setValue trsf 2 1 v21
+            GP.GTrsf.setValue trsf 2 2 v22
+            GP.GTrsf.setValue trsf 2 3 v23
+            GP.GTrsf.setValue trsf 2 4 v24
+            GP.GTrsf.setValue trsf 3 1 v31
+            GP.GTrsf.setValue trsf 3 2 v32
+            GP.GTrsf.setValue trsf 3 3 v33
+            GP.GTrsf.setValue trsf 3 4 v34
+            return trsf
     
 instance Transformable Solid where
     matTransform :: M34 Double -> Solid -> Solid
