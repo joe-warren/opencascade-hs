@@ -148,7 +148,7 @@ applyScaleTrsfs applyTrsf applyGTrsf (maybeTrsf, maybeGTrsf) =
 
 scaleTrsfs :: V2 Double -> (Maybe (Acquire (Ptr GP.Trsf)), Maybe (Acquire (Ptr GP.GTrsf)))
 scaleTrsfs (V2 1 1) = (Nothing, Nothing)
-scaleTrsfs v@(V2 x y) = 
+scaleTrsfs (V2 x y) = 
     let isUniform = nearZero (abs x - abs y)
         bothArePositive = x >= 0 && y >= 0
     in if isUniform && bothArePositive 

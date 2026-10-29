@@ -12,7 +12,7 @@ and this project adheres to the
 
 - Boolean operations on `Shape` now correctly merge neighbouring faces (Github issue #52)
 - Nearly uniform arguments to `scale` and `scale2D` no longer produce invalid geometry (Github issue #55)
-- Arguments to `matTransform` and `matTranform2D` which consist of an orthogonal matrix plus a uniform scale no longer produce invalid geometry (Github issue #33)
+- Arguments to `matTransform` and `matTransform2D` which consist of an orthogonal matrix plus a uniform scale no longer produce invalid geometry (Github issue #33)
 
 ## 0.8.0.0
 
