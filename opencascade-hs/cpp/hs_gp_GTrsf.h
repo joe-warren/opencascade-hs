@@ -16,6 +16,8 @@ void hs_gp_GTrsf_setValue(gp_GTrsf * trsf, int row, int col, double value, HSExc
 
 void hs_gp_GTrsf_setForm(gp_GTrsf * trsf, HSExceptionType* exType, void ** exPtr);
 
+bool hs_gp_GTrsf_isNegative(gp_GTrsf * trsf, HSExceptionType* exType, void ** exPtr);
+
 #ifdef __cplusplus
 }
 #endif

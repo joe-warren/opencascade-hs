@@ -1,0 +1,62 @@
+<?xml version='1.0' ?>
+<svg viewBox="-2.0 -86.14709848078965 142.17732906760364 238.14709848078965" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="142.17732906760364" height="238.14709848078965">
+  <style type="text/css">.edge {
+  fill: None;
+  fill-opacity: 0.0;
+  stroke-linecap: round;
+}
+.visible .edge {
+  stroke: #000000;
+  stroke-opacity: 1.0;
+  stroke-width: 1.0;
+}
+.hidden .edge {
+  stroke: #C8C8FF;
+  stroke-opacity: 1.0;
+  stroke-width: 1.0;
+}
+.fill {
+  fill-rule: evenodd;
+}
+
+ @media (prefers-color-scheme: dark) {
+.edge {
+  fill: None;
+  fill-opacity: 0.0;
+  stroke-linecap: round;
+}
+.visible .edge {
+  stroke: #FFFFFF;
+  stroke-opacity: 1.0;
+  stroke-width: 1.0;
+}
+.hidden .edge {
+  stroke: #A00000;
+  stroke-opacity: 1.0;
+  stroke-width: 1.0;
+}
+.fill {
+  fill-rule: evenodd;
+}
+
+}</style>
+  <g>
+    <g />
+    <g class="hidden">
+      <g class="sharp">
+        <path class="edge" />
+      </g>
+      <g class="outline">
+        <path class="edge" />
+      </g>
+    </g>
+    <g class="visible">
+      <g class="sharp">
+        <path class="edge" />
+      </g>
+      <g class="outline">
+        <path class="edge" d="M1.7763568394002505e-15,-8.881784197001252e-16 L54.03023058681398,-84.14709848078965 L138.17732906760364,-30.116867893975673 L86.73487978109559,50.00000000000001 L100.0,50.0 L100.0,150.0 L0.0,150.0 L0.0,50.0 L77.8703862327451,50.0 L0.0,0.0" />
+      </g>
+    </g>
+  </g>
+</svg>

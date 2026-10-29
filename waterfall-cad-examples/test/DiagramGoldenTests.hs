@@ -280,18 +280,29 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             Solids.unitCylinder
             <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
         )
-    , solidTest "scale near unity (twoD)" "nearUnityScaleTwoD.svg" 
-        . Solids.colourSolid Colour.red . Solids.prism 2 $
+    , diagramTest "scale near unity (twoD)" "nearUnityScaleTwoD.svg" 
+        . foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible) 
+        . Shape.shapePaths
+        . TwoD.Transforms.uScale2D 100 $
         ( TwoD.Transforms.scale2D (V2 0.9999999999999998 1) Shape.unitCircle
             <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
         )
-    , solidTest "orthogonal matrix (twoD)" "orthogonalMatrixTwoD.svg"
-        . Solids.colourSolid Colour.red . Solids.prism 2 $
+    , diagramTest "orthogonal matrix (twoD)" "orthogonalMatrixTwoD.svg" 
+        . foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible) 
+        . Shape.shapePaths
+        . TwoD.Transforms.uScale2D 100 $
         ( TwoD.Transforms.matTransform2D 
             (V2 (V3 (sin 1) (cos 1) 0)
                 (V3 (cos 1) (-sin 1) 0)
             )
         Shape.unitSquare
             <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
+        )
+    , diagramTest "negative determinant GTrsf (twoD)" "negativeDeterminantGTrsfTwoD.svg"
+        . foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible)
+        . Shape.shapePaths
+        . TwoD.Transforms.uScale2D 100 $
+        ( TwoD.Transforms.matTransform2D (V2 (V3 1 1 0) (V3 1 0 0)) Shape.centeredSquare
+            <> TwoD.Transforms.translate2D (V2 0.5 0) Shape.centeredSquare
         )
     ]
