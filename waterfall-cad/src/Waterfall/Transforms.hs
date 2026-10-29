@@ -139,7 +139,6 @@ scaleTrsf (V3 x y z ) =
                         GP.GTrsf.setValue gtrsf 1 1 (abs x)
                         GP.GTrsf.setValue gtrsf 2 2 (abs y)
                         GP.GTrsf.setValue gtrsf 3 3 (abs z)
-                        GP.GTrsf.setForm gtrsf
                         return gtrsf
             )
 
