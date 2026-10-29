@@ -172,8 +172,8 @@ scaleTrsfs v@(V2 x y) =
                 else Just $ do
                     trsf <- GP.GTrsf.new 
                     liftIO $ do
-                        GP.GTrsf.setValue trsf 1 1 x
-                        GP.GTrsf.setValue trsf 2 2 y
+                        GP.GTrsf.setValue trsf 1 1 (abs x) 
+                        GP.GTrsf.setValue trsf 2 2 (abs y) 
                         GP.GTrsf.setValue trsf 3 3 1
                         return trsf
 
