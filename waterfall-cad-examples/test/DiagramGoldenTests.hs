@@ -18,6 +18,7 @@ import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.Offset as Offset
 import qualified Waterfall.Booleans as Booleans
 import qualified Waterfall.TwoD.Shape as Shape
+import qualified Waterfall.Colour as Colour
 import Linear
 import qualified CsgExample
 import Control.Monad.Except (runExceptT, liftEither)
@@ -263,5 +264,20 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 & TwoD.Transforms.scale2D 50
             | i :: Int <- [0 .. 3]
             ]
+        )
+    , solidTest "scale near unity" "nearUnityScale.svg" 
+        . Solids.colourSolid Colour.red $
+        (Transforms.scale (V3 0.9999999999999998 1 1) Solids.unitCylinder
+            <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
+        )
+    , solidTest "orthogonal matrix" "orthogonalMatrix.svg"
+        . Solids.colourSolid Colour.red $
+        -- rotation by 1 radian around the -y axis
+        ( Transforms.matTransform 
+            (V3 (V4 (sin 1) 0 (cos 1) 0)
+                (V4 0 1 0 0)
+                (V4 (cos 1) 0 (-sin 1) 0))
+            Solids.unitCylinder
+            <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
         )
     ]
