@@ -54,10 +54,9 @@ function clearProgramParam() {
   }
 }
 
-// Fetch a URL, streaming the body so we can report download progress
+// Read a response, streaming the body so we can report download progress
 const fmtBytes = (n) => `${(n / 1048576).toFixed(1)} MB`;
-async function fetchWithProgress(url, onProgress) {
-  const r = await fetch(url);
+async function readWithProgress(r, onProgress) {
   if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
   if (!r.body) return new Uint8Array(await r.arrayBuffer());
   const total = Number(r.headers.get("content-length")) || 0;
@@ -80,13 +79,43 @@ async function fetchWithProgress(url, onProgress) {
   return out;
 }
 
-// Warn on first visit,
-// When the rootfs is loaded, save that to localStorage, don't ask again
-const ROOTFS_WARNING_KEY = "waterfall-playground-rootfs-warning-ack";
+// The rootfs is too large for the browser's HTTP cache, so keep it in Cache Storage.
+// Its filename is content hashed, so any other cached entry is stale.
+// ROOTFS_URL is substituted by build_playground.sh
+const rootfsUrl = new URL("ROOTFS_URL", window.location.href).href;
+const ROOTFS_CACHE = "waterfall-playground-rootfs";
+async function openRootfsCache() {
+  try { return await caches.open(ROOTFS_CACHE); } catch (_) { return null; }
+}
+const rootfsCache = await openRootfsCache();
+const cachedRootfs = await rootfsCache?.match(rootfsUrl).catch(() => undefined);
+
+async function storeRootfs(bytes) {
+  try {
+    for (const req of await rootfsCache.keys()) {
+      if (req.url !== rootfsUrl) await rootfsCache.delete(req);
+    }
+    await rootfsCache.put(rootfsUrl, new Response(bytes, {
+      headers: {
+        "content-type": "application/zstd",
+        "content-length": String(bytes.length),
+      },
+    }));
+  } catch (e) {
+    console.warn("Failed to cache rootfs", e);
+  }
+}
+
+async function fetchRootfs(onProgress) {
+  const bytes = await readWithProgress(
+    cachedRootfs ?? await fetch(rootfsUrl), onProgress
+  );
+  if (rootfsCache && !cachedRootfs) storeRootfs(bytes);
+  return bytes;
+}
+
+// Warn whenever the rootfs has to be downloaded
 async function confirmRootfsDownload() {
-  let acknowledged = false;
-  try { acknowledged = localStorage.getItem(ROOTFS_WARNING_KEY) === "1"; } catch (_) {}
-  if (acknowledged) return;
   // The dialog element must exist before we can show it.
   if (document.readyState === "loading") {
     await new Promise((res) =>
@@ -94,16 +123,14 @@ async function confirmRootfsDownload() {
     );
   }
   const dlg = document.getElementById("warningDialog");
-  setStatus("Waiting to download rootfs...");
+  setStatus("Waiting to download rootfs…");
   dlg.showModal();
   await new Promise((res) => dlg.addEventListener("close", res, { once: true }));
-  if (dlg.returnValue === "ok") {
-    try { localStorage.setItem(ROOTFS_WARNING_KEY, "1"); } catch (_) {}
-  }
 }
-await confirmRootfsDownload();
+if (!cachedRootfs) await confirmRootfsDownload();
 
-setStatus("Downloading rootfs...");
+const rootfsVerb = cachedRootfs ? "Loading rootfs from cache" : "Downloading rootfs";
+setStatus(`${rootfsVerb}…`);
 const rootfs = new PreopenDirectory("/", []);
 
 const bsdtar_wasi = new WASI(
@@ -132,10 +159,9 @@ try {
       fetch("https://haskell-wasm.github.io/bsdtar-wasm/bsdtar.wasm"),
       { wasi_snapshot_preview1: bsdtar_wasi.wasiImport }
     ),
-    // ROOTFS_URL is substituted by build_playground.sh
-    fetchWithProgress("ROOTFS_URL", (received, total) => {
+    fetchRootfs((received, total) => {
       setStatus(
-        `Downloading rootfs… ${fmtBytes(received)}` +
+        `${rootfsVerb}… ${fmtBytes(received)}` +
           (total ? ` / ${fmtBytes(total)}` : "")
       );
     }),
@@ -149,7 +175,7 @@ try {
       : Promise.resolve({ text: savedProgram }),
   ]);
 
-  setStatus("Extracting rootfs...");
+  setStatus("Extracting rootfs…");
   bsdtar_wasi.fds[0] = new OpenFile(
     new File(rootfs_bytes, { readonly: true })
   );
@@ -201,7 +227,7 @@ try {
   document.getElementById("exampleMain").disabled = false;
   document.getElementById("exampleToggle").disabled = false;
 
-  setStatus("Initialising GHC...");
+  setStatus("Initialising GHC…");
   dyld = await main({
     rpc: new DyLDBrowserHost({
       rootfs,
@@ -312,7 +338,7 @@ async function showSelected() {
   const name = solidSelect.value;
   if (!name) { updateViewer(); return; }
   setBusy(true);
-  setStatus(`Rendering ${name}...`);
+  setStatus(`Rendering ${name}…`);
   try { (rootfs.dir ?? rootfs).contents.delete("out.glb"); } catch (_) {}
   try {
     await renderSolid(name, resolution(), ioFlag(name));
@@ -346,7 +372,7 @@ function applyProgram(url, text) {
 
 async function loadFromUrl(url) {
   setBusy(true);
-  setStatus(`Loading ${url}...`);
+  setStatus(`Loading ${url}…`);
   try {
     const r = await fetch(url);
     if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
@@ -640,7 +666,7 @@ downloadMenu.querySelectorAll("li").forEach((li) => {
 async function run() {
   document.getElementById("runBtn").disabled = true;
   setBusy(true);
-  setStatus("Compiling...");
+  setStatus("Compiling…");
 
   try {
     document.getElementById("stdout").value = "";
