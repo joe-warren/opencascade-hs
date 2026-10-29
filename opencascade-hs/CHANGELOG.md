@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added 
+
+- Added `OpenCascade.GP.GTrsf.isNegative`
+
 ## 0.8.0.0
 
 ### Added
