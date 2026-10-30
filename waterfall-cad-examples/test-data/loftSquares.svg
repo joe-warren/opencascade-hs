@@ -1,0 +1,62 @@
+<?xml version='1.0' ?>
+<svg viewBox="-322.0 -5561.033831778426 804.0000000000002 5776.842825308366" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="804.0000000000002" height="5776.842825308366">
+  <style type="text/css">.edge {
+  fill: None;
+  fill-opacity: 0.0;
+  stroke-linecap: round;
+}
+.visible .edge {
+  stroke: #000000;
+  stroke-opacity: 1.0;
+  stroke-width: 1.0;
+}
+.hidden .edge {
+  stroke: #C8C8FF;
+  stroke-opacity: 1.0;
+  stroke-width: 1.0;
+}
+.fill {
+  fill-rule: evenodd;
+}
+
+ @media (prefers-color-scheme: dark) {
+.edge {
+  fill: None;
+  fill-opacity: 0.0;
+  stroke-linecap: round;
+}
+.visible .edge {
+  stroke: #FFFFFF;
+  stroke-opacity: 1.0;
+  stroke-width: 1.0;
+}
+.hidden .edge {
+  stroke: #A00000;
+  stroke-opacity: 1.0;
+  stroke-width: 1.0;
+}
+.fill {
+  fill-rule: evenodd;
+}
+
+}</style>
+  <g>
+    <g />
+    <g class="hidden">
+      <g class="sharp">
+        <path class="edge" d="M0.0,0.0 L480.0,85.52359741197583 M0.0,0.0 L1.5129922697825146e-13,-5559.033831778426 M-319.9999999999999,128.28539611796367 L3.753745728311947e-15,-1.1617278617866825e-14" />
+      </g>
+      <g class="outline">
+        <path class="edge" />
+      </g>
+    </g>
+    <g class="visible">
+      <g class="sharp">
+        <path class="edge" d="M479.99999999999994,85.5235974119758 L480.0000000000001,-5473.51023436645 M1.5129922697825146e-13,-5559.033831778426 L480.00000000000017,-5473.51023436645 M479.99999999999994,85.5235974119758 L160.00000000000006,213.80899352993947 M160.00000000000003,213.80899352993944 L160.00000000000017,-5345.224838248487 M480.00000000000006,-5473.510234366451 L160.00000000000017,-5345.224838248488 M160.00000000000003,213.80899352993944 L-320.0,128.28539611796361 M-319.9999999999999,128.28539611796367 L-319.9999999999997,-5430.748435660463 M160.0000000000002,-5345.224838248488 L-319.99999999999983,-5430.748435660464 M-319.9999999999998,-5430.748435660463 L1.1744058344992797e-13,-5559.033831778426" />
+      </g>
+      <g class="outline">
+        <path class="edge" />
+      </g>
+    </g>
+  </g>
+</svg>
