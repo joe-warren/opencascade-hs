@@ -11,6 +11,8 @@ and this project adheres to the
 ### Added 
 
 - Added `OpenCascade.GP.GTrsf.isNegative`
+- Added `OpenCascade.BRepOffsetAPI.MakePipeShell`
+- Added `OpenCascade.BRepTools.outerWire`
 
 ## 0.8.0.0
 
