@@ -20,7 +20,7 @@ void hs_delete_BRepOffsetAPI_MakePipeShell(BRepOffsetAPI_MakePipeShell * builder
 }
 
 void hs_BRepOffsetAPI_MakePipeShell_setModeFrenet(BRepOffsetAPI_MakePipeShell * builder, bool isFrenet){
-    builder->SetMode(static_cast<Standard_Boolean>(isFrenet));
+    builder->SetMode(static_cast<bool>(isFrenet));
 }
 
 void hs_BRepOffsetAPI_MakePipeShell_setDiscreteMode(BRepOffsetAPI_MakePipeShell * builder){
@@ -40,8 +40,8 @@ void hs_BRepOffsetAPI_MakePipeShell_add(
         exPtr,
         [builder, profile, withContact, withCorrection]{
             builder->Add(*profile,
-                         static_cast<Standard_Boolean>(withContact),
-                         static_cast<Standard_Boolean>(withCorrection));
+                         static_cast<bool>(withContact),
+                         static_cast<bool>(withCorrection));
         });
 }
 
