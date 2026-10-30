@@ -25,6 +25,9 @@ data-files:
     test-data/2d-booleans.svg
     test-data/bounding-boxes.svg
     test-data/csg.svg
+    test-data/curvySweep.svg
+    test-data/curvySweepConcentricSquares.svg
+    test-data/curvySweepTwoCircles.svg
     test-data/fillet.svg
     test-data/flags.svg
     test-data/gear.svg

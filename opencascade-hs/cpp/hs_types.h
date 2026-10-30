@@ -58,6 +58,7 @@ typedef void Geom_BezierCurve;
 typedef void Geom_BSplineCurve;
 typedef int GeomFill_Trihedron; 
 typedef void BRepOffsetAPI_ThruSections;
+typedef void BRepOffsetAPI_MakePipeShell;
 typedef void BRepMesh_IncrementalMesh;
 typedef void StlAPI_Writer;
 typedef void StlAPI_Reader;

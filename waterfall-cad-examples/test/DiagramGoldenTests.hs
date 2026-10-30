@@ -17,9 +17,13 @@ import qualified Waterfall.Solids as Solids
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.Offset as Offset
 import qualified Waterfall.Booleans as Booleans
+import qualified Waterfall.Path as Path
+import qualified Waterfall.TwoD.Path2D as Path2D
 import Waterfall.TwoD.Shape (Shape)
 import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Colour as Colour
+import qualified Waterfall.Sweep as Sweep
+import qualified Waterfall.Loft as Loft
 import Linear
 import qualified CsgExample
 import Control.Monad.Except (runExceptT, liftEither)
@@ -311,5 +315,35 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
     , shapeTest "negative uniform scale (twoD)" "negativeUniformScaleTwoD.svg"
         ( TwoD.Transforms.scale2D (V2 (-1) (-1)) Shape.unitSquare
             <> TwoD.Transforms.translate2D (V2 (-1) 0) Shape.centeredSquare
+        )
+    , solidTest "curvy sweep" "curvySweep.svg" 
+        ( Path2D.bezier (V2 0 0) (V2 0 10) (V2 10 10) (V2 10 0)
+            & Path.fromPath2D
+            & (`Sweep.sweep` Shape.unitCircle)
+        )
+    , solidTest "curvy sweep two circles" "curvySweepTwoCircles.svg" 
+        ( let profile = mconcat 
+                [ TwoD.Transforms.translate2D (unit _x ^* i) Shape.unitCircle 
+                | i <- [-1.5, 1.5]
+                ]
+          in Path2D.bezier (V2 0 0) (V2 0 10) (V2 10 10) (V2 10 0)
+            & Path.fromPath2D
+            & (`Sweep.sweep` profile)
+        )
+    , solidTest "curvy sweep concentric squares" "curvySweepConcentricSquares.svg" 
+        ( let profile = 
+                ( TwoD.Transforms.uScale2D 2 Shape.centeredSquare
+                    `Booleans.difference`
+                        TwoD.Transforms.uScale2D 1.5 Shape.centeredSquare
+                ) <> Shape.centeredSquare
+          in Path2D.bezier (V2 0 0) (V2 0 (-10)) (V2 10 (-10)) (V2 10 0)
+            & Path.fromPath2D
+            & (`Sweep.sweep` profile)
+        )
+    , solidTest "loft squares" "loftSquares.svg" 
+        ( Loft.loft
+            [ Path.fromPath2D $ mconcat $ Shape.shapePaths Shape.unitSquare
+            , Transforms.translate (V3 0 0 10) $ Path.fromPath2D $ mconcat $ Shape.shapePaths Shape.unitSquare
+            ]
         )
     ]
