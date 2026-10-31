@@ -582,6 +582,3 @@ library
           /opt/homebrew/include/opencascade
       extra-lib-dirs:
           /opt/homebrew/lib
-    if os(darwin)
-      include-dirs:
-          /usr/local/include/opencascade
