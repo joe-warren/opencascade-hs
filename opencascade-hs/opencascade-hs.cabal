@@ -423,6 +423,7 @@ library
   else
     include-dirs:
         /usr/include/opencascade
+        /usr/local/include/opencascade
     cxx-sources:
         cpp/hs_Bnd_Box.cpp
         cpp/hs_Bnd_OBB.cpp
@@ -572,3 +573,15 @@ library
         TKService
         TKShHealing
         TKXSBase
+    if os(linux)
+      extra-lib-dirs:
+          /usr/lib64/opencascade
+          /usr/lib/opencascade
+    if os(darwin) && arch(aarch64)
+      include-dirs:
+          /opt/homebrew/include/opencascade
+      extra-lib-dirs:
+          /opt/homebrew/lib
+    if os(darwin)
+      include-dirs:
+          /usr/local/include/opencascade

@@ -32,6 +32,7 @@ data-files:
     test-data/flags.svg
     test-data/gear.svg
     test-data/loft.svg
+    test-data/loftSquares.svg
     test-data/mconcat2Ddiagram.svg
     test-data/nearUnityScale.svg
     test-data/nearUnityScaleTwoD.svg
