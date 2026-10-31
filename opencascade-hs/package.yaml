@@ -41,6 +41,17 @@ when:
   else:
     include-dirs:
     - /usr/include/opencascade
+    - /usr/local/include/opencascade
+    when:
+    - condition: os(linux)
+      extra-lib-dirs:
+      - /usr/lib64/opencascade
+      - /usr/lib/opencascade
+    - condition: os(darwin) && arch(aarch64)
+      include-dirs:
+      - /opt/homebrew/include/opencascade
+      extra-lib-dirs:
+      - /opt/homebrew/lib
     cxx-sources:
     - cpp/*.cpp
     extra-libraries:
