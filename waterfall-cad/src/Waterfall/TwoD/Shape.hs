@@ -23,16 +23,19 @@ import Waterfall.Internal.Edges (allWires)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import OpenCascade.Inheritance (upcast)
 import Linear (unit, _x, _y, zero, V2 (..))
-import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo, line)
+import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo, line, closeLoop)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
 
--- | Construct a 2D Shape from a closed path 
+-- | Construct a 2D Shape from a path 
+--
+-- Closes it (with a straight line) if it's open
 makeShape :: Path2D -> Shape
-makeShape (Path2D (ComplexRawPath r)) = Shape . unsafeFromAcquirePtr  $ do
-    p <- acquireForeignPtr r
-    upcast <$> (MakeFace.face =<< MakeFace.fromWire p False)
-makeShape _ = Shape . unsafeFromAcquirePtr $
-    upcast <$> (MakeFace.face =<< MakeFace.new)
+makeShape path = case closeLoop path of 
+    (Path2D (ComplexRawPath r)) -> Shape . unsafeFromAcquirePtr  $ do
+        p <- acquireForeignPtr r
+        upcast <$> (MakeFace.face =<< MakeFace.fromWire p False)
+    _ -> Shape . unsafeFromAcquirePtr $
+        upcast <$> (MakeFace.face =<< MakeFace.new)
 
 -- | Get the paths back from a 2D shape
 -- 

@@ -50,6 +50,7 @@ data-files:
     test-data/orthogonalMatrixTwoD.svg
     test-data/platonic.svg
     test-data/revolution.svg
+    test-data/svgPrism.svg
     test-data/sweep.svg
     test-data/takePathFraction.svg
     test-data/text.svg

@@ -15,6 +15,11 @@ and this project adheres to the
 - Arguments to `matTransform` and `matTransform2D` which consist of an orthogonal matrix plus a uniform scale no longer produce invalid geometry (Github issue #33)
 - `Waterfall.Sweep` now uses `MakePipeShell` rather than `MakePipe` which is more modern, and has fewer bugs, (Github issue #25)
 
+### Changed 
+
+- `Waterfall.TwoD.Shape.makeShape` now closes the path if it was open (Github issue #57)
+    - This fixes shape construction from SVG files with endpoints that were previously processed as "not quite closed" due to rounding errors.
+
 ## 0.8.0.0
 
 ### Added
