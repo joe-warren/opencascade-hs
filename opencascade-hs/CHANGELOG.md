@@ -14,6 +14,15 @@ and this project adheres to the
 - Added `OpenCascade.BRepOffsetAPI.MakePipeShell`
 - Added `OpenCascade.BRepTools.outerWire`
 
+### Changed
+
+- Changes to `extra-lib-dirs` and `include-dirs`
+  - Add `/usr/local/include/opencascade` to `include-dirs`
+  - On Linux, add `/usr/lib/opencascade` and `/usr/lib64/opencascade` to `extra-lib-dirs`
+    - This should add support for Gentoo, which uses these directories
+  - On MacOS, on Apple Silicon add `/opt/homebrew/include/opencascade` to `include-dirs` and `/opt/homebrew/lib` to `extra-lib-dirs`.
+    - This should add support for a homebrew install of opencascade, without having to set the environment variables that are currently documented in the README.  
+
 ## 0.8.0.0
 
 ### Added
