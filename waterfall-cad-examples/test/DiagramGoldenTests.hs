@@ -24,6 +24,7 @@ import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Colour as Colour
 import qualified Waterfall.Sweep as Sweep
 import qualified Waterfall.Loft as Loft
+import qualified Waterfall.SVG as SVG
 import Linear
 import qualified CsgExample
 import Control.Monad.Except (runExceptT, liftEither)
@@ -346,4 +347,9 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             , Transforms.translate (V3 0 0 10) $ Path.fromPath2D $ mconcat $ Shape.shapePaths Shape.unitSquare
             ]
         )
+    , doTest "read svg and make prism" "svgPrism.svg" $ do
+        projectRoot <- Paths.getDataDir 
+        Right gearProfile <- SVG.readSVG (projectRoot </> "test-data/gear-profile.svg")
+        let s = foldMap (Solids.prism 1 . Shape.makeShape) gearProfile
+        return $ standardSolidDiagram s
     ]
