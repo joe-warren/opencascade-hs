@@ -30,6 +30,7 @@ data-files:
     test-data/curvySweepTwoCircles.svg
     test-data/fillet.svg
     test-data/flags.svg
+    test-data/gear-profile.svg
     test-data/gear.svg
     test-data/loft.svg
     test-data/loftSquares.svg
