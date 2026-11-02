@@ -6,8 +6,6 @@ module Waterfall.Colour
 , sRGBComponents
 , rgb24
 , mixColours
-, mixColoursRGB
-, mixColoursCIE
 , black
 , white
 , silver
