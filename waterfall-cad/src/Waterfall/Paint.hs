@@ -1,5 +1,6 @@
 {-# LANGUAGE DerivingVia, DeriveGeneric #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE RankNTypes #-}
 {-|
 Module: Waterfall.Paint
 
@@ -27,6 +28,8 @@ module Waterfall.Paint
 , DoubleSidedness (..)
 , defaultPaint
 , paintIsDefined
+, mixPaints
+, mixPaintsWithColours
 -- * Constructors
 , paintWithColour
 , paintWithOpacity
@@ -46,11 +49,13 @@ module Waterfall.Paint
 ) where
 import Data.Monoid (Last (..), Endo (..))
 import GHC.Generics (Generically (..), Generic)
-import Data.Maybe (catMaybes)
-import Data.List (intersperse)
-import Control.Lens (Lens', lens)
-import Waterfall.Colour (Colour (..))
+import Data.Maybe (catMaybes, mapMaybe, isNothing, fromMaybe)
+import Data.List (intersperse, intercalate)
+import Control.Lens (Lens', lens, (^.), (.~), (&))
+import Waterfall.Colour (Colour (..), mixColours)
 import qualified Waterfall.Colour as Colour
+import Data.List.NonEmpty (NonEmpty, toList)
+import qualified Data.List.NonEmpty as NE
 import Control.DeepSeq (NFData (rnf), rwhnf)
 
 -- | Whether to display a surface as Double or Single Sided
@@ -122,6 +127,65 @@ defaultPaint = paintWithColour (Colour.white)
 paintIsDefined :: Paint -> Bool
 paintIsDefined = (/= mempty)
 
+mixPaints :: NonEmpty Paint -> Paint
+mixPaints = mixPaintsWithColours mixColours
+
+average :: [Double] -> Maybe Double
+average [] = Nothing
+average s = Just (sum s / realToFrac (length s))
+
+mixValue :: Lens' Paint (Maybe Double) -> NonEmpty Paint -> Paint
+mixValue lens paints = 
+    let value = paints
+            & toList
+            & mapMaybe (^. lens)
+            & average
+    in mempty & lens .~ value
+
+    
+mixColoursWith
+    :: (NonEmpty Colour -> Colour) 
+    -> Lens' Paint (Maybe Colour) 
+    -> NonEmpty Paint
+    -> Paint
+mixColoursWith f l paints = 
+    let definedColours = 
+            NE.nonEmpty . mapMaybe (^. l) . toList $ paints 
+    in mempty & l .~ (f <$> definedColours)
+
+mixNames :: NonEmpty Paint -> Paint
+mixNames paints = 
+    if all (isNothing . (^. paintName)) paints
+        then mempty
+        else 
+            let name = 
+                    intercalate " plus " 
+                        $ toList 
+                        ((fromMaybe "<undefined>" . (^. paintName))
+                            <$> paints
+                        )
+            in paintWithName name
+
+mixDoubleSidedness :: NonEmpty Paint -> Paint
+mixDoubleSidedness paints = 
+    mempty 
+        & paintDoubleSidedness .~ 
+            (maximum . fmap (^. paintDoubleSidedness) $ paints)
+
+mixPaintsWithColours 
+    :: (NonEmpty Colour -> Colour)
+    -> NonEmpty Paint 
+    -> Paint
+mixPaintsWithColours colourFn paints = 
+    mempty
+        <> mixColoursWith colourFn paintColour paints
+        <> mixColoursWith colourFn paintEmissiveColour paints
+        <> mixValue paintOpacity paints
+        <> mixValue paintMetallic paints
+        <> mixValue paintRoughness paints
+        <> mixNames paints
+        <> mixDoubleSidedness paints
+
 -- | The paint colour
 paintColour :: Lens' Paint (Maybe Colour)
 paintColour = 
@@ -158,7 +222,6 @@ paintMetallic =
 -- In the range [0, 1], 1 is fully metal.
 paintWithMetallic :: Double -> Paint
 paintWithMetallic m = mempty { _paintMetallic = Last (Just m) }
-
 
 -- | The paint "Roughness" value, in a [PBR](https://en.wikipedia.org/wiki/Physically_based_rendering) model.
 paintRoughness :: Lens' Paint (Maybe Double)

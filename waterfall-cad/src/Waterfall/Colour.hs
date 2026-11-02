@@ -1,4 +1,4 @@
-{-#LANGUAGE DeriveGeneric #-}
+{-#LANGUAGE TupleSections #-}
 module Waterfall.Colour
 ( Colour
 , toDataColour
@@ -6,6 +6,7 @@ module Waterfall.Colour
 , sRGBComponents
 , rgb24
 , rgb
+, mixColours
 , black
 , white
 , silver
@@ -32,6 +33,7 @@ import Data.Function (on)
 import qualified Data.Colour
 import qualified Data.Colour.SRGB as SRGB
 import Linear (V3 (..))
+import Data.List.NonEmpty (NonEmpty, toList)
 
 -- | Three sRGB values, in the range [0, 1]
 newtype Colour = Colour
@@ -86,6 +88,16 @@ rgb24 word =
 
 rgb :: Double -> Double -> Double -> Colour
 rgb r g b = Colour $ SRGB.sRGB r g b
+
+mixColours :: NonEmpty Colour -> Colour
+mixColours cs =
+    let weight = 1 / realToFrac (length cs)
+    in fromDataColour 
+        . ($ toDataColour black)
+        . Data.Colour.affineCombo 
+        . fmap ((weight, ) . toDataColour)
+        . toList 
+        $ cs
 
 black, white, silver, grey, maroon, red, purple, fuchsia, green, lime, olive, yellow, navy, blue, teal, aqua :: Colour
 -- | <<doc-images/black.svg black>>
