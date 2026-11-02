@@ -3,7 +3,7 @@ module PaintTests
 ) where
 
 import Waterfall.Paint
-import Waterfall.Colour (rgb24, rgb)
+import Waterfall.Colour (Colour (..), rgb24)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 
@@ -19,8 +19,8 @@ paintTests = testGroup "Paint Show instance"
 
     , testCase "colour falls back to double when unrepresentable" $
         assertEqual ""
-            "paintWithColour (rgb 1.0 3.8910505836575876e-3 0.0)"
-            (show (paintWithColour (rgb 1 (1 / 257) 0)))
+            "paintWithColour (Colour 1.0 3.8910505836575876e-3 0.0)"
+            (show (paintWithColour (Colour 1 (1 / 257) 0)))
 
     , testCase "combined properties" $
         assertEqual ""

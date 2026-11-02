@@ -1,11 +1,10 @@
-{-#LANGUAGE TupleSections #-}
+{-#LANGUAGE DeriveGeneric #-}
 module Waterfall.Colour
-( Colour
+( Colour (..)
 , toDataColour
 , fromDataColour
 , sRGBComponents
 , rgb24
-, rgb
 , mixColours
 , mixColoursRGB
 , mixColoursCIE
@@ -30,49 +29,42 @@ module Waterfall.Colour
 import Data.Word (Word32)
 import Data.Bits (shiftL, shiftR, (.&.), (.|.))
 import Numeric (showHex)
-import Control.DeepSeq (NFData, rnf)
-import Data.Function (on)
+import Control.DeepSeq (NFData)
+import GHC.Generics (Generic)
 import qualified Data.Colour
 import qualified Data.Colour.SRGB as SRGB
 import qualified Data.Colour.Ok as Ok
 import qualified Data.Colour.CIE as CIE
 import qualified Data.Colour.CIE.Illuminant as CIE.Illuminant
 import Linear (V3 (..), (^*))
-import Data.List.NonEmpty (NonEmpty, toList)
+import Data.List.NonEmpty (NonEmpty)
 
 -- | Three sRGB values, in the range [0, 1]
-newtype Colour = Colour
-    { toDataColour :: (Data.Colour.Colour Double)
-    }
+data Colour = Colour Double Double Double
+    deriving (Eq, Ord, Generic)
+
+instance NFData Colour
 
 fromDataColour :: Data.Colour.Colour Double -> Colour
-fromDataColour = Colour
+fromDataColour dc = case SRGB.toSRGB dc of 
+    SRGB.RGB r g b -> Colour r g b
+
+toDataColour :: Colour -> Data.Colour.Colour Double
+toDataColour (Colour r g b) = SRGB.sRGB r g b
 
 sRGBComponents :: Colour -> V3 Double
-sRGBComponents (Colour c) = case SRGB.toSRGB c of 
-    SRGB.RGB r g b -> V3 r g b
+sRGBComponents (Colour r g b) = V3 r g b
     
-instance Eq Colour where
-    (==) = (==) `on` sRGBComponents
-
-instance Ord Colour where
-    compare = compare `on` sRGBComponents
-
-instance NFData Colour where
-    rnf (Colour c) = case SRGB.toSRGB c of
-        SRGB.RGB r g b -> rnf r `seq` rnf g `seq` rnf b
-
 instance Show Colour where
-    showsPrec d c = showParen (d > 10) $
-        let V3 r g b = sRGBComponents c
-            SRGB.RGB r8 g8 b8 = SRGB.toSRGB24 (toDataColour c)
+    showsPrec d c@(Colour r g b) = showParen (d > 10) $
+        let SRGB.RGB r8 g8 b8 = SRGB.toSRGB24 (toDataColour c)
             word = (fromIntegral r8 `shiftL` 16) .|. (fromIntegral g8 `shiftL` 8) .|. fromIntegral b8 :: Word32
             hex = showHex word ""
         in if rgb24 word == c
               then showString "rgb24 0x"
                     . showString (replicate (6 - length hex) '0')
                     . showString hex
-              else showString "rgb " 
+              else showString "Colour " 
                     . showsPrec 11 r
                     . showChar ' ' 
                     . showsPrec 11 g
@@ -89,10 +81,7 @@ instance Show Colour where
 rgb24 :: Word32 -> Colour
 rgb24 word =
     let channel shift = fromIntegral ((word `shiftR` shift) .&. 0xFF) / 255
-    in Colour $ SRGB.sRGB (channel 16) (channel 8) (channel 0)
-
-rgb :: Double -> Double -> Double -> Colour
-rgb r g b = Colour $ SRGB.sRGB r g b
+    in Colour (channel 16) (channel 8) (channel 0)
 
 mixColours :: NonEmpty Colour -> Colour
 mixColours cs =
@@ -104,9 +93,8 @@ mixColours cs =
     in fromLAB
         . (^* weight)
         . sum
-        . fmap (toLAB)
+        . fmap toLAB
         $ cs
-
         
 mixColoursCIE :: NonEmpty Colour -> Colour
 mixColoursCIE cs =
@@ -124,7 +112,7 @@ mixColoursCIE cs =
 
 mixColoursRGB :: NonEmpty Colour -> Colour
 mixColoursRGB cs =
-    let fromRGB (V3 x y z) = rgb x y z
+    let fromRGB (V3 x y z) = Colour x y z
         weight = 1 / realToFrac (length cs)
     in fromRGB
         . (^* weight)

@@ -135,12 +135,12 @@ average [] = Nothing
 average s = Just (sum s / realToFrac (length s))
 
 mixValue :: Lens' Paint (Maybe Double) -> NonEmpty Paint -> Paint
-mixValue lens paints = 
+mixValue l paints = 
     let value = paints
             & toList
-            & mapMaybe (^. lens)
+            & mapMaybe (^. l)
             & average
-    in mempty & lens .~ value
+    in mempty & l .~ value
 
     
 mixColoursWith
@@ -161,7 +161,7 @@ mixNames paints =
             let name = 
                     intercalate " plus " 
                         $ toList 
-                        ((fromMaybe "<undefined>" . (^. paintName))
+                        (fromMaybe "<undefined>" . (^. paintName)
                             <$> paints
                         )
             in paintWithName name
