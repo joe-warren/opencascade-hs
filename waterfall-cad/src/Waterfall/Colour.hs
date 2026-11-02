@@ -1,7 +1,11 @@
 {-#LANGUAGE DeriveGeneric #-}
 module Waterfall.Colour
-( Colour (..)
+( Colour
+, toDataColour
+, fromDataColour
+, sRGBComponents
 , rgb24
+, rgb
 , black
 , white
 , silver
@@ -21,15 +25,52 @@ module Waterfall.Colour
 ) where
 
 import Data.Word (Word32)
-import Data.Bits (shiftR, (.&.))
-import GHC.Generics (Generic)
-import Control.DeepSeq (NFData)
+import Data.Bits (shiftL, shiftR, (.&.), (.|.))
+import Numeric (showHex)
+import Control.DeepSeq (NFData, rnf)
+import Data.Function (on)
+import qualified Data.Colour
+import qualified Data.Colour.SRGB as SRGB
+import Linear (V3 (..))
 
 -- | Three sRGB values, in the range [0, 1]
-data Colour = Colour Double Double Double
-    deriving (Eq, Ord, Show, Generic)
+newtype Colour = Colour
+    { toDataColour :: (Data.Colour.Colour Double)
+    }
 
-instance NFData Colour
+fromDataColour :: Data.Colour.Colour Double -> Colour
+fromDataColour = Colour
+
+sRGBComponents :: Colour -> V3 Double
+sRGBComponents (Colour c) = case SRGB.toSRGB c of 
+    SRGB.RGB r g b -> V3 r g b
+
+instance Eq Colour where
+    (==) = (==) `on` sRGBComponents
+
+instance Ord Colour where
+    compare = compare `on` sRGBComponents
+
+instance NFData Colour where
+    rnf (Colour c) = case SRGB.toSRGB c of
+        SRGB.RGB r g b -> rnf r `seq` rnf g `seq` rnf b
+
+instance Show Colour where
+    showsPrec d c = showParen (d > 10) $
+        let V3 r g b = sRGBComponents c
+            SRGB.RGB r8 g8 b8 = SRGB.toSRGB24 (toDataColour c)
+            word = (fromIntegral r8 `shiftL` 16) .|. (fromIntegral g8 `shiftL` 8) .|. fromIntegral b8 :: Word32
+            hex = showHex word ""
+        in if rgb24 word == c
+              then showString "rgb24 0x"
+                    . showString (replicate (6 - length hex) '0')
+                    . showString hex
+              else showString "rgb " 
+                    . showsPrec 11 r
+                    . showChar ' ' 
+                    . showsPrec 11 g
+                    . showChar ' '
+                    . showsPrec 11 b
 
 -- | Convert an integer into a Colour
 --
@@ -39,9 +80,12 @@ instance NFData Colour
 -- rgb24 0xFFFFFF == white
 -- @
 rgb24 :: Word32 -> Colour
-rgb24 rgb =
-    let channel shift = fromIntegral ((rgb `shiftR` shift) .&. 0xFF) / 255
-    in Colour (channel 16) (channel 8) (channel 0)
+rgb24 word =
+    let channel shift = fromIntegral ((word `shiftR` shift) .&. 0xFF) / 255
+    in Colour $ SRGB.sRGB (channel 16) (channel 8) (channel 0)
+
+rgb :: Double -> Double -> Double -> Colour
+rgb r g b = Colour $ SRGB.sRGB r g b
 
 black, white, silver, grey, maroon, red, purple, fuchsia, green, lime, olive, yellow, navy, blue, teal, aqua :: Colour
 -- | <<doc-images/black.svg black>>

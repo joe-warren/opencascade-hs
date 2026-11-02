@@ -32,6 +32,7 @@ dependencies:
 - filepath >= 1.4 && < 1.6
 - containers >= 0.6 && < 1
 - deepseq >= 1.4 && < 2
+- colour >= 2.3 && < 3
 
 ghc-options: *ghc-options
 

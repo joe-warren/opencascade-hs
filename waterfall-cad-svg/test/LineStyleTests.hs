@@ -3,7 +3,7 @@ module LineStyleTests
 ) where
 
 import Waterfall.SVG.ToSVG.LineStyle
-import Waterfall.Colour (Colour (..))
+import qualified Waterfall.Colour as Colour
 import Control.Lens ((^.))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -22,25 +22,25 @@ lineStyleShowTests = testGroup "LineStyle Show instance"
 
     , testCase "single property" $
         assertEqual ""
-            "lineWithColour (Colour 1.0 0.0 0.0)"
-            (show (lineWithColour (Colour 1 0 0)))
+            "lineWithColour (rgb24 0xff0000)"
+            (show (lineWithColour (Colour.rgb24 0xFF0000)))
 
     , testCase "combined properties" $
         assertEqual ""
-            "lineWithColour (Colour 0.0 0.0 1.0) <> lineWithOpacity 0.5"
+            "lineWithColour (rgb24 0x0000ff) <> lineWithOpacity 0.5"
             (show
                 (lineWithOpacity 0.5
-                <> lineWithColour (Colour 1 0 0)
-                <> lineWithColour (Colour 0 0 1)
+                <> lineWithColour (Colour.rgb24 0xFF0000)
+                <> lineWithColour (Colour.rgb24 0x0000FF)
                 ))
 
     , testCase "all properties" $
         assertEqual ""
-            "lineWithColour (Colour 1.0 0.0 0.0) <> lineWithOpacity 0.5 <> lineWithWidth 2.0"
+            "lineWithColour (rgb24 0xff0000) <> lineWithOpacity 0.5 <> lineWithWidth 2.0"
             (show
                 (lineWithWidth 2
                 <> lineWithOpacity 0.5
-                <> lineWithColour (Colour 1 0 0)
+                <> lineWithColour (Colour.rgb24 0xFF0000)
                 ))
 
     , testCase "negative argument in brackets" $
@@ -71,8 +71,8 @@ diagramStyleShowTests = testGroup "DiagramStyle Show instance"
 
     , testCase "hidden line only, with combined properties" $
         assertEqual ""
-            "diagramWithHiddenLine (lineWithColour (Colour 0.0 0.0 0.0) <> lineWithOpacity 0.4)"
-            (show (diagramWithHiddenLine (lineWithColour (Colour 0 0 0) <> lineWithOpacity 0.4)))
+            "diagramWithHiddenLine (lineWithColour (rgb24 0x000000) <> lineWithOpacity 0.4)"
+            (show (diagramWithHiddenLine (lineWithColour (Colour.rgb24 0x000000) <> lineWithOpacity 0.4)))
 
     , testCase "both lines" $
         assertEqual ""
@@ -84,12 +84,12 @@ diagramStyleShowTests = testGroup "DiagramStyle Show instance"
 
     , testCase "repeated lines are merged" $
         assertEqual ""
-            "diagramWithVisibleLine (lineWithColour (Colour 1.0 0.0 0.0) <> lineWithWidth 2.0) <> diagramWithHiddenLine (lineWithOpacity 0.4)"
+            "diagramWithVisibleLine (lineWithColour (rgb24 0xff0000) <> lineWithWidth 2.0) <> diagramWithHiddenLine (lineWithOpacity 0.4)"
             (show
                 (diagramWithVisibleLine (lineWithWidth 2)
                 <> diagramWithHiddenLine (lineWithOpacity 0.4)
-                <> diagramWithVisibleLine (lineWithColour (Colour 1 0 0))
-                ))
+                <> diagramWithVisibleLine (lineWithColour (Colour.rgb24 0xFF0000)
+                )))
 
     , testCase "visible line only in brackets when used as an argument" $
         assertEqual ""
@@ -107,14 +107,14 @@ diagramStyleShowTests = testGroup "DiagramStyle Show instance"
 
     , testCase "defaultStyle" $
         assertEqual ""
-            "diagramWithVisibleLine (lineWithColour (Colour 0.0 0.0 0.0) <> lineWithOpacity 1.0 <> lineWithWidth 1.0) <> diagramWithHiddenLine (lineWithColour (Colour 0.0 0.0 0.0) <> lineWithOpacity 0.4 <> lineWithWidth 1.0)"
+            "diagramWithVisibleLine (lineWithColour (rgb24 0x000000) <> lineWithOpacity 1.0 <> lineWithWidth 1.0) <> diagramWithHiddenLine (lineWithColour (rgb24 0x000000) <> lineWithOpacity 0.4 <> lineWithWidth 1.0)"
             (show defaultDiagramStyle)
     ]
 
 lensTests :: TestTree
 lensTests = testGroup "lenses"
     [ testCase "lineColour" $
-        assertEqual "" (Just (Colour 1 0 0)) (lineWithColour (Colour 1 0 0) ^. lineColour)
+        assertEqual "" (Just Colour.red) (lineWithColour Colour.red ^. lineColour)
 
     , testCase "lineOpacity" $
         assertEqual "" (Just 0.5) (lineWithOpacity 0.5 ^. lineOpacity)

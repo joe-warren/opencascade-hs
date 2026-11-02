@@ -3,6 +3,7 @@ module PaintTests
 ) where
 
 import Waterfall.Paint
+import Waterfall.Colour (rgb24, rgb)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 
@@ -13,29 +14,34 @@ paintTests = testGroup "Paint Show instance"
 
     , testCase "single property" $
         assertEqual ""
-            "paintWithColour (Colour 1.0 0.0 0.0)"
-            (show (paintWithColour (Colour 1 0 0)))
+            "paintWithColour (rgb24 0xff0000)"
+            (show (paintWithColour (rgb24 0xFF0000)))
+
+    , testCase "colour falls back to double when unrepresentable" $
+        assertEqual ""
+            "paintWithColour (rgb 1.0 3.8910505836575876e-3 0.0)"
+            (show (paintWithColour (rgb 1 (1 / 257) 0)))
 
     , testCase "combined properties" $
         assertEqual ""
-            "paintWithColour (Colour 0.0 0.0 1.0) <> paintWithOpacity 0.5 <> paintWithName \"blue\""
+            "paintWithColour (rgb24 0x0000ff) <> paintWithOpacity 0.5 <> paintWithName \"blue\""
             (show 
                 (paintWithName "blue" 
-                <> paintWithColour (Colour 1 0 0) 
+                <> paintWithColour (rgb24 0xFF0000) 
                 <> paintWithOpacity 0.5 
-                <> paintWithColour (Colour 0 0 1)
+                <> paintWithColour (rgb24 0x0000FF)
             ))
 
     , testCase "all properties" $
         assertEqual ""
-            "paintWithColour (Colour 1.0 0.0 0.0) <> paintWithOpacity 0.5 <> paintWithMetallic 0.2 <> paintWithRoughness 0.1 <> paintWithEmissiveColour (Colour 0.0 0.0 1.0) <> paintWithName \"red\" <> paintWithDoubleSidedness DoubleSided"
+            "paintWithColour (rgb24 0xff0000) <> paintWithOpacity 0.5 <> paintWithMetallic 0.2 <> paintWithRoughness 0.1 <> paintWithEmissiveColour (rgb24 0x0000ff) <> paintWithName \"red\" <> paintWithDoubleSidedness DoubleSided"
             (show 
                 (paintWithName "red" 
-                <> paintWithColour (Colour 1 0 0) 
+                <> paintWithColour (rgb24 0xFF0000) 
                 <> paintWithOpacity 0.5 
                 <> paintWithMetallic 0.2
                 <> paintWithRoughness 0.1
-                <> paintWithEmissiveColour (Colour 0 0 1)
+                <> paintWithEmissiveColour (rgb24 0x0000FF)
                 <> paintWithDoubleSidedness DoubleSided
                 ))
 

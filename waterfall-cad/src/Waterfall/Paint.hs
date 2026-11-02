@@ -50,6 +50,7 @@ import Data.Maybe (catMaybes)
 import Data.List (intersperse)
 import Control.Lens (Lens', lens)
 import Waterfall.Colour (Colour (..))
+import qualified Waterfall.Colour as Colour
 import Control.DeepSeq (NFData (rnf), rwhnf)
 
 -- | Whether to display a surface as Double or Single Sided
@@ -111,7 +112,7 @@ instance Show Paint where
 -- defaultPaint /= mempty
 -- @
 defaultPaint :: Paint
-defaultPaint = paintWithColour (Colour 1 1 1)
+defaultPaint = paintWithColour (Colour.white)
     <> paintWithOpacity 1 
     <> paintWithDoubleSidedness DoubleSided
     <> paintWithMetallic 0

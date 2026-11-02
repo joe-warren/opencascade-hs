@@ -91,6 +91,7 @@ library
   build-depends:
       base >=4.17 && <5
     , bifunctors ==5.*
+    , colour >=2.3 && <3
     , containers >=0.6 && <1
     , deepseq >=1.4 && <2
     , filepath >=1.4 && <1.6

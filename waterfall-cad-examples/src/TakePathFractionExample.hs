@@ -11,9 +11,9 @@ import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
+import qualified Waterfall.Colour as Colour
 import Linear (V3 (..), zero)
 import Data.Function ((&))
-import Waterfall.Colour (Colour (Colour))
 
 takePathFractionExample :: Solid
 takePathFractionExample =
@@ -26,7 +26,7 @@ takePathFractionExample =
         profile = TwoD.Transforms.uScale2D 0.2 Shape.unitCircle
         fractions = [0.1, 0.2 .. 1.0]
         -- Interpolate between a pale red, and a pale blue
-        colour fraction = Colour (1 - 0.6*fraction) (0.4) (0.4 + 0.6*fraction)
+        colour fraction = Colour.rgb (1 - 0.6*fraction) (0.4) (0.4 + 0.6*fraction)
 
     in mconcat
         [ profile
