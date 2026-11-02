@@ -14,4 +14,5 @@ stack exec waterfall-cad-examples --  --prism --glb images/models/prism.glb
 stack exec waterfall-cad-examples --  --2d-booleans --glb images/models/2d-booleans.glb
 stack exec waterfall-cad-examples --  --platonic-solids --glb images/models/platonic.glb
 stack exec waterfall-cad-examples --  --take-path-fraction --glb images/models/takePathFraction.glb
+stack exec waterfall-cad-examples --  --loose-parts --glb images/models/loose-parts.glb
 stack exec waterfall-cad-examples --  --flags --glb images/models/flags.glb --resolution 1

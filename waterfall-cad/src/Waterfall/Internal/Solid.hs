@@ -16,6 +16,7 @@ module Waterfall.Internal.Solid
 , solidFromAcquireWithCatch
 , solidFromAcquireTWithCatch
 , solidFromAcquireMappingPaintMap
+, solidFromAcquireTWithPaintMap
 , solidFromAcquireWithPaintMapWithCatch
 , solidFromAcquireTWithPaintMapWithCatch
 , solidFromAcquireMappingPaintMapWithCatch
@@ -108,11 +109,14 @@ solidFromAcquireWithPaintMap f =
     let (paintMap, ptr) = unsafeFromAcquirePtrT f 
     in Solid ptr paintMap
 
+solidFromAcquireTWithPaintMap :: Traversable t => Acquire (t (PaintMap, Ptr TopoDS.Shape.Shape)) -> t Solid
+solidFromAcquireTWithPaintMap = 
+    fmap (uncurry (flip Solid)) . getCompose . unsafeFromAcquirePtrT . fmap Compose
+
 solidFromAcquireWithPaintMapWithCatch ::  Acquire (PaintMap, Ptr TopoDS.Shape.Shape) -> Either WaterfallError Solid
 solidFromAcquireWithPaintMapWithCatch f = do
     (paintMap, ptr) <- unsafeFromAcquirePtrTWithCatch f 
     return $ Solid ptr paintMap
-
     
 solidFromAcquireTWithPaintMapWithCatch :: Traversable t => Acquire (t (PaintMap, Ptr TopoDS.Shape.Shape)) -> Either WaterfallError (t Solid)
 solidFromAcquireTWithPaintMapWithCatch = 
