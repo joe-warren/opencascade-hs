@@ -8,6 +8,12 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added 
+
+- Added conversions between `Waterfall.Colour.Colour` and the `Colour` type from [the colour package](https://hackage.haskell.org/package/colour) (`toDataColour` and `fromDataColour`)
+- Added `mixPaint` and `mixPaintWithColour` to `Waterfall.Paint` and `mixColour` to `Waterfall.Colour
+- Added `sRGBComponents` to `Waterfall.Colour`
+
 ### Fixed
 
 - Boolean operations on `Shape` now correctly merge neighbouring faces (Github issue #52)
