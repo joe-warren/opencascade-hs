@@ -8,6 +8,7 @@ module Waterfall.Colour
 , rgb
 , mixColours
 , mixColoursRGB
+, mixColoursCIE
 , black
 , white
 , silver
@@ -33,7 +34,9 @@ import Control.DeepSeq (NFData, rnf)
 import Data.Function (on)
 import qualified Data.Colour
 import qualified Data.Colour.SRGB as SRGB
+import qualified Data.Colour.Ok as Ok
 import qualified Data.Colour.CIE as CIE
+import qualified Data.Colour.CIE.Illuminant as CIE.Illuminant
 import Linear (V3 (..), (^*))
 import Data.List.NonEmpty (NonEmpty, toList)
 
@@ -93,10 +96,25 @@ rgb r g b = Colour $ SRGB.sRGB r g b
 
 mixColours :: NonEmpty Colour -> Colour
 mixColours cs =
-    let toCIE c = 
-            let (x, y, z) = CIE.cieXYZView . toDataColour $ c
-            in V3 x y z
-        fromCIE (V3 x y z) = fromDataColour $ CIE.cieXYZ x y z
+    let toLAB c = 
+            let (l, a, b) = Ok.okLabView . toDataColour $ c
+            in V3 l a b
+        fromLAB (V3 l a b) = fromDataColour $ Ok.okLab l a b
+        weight = 1 / realToFrac (length cs)
+    in fromLAB
+        . (^* weight)
+        . sum
+        . fmap (toLAB)
+        $ cs
+
+        
+mixColoursCIE :: NonEmpty Colour -> Colour
+mixColoursCIE cs =
+    let chroma = CIE.Illuminant.d65
+        toCIE c = 
+            let (l, a, b) = CIE.cieLABView chroma . toDataColour $ c
+            in V3 l a b
+        fromCIE (V3 l a b) = fromDataColour $ CIE.cieLAB chroma l a b
         weight = 1 / realToFrac (length cs)
     in fromCIE 
         . (^* weight)

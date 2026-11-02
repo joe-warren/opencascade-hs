@@ -180,16 +180,19 @@ writeSTEP filepath (Solid ptr paintMap) = (`withAcquire` pure) $ do
     resWrite <- liftIO $ StepCAFControl.Writer.write writer filepath
     unless (resWrite == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
 
+clamp :: Double -> Double
+clamp = min 1 . max 0
+
 colourToOCColor :: Colour -> Acquire (Ptr Quantity.Color)
 colourToOCColor c = 
     let SRGB.RGB r g b = SRGB.toSRGB . toDataColour $ c
-    in Quantity.Color.new r g b Quantity.TypeOfColor.SRGB
+    in Quantity.Color.new (clamp r) (clamp g) (clamp b) Quantity.TypeOfColor.SRGB
 
 -- Used for Emmisive Colour, which is in a linear RGB space
 colourToOCVec3 :: Colour -> Acquire (Ptr (NCollection.Vec3 Float))
 colourToOCVec3 c =
     let SRGB.Linear.RGB r g b = SRGB.Linear.toRGB . toDataColour $ c
-    in NCollection.Vec3.newVec3Float (realToFrac r) (realToFrac g) (realToFrac b)
+    in NCollection.Vec3.newVec3Float (realToFrac . clamp $ r) (realToFrac . clamp $ g) (realToFrac . clamp $ b)
 
 paintLookup :: Alternative f => Paint -> Getting (f a) Paint (f a) -> f a
 paintLookup paint lens = paint ^. lens <|> defaultPaint ^. lens
