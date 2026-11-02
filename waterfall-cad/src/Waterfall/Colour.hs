@@ -7,6 +7,7 @@ module Waterfall.Colour
 , rgb24
 , rgb
 , mixColours
+, mixColoursRGB
 , black
 , white
 , silver
@@ -32,7 +33,8 @@ import Control.DeepSeq (NFData, rnf)
 import Data.Function (on)
 import qualified Data.Colour
 import qualified Data.Colour.SRGB as SRGB
-import Linear (V3 (..))
+import qualified Data.Colour.CIE as CIE
+import Linear (V3 (..), (^*))
 import Data.List.NonEmpty (NonEmpty, toList)
 
 -- | Three sRGB values, in the range [0, 1]
@@ -46,7 +48,7 @@ fromDataColour = Colour
 sRGBComponents :: Colour -> V3 Double
 sRGBComponents (Colour c) = case SRGB.toSRGB c of 
     SRGB.RGB r g b -> V3 r g b
-
+    
 instance Eq Colour where
     (==) = (==) `on` sRGBComponents
 
@@ -91,12 +93,25 @@ rgb r g b = Colour $ SRGB.sRGB r g b
 
 mixColours :: NonEmpty Colour -> Colour
 mixColours cs =
-    let weight = 1 / realToFrac (length cs)
-    in fromDataColour 
-        . ($ toDataColour black)
-        . Data.Colour.affineCombo 
-        . fmap ((weight, ) . toDataColour)
-        . toList 
+    let toCIE c = 
+            let (x, y, z) = CIE.cieXYZView . toDataColour $ c
+            in V3 x y z
+        fromCIE (V3 x y z) = fromDataColour $ CIE.cieXYZ x y z
+        weight = 1 / realToFrac (length cs)
+    in fromCIE 
+        . (^* weight)
+        . sum
+        . fmap (toCIE)
+        $ cs
+
+mixColoursRGB :: NonEmpty Colour -> Colour
+mixColoursRGB cs =
+    let fromRGB (V3 x y z) = rgb x y z
+        weight = 1 / realToFrac (length cs)
+    in fromRGB
+        . (^* weight)
+        . sum
+        . fmap (sRGBComponents)
         $ cs
 
 black, white, silver, grey, maroon, red, purple, fuchsia, green, lime, olive, yellow, navy, blue, teal, aqua :: Colour
