@@ -45,13 +45,16 @@ data Colour = Colour Double Double Double
 
 instance NFData Colour
 
+-- | Create a `Colour` from a `Data.Colour.Colour` (from the @colour@ package)
 fromDataColour :: Data.Colour.Colour Double -> Colour
 fromDataColour dc = case SRGB.toSRGB dc of 
     SRGB.RGB r g b -> Colour r g b
 
+-- | Create a `Colour` into a `Data.Colour.Colour` (from the @colour@ package)
 toDataColour :: Colour -> Data.Colour.Colour Double
 toDataColour (Colour r g b) = SRGB.sRGB r g b
 
+-- | The RGB components from a colour as a vector 
 sRGBComponents :: Colour -> V3 Double
 sRGBComponents (Colour r g b) = V3 r g b
     
@@ -83,6 +86,9 @@ rgb24 word =
     let channel shift = fromIntegral ((word `shiftR` shift) .&. 0xFF) / 255
     in Colour (channel 16) (channel 8) (channel 0)
 
+-- | Compute an average from a List of `Colour`s
+-- 
+-- The average is computed in [the "OkLAB" colour space](https://en.wikipedia.org/wiki/Oklab_color_space).
 mixColours :: NonEmpty Colour -> Colour
 mixColours cs =
     let toLAB c = 
@@ -94,30 +100,6 @@ mixColours cs =
         . (^* weight)
         . sum
         . fmap toLAB
-        $ cs
-        
-mixColoursCIE :: NonEmpty Colour -> Colour
-mixColoursCIE cs =
-    let chroma = CIE.Illuminant.d65
-        toCIE c = 
-            let (l, a, b) = CIE.cieLABView chroma . toDataColour $ c
-            in V3 l a b
-        fromCIE (V3 l a b) = fromDataColour $ CIE.cieLAB chroma l a b
-        weight = 1 / realToFrac (length cs)
-    in fromCIE 
-        . (^* weight)
-        . sum
-        . fmap (toCIE)
-        $ cs
-
-mixColoursRGB :: NonEmpty Colour -> Colour
-mixColoursRGB cs =
-    let fromRGB (V3 x y z) = Colour x y z
-        weight = 1 / realToFrac (length cs)
-    in fromRGB
-        . (^* weight)
-        . sum
-        . fmap (sRGBComponents)
         $ cs
 
 black, white, silver, grey, maroon, red, purple, fuchsia, green, lime, olive, yellow, navy, blue, teal, aqua :: Colour

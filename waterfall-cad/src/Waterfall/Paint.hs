@@ -127,8 +127,6 @@ defaultPaint = paintWithColour (Colour.white)
 paintIsDefined :: Paint -> Bool
 paintIsDefined = (/= mempty)
 
-mixPaints :: NonEmpty Paint -> Paint
-mixPaints = mixPaintsWithColours mixColours
 
 average :: [Double] -> Maybe Double
 average [] = Nothing
@@ -172,19 +170,25 @@ mixDoubleSidedness paints =
         & paintDoubleSidedness .~ 
             (maximum . fmap (^. paintDoubleSidedness) $ paints)
 
+-- | A version of `mixPaints` that exposes how to average `Colour`s
 mixPaintsWithColours 
     :: (NonEmpty Colour -> Colour)
     -> NonEmpty Paint 
     -> Paint
 mixPaintsWithColours colourFn paints = 
-    mempty
-        <> mixColoursWith colourFn paintColour paints
+        mixColoursWith colourFn paintColour paints
         <> mixColoursWith colourFn paintEmissiveColour paints
         <> mixValue paintOpacity paints
         <> mixValue paintMetallic paints
         <> mixValue paintRoughness paints
         <> mixNames paints
         <> mixDoubleSidedness paints
+
+-- | Compute an average from a list of `Paint`s 
+-- 
+-- Undefined values in the Paints do not contribute to the average
+mixPaints :: NonEmpty Paint -> Paint
+mixPaints = mixPaintsWithColours mixColours
 
 -- | The paint colour
 paintColour :: Lens' Paint (Maybe Colour)
