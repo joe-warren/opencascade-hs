@@ -43,6 +43,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import qualified OpenCascade.BRepBuilderAPI.Sewing as BRepBuilderAPI.Sewing
 import qualified OpenCascade.TopoDS as TopoDS
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
 import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
 import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
@@ -278,7 +279,9 @@ paintSolid paint (Solid s _) =
 looseParts :: Solid -> [Solid] 
 looseParts s = solidFromAcquireTWithPaintMap $ do
     solid <- acquireSolid s
-    childSolids <- allSubShapesWithCopy ShapeEnum.Solid solid
+    childSolids <- 
+        filterM (fmap (>0) . liftIO . TopoDS.Shape.nbChildren)
+            =<< allSubShapesWithCopy ShapeEnum.Solid solid
     forM childSolids $ \child -> do
         newPaintMap <- case solidPaintMap s of 
             UniformPaint p -> pure . UniformPaint $ p
