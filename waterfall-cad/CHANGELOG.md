@@ -20,6 +20,7 @@ and this project adheres to the
 - Nearly uniform arguments to `scale` and `scale2D` no longer produce invalid geometry (Github issue #55)
 - Arguments to `matTransform` and `matTransform2D` which consist of an orthogonal matrix plus a uniform scale no longer produce invalid geometry (Github issue #33)
 - `Waterfall.Sweep` now uses `MakePipeShell` rather than `MakePipe` which is more modern, and has fewer bugs, (Github issue #25)
+- Colour components are clamped to the range [0..1] on write; out of range components would previously have raised an exception.
 
 ### Changed 
 
