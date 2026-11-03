@@ -36,6 +36,7 @@ data-files:
     test-data/loftSquares.svg
     test-data/loose-parts.svg
     test-data/loosePartsThenTransform.svg
+    test-data/looseShapesDiagram.svg
     test-data/mconcat2Ddiagram.svg
     test-data/nearUnityScale.svg
     test-data/nearUnityScaleTwoD.svg
@@ -140,6 +141,7 @@ test-suite waterfall-cad-tests
       ExceptionTests
       LifetimeTests
       PaintTests
+      ShapeTests
       SolidTests
       Paths_waterfall_cad_examples
   hs-source-dirs:

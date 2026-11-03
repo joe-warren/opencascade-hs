@@ -6,6 +6,7 @@ module Waterfall.TwoD.Shape
 , unitSquare
 , centeredSquare
 , unitPolygon
+, looseShapes
 -- * Boolean operations
 , union2D
 , difference2D
@@ -19,12 +20,16 @@ import Waterfall.TwoD.Internal.Shape (Shape (..), union2D, difference2D, interse
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.TwoD.Transforms (translate2D, rotate2D)
 import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquirePtrT)
-import Waterfall.Internal.Edges (allWires)
+import Waterfall.Internal.Edges (allWires, allSubShapesWithCopy)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import OpenCascade.Inheritance (upcast)
 import Linear (unit, _x, _y, zero, V2 (..))
 import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo, line, closeLoop)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad (filterM)
 
 -- | Construct a 2D Shape from a path 
 --
@@ -90,3 +95,10 @@ unitPolygon n
                 | (a, b) <- zip points (drop 1 points)
                 ]
         in makeShape paths
+
+-- | Split a `Shape` into a list of disjoint parts
+looseShapes :: Shape -> [Shape] 
+looseShapes (Shape r) = fmap Shape . unsafeFromAcquirePtrT $ do
+    shape <- acquireForeignPtr r
+    filterM (fmap (>0) . liftIO . TopoDS.Shape.nbChildren)
+        =<< allSubShapesWithCopy ShapeEnum.Face shape

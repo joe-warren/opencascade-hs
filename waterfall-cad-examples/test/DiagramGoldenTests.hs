@@ -52,6 +52,7 @@ import qualified TakePathFractionExample
 import qualified Paths_waterfall_cad_examples as Paths
 import qualified FlagExample
 import qualified LoosePartsExample
+import qualified Waterfall.Paint as Paint
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
@@ -369,4 +370,15 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 & fmap (Transforms.rotate (unit _z) (pi/2))
                 & take 3
                 & mconcat
+    , diagramTest "looseShapes diagram" "looseShapesDiagram.svg" 
+        ( Shape.unitCircle
+            & (`Booleans.difference` TwoD.Transforms.scale2D (V2 0.1 3) Shape.centeredSquare)
+            & (`Booleans.difference` TwoD.Transforms.scale2D (V2 3 0.1) Shape.centeredSquare)
+            & Shape.looseShapes
+            & zipWith TwoD.Transforms.uScale2D [1, 1.05 ..]
+            & zipWith Diagram.shapeDiagram
+                (Paint.paintWithColour <$> [Colour.red, Colour.blue, Colour.green, Colour.yellow])
+            & mconcat
+            & TwoD.Transforms.scale2D 50
+        )
     ]
