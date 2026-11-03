@@ -1,5 +1,6 @@
 {-# LANGUAGE DerivingVia, DeriveGeneric #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE RankNTypes #-}
 {-|
 Module: Waterfall.Paint
 
@@ -27,6 +28,8 @@ module Waterfall.Paint
 , DoubleSidedness (..)
 , defaultPaint
 , paintIsDefined
+, mixPaints
+, mixPaintsWithColours
 -- * Constructors
 , paintWithColour
 , paintWithOpacity
@@ -46,10 +49,13 @@ module Waterfall.Paint
 ) where
 import Data.Monoid (Last (..), Endo (..))
 import GHC.Generics (Generically (..), Generic)
-import Data.Maybe (catMaybes)
-import Data.List (intersperse)
-import Control.Lens (Lens', lens)
-import Waterfall.Colour (Colour (..))
+import Data.Maybe (catMaybes, mapMaybe, isNothing, fromMaybe)
+import Data.List (intersperse, intercalate)
+import Control.Lens (Lens', lens, (^.), (.~), (&))
+import Waterfall.Colour (Colour (..), mixColours)
+import qualified Waterfall.Colour as Colour
+import Data.List.NonEmpty (NonEmpty, toList)
+import qualified Data.List.NonEmpty as NE
 import Control.DeepSeq (NFData (rnf), rwhnf)
 
 -- | Whether to display a surface as Double or Single Sided
@@ -111,7 +117,7 @@ instance Show Paint where
 -- defaultPaint /= mempty
 -- @
 defaultPaint :: Paint
-defaultPaint = paintWithColour (Colour 1 1 1)
+defaultPaint = paintWithColour (Colour.white)
     <> paintWithOpacity 1 
     <> paintWithDoubleSidedness DoubleSided
     <> paintWithMetallic 0
@@ -120,6 +126,69 @@ defaultPaint = paintWithColour (Colour 1 1 1)
 -- | Test whether a paint is storing any values
 paintIsDefined :: Paint -> Bool
 paintIsDefined = (/= mempty)
+
+
+average :: [Double] -> Maybe Double
+average [] = Nothing
+average s = Just (sum s / realToFrac (length s))
+
+mixValue :: Lens' Paint (Maybe Double) -> NonEmpty Paint -> Paint
+mixValue l paints = 
+    let value = paints
+            & toList
+            & mapMaybe (^. l)
+            & average
+    in mempty & l .~ value
+
+    
+mixColoursWith
+    :: (NonEmpty Colour -> Colour) 
+    -> Lens' Paint (Maybe Colour) 
+    -> NonEmpty Paint
+    -> Paint
+mixColoursWith f l paints = 
+    let definedColours = 
+            NE.nonEmpty . mapMaybe (^. l) . toList $ paints 
+    in mempty & l .~ (f <$> definedColours)
+
+mixNames :: NonEmpty Paint -> Paint
+mixNames paints = 
+    if all (isNothing . (^. paintName)) paints
+        then mempty
+        else 
+            let name = 
+                    intercalate " plus " 
+                        $ toList 
+                        (fromMaybe "unnamed-paint" . (^. paintName)
+                            <$> paints
+                        )
+            in paintWithName name
+
+mixDoubleSidedness :: NonEmpty Paint -> Paint
+mixDoubleSidedness paints = 
+    mempty 
+        & paintDoubleSidedness .~ 
+            (maximum . fmap (^. paintDoubleSidedness) $ paints)
+
+-- | A version of `mixPaints` that exposes how to average `Colour`s
+mixPaintsWithColours 
+    :: (NonEmpty Colour -> Colour)
+    -> NonEmpty Paint 
+    -> Paint
+mixPaintsWithColours colourFn paints = 
+        mixColoursWith colourFn paintColour paints
+        <> mixColoursWith colourFn paintEmissiveColour paints
+        <> mixValue paintOpacity paints
+        <> mixValue paintMetallic paints
+        <> mixValue paintRoughness paints
+        <> mixNames paints
+        <> mixDoubleSidedness paints
+
+-- | Compute an average from a list of `Paint`s 
+-- 
+-- Undefined values in the Paints do not contribute to the average (although they do effect the name, if any of the Paints have a name set).
+mixPaints :: NonEmpty Paint -> Paint
+mixPaints = mixPaintsWithColours mixColours
 
 -- | The paint colour
 paintColour :: Lens' Paint (Maybe Colour)
@@ -158,7 +227,6 @@ paintMetallic =
 paintWithMetallic :: Double -> Paint
 paintWithMetallic m = mempty { _paintMetallic = Last (Just m) }
 
-
 -- | The paint "Roughness" value, in a [PBR](https://en.wikipedia.org/wiki/Physically_based_rendering) model.
 paintRoughness :: Lens' Paint (Maybe Double)
 paintRoughness = 
@@ -174,7 +242,7 @@ paintWithRoughness r = mempty { _paintRoughness= Last (Just r) }
 
 -- | The paint "Emissive" factor, in a [PBR](https://en.wikipedia.org/wiki/Physically_based_rendering) model.
 --
--- EmissiveColour is written as linear RGB, rather than converted to sRGB.
+-- EmissiveColour is converted from sRGB to linear RGB when written.
 paintEmissiveColour :: Lens' Paint (Maybe Colour)
 paintEmissiveColour = 
     lens

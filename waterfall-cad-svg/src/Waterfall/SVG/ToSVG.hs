@@ -16,7 +16,7 @@ import Waterfall.SVG.ToSVG.LineStyle
 import qualified Graphics.Svg as Svg
 import qualified Graphics.Svg.CssTypes as Svg.Css
 import Waterfall.Internal.NearZero (nearZero)
-import Linear (_xy, _x, _y, V2 (..))
+import Linear (_xy, _x, _y, V2 (..), V3 (..))
 import Control.Lens ((^.), (&), (.~), (<&>))
 import Foreign.Ptr (Ptr)
 import Control.Monad ((<=<)) 
@@ -164,13 +164,14 @@ shapeToPathCommands =
         . Waterfall.shapePaths 
     
 colourToPixel :: Waterfall.Colour -> PixelRGBA8
-colourToPixel (Waterfall.Colour r g b) =
-    let conv = round . (* 255) . min 1 . max 0
+colourToPixel c =
+    let V3 r g b = Waterfall.sRGBComponents c
+        conv = round . (* 255) . min 1 . max 0
      in PixelRGBA8 (conv r) (conv g) (conv b) 255
 
 fillToPath :: (Waterfall.Paint, Waterfall.Shape) -> Svg.Path
 fillToPath (paint, shape) =
-    let colour = fromMaybe (Waterfall.Colour 1 1 1) (paint ^. Waterfall.paintColour <|> Waterfall.defaultPaint ^. Waterfall.paintColour)
+    let colour = fromMaybe (Waterfall.white) (paint ^. Waterfall.paintColour <|> Waterfall.defaultPaint ^. Waterfall.paintColour)
         opacity = fromMaybe (1.0)  (paint ^. Waterfall.paintOpacity <|> Waterfall.defaultPaint ^. Waterfall.paintOpacity)
         setOpacity = if opacity == 1.0 
             then id 
@@ -204,7 +205,7 @@ lineStyleCss :: DiagramStyle -> [Svg.Css.CssRule]
 lineStyleCss style =
     let resolve l fallback line defaultLine = fromMaybe fallback (line ^. l <|> defaultLine ^. l)
         strokeDeclarations line defaultLine =
-            [ Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor . colourToPixel $ resolve lineColour (Waterfall.Colour 0 0 0) line defaultLine]]
+            [ Svg.Css.CssDeclaration "stroke" [[Svg.Css.CssColor . colourToPixel $ resolve lineColour Waterfall.black line defaultLine]]
             , Svg.Css.CssDeclaration "stroke-opacity" [[Svg.Css.CssNumber . Svg.Num $ resolve lineOpacity 1 line defaultLine]]
             , Svg.Css.CssDeclaration "stroke-width" [[Svg.Css.CssNumber . Svg.Num $ resolve lineWidth 1 line defaultLine]]
             ]

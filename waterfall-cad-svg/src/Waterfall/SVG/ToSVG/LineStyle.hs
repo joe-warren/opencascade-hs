@@ -177,12 +177,12 @@ diagramHiddenLine = lens _hiddenLine (\ds ls -> ds {_hiddenLine = ls})
 defaultDiagramStyle :: DiagramStyle
 defaultDiagramStyle = DiagramStyle
     { _visibleLine = LineStyle 
-        { _lineColour = Last . Just $ Waterfall.Colour 0 0 0
+        { _lineColour = Last . Just $ Waterfall.black
         , _lineOpacity = Last . Just $ 1
         , _lineWidth = Last . Just $ 1
         }
     , _hiddenLine = LineStyle 
-        { _lineColour = Last . Just $ Waterfall.Colour 0 0 0
+        { _lineColour = Last . Just $ Waterfall.black
         , _lineOpacity = Last . Just $ 0.4
         , _lineWidth = Last . Just $ 1
         }

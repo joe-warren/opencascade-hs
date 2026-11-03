@@ -64,7 +64,8 @@ import Data.Char (toLower)
 import System.FilePath (takeExtension)
 import Control.Exception (Exception, throwIO)
 import OpenCascade.TDF.Label (Label)
-import Waterfall.Paint (Colour(..), paintColour, defaultPaint, Paint, DoubleSidedness(..), paintName, paintOpacity, paintEmissiveColour, paintMetallic, paintDoubleSidedness, paintRoughness)
+import Waterfall.Paint (paintColour, defaultPaint, Paint, DoubleSidedness(..), paintName, paintOpacity, paintEmissiveColour, paintMetallic, paintDoubleSidedness, paintRoughness)
+import Waterfall.Colour (Colour, toDataColour)
 import qualified OpenCascade.XCAFDoc.ColorTool as XCafDoc.ColourTool
 import Control.Lens ((^.), Getting)
 import System.IO (hPutStrLn, stderr)
@@ -78,6 +79,8 @@ import qualified OpenCascade.XCAFDoc.VisMaterialTool as XCafDoc.VisMaterialTool
 import Control.Applicative ((<|>), Alternative)
 import qualified OpenCascade.Graphic3D.AlphaMode as AlphaMode
 import qualified OpenCascade.Graphic3D.TypeOfBackfacingModel as TypeOfBackfacingModel
+import qualified Data.Colour.SRGB as SRGB
+import qualified Data.Colour.SRGB.Linear as SRGB.Linear
 
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -177,13 +180,19 @@ writeSTEP filepath (Solid ptr paintMap) = (`withAcquire` pure) $ do
     resWrite <- liftIO $ StepCAFControl.Writer.write writer filepath
     unless (resWrite == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
 
+clamp :: Double -> Double
+clamp = min 1 . max 0
+
 colourToOCColor :: Colour -> Acquire (Ptr Quantity.Color)
-colourToOCColor (Colour r g b) =
-    Quantity.Color.new r g b Quantity.TypeOfColor.SRGB
-    
+colourToOCColor c = 
+    let SRGB.RGB r g b = SRGB.toSRGB . toDataColour $ c
+    in Quantity.Color.new (clamp r) (clamp g) (clamp b) Quantity.TypeOfColor.SRGB
+
+-- Used for Emissive Colour, which is in a linear RGB space
 colourToOCVec3 :: Colour -> Acquire (Ptr (NCollection.Vec3 Float))
-colourToOCVec3 (Colour r g b) =
-    NCollection.Vec3.newVec3Float (realToFrac r) (realToFrac g) (realToFrac b)
+colourToOCVec3 c =
+    let SRGB.Linear.RGB r g b = SRGB.Linear.toRGB . toDataColour $ c
+    in NCollection.Vec3.newVec3Float (realToFrac . clamp $ r) (realToFrac . clamp $ g) (realToFrac . clamp $ b)
 
 paintLookup :: Alternative f => Paint -> Getting (f a) Paint (f a) -> f a
 paintLookup paint lens = paint ^. lens <|> defaultPaint ^. lens

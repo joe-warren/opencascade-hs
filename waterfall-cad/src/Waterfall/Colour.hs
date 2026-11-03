@@ -1,7 +1,11 @@
 {-#LANGUAGE DeriveGeneric #-}
 module Waterfall.Colour
 ( Colour (..)
+, toDataColour
+, fromDataColour
+, sRGBComponents
 , rgb24
+, mixColours
 , black
 , white
 , silver
@@ -21,15 +25,50 @@ module Waterfall.Colour
 ) where
 
 import Data.Word (Word32)
-import Data.Bits (shiftR, (.&.))
-import GHC.Generics (Generic)
+import Data.Bits (shiftL, shiftR, (.&.), (.|.))
+import Numeric (showHex)
 import Control.DeepSeq (NFData)
+import GHC.Generics (Generic)
+import qualified Data.Colour
+import qualified Data.Colour.SRGB as SRGB
+import qualified Data.Colour.Ok as Ok
+import Linear (V3 (..), (^*))
+import Data.List.NonEmpty (NonEmpty ((:|)))
 
 -- | Three sRGB values, in the range [0, 1]
 data Colour = Colour Double Double Double
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Generic)
 
 instance NFData Colour
+
+-- | Create a `Colour` from a `Data.Colour.Colour` (from the @colour@ package)
+fromDataColour :: Data.Colour.Colour Double -> Colour
+fromDataColour dc = case SRGB.toSRGB dc of 
+    SRGB.RGB r g b -> Colour r g b
+
+-- | Convert a `Colour` into a `Data.Colour.Colour` (from the @colour@ package)
+toDataColour :: Colour -> Data.Colour.Colour Double
+toDataColour (Colour r g b) = SRGB.sRGB r g b
+
+-- | The RGB components from a colour as a vector 
+sRGBComponents :: Colour -> V3 Double
+sRGBComponents (Colour r g b) = V3 r g b
+    
+instance Show Colour where
+    showsPrec d c@(Colour r g b) = showParen (d > 10) $
+        let SRGB.RGB r8 g8 b8 = SRGB.toSRGB24 (toDataColour c)
+            word = (fromIntegral r8 `shiftL` 16) .|. (fromIntegral g8 `shiftL` 8) .|. fromIntegral b8 :: Word32
+            hex = showHex word ""
+        in if rgb24 word == c
+              then showString "rgb24 0x"
+                    . showString (replicate (6 - length hex) '0')
+                    . showString hex
+              else showString "Colour " 
+                    . showsPrec 11 r
+                    . showChar ' ' 
+                    . showsPrec 11 g
+                    . showChar ' '
+                    . showsPrec 11 b
 
 -- | Convert an integer into a Colour
 --
@@ -39,9 +78,27 @@ instance NFData Colour
 -- rgb24 0xFFFFFF == white
 -- @
 rgb24 :: Word32 -> Colour
-rgb24 rgb =
-    let channel shift = fromIntegral ((rgb `shiftR` shift) .&. 0xFF) / 255
+rgb24 word =
+    let channel shift = fromIntegral ((word `shiftR` shift) .&. 0xFF) / 255
     in Colour (channel 16) (channel 8) (channel 0)
+
+-- | Compute an average from a List of `Colour`s
+-- 
+-- The average is computed in [the "OkLAB" colour space](https://en.wikipedia.org/wiki/Oklab_color_space).
+mixColours :: NonEmpty Colour -> Colour
+-- Special casing the singleton list avoids floating point errors when roundtripping through OkLAB
+mixColours (c :| []) = c
+mixColours cs =
+    let toLAB c = 
+            let (l, a, b) = Ok.okLabView . toDataColour $ c
+            in V3 l a b
+        fromLAB (V3 l a b) = fromDataColour $ Ok.okLab l a b
+        weight = 1 / realToFrac (length cs)
+    in fromLAB
+        . (^* weight)
+        . sum
+        . fmap toLAB
+        $ cs
 
 black, white, silver, grey, maroon, red, purple, fuchsia, green, lime, olive, yellow, navy, blue, teal, aqua :: Colour
 -- | <<doc-images/black.svg black>>

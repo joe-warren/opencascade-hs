@@ -11,9 +11,9 @@ import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
+import Waterfall.Colour (Colour (..))
 import Linear (V3 (..), zero)
 import Data.Function ((&))
-import Waterfall.Colour (Colour (Colour))
 
 takePathFractionExample :: Solid
 takePathFractionExample =

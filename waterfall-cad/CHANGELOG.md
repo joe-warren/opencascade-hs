@@ -8,17 +8,26 @@ and this project adheres to the
 
 ## Unreleased
 
+### Added 
+
+- Added conversions between `Waterfall.Colour.Colour` and the `Colour` type from [the colour package](https://hackage.haskell.org/package/colour) (`toDataColour` and `fromDataColour`)
+- Added `mixPaints` and `mixPaintsWithColours` to `Waterfall.Paint` and `mixColours` to `Waterfall.Colour`
+- Added `sRGBComponents` to `Waterfall.Colour`
+
 ### Fixed
 
 - Boolean operations on `Shape` now correctly merge neighbouring faces (Github issue #52)
 - Nearly uniform arguments to `scale` and `scale2D` no longer produce invalid geometry (Github issue #55)
 - Arguments to `matTransform` and `matTransform2D` which consist of an orthogonal matrix plus a uniform scale no longer produce invalid geometry (Github issue #33)
 - `Waterfall.Sweep` now uses `MakePipeShell` rather than `MakePipe` which is more modern, and has fewer bugs, (Github issue #25)
+- Colour components are clamped to the range [0..1] on write; out of range components would previously have raised an exception.
 
 ### Changed 
 
 - `Waterfall.TwoD.Shape.makeShape` now closes the path if it was open (Github issue #57)
     - This fixes shape construction from SVG files with endpoints that were previously processed as "not quite closed" due to rounding errors.
+- The `Show` instance on `Colour` now displays values in terms of `Waterfall.Colour.rgb24` when this is possible.
+- Emissive Colour is now converted to linear RGB when written
 
 ## 0.8.0.0
 
