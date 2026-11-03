@@ -11,7 +11,7 @@ and this project adheres to the
 ### Added 
 
 - Added conversions between `Waterfall.Colour.Colour` and the `Colour` type from [the colour package](https://hackage.haskell.org/package/colour) (`toDataColour` and `fromDataColour`)
-- Added `mixPaint` and `mixPaintWithColour` to `Waterfall.Paint` and `mixColour` to `Waterfall.Colour
+- Added `mixPaints` and `mixPaintsWithColours` to `Waterfall.Paint` and `mixColours` to `Waterfall.Colour`
 - Added `sRGBComponents` to `Waterfall.Colour`
 
 ### Fixed
@@ -25,6 +25,8 @@ and this project adheres to the
 
 - `Waterfall.TwoD.Shape.makeShape` now closes the path if it was open (Github issue #57)
     - This fixes shape construction from SVG files with endpoints that were previously processed as "not quite closed" due to rounding errors.
+- The `Show` instance on `Colour` now displays values in terms of `Waterfall.Colour.rgb24` when this is possible.
+- Emissive Colour is now converted to linear RGB when written
 
 ## 0.8.0.0
 

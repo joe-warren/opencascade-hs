@@ -32,10 +32,8 @@ import GHC.Generics (Generic)
 import qualified Data.Colour
 import qualified Data.Colour.SRGB as SRGB
 import qualified Data.Colour.Ok as Ok
-import qualified Data.Colour.CIE as CIE
-import qualified Data.Colour.CIE.Illuminant as CIE.Illuminant
 import Linear (V3 (..), (^*))
-import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty (NonEmpty ((:|)))
 
 -- | Three sRGB values, in the range [0, 1]
 data Colour = Colour Double Double Double
@@ -48,7 +46,7 @@ fromDataColour :: Data.Colour.Colour Double -> Colour
 fromDataColour dc = case SRGB.toSRGB dc of 
     SRGB.RGB r g b -> Colour r g b
 
--- | Create a `Colour` into a `Data.Colour.Colour` (from the @colour@ package)
+-- | Convert a `Colour` into a `Data.Colour.Colour` (from the @colour@ package)
 toDataColour :: Colour -> Data.Colour.Colour Double
 toDataColour (Colour r g b) = SRGB.sRGB r g b
 
@@ -88,6 +86,8 @@ rgb24 word =
 -- 
 -- The average is computed in [the "OkLAB" colour space](https://en.wikipedia.org/wiki/Oklab_color_space).
 mixColours :: NonEmpty Colour -> Colour
+-- Special casing the singleton list avoids floating point errors when roundtripping through OkLAB
+mixColours (c :| []) = c
 mixColours cs =
     let toLAB c = 
             let (l, a, b) = Ok.okLabView . toDataColour $ c

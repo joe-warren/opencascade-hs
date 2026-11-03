@@ -3,7 +3,7 @@ module PaintTests
 ) where
 
 import Waterfall.Paint
-import Waterfall.Colour (Colour (..), rgb24)
+import Waterfall.Colour (rgb24)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 

@@ -188,7 +188,7 @@ colourToOCColor c =
     let SRGB.RGB r g b = SRGB.toSRGB . toDataColour $ c
     in Quantity.Color.new (clamp r) (clamp g) (clamp b) Quantity.TypeOfColor.SRGB
 
--- Used for Emmisive Colour, which is in a linear RGB space
+-- Used for Emissive Colour, which is in a linear RGB space
 colourToOCVec3 :: Colour -> Acquire (Ptr (NCollection.Vec3 Float))
 colourToOCVec3 c =
     let SRGB.Linear.RGB r g b = SRGB.Linear.toRGB . toDataColour $ c

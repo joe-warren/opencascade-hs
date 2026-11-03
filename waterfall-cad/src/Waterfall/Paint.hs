@@ -159,7 +159,7 @@ mixNames paints =
             let name = 
                     intercalate " plus " 
                         $ toList 
-                        (fromMaybe "<undefined>" . (^. paintName)
+                        (fromMaybe "unnamed-paint" . (^. paintName)
                             <$> paints
                         )
             in paintWithName name
@@ -186,7 +186,7 @@ mixPaintsWithColours colourFn paints =
 
 -- | Compute an average from a list of `Paint`s 
 -- 
--- Undefined values in the Paints do not contribute to the average
+-- Undefined values in the Paints do not contribute to the average (although they do effect the name, if any of the Paints have a name set).
 mixPaints :: NonEmpty Paint -> Paint
 mixPaints = mixPaintsWithColours mixColours
 
@@ -242,7 +242,7 @@ paintWithRoughness r = mempty { _paintRoughness= Last (Just r) }
 
 -- | The paint "Emissive" factor, in a [PBR](https://en.wikipedia.org/wiki/Physically_based_rendering) model.
 --
--- EmissiveColour is written as linear RGB, rather than converted to sRGB.
+-- EmissiveColour is converted from sRGB to linear RGB when written.
 paintEmissiveColour :: Lens' Paint (Maybe Colour)
 paintEmissiveColour = 
     lens
