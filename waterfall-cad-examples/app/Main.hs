@@ -29,6 +29,7 @@ import Linear (V2 (..), V3 (..), _x, _y)
 import Control.Lens ((^.))
 import Control.Applicative ((<|>))
 import Control.Monad (join)
+import LoosePartsExample (loosePartsExample)
 
 normalizeSize :: (V2 Double -> Double, Double) -> Diagram.Diagram -> Diagram.Diagram
 normalizeSize (getter, target) d = 
@@ -81,6 +82,7 @@ exampleOption =
       OA.flag' twoDBooleansExample (OA.long "2d-booleans" <> OA.help "demonstrates 2D boolean operations (union, intersection, difference) on shapes" ) <|>
       OA.flag' platonicSolidsExample (OA.long "platonic-solids" <> OA.help "demonstrates the 5 platonic solids (tetrahedron, cube, octahedron, dodecahedron and icosahedron)") <|>
       OA.flag' takePathFractionExample (OA.long "take-path-fraction" <> OA.help "demonstrates truncating a path to different fractions of its length") <|>
+      OA.flag' loosePartsExample (OA.long "loose-parts" <> OA.help "demonstrates splitting up a solid") <|>
       OA.flag' flagExample (OA.long "flags" <> OA.help "demonstrates colour support (and various forms of pride)") <|>
       (OA.flag' gearExample (OA.long "gear" <> OA.help "generate an involute gear") <*>
        (OA.option OA.auto (OA.long "thickness" <> OA.help "gear depth") <|> pure 1.0) <*>

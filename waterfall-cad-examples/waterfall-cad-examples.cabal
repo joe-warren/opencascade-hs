@@ -34,6 +34,9 @@ data-files:
     test-data/gear.svg
     test-data/loft.svg
     test-data/loftSquares.svg
+    test-data/loose-parts.svg
+    test-data/loosePartsThenTransform.svg
+    test-data/looseShapesDiagram.svg
     test-data/mconcat2Ddiagram.svg
     test-data/nearUnityScale.svg
     test-data/nearUnityScaleTwoD.svg
@@ -73,6 +76,7 @@ library
       FlagExample
       GearExample
       LoftExample
+      LoosePartsExample
       OffsetExample
       PlatonicSolidsExample
       PrismExample
@@ -137,6 +141,8 @@ test-suite waterfall-cad-tests
       ExceptionTests
       LifetimeTests
       PaintTests
+      ShapeTests
+      SolidTests
       Paths_waterfall_cad_examples
   hs-source-dirs:
       test

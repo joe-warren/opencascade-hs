@@ -99,7 +99,8 @@ If you've found the project useful, or interesting, or if you've built anything 
 
 [![](waterfall-cad-examples/test-data/text.svg)](waterfall-cad-examples/src/TextExample.hs)
 
-[![](waterfall-cad-examples/test-data/2d-booleans.svg)](waterfall-cad-examples/src/TwoDBooleansExample.hs)
+[![](waterfall-cad-examples/test-data/loose-parts.svg)](waterfall-cad-examples/src/LoosePartsExample.hs)
+&ThinSpace;[![](waterfall-cad-examples/test-data/2d-booleans.svg)](waterfall-cad-examples/src/TwoDBooleansExample.hs)
 
 [![](waterfall-cad-examples/test-data/loft.svg)](waterfall-cad-examples/src/LoftExample.hs)
 

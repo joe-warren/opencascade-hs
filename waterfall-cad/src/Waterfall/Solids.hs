@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module Waterfall.Solids 
 ( Solid
 , emptySolid
@@ -15,6 +16,7 @@ module Waterfall.Solids
 , icosahedron
 , colourSolid
 , paintSolid
+, looseParts
 , prism
 , volume
 , centerOfMass
@@ -22,7 +24,8 @@ module Waterfall.Solids
 ) where
 
 
-import Waterfall.Internal.Solid (Solid (..), PaintMap (..), solidFromAcquire, acquireSolid, emptySolid, emptyPaintMap)
+import Waterfall.Internal.Solid (Solid (..), PaintMap (..), solidFromAcquire, acquireSolid, emptySolid, emptyPaintMap, solidFromAcquireTWithPaintMap)
+import Waterfall.Internal.Edges (allSubShapesWithCopy)
 import Waterfall.Paint (Paint, paintWithColour)
 import Waterfall.Internal.Finalizers (NoPtr, acquireForeignPtr, unsafeFromAcquire)
 import Control.DeepSeq (NFData)
@@ -40,6 +43,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import qualified OpenCascade.BRepBuilderAPI.Sewing as BRepBuilderAPI.Sewing
 import qualified OpenCascade.TopoDS as TopoDS
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
 import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
 import qualified OpenCascade.BRepPrimAPI.MakeBox as MakeBox
@@ -47,6 +51,7 @@ import qualified OpenCascade.BRepPrimAPI.MakeSphere as MakeSphere
 import qualified OpenCascade.BRepPrimAPI.MakeCylinder as MakeCylinder
 import qualified OpenCascade.BRepPrimAPI.MakeCone as MakeCone
 import qualified OpenCascade.BRepPrimAPI.MakeTorus as MakeTorus
+import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
 import qualified OpenCascade.GP as GP
@@ -60,9 +65,11 @@ import qualified OpenCascade.BRepPrimAPI.MakePrism as MakePrism
 import qualified OpenCascade.Inheritance as Inheritance
 
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad ((<=<))
+import Control.Monad ((<=<), forM, filterM)
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
+import qualified Waterfall.Internal.ShapeMap as ShapeMap
+import Data.Maybe (isJust)
 
 -- | A cube with side lengths of 1, one vertex on the origin, another on \( (1, 1, 1) \)
 unitCube :: Solid
@@ -267,6 +274,23 @@ colourSolid colour = paintSolid (paintWithColour colour)
 paintSolid :: Paint -> Solid -> Solid
 paintSolid paint (Solid s _) = 
     Solid s (UniformPaint paint )
+
+-- | Split a `Solid` into a list of disjoint parts
+looseParts :: Solid -> [Solid] 
+looseParts s = solidFromAcquireTWithPaintMap $ do
+    solid <- acquireSolid s
+    childSolids <- 
+        filterM (fmap (>0) . liftIO . TopoDS.Shape.nbChildren)
+            =<< allSubShapesWithCopy ShapeEnum.Solid solid
+    forM childSolids $ \child -> do
+        newPaintMap <- case solidPaintMap s of 
+            UniformPaint p -> pure . UniformPaint $ p
+            FacePaints paints -> do
+                faces <- liftIO . ShapeMap.fromList . fmap (,()) =<< allSubShapesWithCopy ShapeEnum.Face child
+                let exists = fmap isJust . liftIO . ShapeMap.lookup faces . Inheritance.upcast <=< acquireForeignPtr . fst
+                newPaints <- filterM exists paints
+                return (FacePaints newPaints)
+        return (newPaintMap, child)
 
 gPropQuery :: (NoPtr a, NFData a) => (Ptr GProps.GProps -> Acquire a) -> Solid -> a
 gPropQuery f s = unsafeFromAcquire $ do
