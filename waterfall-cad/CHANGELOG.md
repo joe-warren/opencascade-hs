@@ -13,6 +13,7 @@ and this project adheres to the
 - Added conversions between `Waterfall.Colour.Colour` and the `Colour` type from [the colour package](https://hackage.haskell.org/package/colour) (`toDataColour` and `fromDataColour`)
 - Added `mixPaints` and `mixPaintsWithColours` to `Waterfall.Paint` and `mixColours` to `Waterfall.Colour`
 - Added `sRGBComponents` to `Waterfall.Colour`
+- Added `Waterfall.Solids.looseParts` and `Waterfall.TwoD.Shape.looseShapes`
 
 ### Fixed
 
