@@ -51,7 +51,6 @@ import qualified PlatonicSolidsExample
 import qualified TakePathFractionExample
 import qualified Paths_waterfall_cad_examples as Paths
 import qualified FlagExample
-import qualified Waterfall.Solids as LoosePartsExample
 import qualified LoosePartsExample
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
@@ -355,4 +354,19 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         Right gearProfile <- SVG.readSVG (projectRoot </> "test-data/gear-profile.svg")
         let s = foldMap (Solids.prism 1 . Shape.makeShape) gearProfile
         return $ standardSolidDiagram s
+    , solidTest "looseParts with Colour then transform" "loosePartsThenTransform.svg" $ 
+        let a = Solids.centeredCube 
+                & Solids.colourSolid Colour.maroon
+                & Transforms.translate (unit _x) 
+            b = Solids.centeredCube 
+                & Solids.colourSolid Colour.navy
+                & Transforms.translate (unit _x ^* (-1))
+            separator = Solids.centeredCube
+                & Solids.colourSolid Colour.lime
+                & Transforms.scale (V3 5 0.1 5)
+        in ((a <> b) `Booleans.difference` separator)
+                & Solids.looseParts
+                & fmap (Transforms.rotate (unit _z) (pi/2))
+                & take 3
+                & mconcat
     ]

@@ -24,7 +24,7 @@ module Waterfall.Solids
 ) where
 
 
-import Waterfall.Internal.Solid (Solid (..), PaintMap (..), solidFromAcquire, acquireSolid, emptySolid, emptyPaintMap, solidFromAcquireMappingPaintMap, solidFromAcquireTWithPaintMap)
+import Waterfall.Internal.Solid (Solid (..), PaintMap (..), solidFromAcquire, acquireSolid, emptySolid, emptyPaintMap, solidFromAcquireTWithPaintMap)
 import Waterfall.Internal.Edges (allSubShapesWithCopy)
 import Waterfall.Paint (Paint, paintWithColour)
 import Waterfall.Internal.Finalizers (NoPtr, acquireForeignPtr, unsafeFromAcquire)
@@ -64,9 +64,11 @@ import qualified OpenCascade.BRepPrimAPI.MakePrism as MakePrism
 import qualified OpenCascade.Inheritance as Inheritance
 
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad ((<=<))
+import Control.Monad ((<=<), forM, filterM)
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
+import qualified Waterfall.Internal.ShapeMap as ShapeMap
+import Data.Maybe (isJust)
 
 -- | A cube with side lengths of 1, one vertex on the origin, another on \( (1, 1, 1) \)
 unitCube :: Solid
@@ -277,7 +279,15 @@ looseParts :: Solid -> [Solid]
 looseParts s = solidFromAcquireTWithPaintMap $ do
     solid <- acquireSolid s
     childSolids <- allSubShapesWithCopy ShapeEnum.Solid solid
-    return $ (solidPaintMap s,) <$> childSolids
+    forM childSolids $ \child -> do
+        newPaintMap <- case solidPaintMap s of 
+            UniformPaint p -> pure . UniformPaint $ p
+            FacePaints paints -> do
+                faces <- liftIO . ShapeMap.fromList . fmap (,()) =<< allSubShapesWithCopy ShapeEnum.Face child
+                let exists = fmap isJust . liftIO . ShapeMap.lookup faces . Inheritance.upcast <=< acquireForeignPtr . fst
+                newPaints <- filterM exists paints
+                return (FacePaints newPaints)
+        return (newPaintMap, child)
 
 gPropQuery :: (NoPtr a, NFData a) => (Ptr GProps.GProps -> Acquire a) -> Solid -> a
 gPropQuery f s = unsafeFromAcquire $ do

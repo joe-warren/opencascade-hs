@@ -35,6 +35,7 @@ data-files:
     test-data/loft.svg
     test-data/loftSquares.svg
     test-data/loose-parts.svg
+    test-data/loosePartsThenTransform.svg
     test-data/mconcat2Ddiagram.svg
     test-data/nearUnityScale.svg
     test-data/nearUnityScaleTwoD.svg
