@@ -31,6 +31,7 @@ extra-source-files:
     cpp/hs_BRepAlgoAPI_Common.h
     cpp/hs_BRepAlgoAPI_Cut.h
     cpp/hs_BRepAlgoAPI_Fuse.h
+    cpp/hs_BRepAlgoAPI_Section.h
     cpp/hs_BRepBndLib.h
     cpp/hs_BRepBuilderAPI_Copy.h
     cpp/hs_BRepBuilderAPI_GTransform.h
@@ -83,6 +84,7 @@ extra-source-files:
     cpp/hs_gp_Dir2d.h
     cpp/hs_gp_GTrsf.h
     cpp/hs_gp_Lin.h
+    cpp/hs_gp_Pln.h
     cpp/hs_gp_Pnt.h
     cpp/hs_gp_Pnt2d.h
     cpp/hs_gp_Trsf.h
@@ -170,6 +172,7 @@ library
       OpenCascade.BRepAlgoAPI.Cut
       OpenCascade.BRepAlgoAPI.Fuse
       OpenCascade.BRepAlgoAPI.Internal.Destructors
+      OpenCascade.BRepAlgoAPI.Section
       OpenCascade.BRepAlgoAPI.Types
       OpenCascade.BRepBndLib
       OpenCascade.BRepBuilderAPI
@@ -259,6 +262,7 @@ library
       OpenCascade.GP.GTrsf
       OpenCascade.GP.Internal.Destructors
       OpenCascade.GP.Lin
+      OpenCascade.GP.Pln
       OpenCascade.GP.Pnt
       OpenCascade.GP.Pnt2d
       OpenCascade.GP.Trsf
@@ -435,6 +439,7 @@ library
         cpp/hs_BRepAlgoAPI_Common.cpp
         cpp/hs_BRepAlgoAPI_Cut.cpp
         cpp/hs_BRepAlgoAPI_Fuse.cpp
+        cpp/hs_BRepAlgoAPI_Section.cpp
         cpp/hs_BRepBndLib.cpp
         cpp/hs_BRepBuilderAPI_Copy.cpp
         cpp/hs_BRepBuilderAPI_GTransform.cpp
@@ -487,6 +492,7 @@ library
         cpp/hs_gp_Dir2d.cpp
         cpp/hs_gp_GTrsf.cpp
         cpp/hs_gp_Lin.cpp
+        cpp/hs_gp_Pln.cpp
         cpp/hs_gp_Pnt.cpp
         cpp/hs_gp_Pnt2d.cpp
         cpp/hs_gp_Trsf.cpp

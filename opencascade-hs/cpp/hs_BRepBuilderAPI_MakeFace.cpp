@@ -7,6 +7,19 @@ BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace(){
     return new BRepBuilderAPI_MakeFace();
 }
 
+BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace_fromPln(
+        gp_Pln * pln,
+        HSExceptionType* exType,
+        void** exPtr){
+
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [pln]{
+        return new BRepBuilderAPI_MakeFace(*pln);
+    });
+}
+
 void hs_delete_BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeFace * builder){
     delete builder;
 }
