@@ -66,7 +66,7 @@ data DoubleSidedness = SingleSided | DoubleSided
 
 instance NFData DoubleSidedness where rnf = rwhnf
 
--- | Can be applied to change the appearance of the surface of a `Solid`
+-- | Can be applied to change the appearance of the surface of a `Waterfall.Solids.Solid`
 -- 
 -- `Paint` values can be constructed from the @paintWith*@ functions
 -- and can be combined monoidally (with `<>`).
@@ -186,7 +186,7 @@ mixPaintsWithColours colourFn paints =
 
 -- | Compute an average from a list of `Paint`s 
 -- 
--- Undefined values in the Paints do not contribute to the average (although they do effect the name, if any of the Paints have a name set).
+-- Undefined values in the `Paint`s do not contribute to the average (although they do affect the name, if any of the `Paint`s have a name set).
 mixPaints :: NonEmpty Paint -> Paint
 mixPaints = mixPaintsWithColours mixColours
 

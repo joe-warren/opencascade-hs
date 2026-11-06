@@ -1,14 +1,14 @@
 {-|
-[Constructive Solid Geometry \(CSG\)](https://en.wikipedia.org/wiki/Constructive_solid_geometry) operations on `Solid`, and `Shape`.
+[Constructive Solid Geometry \(CSG\)](https://en.wikipedia.org/wiki/Constructive_solid_geometry) operations on `Waterfall.Solids.Solid`, and `Waterfall.TwoD.Shape.Shape`.
 -}
 module Waterfall.Booleans
-( union3D
+( Boolean(..)
+, union3D
 , difference3D
 , intersection3D
 , complement
 , unions3D
 , intersections3D
-, Boolean(..)
 ) where
 
 import Waterfall.Internal.Solid(union3D, unions3D, difference3D, intersection3D, intersections3D, complement)
@@ -37,8 +37,13 @@ class Boolean a where
     --
     -- Represents a region of space containing no volume or area.
     --
-    -- For union: @empty `union` x = x `union` empty = x@
-    -- For intersection: @empty `intersection` x = x `intersection` empty = empty@
+    -- For union: 
+    --
+    -- > empty `union` x = x `union` empty = x
+    -- 
+    -- For intersection: 
+    -- 
+    -- > empty `intersection` x = x `intersection` empty = empty
     empty :: a
     
     -- | Take the union of a list of objects

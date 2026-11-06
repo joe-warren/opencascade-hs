@@ -137,7 +137,7 @@ tryRoundIndexedConditionalFillet =
 --
 -- In general, relying on the edge index is inelegant,
 --
--- In an earlier version of Waterfall-CAD, fillets were controlled by the edge *endpoints*, rather than the edge path
+-- In an earlier version of Waterfall-CAD, fillets were controlled by the edge /endpoints/, rather than the edge path
 --  
 -- If you consider a Solid with a semicircular face,
 -- there's no way to select either the curved or the flat edge of the semicircle based on just the endpoints
@@ -350,7 +350,7 @@ chamferWithPaint
 chamferWithPaint paintFunction d =
     conditionalChamferWithPaint paintFunction (const . pure $ d )
 
--- | Returns a value when the target of a lens, when applied to the edge's `Path`'s endpoints are close to one another.
+-- | Returns a value when the target of a lens is nearly equal at both endpoints of the edge's `Path`.
 --
 -- This can be used in combination with `roundConditionalFillet`/`conditionalChamfer`.
 --

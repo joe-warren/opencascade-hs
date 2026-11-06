@@ -182,7 +182,7 @@ fillToPath (paint, shape) =
         & Svg.drawAttr . Svg.fillColor .~ (pure . Svg.ColorRef . colourToPixel $ colour)
         & setOpacity
         
--- | Convert a `Waterfall.Path2D` into a list of `Svg.PathCommands`
+-- | Convert a `Waterfall.Path2D` into a list of `Svg.PathCommand`s
 path2DToPathCommands :: Waterfall.Path2D -> [Svg.PathCommand]
 path2DToPathCommands (Path2D theRawPath) = case theRawPath of  
     Internal.Path.Common.EmptyRawPath -> []

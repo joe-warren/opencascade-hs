@@ -87,7 +87,7 @@ instance Transformable2D Diagram where
   translate2D v = mapDiagram (translate2D v)
   mirror2D v = mapDiagram (mirror2D v)
 
--- | Categorize the lines in a diagram
+-- | Categorise the lines in a diagram
 data LineType = 
     -- | Represents lines at the edge of objects, the "silhouette" 
     -- 
@@ -193,7 +193,7 @@ diagramLines lt v = fromMaybe [] . M.lookup (normaliseLineType lt, v) . getDiagr
 
 -- | Compute the Axis Aligned Bounding Box of a `Diagram`
 -- 
--- Returns Nothing if the `Diagram` does not contain lines that are `OutLine` or `Sharp`
+-- Returns @Nothing@ if the `Diagram` does not contain lines that are `OutLine` or `SharpLine`
 diagramBoundingBox :: Diagram -> Maybe (V2 Double, V2 Double)
 diagramBoundingBox d = unsafeFromAcquire $ do
     let outline = diagramLines OutLine Visible d

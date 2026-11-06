@@ -15,7 +15,7 @@ loaded using `OpenCascade.RWGltf.CafReader` in most operations will lead to segm
 However, we can safely access the Triangulation of the Shape, construct Polygons from this
 and then use BReps derived from these Polygons.
 
-In this way, the `remesh` function produces a new Boundary Represenation from the Mesh of an `OpenCascade.TopoDS.Shape`
+In this way, the `remesh` function produces a new Boundary Representation from the Mesh of an `OpenCascade.TopoDS.Shape`
 
 -}
 module Waterfall.Internal.Remesh 

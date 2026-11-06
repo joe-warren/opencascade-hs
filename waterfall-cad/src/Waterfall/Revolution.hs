@@ -18,7 +18,7 @@ import Linear (unit, _x)
 import Waterfall.Internal.Path.Common (RawPath(..))
 import Data.Either (fromRight)
 
--- | Version of `revolution` that returns an `Error` on failure.
+-- | Version of `revolution` that returns a `WaterfallError` on failure.
 --
 -- Revolution can fail, for example, if the `Path2D` crosses the axis of revolution.
 tryRevolution :: Path2D -> Either WaterfallError Solid

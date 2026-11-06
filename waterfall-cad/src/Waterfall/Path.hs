@@ -5,7 +5,7 @@ module Waterfall.Path
 ( Path
 , module Waterfall.Path.Common
 , fromPath2D
--- $ reexports
+-- $reexports
 , line3D
 , lineTo3D
 , lineRelative3D

@@ -10,7 +10,7 @@ module Waterfall.TwoD.Path2D
 , arcTo
 , arcRelative
 , repeatLooping
--- $ reexports
+-- $reexports
 , line2D
 , lineTo2D
 , lineRelative2D

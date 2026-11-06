@@ -45,7 +45,7 @@ data SVGErrorKind
 
 instance NFData SVGErrorKind
 
--- | Type representing an error that occured when processing an SVG
+-- | Type representing an error that occurred when processing an SVG
 data SVGError = SVGError SVGErrorKind String
         deriving (Eq, Ord, Show, Generic)
 
@@ -120,8 +120,8 @@ smoothQuadraticBezierCurveToRelative cp2 cp1 cp0 = smoothQuadraticBezierCurveToR
 
 -- | Generate `Waterfall.Path2D`s from a parsed list of `Svg.PathCommand`s.
 -- 
--- Consective `Svg.PathCommands` will be merged into the same `Waterfall.Path2D` 
--- unless either a move command ('m', 'M') or a close path command ('z', 'Z') is encountered.
+-- Consecutive `Svg.PathCommand`s will be merged into the same `Waterfall.Path2D` 
+-- unless either a move command @(\'m\', \'M\')@ or a close path command @(\'z\', \'Z\')@ is encountered.
 convertPathCommands :: [Svg.PathCommand] -> Either SVGError [Waterfall.Path2D]
 convertPathCommands cs =
     let
@@ -181,7 +181,7 @@ convertPathCommands cs =
     in reverse <$> go cs (zero, []) []
 
 -- | Parse [SVG Path data](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths) 
--- and convert it into a `Path2D`
+-- and convert it into a `Waterfall.Path2D`
 parsePath :: String -> Either SVGError [Waterfall.Path2D]
 parsePath s =
     case Atto.parseOnly (pathParser <* Atto.endOfInput) (T.pack s) of 
@@ -191,7 +191,7 @@ parsePath s =
 -- | Parse a `Svg.Transformation` into a function that can be applied to 
 -- any Waterfall type with a `Waterfall.Transformable2D` instance
 -- 
--- This should handle every case except for `TransformUnknown`
+-- This should handle every case except for `Svg.TransformUnknown`
 convertTransform :: Waterfall.Transformable2D a => Svg.Transformation -> Either SVGError (a -> a)
 convertTransform (Svg.TransformMatrix a b c d e f) = Right $ Waterfall.matTransform2D (V2 (V3 a c e) (V3 b d f))
 convertTransform (Svg.Translate x y) = Right $ Waterfall.translate2D (V2 x y)
@@ -333,7 +333,7 @@ convertTree tree = do
         Svg.RectangleTree rectangle -> convertRectangle rectangle
         _ -> Right []
 
--- | Convert an `Svg.Document` into a list of `Path2Ds`
+-- | Convert an `Svg.Document` into a list of `Waterfall.Path2D`s
 convertDocument :: Svg.Document -> Either SVGError [Waterfall.Path2D]
 convertDocument doc = fmap mconcat . traverse convertTree $ (doc ^. Svg.elements) 
 

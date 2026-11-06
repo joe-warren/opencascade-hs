@@ -31,14 +31,14 @@ import Control.Monad ((<=<))
 import Foreign.ForeignPtr (ForeignPtr)
 import Control.DeepSeq (NFData (rnf), rwhnf)
 
--- | An OrientedBoundingBox may be a tighter fit for a Shape than an axis aligned bounding box would be
+-- | An OrientedBoundingBox may be a tighter fit for a `Solid` than an axis aligned bounding box would be
 -- 
 newtype OrientedBoundingBox = OrientedBoundingBox { rawOBB :: ForeignPtr OBB }
 
 instance NFData OrientedBoundingBox where 
     rnf (OrientedBoundingBox obb) = rwhnf obb
 
--- | Compute an OrientedBoundingBox for a solid
+-- | Compute an `OrientedBoundingBox` for a `Solid`
 orientedBoundingBox :: Solid -> Maybe OrientedBoundingBox
 orientedBoundingBox s = 
     if volume s == 0
@@ -65,21 +65,21 @@ getSide fxyz fLength = queryOBB $ \obb -> do
 -- | The "X" side of the oriented bounding box.
 --
 -- This is measured from the center to one Face.
--- So the length of this vector is _half_ of the side length of the bounding box.
+-- So the length of this vector is /half/ of the side length of the bounding box.
 obbSideX :: OrientedBoundingBox -> V3 Double 
 obbSideX = getSide OBB.xDirection OBB.xHSize
     
 -- | The "Y" side of the oriented bounding box.
 --
 -- This is measured from the center to one face.
--- So the length of this vector is _half_ of the side length of the bounding box.
+-- So the length of this vector is /half/ of the side length of the bounding box.
 obbSideY :: OrientedBoundingBox -> V3 Double 
 obbSideY = getSide OBB.yDirection OBB.yHSize
     
 -- | The "Z" side of the oriented bounding box
 --
 -- This is measured from the center to one face.
--- So the length of this vector is _half_ of the side length of the bounding box.
+-- So the length of this vector is /half/ of the side length of the bounding box.
 obbSideZ :: OrientedBoundingBox -> V3 Double
 obbSideZ =  getSide OBB.zDirection OBB.zHSize
 

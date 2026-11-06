@@ -73,11 +73,11 @@ fromAcquirePtrT a = runResourceT $ do
         liftIO $ Concurrent.newForeignPtr ptr finalize
 
 -- | Converting to a value in the `Data.Acquire.Acquire` monad, to a raw value.
--- Analagous to calling `unsafePerformIO` to extract a value in the `IO` monad.
+-- Analogous to calling `unsafePerformIO` to extract a value in the `IO` monad.
 -- The same constraints as apply to `unsafePerformIO` apply to this method. 
 -- That is, it should only be used on "philosophically pure" actions.
 --
--- The `free` action of the resource is called when the underlying value goes out of scope of the Haskell garbage collection,
+-- The "free" action of the resource is called when the underlying value goes out of scope of the Haskell garbage collection,
 -- so may run at an unpredictable time.
 {-# NOINLINE unsafeFromAcquirePtr #-}
 unsafeFromAcquirePtr :: Acquire (Ptr a) -> ForeignPtr a
@@ -110,7 +110,7 @@ acquireForeignPtr fp =
 
 -- | calling the pure valued functions with a pointer type would almost certainly be a bug
 -- 
--- @Ptr@ has an @NFData@ instance, so if we _only_ used that constraint, the functions could be applied to pointers
+-- @Ptr@ has an @NFData@ instance, so if we /only/ used that constraint, the functions could be applied to pointers
 --
 -- Defining a type family for "things that aren't pointers" lets us check that we aren't acquiring pointers
 type NoPtr :: k -> Constraint
@@ -131,7 +131,7 @@ runAcquire a = with a (evaluate . force)
 
 -- | Run a resource in the `Data.Acquire.Acquire` monad, returning its (fully evaluated) result as a pure value.
 --
--- Analagous to calling `unsafePerformIO` to extract a value in the `IO` monad.
+-- Analogous to calling `unsafePerformIO` to extract a value in the `IO` monad.
 -- The same constraints as apply to `unsafePerformIO` apply to this method. 
 -- That is, it should only be used on "philosophically pure" actions.
 --

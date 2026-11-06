@@ -128,8 +128,8 @@ solidFromAcquireWithCatch paintMap = fmap (`Solid` paintMap) . unsafeFromAcquire
 solidFromAcquireTWithCatch :: Traversable t => PaintMap -> Acquire (t (Ptr TopoDS.Shape.Shape)) -> Either WaterfallError (t Solid)
 solidFromAcquireTWithCatch paintMap  = fmap (fmap (`Solid` paintMap)) . unsafeFromAcquirePtrTWithCatch
 
--- | print debug information about a Solid when it's evaluated 
--- exposes the properties of the underlying OpenCacade.TopoDS.Shape
+-- | print debug information about a `Solid` when it's evaluated 
+-- exposes the properties of the underlying `OpenCascade.TopoDS.Shape`
 debug :: Solid -> String
 debug (Solid ptr _) = 
     let 

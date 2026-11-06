@@ -15,7 +15,7 @@ import Control.DeepSeq (NFData)
 --
 -- Under the hood, this is represented by an OpenCascade `TopoDS.Wire`.
 --
--- The monoid instance  Joins `Path`s, @ a <> b @ connects the end point of @ a @ to the start of @ b @, if these points are not coincident, a line is created between them.
+-- The monoid instance joins `Path`s, @ a <> b @ connects the end point of @ a @ to the start of @ b @, if these points are not coincident, a line is created between them.
 --
 newtype Path = Path { rawPath :: RawPath } 
     deriving (Semigroup, Monoid, NFData) via RawPath

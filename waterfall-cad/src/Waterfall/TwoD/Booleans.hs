@@ -1,5 +1,5 @@
 {-|
-[Boolean Operations](https://en.wikipedia.org/wiki/Boolean_operations_on_polygons) on `Shape`.
+[Boolean Operations](https://en.wikipedia.org/wiki/Boolean_operations_on_polygons) on `Waterfall.TwoD.Shape.Shape`.
 -}
 module Waterfall.TwoD.Booleans
 ( union2D

@@ -17,11 +17,11 @@ import qualified Waterfall.Path.Common as Path
 
 -- | [Loft](https://en.wikipedia.org/wiki/Loft_\(3D\)) is a method to create smooth 3D shapes. 
 --
--- Analagous to the [lofting](https://en.wikipedia.org/wiki/Lofting) process in boat building. 
+-- Analogous to the [lofting](https://en.wikipedia.org/wiki/Lofting) process in boat building. 
 -- A loft is defined by planar cross-sections of the desired shape at chosen locations. 
 -- These cross-sections are then interpolated to form a smooth 3d shape.
 --
--- This example demonstrates the `Loft` module, by generating a boat, with the profile of the boat specified by a series of bezier curves.
+-- This example demonstrates the "Waterfall.Loft" module, by generating a boat, with the profile of the boat specified by a series of bezier curves.
 loftExample :: Solids.Solid
 loftExample = 
     let paths = 
