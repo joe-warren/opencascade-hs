@@ -13,6 +13,14 @@ and this project adheres to the
 - Added `OpenCascade.GP.GTrsf.isNegative`
 - Added `OpenCascade.BRepOffsetAPI.MakePipeShell`
 - Added `OpenCascade.BRepTools.outerWire`
+- Added `OpenCascade.GP.Pln` 
+- Added missing methods to `OpenCascade.GP.Lin`:
+  - `fromAx1`, `position`, `setLocation`, `setDirection`,
+    `setPosition`, `reverse`, `reversed`, `angle`, `contains`, `distancePnt`, `distanceLin`, `squareDistancePnt`, `squareDistanceLin`, `normal`, `mirror`, `mirrored`, `mirrorAboutAx1`, `mirroredAboutAx1`, `mirrorAboutAx2`, `mirroredAboutAx2`, `rotate`, `rotated`, `scale`, `scaled`, `transform`, `transformed`, `translate`, `translated`, `translateRelative`, `translatedRelative`
+- Added `OpenCascade.BRepAlgoAPI.Section`
+- Added `OpenCascade.BRepBuilderAPI.MakeFace.fromPln`
+- Added `OpenCascade.BRepGProp.volumePropertiesWithEps`
+  and `OpenCascade.BRepGProp.surfacePropertiesWithEps`
 
 ### Changed
 

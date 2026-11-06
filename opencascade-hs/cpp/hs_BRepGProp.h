@@ -12,9 +12,19 @@ void hs_BRepGProp_VolumeProperties(
     HSExceptionType* exType, void ** exPtr
 );
 
+void hs_BRepGProp_VolumePropertiesWithEps(
+        TopoDS_Shape *shape, GProp_GProps *props, double eps, bool onlyClosed, bool skipShared,
+        HSExceptionType* exType, void ** exPtr
+);
+
 void hs_BRepGProp_SurfaceProperties(
     TopoDS_Shape *shape, GProp_GProps *props, bool skipShared, bool useTriangulation,
     HSExceptionType* exType, void ** exPtr
+);
+
+void hs_BRepGProp_SurfacePropertiesWithEps(
+        TopoDS_Shape *shape, GProp_GProps *props, double eps, bool skipShared,
+        HSExceptionType* exType, void ** exPtr
 );
 
 void hs_BRepGProp_LinearProperties(

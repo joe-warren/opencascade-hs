@@ -167,7 +167,9 @@ compareOutput inputPath expected actual =
             liftEither . Left $
                 ( show mismatchedCount <> "/" <> show totalPixels 
                 <> " pixels didn't match, diff written to " 
-                <> diffPath
+                <> diffPath 
+                <> " actual written to "
+                <> actualPath
                 )
     
 doTest :: TestName -> FilePath -> IO Diagram -> TestTree
@@ -379,6 +381,52 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & zipWith Diagram.shapeDiagram
                 (Paint.paintWithColour <$> [Colour.red, Colour.blue, Colour.green, Colour.yellow])
             & mconcat
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "sphere section" "sphereSection.svg" (
+        Solids.unitSphere 
+            & Shape.section
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "compound section" "compoundSection.svg" (
+        Solids.unitSphere
+            & (`Booleans.difference` (Solids.unitSphere & Transforms.uScale 0.4))
+            & (`Booleans.difference` (Solids.centeredCube & Transforms.translate (unit _x)))
+            & Booleans.union (Solids.centeredCube 
+                & Transforms.uScale 0.8
+                & Transforms.translate (unit _x)
+                )
+            & Shape.section
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
+            & TwoD.Transforms.scale2D 50
+        )
+    , solidTest "painted sphere" "paintedSphere.svg" (
+        Solids.unitSphere
+            & Solids.colourSolid Colour.blue
+        )
+    , diagramTest "sphere silhouette" "sphereSilhouette.svg" (
+        Solids.unitSphere 
+            & Shape.silhouette
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "torus silhouette" "torusSilhouette.svg" (
+        Solids.torus 2 1
+            & Shape.silhouette
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.yellow)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "compound silhouette" "compoundSilhouette.svg" (
+        Solids.unitSphere
+            & (`Booleans.difference` (Solids.unitSphere & Transforms.uScale 0.4))
+            & (`Booleans.difference` (Solids.centeredCube & Transforms.translate (unit _x)))
+            & Booleans.union (Solids.centeredCube 
+                & Transforms.uScale 0.8
+                & Transforms.translate (unit _x)
+                )
+            & Shape.silhouette
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.aqua)
             & TwoD.Transforms.scale2D 50
         )
     ]

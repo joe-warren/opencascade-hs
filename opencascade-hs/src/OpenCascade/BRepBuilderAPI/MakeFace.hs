@@ -11,6 +11,7 @@ module OpenCascade.BRepBuilderAPI.MakeFace
 , add
 , isDone
 , error
+, fromPln
 ) where
 
 import Prelude hiding (error)
@@ -27,6 +28,7 @@ import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C
 import Foreign.Ptr
 import Data.Acquire 
+import qualified OpenCascade.GP as GP
 
 -- new
 
@@ -98,6 +100,17 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_M
 
 fromWire :: Ptr TopoDS.Wire -> Bool -> Acquire (Ptr MakeFace)
 fromWire wire onlyPlane = mkAcquire (wrapException $ rawFromWire wire (boolToCBool onlyPlane)) deleteMakeFace
+
+-- fromPln
+
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_MakeFace_fromPln" rawFromPln
+    :: Ptr GP.Pln
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr MakeFace)
+
+fromPln :: Ptr GP.Pln -> Acquire (Ptr MakeFace)
+fromPln pln = mkAcquire (wrapException $ rawFromPln pln) deleteMakeFace
 
 -- add
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_BRepBuilderAPI_MakeFace_Add" rawAdd
