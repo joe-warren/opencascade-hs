@@ -9,6 +9,8 @@ module Waterfall.TwoD.Shape
 , looseShapes
 , section
 , silhouette
+, area
+, centroid
 -- * Boolean operations
 , union2D
 , difference2D
@@ -16,8 +18,6 @@ module Waterfall.TwoD.Shape
 , unions2D
 , intersections2D
 , emptyShape
-, area
-, centroid
 ) where
 
 import Waterfall.TwoD.Internal.Shape (Shape (..), union2D, difference2D, intersection2D, unions2D, intersections2D, emptyShape)
