@@ -25,7 +25,7 @@ import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Control.Lens ((^.), (&), (.~), (<&>))
-import Linear (_x, _y, _z, V3 (V3), norm, unit)
+import Linear (_x, _y, _z, V3, norm, unit)
 import qualified Data.IntMap as IntMap
 import Data.Maybe (fromMaybe, catMaybes)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap

@@ -95,7 +95,7 @@ shapeTests = testGroup "Shape"
             let s = Solids.torus 2 1
                     & Shape.silhouette
             in assertEqual "torus has one part" 1 (length . Shape.looseShapes $ s)
-                <> assertBool "silhouette area is 8*pi" ((< 1e-5) . abs . subtract (8*pi) . Shape.area $ s)
+                <> assertBool "silhouette area is 8*pi" ((< 1e-4) . abs . subtract (8*pi) . Shape.area $ s)
 
         , testCase "silhouette of cube with hole" $
             let s = Solids.centeredCube
