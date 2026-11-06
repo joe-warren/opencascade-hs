@@ -115,6 +115,7 @@ extensionToFormats s =
      in case ext of  
         ".stl" -> Just (writeSTL, readSTL)
         ".step" -> Just (const writeSTEP, readSTEP)
+        ".stp" -> Just (const writeSTEP, readSTEP)
         ".gltf" -> Just (writeGLTF, readGLTF)
         ".glb" -> Just (writeGLB, readGLB)
         ".obj" -> Just (writeOBJ, readOBJ)
