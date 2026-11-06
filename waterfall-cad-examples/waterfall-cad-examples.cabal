@@ -25,6 +25,7 @@ data-files:
     test-data/2d-booleans.svg
     test-data/bounding-boxes.svg
     test-data/compoundSection.svg
+    test-data/compoundSilhouette.svg
     test-data/csg.svg
     test-data/curvySweep.svg
     test-data/curvySweepConcentricSquares.svg
@@ -56,10 +57,12 @@ data-files:
     test-data/platonic.svg
     test-data/revolution.svg
     test-data/sphereSection.svg
+    test-data/sphereSilhouette.svg
     test-data/svgPrism.svg
     test-data/sweep.svg
     test-data/takePathFraction.svg
     test-data/text.svg
+    test-data/torusSilhouette.svg
     test-data/union2D.svg
     test-data/union2Ddiagram.svg
     test-data/fonts/varela/OFL.txt

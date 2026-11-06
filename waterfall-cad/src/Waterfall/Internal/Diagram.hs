@@ -1,6 +1,7 @@
 {-# LANGUAGE TupleSections #-}
 module Waterfall.Internal.Diagram
 ( buildSolidDiagramFills
+, silhouetteShape
 ) where
 import Waterfall.Internal.Solid (PaintMap(..), materialiseFacePaints, paintMapIsEmpty)
 import Waterfall.Paint (Paint)
@@ -24,7 +25,7 @@ import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Control.Lens ((^.), (&), (.~), (<&>))
-import Linear (_x, _y, _z, V3, norm)
+import Linear (_x, _y, _z, V3 (V3), norm, unit)
 import qualified Data.IntMap as IntMap
 import Data.Maybe (fromMaybe, catMaybes)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
@@ -48,6 +49,10 @@ import Waterfall.Internal.Finalizers (fromAcquirePtr, fromAcquirePtrT)
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified Data.Map as M
 import qualified OpenCascade.ShapeUpgrade.UnifySameDomain as UnifySameDomain
+import qualified OpenCascade.HLRBRep.Algo as HLRBRep.Algo
+import qualified OpenCascade.GP as GP
+import qualified OpenCascade.HLRAlgo.Projector as HLRAlgo.Projector
+import qualified OpenCascade.GP.Ax2 as GP.Ax2
 
 boundaryEdges :: Ptr HLRBRep.HLRToShape -> Acquire [Ptr TopoDS.Edge]
 boundaryEdges extractor = 
@@ -199,6 +204,24 @@ projectedRegions s projectionDir projector extractor = do
                                 faceMaybe <- lookupCandidateFace candidatePoints
                                 return $ (region, faceMaybe)
 
+silhouetteShape 
+    :: Ptr TopoDS.Shape 
+    -> Acquire [Shape]
+silhouetteShape s = do
+    algo <- HLRBRep.Algo.new
+    liftIO $ HLRBRep.Algo.add algo s
+    o <- GP.origin
+    let projectionDir = unit _z
+    projector <- HLRAlgo.Projector.fromAx2 =<< GP.Ax2.newAutoX o =<< v3ToDir projectionDir
+    liftIO $ do 
+        HLRBRep.Algo.projector algo projector
+        HLRBRep.Algo.update algo
+        HLRBRep.Algo.hide algo
+    extractor <- HLRBRep.HLRToShape.fromAlgo algo
+    regions <- projectedRegions s projectionDir projector extractor
+    let hitRegions = fmap fst . catMaybes . fmap sequence $ regions
+    mergeRegions hitRegions
+
 buildSolidDiagramFills' 
     :: Ptr TopoDS.Shape
     -> V3 Double 
@@ -210,8 +233,8 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
     paintMap <- liftIO $ ShapeMap.fromList (first upcast <$> paints)
     regions <- projectedRegions s projectionDir projector extractor
     let hitRegions = catMaybes . fmap sequence $ regions
-    paintRegionMap <- fmap (M.fromListWith ((<>)) . catMaybes)
-        $ forM hitRegions $ \(region, hit) -> do    
+    paintRegionMap <- fmap (M.fromListWith (<>) . catMaybes)
+        $ forM hitRegions $ \(region, hit) -> do
             paint <- liftIO $ ShapeMap.lookup paintMap (upcast hit)
             return $ (, [region]) <$> paint
 

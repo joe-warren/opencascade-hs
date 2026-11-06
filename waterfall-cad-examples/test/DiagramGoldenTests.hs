@@ -405,4 +405,28 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         Solids.unitSphere
             & Solids.colourSolid Colour.blue
         )
+    , diagramTest "sphere silhouette" "sphereSilhouette.svg" (
+        Solids.unitSphere 
+            & Shape.silhouette
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "torus silhouette" "torusSilhouette.svg" (
+        Solids.torus 2 1
+            & Shape.silhouette
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.yellow)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "compound silhouette" "compoundSilhouette.svg" (
+        Solids.unitSphere
+            & (`Booleans.difference` (Solids.unitSphere & Transforms.uScale 0.4))
+            & (`Booleans.difference` (Solids.centeredCube & Transforms.translate (unit _x)))
+            & Booleans.union (Solids.centeredCube 
+                & Transforms.uScale 0.8
+                & Transforms.translate (unit _x)
+                )
+            & Shape.silhouette
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.aqua)
+            & TwoD.Transforms.scale2D 50
+        )
     ]

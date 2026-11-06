@@ -8,6 +8,7 @@ module Waterfall.TwoD.Shape
 , unitPolygon
 , looseShapes
 , section
+, silhouette
 -- * Boolean operations
 , union2D
 , difference2D
@@ -20,7 +21,7 @@ module Waterfall.TwoD.Shape
 import Waterfall.TwoD.Internal.Shape (Shape (..), union2D, difference2D, intersection2D, unions2D, intersections2D, emptyShape)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.TwoD.Transforms (translate2D, rotate2D)
-import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquirePtrT)
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquirePtrT, unsafeFromAcquire)
 import Waterfall.Internal.Edges (allWires, allSubShapesWithCopy)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
@@ -33,6 +34,7 @@ import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (filterM)
 import Waterfall.Internal.Solid (Solid, acquireSolid)
+import Waterfall.Internal.Diagram (silhouetteShape)
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 
@@ -108,7 +110,7 @@ looseShapes (Shape r) = fmap Shape . unsafeFromAcquirePtrT $ do
     filterM (fmap (>0) . liftIO . TopoDS.Shape.nbChildren)
         =<< allSubShapesWithCopy ShapeEnum.Face shape
 
--- | Compute the cross-section of a `Shape` on the @xy@ plane
+-- | Compute the cross-section of a `Solid` on the @xy@ plane
 --
 -- The cross section is computed at @z=0@
 section :: Solid -> Shape
@@ -117,3 +119,8 @@ section solid = Shape . unsafeFromAcquirePtr $ do
     face <- MakeFace.face =<< MakeFace.fromPln =<< GP.Pln.new
     MakeShape.shape . upcast =<< Common.fromShapes s (upcast face)
 
+-- | Compute the Shadow of a `Solid` projected onto the @xy@ plane
+silhouette :: Solid -> Shape
+silhouette solid = unsafeFromAcquire $ do
+    s <- acquireSolid solid
+    mconcat <$> silhouetteShape s 
