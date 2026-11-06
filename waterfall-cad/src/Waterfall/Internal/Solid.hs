@@ -85,7 +85,7 @@ paintMapIsEmpty _ = False
 -- Alternatively, a region of 3d Space.
 --
 -- Under the hood, this is represented by an OpenCascade `TopoDS.Shape`.
--- The underlying shape should either be a Solid, or a CompSolid.
+-- The underlying shape should either be a Solid, a CompSolid, or a Compound of Solids
 -- 
 -- While you shouldn't need to know what this means to use the library,
 -- please feel free to report a bug if you're able to construct a `Solid`
