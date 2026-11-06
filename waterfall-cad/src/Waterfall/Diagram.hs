@@ -193,7 +193,7 @@ diagramLines lt v = fromMaybe [] . M.lookup (normaliseLineType lt, v) . getDiagr
 
 -- | Compute the Axis Aligned Bounding Box of a `Diagram`
 -- 
--- Returns @Nothing@ if the `Diagram` does not contain lines that are `OutLine` or `SharpLine`
+-- Returns @Nothing@ if the `Diagram` does not contain `Visible` lines that are `OutLine` or `SharpLine`
 diagramBoundingBox :: Diagram -> Maybe (V2 Double, V2 Double)
 diagramBoundingBox d = unsafeFromAcquire $ do
     let outline = diagramLines OutLine Visible d

@@ -18,9 +18,11 @@ redShinyPaint =
 
 Not all `Paint` properties are supported by every file format:
 
-* glTF and OBJ use the full set
+* glTF uses the full set
+* OBJ uses the colour, opacity, and roughness (as part of the specular component)
 * STEP only uses the colour
 * SVG uses colour and opacity
+* STL ignores the `Paint` properties completely
 -}
 module Waterfall.Paint 
 ( Colour (..)

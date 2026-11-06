@@ -51,7 +51,7 @@ tryPointedLoft ::
     -> Either WaterfallError Solid
 tryPointedLoft = tryPointedLoftWithPrecision defaultPrecision
 
--- | like `pointedLoft`, but returns an Either on error
+-- | like `loft`, but returns an Either on error
 tryLoft :: 
     [Path] -- ^ Series of cross-sections that the loft will pass through
     -> Either WaterfallError Solid

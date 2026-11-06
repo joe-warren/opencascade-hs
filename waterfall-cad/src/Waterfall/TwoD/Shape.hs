@@ -95,6 +95,8 @@ centeredSquare :: Shape
 centeredSquare = translate2D (V2 (-0.5) (-0.5)) unitSquare
 
 -- | \(n\) sided Polygon, centered on the origin
+--
+-- The polygon has a circumradius of 1, with one vertex on the positive x-axis
 -- 
 -- Empty when n <= 2
 unitPolygon :: Integer -> Shape
