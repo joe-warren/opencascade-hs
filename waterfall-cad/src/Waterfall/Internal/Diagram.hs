@@ -126,14 +126,17 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
             tolerance <- calcFuzzyTolerance boundary 
             rayBound <- calcRayBound s
             let angularTolerance = 1e-8
-            fuser <- BOPAlgo.Builder.new 
-            liftIO $ BOPAlgo.Builder.setFuzzyValue fuser tolerance
-            forM_ boundary (liftIO . BOPAlgo.Builder.addArgument fuser . upcast)
-            liftIO $ BOPAlgo.Builder.perform fuser
-            keptEdges <- pruneDangling 
-                =<< traverse (liftIO . unsafeDowncast)
-                =<<  allSubShapesWithCopy ShapeEnum.Edge 
-                =<< BOPAlgo.Builder.shape fuser
+            keptEdges <- case boundary of 
+                [oneEdge] -> pure [oneEdge]
+                _ -> do
+                    fuser <- BOPAlgo.Builder.new 
+                    liftIO $ BOPAlgo.Builder.setFuzzyValue fuser tolerance
+                    forM_ boundary (liftIO . BOPAlgo.Builder.addArgument fuser . upcast)
+                    liftIO $ BOPAlgo.Builder.perform fuser
+                    pruneDangling 
+                        =<< traverse (liftIO . unsafeDowncast)
+                        =<<  allSubShapesWithCopy ShapeEnum.Edge 
+                        =<< BOPAlgo.Builder.shape fuser
 
             builder <- TopoDS.Builder.new
             compound <- TopoDS.Compound.new

@@ -52,6 +52,7 @@ data-files:
     test-data/offsetOfCompound.svg
     test-data/orthogonalMatrix.svg
     test-data/orthogonalMatrixTwoD.svg
+    test-data/paintedSphere.svg
     test-data/platonic.svg
     test-data/revolution.svg
     test-data/sphereSection.svg

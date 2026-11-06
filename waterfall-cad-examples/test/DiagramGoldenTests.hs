@@ -399,4 +399,8 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
             & TwoD.Transforms.scale2D 50
         )
+    , solidTest "painted sphere" "paintedSphere.svg" (
+        Solids.unitSphere
+            & Solids.colourSolid Colour.blue
+        )
     ]
