@@ -8,13 +8,17 @@ and this project adheres to the
 
 ## Unreleased
 
-# 0.8.0.0
+### Added
 
-## Added 
+- Added `LoosePartsExample`
+
+## 0.8.0.0
+
+### Added 
 
 - Added `FlagExample`
 
-## Changed
+### Changed
 
 - `CsgExample`, `BoundingBoxExample`, `PlatonicSolidsExample` and `TakePathFractionExample` all now include colour
 

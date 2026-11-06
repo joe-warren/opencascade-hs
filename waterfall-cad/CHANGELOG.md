@@ -14,6 +14,8 @@ and this project adheres to the
 - Added `mixPaints` and `mixPaintsWithColours` to `Waterfall.Paint` and `mixColours` to `Waterfall.Colour`
 - Added `sRGBComponents` to `Waterfall.Colour`
 - Added `Waterfall.Solids.looseParts` and `Waterfall.TwoD.Shape.looseShapes`
+- Added `Waterfall.TwoD.Shape.section` and `Waterfall.TwoD.Shape.silhouette`
+- Added `Waterfall.TwoD.Shape.area` and `Waterfall.TwoD.Shape.centroid`
 
 ### Fixed
 
@@ -22,6 +24,8 @@ and this project adheres to the
 - Arguments to `matTransform` and `matTransform2D` which consist of an orthogonal matrix plus a uniform scale no longer produce invalid geometry (Github issue #33)
 - `Waterfall.Sweep` now uses `MakePipeShell` rather than `MakePipe` which is more modern, and has fewer bugs, (Github issue #25)
 - Colour components are clamped to the range [0..1] on write; out of range components would previously have raised an exception.
+- `volume`, `centerOfMass` and `momentOfInertia` now use a different kernel function and should be more accurate
+- Diagrams of objects with an outline consisting of a single edge were computed without a fill
 
 ### Changed 
 
