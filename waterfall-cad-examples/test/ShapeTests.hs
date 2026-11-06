@@ -42,8 +42,7 @@ shapeTests = testGroup "Shape"
         , testCase "parts preserve area" $
             let parts = Shape.looseShapes
                     (Shape.centeredSquare <> TwoD.Transforms.translate2D (unit _x ^* 3) Shape.centeredSquare)
-                area = Solids.volume . Solids.prism 1
-            in assertBool "each part has unit area" (all ((< 1e-6) . abs . subtract 1 . area) parts)
+            in assertBool "each part has unit area" (all ((< 1e-6) . abs . subtract 1 . Shape.area) parts)
         ]
     , testGroup "section"
         [ testCase "cross section of sphere on plane has one part" $

@@ -16,27 +16,36 @@ module Waterfall.TwoD.Shape
 , unions2D
 , intersections2D
 , emptyShape
+, area
+, centroid
 ) where
 
 import Waterfall.TwoD.Internal.Shape (Shape (..), union2D, difference2D, intersection2D, unions2D, intersections2D, emptyShape)
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.TwoD.Transforms (translate2D, rotate2D)
-import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquirePtrT, unsafeFromAcquire)
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquirePtrT, unsafeFromAcquire, NoPtr)
 import Waterfall.Internal.Edges (allWires, allSubShapesWithCopy)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.GP.Pln as GP.Pln
 import OpenCascade.Inheritance (upcast)
-import Linear (unit, _x, _y, zero, V2 (..))
+import Linear (unit, _x, _y, _xy, zero, V2 (..))
 import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo, line, closeLoop)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (filterM)
+import Control.Monad (filterM, (<=<))
 import Waterfall.Internal.Solid (Solid, acquireSolid)
 import Waterfall.Internal.Diagram (silhouetteShape)
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
+import Control.DeepSeq (NFData)
+import Foreign (Ptr)
+import Data.Acquire (Acquire)
+import Control.Lens ((^.))
+import qualified OpenCascade.GProp.GProps as GProps
+import qualified OpenCascade.BRepGProp as BRepGProp
+import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 
 -- | Construct a 2D Shape from a path 
 --
@@ -124,3 +133,21 @@ silhouette :: Solid -> Shape
 silhouette solid = unsafeFromAcquire $ do
     s <- acquireSolid solid
     mconcat <$> silhouetteShape s 
+
+
+gPropQuery :: (NoPtr a, NFData a) => (Ptr GProps.GProps -> Acquire a) -> Shape -> a
+gPropQuery f (Shape s) = unsafeFromAcquire $ do
+    shape <- acquireForeignPtr s
+    gProp <- GProps.new
+    liftIO $ BRepGProp.surfaceProperties shape gProp False False
+    f gProp
+
+-- | Area of the `Shape`
+area :: Shape -> Double
+area = gPropQuery (liftIO . GProps.mass)
+
+-- | Center Of Mass of the `Shape` 
+-- 
+-- The 2D counterpart of `Waterfall.Solids.centerOfMass`
+centroid :: Shape -> V2 Double 
+centroid = (^. _xy) . (gPropQuery ((liftIO . gpPntToV3) <=< GProps.centreOfMass))
