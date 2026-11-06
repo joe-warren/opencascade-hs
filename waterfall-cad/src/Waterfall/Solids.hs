@@ -296,7 +296,7 @@ gPropQuery :: (NoPtr a, NFData a) => (Ptr GProps.GProps -> Acquire a) -> Solid -
 gPropQuery f s = unsafeFromAcquire $ do
     solid <- acquireSolid s
     gProp <- GProps.new
-    liftIO $ BRepGProp.volumeProperties solid gProp False False False
+    liftIO $ BRepGProp.volumePropertiesWithEps solid gProp 1e-9 False False
     f gProp
 
 -- | Volume of the Solid

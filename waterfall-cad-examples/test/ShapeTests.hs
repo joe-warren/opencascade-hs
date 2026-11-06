@@ -7,7 +7,7 @@ import qualified Waterfall.Booleans as Booleans
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
 import qualified Waterfall.Solids as Solids
-import Linear (V2 (..), unit, _x, _z, (^*))
+import Linear (V2 (..), unit, _x, _z, (^*), V3 (..))
 import Data.Function ((&))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -55,5 +55,53 @@ shapeTests = testGroup "Shape"
                     & Shape.section
                     & Shape.looseShapes
             in assertEqual "" 0 (length parts) 
+        ]
+    , testGroup "silhouette" 
+        [ testCase "emptySolid has no parts" $
+            let parts = Shape.looseShapes (Shape.silhouette Solids.emptySolid)
+            in assertEqual "" 0 (length parts) 
+
+        , testCase "silhouette of sphere" $
+            let s = Shape.silhouette Solids.unitSphere
+            in assertEqual "sphere has one part" 1 (length . Shape.looseShapes $ s)
+                <> assertBool "silhouette area is pi" ((< 1e-6) . abs . subtract pi . Shape.area $ s)
+
+        , testCase "silhouette of cube" $
+            let s = Shape.silhouette Solids.centeredCube 
+            in assertEqual "cube has one part" 1 (length . Shape.looseShapes $ s)
+                <> assertBool "silhouette area is 1" ((< 1e-6) . abs . subtract 1 . Shape.area $ s)
+
+        , testCase "silhouette of cube (rotated)" $
+            let s = Solids.centeredCube 
+                    & Transforms.rotate (unit _x) (pi/4)
+                    & Shape.silhouette
+            in assertEqual "cube has one part" 1 (length . Shape.looseShapes $ s)
+                <> assertBool "silhouette area is sqrt(2)" ((< 1e-6) . abs . subtract (sqrt 2) . Shape.area $ s)
+
+        , testCase "silhouette of cylinder" $
+            let s = Solids.centeredCylinder 
+                    & Shape.silhouette
+            in assertEqual "cylinder has one part" 1 (length . Shape.looseShapes $ s)
+                <> assertBool "silhouette area is pi" ((< 1e-6) . abs . subtract pi . Shape.area $ s)
+
+        , testCase "silhouette of cylinder (rotated)" $
+            let s = Solids.centeredCylinder 
+                    & Transforms.rotate (unit _x) (pi/2)
+                    & Shape.silhouette
+            in assertEqual "cube has one part" 1 (length . Shape.looseShapes $ s)
+                <> assertBool "silhouette area is 2" ((< 1e-6) . abs . subtract 2 . Shape.area $ s)
+
+        , testCase "silhouette of torus" $
+            let s = Solids.torus 2 1
+                    & Shape.silhouette
+            in assertEqual "torus has one part" 1 (length . Shape.looseShapes $ s)
+                <> assertBool "silhouette area is 8*pi" ((< 1e-5) . abs . subtract (8*pi) . Shape.area $ s)
+
+        , testCase "silhouette of cube with hole" $
+            let s = Solids.centeredCube
+                    & (`Booleans.difference` (Solids.centeredCylinder & Transforms.scale (V3 0.1 0.1 2)))
+                    & Shape.silhouette
+            in assertEqual "cube has one part" 1 (length . Shape.looseShapes $ s)
+                <> assertBool "silhouette area is 1-pi/100" ((< 1e-5) . abs . subtract (1-pi/100) . Shape.area $ s)
         ]
     ]

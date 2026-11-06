@@ -139,7 +139,7 @@ gPropQuery :: (NoPtr a, NFData a) => (Ptr GProps.GProps -> Acquire a) -> Shape -
 gPropQuery f (Shape s) = unsafeFromAcquire $ do
     shape <- acquireForeignPtr s
     gProp <- GProps.new
-    liftIO $ BRepGProp.surfaceProperties shape gProp False False
+    liftIO $ BRepGProp.surfacePropertiesWithEps shape gProp 1e-9 False
     f gProp
 
 -- | Area of the `Shape`
