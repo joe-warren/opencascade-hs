@@ -111,14 +111,13 @@ faceArea face = do
     liftIO $ BRepGProp.surfaceProperties (upcast face) props False False
     liftIO $ GProps.mass props
 
-buildSolidDiagramFills' 
-    :: Ptr TopoDS.Shape
+projectedRegions
+    :: Ptr TopoDS.Shape 
     -> V3 Double 
-    -> Ptr HLRAlgo.Projector
+    -> Ptr HLRAlgo.Projector 
     -> Ptr HLRBRep.HLRToShape
-    -> [(Ptr TopoDS.Face, Paint)]
-    -> Acquire [(Paint, Shape)]
-buildSolidDiagramFills' s projectionDir projector extractor paints = do
+    -> Acquire [(Ptr TopoDS.Face, Maybe (Ptr TopoDS.Face))]
+projectedRegions s projectionDir projector extractor = do
     boundary <- boundaryEdges extractor
     if null boundary 
         then return []
@@ -160,12 +159,10 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
                             intersector <- ShapeIntersector.new
                             liftIO $ ShapeIntersector.load intersector s (tolerance/1000)
 
-                            paintMap <- liftIO $ ShapeMap.fromList (first upcast <$> paints)
-                            
                             d <- v3ToDir projectionDir
 
                             forwardFacingRegions <- filterM (fmap (> 0) . faceArea) regions
-                            paintRegionMap <- fmap (M.fromListWith (<>) . catMaybes) $ forM forwardFacingRegions $ \region -> do
+                            forM forwardFacingRegions $ \region -> do
                                 mesh <- IncrementalMesh.fromShapeAndLinDeflection (upcast region) tolerance
                                 liftIO $ IncrementalMesh.perform mesh
                                 loc <- TopLoc.Location.new
@@ -184,8 +181,8 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
                                 let candidatePoints = (triangleCenters <> [centerOfMass])
                                         & (traverse . _z .~ 0)
 
-                                let lookupCandidatePaint [] = pure Nothing
-                                    lookupCandidatePaint (h:t) = do
+                                let lookupCandidateFace [] = pure Nothing
+                                    lookupCandidateFace (h:t) = do
                                         pin <- v3ToPnt h
                                         p <- GP.Pnt.transformed pin inv
                                         line <- GP.Lin.new p d
@@ -194,17 +191,32 @@ buildSolidDiagramFills' s projectionDir projector extractor paints = do
                                         n <- liftIO $ ShapeIntersector.nbPnt intersector
                                         hits <- forM [1 .. n] $ \i -> (, i) <$> liftIO (ShapeIntersector.wParameter intersector i)
                                         case hits of
-                                            [] -> lookupCandidatePaint t
+                                            [] -> lookupCandidateFace t
                                             _ -> do
                                                 let (_, nearest) = maximum hits
                                                 hit <- ShapeIntersector.face intersector nearest
-                                                found <- liftIO $ ShapeMap.lookup paintMap (upcast hit)
-                                                return $ Just (fromMaybe mempty found)
-                                paint <- lookupCandidatePaint candidatePoints
-                                return $ (, [region]) <$> paint
+                                                return $ Just (hit)
+                                faceMaybe <- lookupCandidateFace candidatePoints
+                                return $ (region, faceMaybe)
 
-                            traverse mergeRegions paintRegionMap
-                                <&> foldMap sequence . M.toList
+buildSolidDiagramFills' 
+    :: Ptr TopoDS.Shape
+    -> V3 Double 
+    -> Ptr HLRAlgo.Projector
+    -> Ptr HLRBRep.HLRToShape
+    -> [(Ptr TopoDS.Face, Paint)]
+    -> Acquire [(Paint, Shape)]
+buildSolidDiagramFills' s projectionDir projector extractor paints = do
+    paintMap <- liftIO $ ShapeMap.fromList (first upcast <$> paints)
+    regions <- projectedRegions s projectionDir projector extractor
+    let hitRegions = catMaybes . fmap sequence $ regions
+    paintRegionMap <- fmap (M.fromListWith ((<>)) . catMaybes)
+        $ forM hitRegions $ \(region, hit) -> do    
+            paint <- liftIO $ ShapeMap.lookup paintMap (upcast hit)
+            return $ (, [region]) <$> paint
+
+    traverse mergeRegions paintRegionMap
+        <&> foldMap sequence . M.toList
 
 buildSolidDiagramFills
     :: PaintMap 
