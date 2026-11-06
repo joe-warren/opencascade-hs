@@ -381,4 +381,22 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & mconcat
             & TwoD.Transforms.scale2D 50
         )
+    , diagramTest "sphere section" "sphereSection.svg" (
+        Solids.unitSphere 
+            & Shape.section
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "compound section" "compoundSection.svg" (
+        Solids.unitSphere
+            & (`Booleans.difference` (Solids.unitSphere & Transforms.uScale 0.4))
+            & (`Booleans.difference` (Solids.centeredCube & Transforms.translate (unit _x)))
+            & Booleans.union (Solids.centeredCube 
+                & Transforms.uScale 0.8
+                & Transforms.translate (unit _x)
+                )
+            & Shape.section
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
+            & TwoD.Transforms.scale2D 50
+        )
     ]

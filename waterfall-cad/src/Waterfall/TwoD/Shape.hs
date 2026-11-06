@@ -7,6 +7,7 @@ module Waterfall.TwoD.Shape
 , centeredSquare
 , unitPolygon
 , looseShapes
+, section
 -- * Boolean operations
 , union2D
 , difference2D
@@ -24,12 +25,16 @@ import Waterfall.Internal.Edges (allWires, allSubShapesWithCopy)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
+import qualified OpenCascade.GP.Pln as GP.Pln
 import OpenCascade.Inheritance (upcast)
 import Linear (unit, _x, _y, zero, V2 (..))
 import Waterfall.Path.Common (pathFrom, arcViaTo, lineTo, line, closeLoop)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (filterM)
+import Waterfall.Internal.Solid (Solid, acquireSolid)
+import qualified OpenCascade.BRepAlgoAPI.Common as Common
+import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 
 -- | Construct a 2D Shape from a path 
 --
@@ -102,3 +107,13 @@ looseShapes (Shape r) = fmap Shape . unsafeFromAcquirePtrT $ do
     shape <- acquireForeignPtr r
     filterM (fmap (>0) . liftIO . TopoDS.Shape.nbChildren)
         =<< allSubShapesWithCopy ShapeEnum.Face shape
+
+-- | Compute the cross-section of a `Shape` on the @xy@ plane
+--
+-- The cross section is computed at @z=0@
+section :: Solid -> Shape
+section solid = Shape . unsafeFromAcquirePtr $ do
+    s <- acquireSolid solid
+    face <- MakeFace.face =<< MakeFace.fromPln =<< GP.Pln.new
+    MakeShape.shape . upcast =<< Common.fromShapes s (upcast face)
+
