@@ -167,7 +167,9 @@ compareOutput inputPath expected actual =
             liftEither . Left $
                 ( show mismatchedCount <> "/" <> show totalPixels 
                 <> " pixels didn't match, diff written to " 
-                <> diffPath
+                <> diffPath 
+                <> " actual written to "
+                <> actualPath
                 )
     
 doTest :: TestName -> FilePath -> IO Diagram -> TestTree
