@@ -98,19 +98,22 @@ trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiu
 
         edgesWithRadius <- getEdgesWithRadius radiusFunction s
 
-        liftIO $ forM_ edgesWithRadius (uncurry (addEdge builder))
+        if null edgesWithRadius 
+            then pure (solidPaintMap solid, s)
+            else do
+                liftIO $ forM_ edgesWithRadius (uncurry (addEdge builder))
 
-        resultShape <- MakeShape.shape (upcast builder)
+                resultShape <- MakeShape.shape (upcast builder)
 
-        newPaintMap <-
-            remapWithBlendFunction
-                paintFunction
-                s
-                (snd <$> edgesWithRadius)
-                (makeShapeHistory . upcast $ builder)
-                (solidPaintMap solid)
+                newPaintMap <-
+                    remapWithBlendFunction
+                        paintFunction
+                        s
+                        (snd <$> edgesWithRadius)
+                        (makeShapeHistory . upcast $ builder)
+                        (solidPaintMap solid)
 
-        pure (newPaintMap, resultShape)
+                pure (newPaintMap, resultShape)
 
 -- | Version of `tryRoundIndexedConditionalFillet`
 --
