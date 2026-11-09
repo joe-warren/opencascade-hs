@@ -94,13 +94,14 @@ trySomeIndexedConditionalFilletWithPaint
 trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiusFunction solid =
     solidFromAcquireWithPaintMapWithCatch $ do
         s <- acquireSolid solid
-        builder <- makeBuilder s
 
         edgesWithRadius <- getEdgesWithRadius radiusFunction s
 
         if null edgesWithRadius 
             then pure (solidPaintMap solid, s)
             else do
+                builder <- makeBuilder s
+
                 liftIO $ forM_ edgesWithRadius (uncurry (addEdge builder))
 
                 resultShape <- MakeShape.shape (upcast builder)
