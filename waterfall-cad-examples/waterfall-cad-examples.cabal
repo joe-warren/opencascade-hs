@@ -49,6 +49,7 @@ data-files:
     test-data/negativeScaledCube.svg
     test-data/negativeScaledCuboid.svg
     test-data/negativeUniformScaleTwoD.svg
+    test-data/noopFilletCube.svg
     test-data/offset.svg
     test-data/offsetOfCompound.svg
     test-data/orthogonalMatrix.svg

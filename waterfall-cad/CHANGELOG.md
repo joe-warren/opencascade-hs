@@ -27,6 +27,7 @@ and this project adheres to the
 - Colour components are clamped to the range [0..1] on write; out of range components would previously have raised an exception.
 - `volume`, `centerOfMass` and `momentOfInertia` now use a different kernel function and should be more accurate
 - Diagrams of objects with an outline consisting of a single edge were computed without a fill
+- A "Noop Fillet" (with a function that matches no edges) no longer fails
 
 ### Changed 
 

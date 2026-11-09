@@ -24,6 +24,7 @@ import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Colour as Colour
 import qualified Waterfall.Sweep as Sweep
 import qualified Waterfall.Loft as Loft
+import qualified Waterfall.Fillet as Fillet
 import qualified Waterfall.SVG as SVG
 import Linear
 import qualified CsgExample
@@ -428,5 +429,10 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & Shape.silhouette
             & Diagram.shapeDiagram (Paint.paintWithColour Colour.aqua)
             & TwoD.Transforms.scale2D 50
+        )
+    , solidTest "noop fillet cube" "noopFilletCube.svg" (
+        Solids.unitCube
+            & Fillet.roundConditionalFillet (const Nothing)
+            & Solids.colourSolid Colour.blue
         )
     ]
