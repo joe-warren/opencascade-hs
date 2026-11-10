@@ -8,7 +8,6 @@ import Test.Tasty.Golden.Advanced (goldenTest)
 import Text.XML.Light as XML
 import DarkModeSVG (darkModeSVG)
 import qualified Graphics.Svg as Svg
-import Data.Maybe (fromMaybe)
 import Waterfall.Diagram (Diagram)
 import qualified Waterfall.Diagram as Diagram
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
@@ -29,6 +28,7 @@ import qualified Waterfall.SVG as SVG
 import Linear
 import qualified CsgExample
 import Control.Monad.Except (runExceptT, liftEither)
+import Control.Exception (throwIO, ErrorCall (..))
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Graphics.Rasterific.Svg as RSvg
 import qualified Graphics.Text.TrueType as FF
@@ -178,7 +178,10 @@ compareOutput inputPath expected actual =
 doTest :: TestName -> FilePath -> IO Diagram -> TestTree
 doTest testName goldenPath makeDiagram = 
     let qualifyGoldenPath = (</> "test-data" </> goldenPath) <$> Paths.getDataDir
-        readGoldenFile = fromMaybe (error $ "failed to read " <> goldenPath) . parseXMLDoc <$> (readFile =<< qualifyGoldenPath)
+        readGoldenFile = maybe 
+            (throwIO . ErrorCall $ "failed to read " <> goldenPath)
+            pure
+            =<< fmap parseXMLDoc . readFile =<< qualifyGoldenPath
         -- most paths are relative to Paths_waterfall_cad_examples.getDataDir
         -- however when updating the file, we want to modify the source file
         -- therefore this is sensitive to the cwd
@@ -467,7 +470,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
     , diagramTest "offset hole negative" "offsetHoleNegative.svg" (
         (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare 
             `Booleans.difference` Shapes.unitCircle)
-            & TwoD.Offset.offsetShape (negate 0.25)
+            & TwoD.Offset.offsetShape (negate 0.1)
             & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
             & TwoD.Transforms.scale2D 50
         )
