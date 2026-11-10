@@ -443,4 +443,32 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
             & TwoD.Transforms.scale2D 50
         )
+    , diagramTest "offset cross positive" "offsetCrossPositive.svg" (
+        (TwoD.Transforms.scale2D (V2 1 3) Shapes.centeredSquare 
+            <> TwoD.Transforms.scale2D (V2 3 1) Shapes.centeredSquare)
+            & TwoD.Offset.offsetShape 0.25
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.yellow)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "offset cross negative" "offsetCrossNegative.svg" (
+        (TwoD.Transforms.scale2D (V2 1 3) Shapes.centeredSquare 
+            <> TwoD.Transforms.scale2D (V2 3 1) Shapes.centeredSquare)
+            & TwoD.Offset.offsetShape (negate 0.25)
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.teal)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "offset hole positive" "offsetHolePositive.svg" (
+        (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare 
+            `Booleans.difference` Shapes.unitCircle)
+            & TwoD.Offset.offsetShape 0.25
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "offset hole negative" "offsetHoleNegative.svg" (
+        (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare 
+            `Booleans.difference` Shapes.unitCircle)
+            & TwoD.Offset.offsetShape (negate 0.25)
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
+            & TwoD.Transforms.scale2D 50
+        )
     ]
