@@ -52,6 +52,7 @@ data-files:
     test-data/noopFilletCube.svg
     test-data/offset.svg
     test-data/offsetOfCompound.svg
+    test-data/offsetSquare.svg
     test-data/orthogonalMatrix.svg
     test-data/orthogonalMatrixTwoD.svg
     test-data/paintedSphere.svg

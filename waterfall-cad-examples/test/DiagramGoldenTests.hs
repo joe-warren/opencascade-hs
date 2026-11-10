@@ -54,6 +54,8 @@ import qualified Paths_waterfall_cad_examples as Paths
 import qualified FlagExample
 import qualified LoosePartsExample
 import qualified Waterfall.Paint as Paint
+import qualified Waterfall as Shapes
+import qualified Waterfall.TwoD.Offset as TwoD.Offset
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
@@ -434,5 +436,11 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         Solids.unitCube
             & Fillet.roundConditionalFillet (const Nothing)
             & Solids.colourSolid Colour.blue
+        )
+    , diagramTest "offset square" "offsetSquare.svg" (
+        Shapes.unitSquare
+            & TwoD.Offset.offsetShape 0.25
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
+            & TwoD.Transforms.scale2D 50
         )
     ]
