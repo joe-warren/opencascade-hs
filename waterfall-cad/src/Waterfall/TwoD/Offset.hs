@@ -36,9 +36,7 @@ getCompoundAsFaces s =
 offsetOne :: Double -> Ptr TopoDS.Face -> Acquire [Ptr TopoDS.Shape]
 offsetOne amount f = do
     builder <- MakeOffset.new
-    face <- MakeFace.face =<< MakeFace.fromPln =<< GP.Pln.new
-    when (amount > 0) $ liftIO $ TopoDS.Shape.reverse (upcast face)
-    liftIO $ MakeOffset.init builder face GeomAbs.JointType.Arc False
+    liftIO $ MakeOffset.init builder f GeomAbs.JointType.Arc False
     wires <- traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Wire (upcast f)
     forM_ wires (liftIO . MakeOffset.addWire builder)
     liftIO $ MakeOffset.perform builder amount 0.0
