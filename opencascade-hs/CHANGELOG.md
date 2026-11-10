@@ -21,6 +21,7 @@ and this project adheres to the
 - Added `OpenCascade.BRepBuilderAPI.MakeFace.fromPln`
 - Added `OpenCascade.BRepGProp.volumePropertiesWithEps`
   and `OpenCascade.BRepGProp.surfacePropertiesWithEps`
+- Added `OpenCascade.BRepOffsetAPI.MakeOffset`
 
 ### Changed
 

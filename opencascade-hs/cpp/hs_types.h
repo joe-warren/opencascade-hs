@@ -74,6 +74,7 @@ typedef int Font_FontAspect;
 typedef int Graphic3d_HorizontalTextAlignment;
 typedef int Graphic3d_VerticalTextAlignment;
 typedef void BRepOffsetAPI_MakeOffsetShape;
+typedef void BRepOffsetAPI_MakeOffset;
 typedef int BRepOffset_Mode;
 typedef int GeomAbs_JoinType;
 typedef void GProp_GProps;
