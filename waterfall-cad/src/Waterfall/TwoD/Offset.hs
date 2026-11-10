@@ -19,7 +19,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import qualified OpenCascade.BRepOffsetAPI.MakeOffset as MakeOffset
 import qualified OpenCascade.GeomAbs.JoinType as GeomAbs.JointType
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
-import Control.Monad (forM_, join)
+import Control.Monad (forM_, join, when)
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BOPAlgo.Tools as BOPAlgo.Tools
 
@@ -37,7 +37,7 @@ offsetOne :: Double -> Ptr TopoDS.Face -> Acquire [Ptr TopoDS.Shape]
 offsetOne amount f = do
     builder <- MakeOffset.new
     face <- MakeFace.face =<< MakeFace.fromPln =<< GP.Pln.new
-    liftIO $ TopoDS.Shape.reverse (upcast face)
+    when (amount > 0) $ liftIO $ TopoDS.Shape.reverse (upcast face)
     liftIO $ MakeOffset.init builder face GeomAbs.JointType.Arc False
     wires <- traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Wire (upcast f)
     forM_ wires (liftIO . MakeOffset.addWire builder)
