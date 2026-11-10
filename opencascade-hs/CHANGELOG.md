@@ -75,6 +75,7 @@ and this project adheres to the
 - Added `OpenCascade.Standard.Failure.getTypeName`
 - Added `OpenCascade.BRepAlgoAPI.Types`
 - Added `OpenCascade.NCollection.List`
+- Added `isDone` method to `OpenCascade.BRepBuilderAPI.MakeShape`
 
 ### Changed
 

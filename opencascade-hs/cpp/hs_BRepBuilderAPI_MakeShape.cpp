@@ -80,3 +80,9 @@ bool hs_BRepBuilderAPI_MakeShape_isDeleted(
         false
     );
 }
+
+bool hs_BRepBuilderAPI_MakeShape_isDone(
+        BRepBuilderAPI_MakeShape* builder
+    ){
+    return builder->IsDone();
+}

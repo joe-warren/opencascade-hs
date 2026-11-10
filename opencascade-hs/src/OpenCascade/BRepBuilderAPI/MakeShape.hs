@@ -6,6 +6,7 @@ module OpenCascade.BRepBuilderAPI.MakeShape
 , modified
 , generated
 , isDeleted
+, isDone
 ) where
 import OpenCascade.BRepBuilderAPI.Types
 import qualified OpenCascade.TopoDS as TopoDS
@@ -65,3 +66,11 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_Make
 
 isDeleted :: Ptr MakeShape -> Ptr TopoDS.Shape -> IO Bool
 isDeleted builder s = cBoolToBool <$> wrapException (rawIsDeleted builder s)
+
+
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeShape.h hs_BRepBuilderAPI_MakeShape_isDone" rawIsDone
+    :: Ptr MakeShape
+    -> IO CBool
+
+isDone :: Ptr MakeShape -> IO Bool
+isDone builder = cBoolToBool <$> rawIsDone builder
