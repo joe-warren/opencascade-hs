@@ -53,6 +53,8 @@ data-files:
     test-data/offset.svg
     test-data/offsetCrossNegative.svg
     test-data/offsetCrossPositive.svg
+    test-data/offsetHoleNegative.svg
+    test-data/offsetHolePositive.svg
     test-data/offsetOfCompound.svg
     test-data/offsetSquare.svg
     test-data/orthogonalMatrix.svg

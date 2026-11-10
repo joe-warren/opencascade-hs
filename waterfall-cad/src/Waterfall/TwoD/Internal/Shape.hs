@@ -33,6 +33,8 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Foldable (traverse_)
 import Foreign.ForeignPtr (ForeignPtr)
 import Control.DeepSeq (NFData (rnf), rwhnf)
+import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
+import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
 
 -- | A Region in 2D Space 
 -- 
@@ -111,8 +113,11 @@ intersections2D = toBooleans2D BOPAlgo.Operation.Common
 
 -- | An empty 2D shape
 emptyShape :: Shape
-emptyShape = Shape . unsafeFromAcquirePtr $ 
-    upcast <$> (MakeFace.face =<< MakeFace.new)
+emptyShape = Shape . unsafeFromAcquirePtr $ do
+    builder <- TopoDS.Builder.new
+    compound <- TopoDS.Compound.new
+    liftIO $ TopoDS.Builder.makeCompound builder compound
+    pure (upcast compound)
 
 -- defining these boolean operators here, rather than in Waterfall.TwoD.Booleans 
 -- means that we can use them in typeclass instances without resorting to orphans
