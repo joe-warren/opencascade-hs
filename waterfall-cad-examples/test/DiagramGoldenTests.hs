@@ -8,7 +8,6 @@ import Test.Tasty.Golden.Advanced (goldenTest)
 import Text.XML.Light as XML
 import DarkModeSVG (darkModeSVG)
 import qualified Graphics.Svg as Svg
-import Data.Maybe (fromMaybe)
 import Waterfall.Diagram (Diagram)
 import qualified Waterfall.Diagram as Diagram
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
@@ -29,6 +28,7 @@ import qualified Waterfall.SVG as SVG
 import Linear
 import qualified CsgExample
 import Control.Monad.Except (runExceptT, liftEither)
+import Control.Exception (throwIO, ErrorCall (..))
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Graphics.Rasterific.Svg as RSvg
 import qualified Graphics.Text.TrueType as FF
@@ -54,6 +54,8 @@ import qualified Paths_waterfall_cad_examples as Paths
 import qualified FlagExample
 import qualified LoosePartsExample
 import qualified Waterfall.Paint as Paint
+import qualified Waterfall as Shapes
+import qualified Waterfall.TwoD.Offset as TwoD.Offset
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
@@ -176,7 +178,10 @@ compareOutput inputPath expected actual =
 doTest :: TestName -> FilePath -> IO Diagram -> TestTree
 doTest testName goldenPath makeDiagram = 
     let qualifyGoldenPath = (</> "test-data" </> goldenPath) <$> Paths.getDataDir
-        readGoldenFile = fromMaybe (error $ "failed to read " <> goldenPath) . parseXMLDoc <$> (readFile =<< qualifyGoldenPath)
+        readGoldenFile = maybe 
+            (throwIO . ErrorCall $ "failed to read " <> goldenPath)
+            pure
+            =<< fmap parseXMLDoc . readFile =<< qualifyGoldenPath
         -- most paths are relative to Paths_waterfall_cad_examples.getDataDir
         -- however when updating the file, we want to modify the source file
         -- therefore this is sensitive to the cwd
@@ -434,5 +439,39 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         Solids.unitCube
             & Fillet.roundConditionalFillet (const Nothing)
             & Solids.colourSolid Colour.blue
+        )
+    , diagramTest "offset square" "offsetSquare.svg" (
+        Shapes.unitSquare
+            & TwoD.Offset.offsetShape 0.25
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "offset cross positive" "offsetCrossPositive.svg" (
+        (TwoD.Transforms.scale2D (V2 1 3) Shapes.centeredSquare 
+            <> TwoD.Transforms.scale2D (V2 3 1) Shapes.centeredSquare)
+            & TwoD.Offset.offsetShape 0.25
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.yellow)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "offset cross negative" "offsetCrossNegative.svg" (
+        (TwoD.Transforms.scale2D (V2 1 3) Shapes.centeredSquare 
+            <> TwoD.Transforms.scale2D (V2 3 1) Shapes.centeredSquare)
+            & TwoD.Offset.offsetShape (negate 0.25)
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.teal)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "offset hole positive" "offsetHolePositive.svg" (
+        (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare 
+            `Booleans.difference` Shapes.unitCircle)
+            & TwoD.Offset.offsetShape 0.25
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
+            & TwoD.Transforms.scale2D 50
+        )
+    , diagramTest "offset hole negative" "offsetHoleNegative.svg" (
+        (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare 
+            `Booleans.difference` Shapes.unitCircle)
+            & TwoD.Offset.offsetShape (negate 0.1)
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
+            & TwoD.Transforms.scale2D 50
         )
     ]

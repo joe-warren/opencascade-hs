@@ -51,7 +51,12 @@ data-files:
     test-data/negativeUniformScaleTwoD.svg
     test-data/noopFilletCube.svg
     test-data/offset.svg
+    test-data/offsetCrossNegative.svg
+    test-data/offsetCrossPositive.svg
+    test-data/offsetHoleNegative.svg
+    test-data/offsetHolePositive.svg
     test-data/offsetOfCompound.svg
+    test-data/offsetSquare.svg
     test-data/orthogonalMatrix.svg
     test-data/orthogonalMatrixTwoD.svg
     test-data/paintedSphere.svg

@@ -17,6 +17,7 @@ and this project adheres to the
 - Added `Waterfall.TwoD.Shape.section` and `Waterfall.TwoD.Shape.silhouette`
 - Added `Waterfall.TwoD.Shape.area` and `Waterfall.TwoD.Shape.centroid`
 - `.stp` is now a supported extension for STEP files in `Waterfall.IO.readSolid` and `Waterfall.IO.writeSolid`
+- Added `offsetShape` and `tryOffsetShape` in `Waterfall.TwoD.Offset`
 
 ### Fixed
 

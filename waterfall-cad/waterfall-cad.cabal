@@ -79,6 +79,7 @@ library
       Waterfall.TwoD.Booleans
       Waterfall.TwoD.Internal.Path2D
       Waterfall.TwoD.Internal.Shape
+      Waterfall.TwoD.Offset
       Waterfall.TwoD.Path2D
       Waterfall.TwoD.Shape
       Waterfall.TwoD.Text

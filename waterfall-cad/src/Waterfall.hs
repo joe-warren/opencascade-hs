@@ -53,6 +53,8 @@ module Waterfall
 , module Waterfall.TwoD.Path2D
 -- | Create a `Shape` from text, rendered using a specific `Font`.
 , module Waterfall.TwoD.Text
+-- | This module deals with offsetting a `Shape`: either shrinking/expanding it.
+, module Waterfall.TwoD.Offset
 -- | Paths in 2D / 3D space.
 --
 -- This module defines functions that can be used with "Waterfall.Path" or "Waterfall.TwoD.Path2D".
@@ -86,4 +88,5 @@ import Waterfall.TwoD.Transforms
 import Waterfall.TwoD.Path2D
 import Waterfall.TwoD.Shape
 import Waterfall.TwoD.Text
+import Waterfall.TwoD.Offset
 import Waterfall.Error

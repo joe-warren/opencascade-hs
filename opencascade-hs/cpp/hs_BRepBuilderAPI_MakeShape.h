@@ -40,6 +40,10 @@ bool hs_BRepBuilderAPI_MakeShape_isDeleted(
     void** exPtr
 );
 
+bool hs_BRepBuilderAPI_MakeShape_isDone(
+        BRepBuilderAPI_MakeShape* builder
+    );
+
 #ifdef __cplusplus
 }
 #endif

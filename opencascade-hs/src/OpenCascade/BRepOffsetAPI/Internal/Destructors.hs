@@ -2,6 +2,7 @@
 module OpenCascade.BRepOffsetAPI.Internal.Destructors
 ( deleteMakePipe
 , deleteMakePipeShell
+, deleteMakeOffset
 , deleteMakeOffsetShape
 , deleteThruSections
 ) where
@@ -12,5 +13,6 @@ import Foreign.Ptr
 
 foreign import capi unsafe "hs_BRepOffsetAPI_MakePipe.h hs_delete_BRepOffsetAPI_MakePipe" deleteMakePipe :: Ptr MakePipe -> IO ()
 foreign import capi unsafe "hs_BRepOffsetAPI_MakePipeShell.h hs_delete_BRepOffsetAPI_MakePipeShell" deleteMakePipeShell :: Ptr MakePipeShell -> IO ()
+foreign import capi unsafe "hs_BRepOffsetAPI_MakeOffset.h hs_delete_BRepOffsetAPI_MakeOffset" deleteMakeOffset :: Ptr MakeOffset -> IO ()
 foreign import capi unsafe "hs_BRepOffsetAPI_MakeOffsetShape.h hs_delete_BRepOffsetAPI_MakeOffsetShape" deleteMakeOffsetShape :: Ptr MakeOffsetShape -> IO ()
 foreign import capi unsafe "hs_BRepOffsetAPI_ThruSections.h hs_delete_BRepOffsetAPI_ThruSections" deleteThruSections :: Ptr ThruSections -> IO ()
