@@ -25,7 +25,8 @@ jobs:
             libocct-modeling-algorithms-dev \
             libocct-modeling-data-dev \
             libocct-ocaf-dev \
-            libocct-visualization-dev
+            libocct-visualization-dev \
+            zstd
 
       - uses: actions/checkout@v4
 
