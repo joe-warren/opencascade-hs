@@ -474,4 +474,32 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
             & TwoD.Transforms.scale2D 50
         )
+    , solidTest "intersections of cubes" "intersectionsOfCubes.svg" (
+        Booleans.intersections [
+            Solids.centeredCube
+                & Transforms.rotate (unit _z) theta
+            | theta <- [0, pi/3, 2*pi/3]
+            ]
+        )
+    , solidTest "unions of cubes" "unionsOfCubes.svg" (
+        Booleans.unions [
+            Solids.centeredCube
+                & Transforms.rotate (unit _z) theta
+            | theta <- [0, pi/3, 2*pi/3]
+            ]
+        )
+    , solidTest "fold intersection of cubes" "foldIntersectionOfCubes.svg" (
+        foldl1 Booleans.intersection [
+            Solids.centeredCube
+                & Transforms.rotate (unit _z) theta
+            | theta <- [0, pi/3, 2*pi/3]
+            ]
+        )
+    , solidTest "fold union of cubes" "foldUnionOfCubes.svg" (
+        foldl' Booleans.union mempty [
+            Solids.centeredCube
+                & Transforms.rotate (unit _z) theta
+            | theta <- [0, pi/3, 2*pi/3]
+            ]
+        )
     ]
