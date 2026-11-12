@@ -13,6 +13,12 @@ BRepPrimAPI_MakeRevol * hs_new_BRepPrimAPI_MakeRevol_fromShapeAndAx1(
     void** exPtr
 );
 
+BRepPrimAPI_MakeRevol * hs_new_BRepPrimAPI_MakeRevol_fromShapeAx1AndAngle(
+        TopoDS_Shape * shape, gp_Ax1 * axis, double angle, bool copy,
+        HSExceptionType* exType,
+        void** exPtr
+);
+
 void hs_delete_BRepPrimAPI_MakeRevol(BRepPrimAPI_MakeRevol * builder);
 
 #ifdef __cplusplus
