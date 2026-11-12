@@ -1,11 +1,14 @@
 module Waterfall.Revolution
 ( revolution
+, revolutionByAngle
 , tryRevolution
+, tryRevolutionByAngle
 ) where
 
 import Waterfall.Internal.Solid (Solid (..), solidFromAcquireWithCatch, emptyPaintMap)
-import Waterfall.TwoD.Internal.Path2D (Path2D (..))
-import Waterfall.Internal.Finalizers (acquireForeignPtr)
+import Waterfall.TwoD.Internal.Shape (Shape(Shape), acquireShape)
+import Waterfall.TwoD.Shape as Shape
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquire)
 import qualified OpenCascade.BRepPrimAPI.MakeRevol as MakeRevol
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
@@ -14,29 +17,54 @@ import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Waterfall.Transforms (rotate)
 import Waterfall.Error (WaterfallError)
 import Control.Monad.IO.Class (liftIO)
-import Linear (unit, _x)
-import Waterfall.Internal.Path.Common (RawPath(..))
+import Linear (unit, _x, _y, _xy, V2 (V2))
 import Data.Either (fromRight)
+import qualified OpenCascade.Bnd.Box as Bnd.Box
+import qualified OpenCascade.BRepBndLib as BRepBndLib
+import Waterfall.Internal.FromOpenCascade (gpPntToV3)
+import Control.Lens ((^.), (&))
+import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
+import Waterfall.Booleans (intersection, Boolean (difference))
 
--- | Version of `revolution` that returns a `WaterfallError` on failure.
---
--- Revolution can fail, for example, if the `Path2D` crosses the axis of revolution.
-tryRevolution :: Path2D -> Either WaterfallError Solid
-tryRevolution (Path2D (ComplexRawPath theRawPath)) =
+splitShapeAboutAxis :: Shape -> [Shape]
+splitShapeAboutAxis shape = unsafeFromAcquire $ do
+    s <- acquireShape shape 
+    bnd <- Bnd.Box.new
+    liftIO $ BRepBndLib.addOptimal s bnd True False
+    p1 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMin bnd
+    p2 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax bnd
+    return $ if p2 ^. _x < 0 || p1 ^. _x > 0
+        then [shape]
+        else let lo = V2 0 (p1 ^. _y)
+                 hi = (p2 ^. _xy) 
+                 mask = Shape.unitSquare
+                    & TwoD.Transforms.scale2D (hi - lo)
+                    & TwoD.Transforms.translate2D (lo)
+            in [shape `intersection` mask, shape `difference` mask]
+
+tryOneRevolutionByAngle :: Double -> Shape -> Either WaterfallError Solid
+tryOneRevolutionByAngle angle (Shape shape) =
     fmap (rotate (unit _x) (pi/2)) . solidFromAcquireWithCatch emptyPaintMap $ do
-        p <- acquireForeignPtr theRawPath
+        s <- acquireForeignPtr shape
         axis <- GP.oy -- revolve around the y axis
-        revol <- MakeRevol.fromShapeAndAx1 (upcast p) axis True
-        shell <- MakeShape.shape (upcast revol)
-        solidBuilder <- MakeSolid.new
-        liftIO $ MakeSolid.add solidBuilder =<< unsafeDowncast shell
-        MakeShape.shape (upcast solidBuilder)
-tryRevolution _ = Right mempty
+        revol <- MakeRevol.fromShapeAx1AndAngle s axis angle True
+        MakeShape.shape (upcast revol)
 
--- | Construct a `Solid` of revolution from a `Path2D`.
+-- | Version of `revolutionByAngle` that returns a `WaterfallError` on failure.
+tryRevolutionByAngle :: Double -> Shape -> Either WaterfallError Solid
+tryRevolutionByAngle angle =
+    fmap mconcat . traverse (tryOneRevolutionByAngle angle) . splitShapeAboutAxis
+
+tryRevolution :: Shape -> Either WaterfallError Solid
+tryRevolution = tryRevolutionByAngle (2*pi)
+
+-- | Construct a `Solid` of revolution from a `Shape`.
 --
--- The `Path2D` is rotated about the y axis, should have endpoints that lie on it ( \(x = 0\) ).
+-- The `Shape` is rotated about the y axis
 --
 -- The resulting `Solid` is rotated such that the axis of revolution is the z axis.
-revolution :: Path2D -> Solid
+revolution :: Shape -> Solid
 revolution = fromRight mempty . tryRevolution
+
+revolutionByAngle :: Double -> Shape -> Solid
+revolutionByAngle = (fromRight mempty .) . tryRevolutionByAngle

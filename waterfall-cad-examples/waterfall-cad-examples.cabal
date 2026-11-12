@@ -72,8 +72,11 @@ data-files:
     test-data/orthogonalMatrix.svg
     test-data/orthogonalMatrixTwoD.svg
     test-data/paintedSphere.svg
+    test-data/partialRevolution.svg
+    test-data/partialRevolutionII.svg
     test-data/platonic.svg
     test-data/revolution.svg
+    test-data/revolutionOfShapeCuttingAxis.svg
     test-data/sphereSection.svg
     test-data/sphereSilhouette.svg
     test-data/svgPrism.svg

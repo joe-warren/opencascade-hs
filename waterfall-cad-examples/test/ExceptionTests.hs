@@ -7,6 +7,7 @@ import qualified Waterfall.Offset as Offset
 import qualified Waterfall.Fillet as Fillet
 import qualified Waterfall.Revolution as Revolution
 import qualified Waterfall.TwoD.Path2D as Path2D
+import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Solids as Solids
 import Waterfall.Error (WaterfallError (..))
 import Linear (V2 (..))
@@ -63,7 +64,7 @@ exceptionTests = testGroup "Exception Tests"
         (fromLeft (error "expected failure") $ Fillet.tryRoundFillet 2 Solids.centeredCube)
         (WaterfallError $ OpenCascadeStandardFailure "StdFail_NotDone" "BRep_API: command not done" "")
     , testCase "Bad Revolution" $ assertEqual "Bad Revolution"
-        (fromLeft (error "expected failure") $ Revolution.tryRevolution
+        (fromLeft (error "expected failure") . Revolution.tryRevolution . Shape.makeShape $
             (Path2D.pathFrom (V2 (-1) 0)
                 [ Path2D.lineTo (V2 1 0)
                 , Path2D.lineTo (V2 1 2)
