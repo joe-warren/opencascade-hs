@@ -29,6 +29,7 @@ and this project adheres to the
 - `volume`, `centerOfMass` and `momentOfInertia` now use a different kernel function and should be more accurate
 - Diagrams of objects with an outline consisting of a single edge were computed without a fill
 - A "Noop Fillet" (with a function that matches no edges) no longer fails
+- Fixed an issue where `intersections` + `intersections3D` would give the wrong result on lists with more than 2 solids 
 
 ### Changed 
 

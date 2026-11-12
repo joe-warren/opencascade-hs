@@ -37,6 +37,9 @@ data-files:
     test-data/gear-profile.svg
     test-data/gear.svg
     test-data/intersectionsOfCubes.svg
+    test-data/intersectionsOfIdenticalCubes.svg
+    test-data/intersectionsWithMempty.svg
+    test-data/intersectionsWithRepeatedCube.svg
     test-data/loft.svg
     test-data/loftSquares.svg
     test-data/loose-parts.svg
@@ -75,6 +78,9 @@ data-files:
     test-data/union2D.svg
     test-data/union2Ddiagram.svg
     test-data/unionsOfCubes.svg
+    test-data/unionsOfIdenticalCubes.svg
+    test-data/unionsWithMempty.svg
+    test-data/unionsWithRepeatedCube.svg
     test-data/fonts/varela/OFL.txt
     test-data/fonts/varela/VarelaRound-Regular.ttf
     test-results/.keep

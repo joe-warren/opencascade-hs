@@ -475,31 +475,87 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & TwoD.Transforms.scale2D 50
         )
     , solidTest "intersections of cubes" "intersectionsOfCubes.svg" (
-        Booleans.intersections [
-            Solids.centeredCube
-                & Transforms.rotate (unit _z) theta
-            | theta <- [0, pi/3, 2*pi/3]
-            ]
+        Booleans.intersections $
+            zipWith Solids.colourSolid
+                [Colour.red, Colour.lime, Colour.aqua] 
+                [
+                Solids.centeredCube
+                    & Transforms.rotate (unit _z) theta
+                | theta <- [0, pi/3, 2*pi/3]
+                ]
         )
     , solidTest "unions of cubes" "unionsOfCubes.svg" (
-        Booleans.unions [
-            Solids.centeredCube
-                & Transforms.rotate (unit _z) theta
-            | theta <- [0, pi/3, 2*pi/3]
-            ]
+        Booleans.unions $
+            zipWith Solids.colourSolid
+                [Colour.red, Colour.lime, Colour.aqua] 
+                [
+                Solids.centeredCube
+                    & Transforms.rotate (unit _z) theta
+                | theta <- [0, pi/3, 2*pi/3]
+                ]
         )
     , solidTest "fold intersection of cubes" "foldIntersectionOfCubes.svg" (
-        foldl1 Booleans.intersection [
-            Solids.centeredCube
-                & Transforms.rotate (unit _z) theta
-            | theta <- [0, pi/3, 2*pi/3]
-            ]
+        foldl1 Booleans.intersection $
+            zipWith Solids.colourSolid
+                [Colour.red, Colour.lime, Colour.aqua] 
+                [
+                Solids.centeredCube
+                    & Transforms.rotate (unit _z) theta
+                | theta <- [0, pi/3, 2*pi/3]
+                ]
         )
     , solidTest "fold union of cubes" "foldUnionOfCubes.svg" (
-        foldl' Booleans.union mempty [
-            Solids.centeredCube
-                & Transforms.rotate (unit _z) theta
-            | theta <- [0, pi/3, 2*pi/3]
-            ]
+        foldl' Booleans.union mempty $
+            zipWith Solids.colourSolid
+                [Colour.red, Colour.lime, Colour.aqua] 
+                [
+                Solids.centeredCube
+                    & Transforms.rotate (unit _z) theta
+                | theta <- [0, pi/3, 2*pi/3]
+                ]
+        )
+     , solidTest "intersections of identical cubes" "intersectionsOfIdenticalCubes.svg" (
+          Booleans.intersections $
+              Solids.colourSolid
+                  <$> [Colour.red, Colour.lime, Colour.aqua]
+                  <*> pure Solids.centeredCube
+          )
+      , solidTest "intersections with repeated cube" "intersectionsWithRepeatedCube.svg" (
+          Booleans.intersections
+              [ Solids.colourSolid Colour.red Solids.centeredCube
+              , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z)
+  (pi/4) Solids.centeredCube)
+              , Solids.colourSolid Colour.aqua Solids.centeredCube
+              ]
+          )
+      , solidTest "intersections with mempty" "intersectionsWithMempty.svg" (
+          Solids.colourSolid Colour.red Solids.unitSphere <>
+              Booleans.intersections
+                  [ Transforms.uScale 2 $ Solids.centeredCube
+                  , mempty
+                  , Transforms.uScale 2 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
+                  ]
+          )
+     , solidTest "unions of identical cubes" "unionsOfIdenticalCubes.svg" (
+          Booleans.unions $
+              Solids.colourSolid
+                  <$> [Colour.red, Colour.lime, Colour.aqua]
+                  <*> pure Solids.centeredCube
+          )
+      , solidTest "unions with repeated cube" "unionsWithRepeatedCube.svg" (
+          Booleans.unions
+              [ Solids.colourSolid Colour.red Solids.centeredCube
+              , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z)
+  (pi/4) Solids.centeredCube)
+              , Solids.colourSolid Colour.aqua Solids.centeredCube
+              ]
+          )
+      , solidTest "unions with mempty" "unionsWithMempty.svg" (
+            Solids.colourSolid Colour.red Solids.unitSphere <>
+                Booleans.unions
+                  [ Transforms.uScale 1.5 $ Solids.centeredCube
+                  , mempty
+                  , Transforms.uScale 1.5 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
+                  ]
         )
     ]
