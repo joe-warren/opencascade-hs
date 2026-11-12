@@ -54,21 +54,17 @@ import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import OpenCascade.Inheritance (SubTypeOf(..), upcast, unsafeDowncast)
 import Waterfall.Internal.Finalizers (acquireForeignPtr, fromAcquirePtrT, unsafeFromAcquire, unsafeFromAcquirePtr, unsafeFromAcquirePtrTWithCatch, unsafeFromAcquirePtrWithCatch, unsafeFromAcquirePtrT)
 import Waterfall.Internal.Edges (allSubShapesWithCopy)
-import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
-import Data.Foldable (traverse_, foldrM)
+import Data.Foldable (traverse_)
 import Data.Bifunctor.Flip (Flip (..))
 import Waterfall.Error (WaterfallError)
 import Waterfall.Paint (Paint, paintIsDefined)
 import Data.Functor.Compose (Compose(..))
 import qualified OpenCascade.NCollection as NCollection
 import Control.Monad (filterM, forM_, (<=<))
-import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
+import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape, deduplicateTopoDSShapes, containsShapeKind)
 import Foreign.ForeignPtr (ForeignPtr)
 import Control.DeepSeq (NFData (rnf), liftRnf, liftRnf2, rwhnf)
 import qualified OpenCascade.NCollection.List as NCollection.List
-import Data.Maybe (isJust)
-import qualified Waterfall.Internal.ShapeMap as ShapeMap
-import qualified OpenCascade.TopExp.Explorer as Explorer
 
 data PaintMap 
     = UniformPaint Paint
@@ -200,7 +196,7 @@ makeShapeHistory builder =
         (MakeShape.isDeleted builder)
         (MakeShape.shape builder)
 
-bopBuilderHistory :: Ptr BOPAlgo.Builder -> History
+bopBuilderHistory :: Ptr BOPAlgo.Builder.Builder -> History
 bopBuilderHistory builder = 
     History 
         (BOPAlgo.Builder.modified builder)
@@ -316,7 +312,7 @@ toBooleans op solids@(h:t) = solidFromAcquireMappingPaintMap $ do
         BOPAlgo.BOP.setOperation bop op
         BOPAlgo.Builder.addArgument builder firstPtr
         traverse_ (BOPAlgo.BOP.addTool bop) ptrs
-        BOPAlgo.setRunParallel builder True
+        BOPAlgo.Builder.setRunParallel builder True
         BOPAlgo.Builder.perform builder
 
 
@@ -349,19 +345,11 @@ intersection3D :: Solid -> Solid -> Solid
 intersection3D = toBoolean Common.fromShapes
 
 deduplicateSolids :: [Solid] -> [Solid]
-deduplicateSolids ss = 
-    let f s (shapeMap, acc)  = do
-            shape <- acquireSolid s
-            inMap <-  liftIO $ isJust <$> ShapeMap.lookup shapeMap shape
-            if inMap
-                then pure (shapeMap, acc)
-                else
-                    liftIO $ (, s:acc) <$> ShapeMap.addIfAbsent (shape, ()) shapeMap
-    in unsafeFromAcquire (snd <$> foldrM f (ShapeMap.empty, []) ss)
+deduplicateSolids = deduplicateTopoDSShapes acquireSolid
 
 isEmptySolid :: Solid -> Bool
 isEmptySolid  = 
-    not . unsafeFromAcquire . (liftIO . Explorer.more <=< (`Explorer.new` ShapeEnum.Face) <=< acquireSolid)
+    not . unsafeFromAcquire . (containsShapeKind ShapeEnum.Face <=< acquireSolid)
 
 intersections3D' :: [Solid] -> Solid
 intersections3D' [] = emptySolid
@@ -370,7 +358,7 @@ intersections3D' solids@(h:t)
     | any isEmptySolid solids = emptySolid
     | otherwise  = solidFromAcquireMappingPaintMap $ do
     builder <- CellsBuilder.new 
-    liftIO $ BOPAlgo.setRunParallel (upcast builder) True
+    liftIO $ BOPAlgo.Builder.setRunParallel (upcast builder) True
     listToTake <- NCollection.List.newListOfShape
     shapes <- traverse acquireSolid solids
     forM_ shapes (liftIO . NCollection.List.appendListOfShape listToTake)

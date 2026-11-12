@@ -29,7 +29,8 @@ and this project adheres to the
 - `volume`, `centerOfMass` and `momentOfInertia` now use a different kernel function and should be more accurate
 - Diagrams of objects with an outline consisting of a single edge were computed without a fill
 - A "Noop Fillet" (with a function that matches no edges) no longer fails
-- Fixed an issue where `intersections` + `intersections3D` would give the wrong result on lists with more than 2 solids 
+- Fixed an issue where `intersections`/`intersections3D`/`intersections2D` would give the wrong result on lists with more than two items
+- Fixed an issue where `unions`/`unions3D` and `mconcat @Solid` would give the wrong result on lists with more than two items which also contain `mempty`
 
 ### Changed 
 

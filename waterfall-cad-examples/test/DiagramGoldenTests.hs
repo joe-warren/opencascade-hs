@@ -542,20 +542,90 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                   <$> [Colour.red, Colour.lime, Colour.aqua]
                   <*> pure Solids.centeredCube
           )
-      , solidTest "unions with repeated cube" "unionsWithRepeatedCube.svg" (
-          Booleans.unions
-              [ Solids.colourSolid Colour.red Solids.centeredCube
-              , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z)
+    , solidTest "unions with repeated cube" "unionsWithRepeatedCube.svg" (
+        Booleans.unions
+            [ Solids.colourSolid Colour.red Solids.centeredCube
+            , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z)
   (pi/4) Solids.centeredCube)
-              , Solids.colourSolid Colour.aqua Solids.centeredCube
+            , Solids.colourSolid Colour.aqua Solids.centeredCube
+            ]
+        )
+    , solidTest "unions with mempty" "unionsWithMempty.svg" (
+        Solids.colourSolid Colour.red Solids.unitSphere <>
+            Booleans.unions
+              [ Transforms.uScale 1.5 $ Solids.centeredCube
+              , mempty
+              , Transforms.uScale 1.5 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
+              ]
+        )
+    , shapeTest "intersections of squares" "intersectionsOfSquares.svg" (
+        Booleans.intersections
+            [
+            Shape.centeredSquare
+                & TwoD.Transforms.rotate2D theta
+            | theta <- [0, pi/3, 2*pi/3]
+            ]
+        )
+    , shapeTest "unions of squares" "unionsOfSquares.svg" (
+        Booleans.unions
+            [
+            Shape.centeredSquare
+                & TwoD.Transforms.rotate2D theta
+            | theta <- [0, pi/3, 2*pi/3]
+            ]
+        )
+    , shapeTest "fold intersection of squares" "foldIntersectionOfSquares.svg" (
+        foldl1 Booleans.intersection
+            [
+            Shape.centeredSquare
+                & TwoD.Transforms.rotate2D theta
+            | theta <- [0, pi/3, 2*pi/3]
+            ]
+        )
+    , shapeTest "fold union of squares" "foldUnionOfSquares.svg" (
+        foldl' Booleans.union mempty $
+            [
+            Shape.centeredSquare
+                & TwoD.Transforms.rotate2D theta
+            | theta <- [0, pi/3, 2*pi/3]
+            ]
+        )
+     , shapeTest "intersections of identical squares" "intersectionsOfIdenticalSquares.svg" (
+          Booleans.intersections 
+                (let s = Shape.centeredSquare in [s, s, s])
+          )
+      , shapeTest "intersections with repeated Square" "intersectionsWithRepeatedSquare.svg" (
+          Booleans.intersections
+              [ Shape.centeredSquare
+              , TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
+              , Shape.centeredSquare
               ]
           )
-      , solidTest "unions with mempty" "unionsWithMempty.svg" (
-            Solids.colourSolid Colour.red Solids.unitSphere <>
-                Booleans.unions
-                  [ Transforms.uScale 1.5 $ Solids.centeredCube
+      , shapeTest "intersections with mempty Shape" "intersectionsWithMemptyShape.svg" (
+            Shape.unitCircle <>
+              Booleans.intersections
+                  [ TwoD.Transforms.uScale2D 2 $ Shape.centeredSquare
                   , mempty
-                  , Transforms.uScale 1.5 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
+                  , TwoD.Transforms.uScale2D 2 $ TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
+                  ]
+          )
+     , shapeTest "unions of identical squares" "unionsOfIdenticalSquares.svg" (
+            Booleans.unions $
+                (let s = Shape.centeredSquare in [s, s, s])
+            )
+      , shapeTest "unions with repeated square" "unionsWithRepeatedSquare.svg" (
+            Booleans.unions
+                [ Shape.centeredSquare
+                , TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
+                , Shape.centeredSquare
+                ]
+            )
+      , shapeTest "unions with mempty shape" "unionsWithMemptyShape.svg" (
+            Shape.unitCircle <>
+              Booleans.unions
+                  [ TwoD.Transforms.uScale2D 1.6 $ Shape.centeredSquare
+                  , mempty
+                  , TwoD.Transforms.uScale2D 1.6 $ TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
                   ]
         )
     ]

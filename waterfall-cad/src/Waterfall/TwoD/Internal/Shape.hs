@@ -16,7 +16,7 @@ import qualified OpenCascade.TopoDS as TopoDS
 import Foreign.Ptr
 import Data.Acquire (Acquire)
 import Algebra.Lattice
-import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr)
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquire)
 import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
 import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
@@ -35,6 +35,11 @@ import Foreign.ForeignPtr (ForeignPtr)
 import Control.DeepSeq (NFData (rnf), rwhnf)
 import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
 import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
+import Control.Monad ((<=<), forM_)
+import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
+import Waterfall.Internal.FromOpenCascade (containsShapeKind, deduplicateTopoDSShapes)
+import qualified OpenCascade.BOPAlgo.CellsBuilder as CellsBuilder
+import qualified OpenCascade.NCollection.List as NCollection.List
 
 -- | A Region in 2D Space 
 -- 
@@ -104,12 +109,40 @@ toBooleans2D op (h:shapes) = Shape . unsafeFromAcquirePtr $ do
 -- | Take the union of a list of 2D shapes
 -- May be more performant than chaining multiple applications of `union2D`
 unions2D :: [Shape] -> Shape
-unions2D = toBooleans2D BOPAlgo.Operation.Fuse
+unions2D = toBooleans2D BOPAlgo.Operation.Fuse 
+    . filter (not . isEmptyShape)
+    . deduplicateShapes
+
+deduplicateShapes :: [Shape] -> [Shape]
+deduplicateShapes = deduplicateTopoDSShapes acquireShape
+
+isEmptyShape :: Shape -> Bool
+isEmptyShape = 
+    not . unsafeFromAcquire . (containsShapeKind ShapeEnum.Face <=< acquireShape)
+
+intersections2D' :: [Shape] -> Shape
+intersections2D' [] = emptyShape
+intersections2D' [x] = x
+intersections2D' ss
+    | any isEmptyShape ss = emptyShape
+    | otherwise  = shapeFromAcquire $ do
+    builder <- CellsBuilder.new 
+    liftIO $ BOPAlgo.Builder.setRunParallel (upcast builder) True
+    listToTake <- NCollection.List.newListOfShape
+    shapes <- traverse acquireShape ss
+    forM_ shapes (liftIO . NCollection.List.appendListOfShape listToTake)
+    listToAvoid <- NCollection.List.newListOfShape
+    liftIO $ forM_ shapes (BOPAlgo.Builder.addArgument (upcast builder))
+    liftIO (BOPAlgo.Builder.perform (upcast builder))
+    liftIO $ CellsBuilder.addToResult builder listToTake listToAvoid 1 False
+    liftIO $ CellsBuilder.removeInternalBoundaries builder
+
+    BOPAlgo.Builder.shape (upcast builder)
 
 -- | Take the intersection of a list of 2D shapes
 -- May be more performant than chaining multiple applications of `intersection2D`
 intersections2D :: [Shape] -> Shape
-intersections2D = toBooleans2D BOPAlgo.Operation.Common
+intersections2D = intersections2D' . deduplicateShapes
 
 -- | An empty 2D shape
 emptyShape :: Shape

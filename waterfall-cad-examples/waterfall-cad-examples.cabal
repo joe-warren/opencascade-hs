@@ -33,13 +33,19 @@ data-files:
     test-data/fillet.svg
     test-data/flags.svg
     test-data/foldIntersectionOfCubes.svg
+    test-data/foldIntersectionOfSquares.svg
     test-data/foldUnionOfCubes.svg
+    test-data/foldUnionOfSquares.svg
     test-data/gear-profile.svg
     test-data/gear.svg
     test-data/intersectionsOfCubes.svg
     test-data/intersectionsOfIdenticalCubes.svg
+    test-data/intersectionsOfIdenticalSquares.svg
+    test-data/intersectionsOfSquares.svg
     test-data/intersectionsWithMempty.svg
+    test-data/intersectionsWithMemptyShape.svg
     test-data/intersectionsWithRepeatedCube.svg
+    test-data/intersectionsWithRepeatedSquare.svg
     test-data/loft.svg
     test-data/loftSquares.svg
     test-data/loose-parts.svg
@@ -79,8 +85,12 @@ data-files:
     test-data/union2Ddiagram.svg
     test-data/unionsOfCubes.svg
     test-data/unionsOfIdenticalCubes.svg
+    test-data/unionsOfIdenticalSquares.svg
+    test-data/unionsOfSquares.svg
     test-data/unionsWithMempty.svg
+    test-data/unionsWithMemptyShape.svg
     test-data/unionsWithRepeatedCube.svg
+    test-data/unionsWithRepeatedSquare.svg
     test-data/fonts/varela/OFL.txt
     test-data/fonts/varela/VarelaRound-Regular.ttf
     test-results/.keep
