@@ -123,6 +123,7 @@ typedef void BRepAlgoAPI_Common;
 typedef void BRepAlgoAPI_Section;
 typedef void BOPAlgo_Builder;
 typedef void BOPAlgo_BOP;
+typedef void BOPAlgo_CellsBuilder;
 typedef int BOPAlgo_Operation;
 typedef void IntCurvesFace_ShapeIntersector;
 typedef void GCPnts_AbscissaPoint;

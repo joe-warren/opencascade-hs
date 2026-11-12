@@ -48,22 +48,23 @@ import OpenCascade.BRepBuilderAPI (MakeShape)
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
 import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
+import qualified OpenCascade.BOPAlgo.CellsBuilder as CellsBuilder
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import OpenCascade.Inheritance (SubTypeOf(..), upcast, unsafeDowncast)
 import Waterfall.Internal.Finalizers (acquireForeignPtr, fromAcquirePtrT, unsafeFromAcquire, unsafeFromAcquirePtr, unsafeFromAcquirePtrTWithCatch, unsafeFromAcquirePtrWithCatch, unsafeFromAcquirePtrT)
 import Waterfall.Internal.Edges (allSubShapesWithCopy)
-import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo
 import Data.Foldable (traverse_)
 import Data.Bifunctor.Flip (Flip (..))
 import Waterfall.Error (WaterfallError)
 import Waterfall.Paint (Paint, paintIsDefined)
 import Data.Functor.Compose (Compose(..))
 import qualified OpenCascade.NCollection as NCollection
-import Control.Monad (filterM)
-import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
+import Control.Monad (filterM, forM_, (<=<))
+import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape, deduplicateTopoDSShapes, containsShapeKind)
 import Foreign.ForeignPtr (ForeignPtr)
 import Control.DeepSeq (NFData (rnf), liftRnf, liftRnf2, rwhnf)
+import qualified OpenCascade.NCollection.List as NCollection.List
 
 data PaintMap 
     = UniformPaint Paint
@@ -195,7 +196,7 @@ makeShapeHistory builder =
         (MakeShape.isDeleted builder)
         (MakeShape.shape builder)
 
-bopBuilderHistory :: Ptr BOPAlgo.Builder -> History
+bopBuilderHistory :: Ptr BOPAlgo.Builder.Builder -> History
 bopBuilderHistory builder = 
     History 
         (BOPAlgo.Builder.modified builder)
@@ -294,6 +295,11 @@ toBoolean f (Solid ptrA paintMapA) (Solid ptrB paintMapB) = solidFromAcquireMapp
 union3D :: Solid -> Solid -> Solid
 union3D = toBoolean Fuse.fromShapes
 
+
+matchesUniformPaint :: Paint -> PaintMap -> Bool
+matchesUniformPaint pa (UniformPaint pb) = pa == pb
+matchesUniformPaint _ _ = False
+
 toBooleans :: BOPAlgo.Operation.Operation -> [Solid] -> Solid
 toBooleans _ [] = emptySolid
 toBooleans _ [x] = x
@@ -306,11 +312,9 @@ toBooleans op solids@(h:t) = solidFromAcquireMappingPaintMap $ do
         BOPAlgo.BOP.setOperation bop op
         BOPAlgo.Builder.addArgument builder firstPtr
         traverse_ (BOPAlgo.BOP.addTool bop) ptrs
-        BOPAlgo.setRunParallel builder True
+        BOPAlgo.Builder.setRunParallel builder True
         BOPAlgo.Builder.perform builder
 
-    let matchesUniformPaint pa (UniformPaint pb) = pa == pb
-        matchesUniformPaint _ _ = False
 
     combinedPaintMap <- 
         case solidPaintMap h of
@@ -324,7 +328,9 @@ toBooleans op solids@(h:t) = solidFromAcquireMappingPaintMap $ do
 -- 
 -- May be more performant than chaining multiple applications of `union3D`
 unions3D :: [Solid] -> Solid
-unions3D = toBooleans BOPAlgo.Operation.Fuse
+unions3D = toBooleans BOPAlgo.Operation.Fuse 
+    . filter (not . isEmptySolid)
+    . deduplicateSolids
 
 -- | Take the difference of two solids
 -- 
@@ -338,12 +344,43 @@ difference3D = toBoolean Cut.fromShapes
 intersection3D :: Solid -> Solid -> Solid
 intersection3D = toBoolean Common.fromShapes
 
+deduplicateSolids :: [Solid] -> [Solid]
+deduplicateSolids = deduplicateTopoDSShapes acquireSolid
+
+isEmptySolid :: Solid -> Bool
+isEmptySolid  = 
+    not . unsafeFromAcquire . (containsShapeKind ShapeEnum.Face <=< acquireSolid)
+
+intersections3D' :: [Solid] -> Solid
+intersections3D' [] = emptySolid
+intersections3D' [x] = x
+intersections3D' solids@(h:t) 
+    | any isEmptySolid solids = emptySolid
+    | otherwise  = solidFromAcquireMappingPaintMap $ do
+    builder <- CellsBuilder.new 
+    liftIO $ BOPAlgo.Builder.setRunParallel (upcast builder) True
+    listToTake <- NCollection.List.newListOfShape
+    shapes <- traverse acquireSolid solids
+    forM_ shapes (liftIO . NCollection.List.appendListOfShape listToTake)
+    listToAvoid <- NCollection.List.newListOfShape
+    liftIO $ forM_ shapes (BOPAlgo.Builder.addArgument (upcast builder))
+    liftIO (BOPAlgo.Builder.perform (upcast builder))
+    liftIO $ CellsBuilder.addToResult builder listToTake listToAvoid 1 False
+    liftIO $ CellsBuilder.removeInternalBoundaries builder
+
+    combinedPaintMap <- 
+        case solidPaintMap h of
+            UniformPaint p | all (matchesUniformPaint p . solidPaintMap) t -> 
+                pure $ UniformPaint p
+            _ -> liftIO $ FacePaints <$> fromAcquirePaints (concat <$> traverse materialiseSolidFacePaints solids)
+            
+    return  (combinedPaintMap, bopBuilderHistory . upcast $ builder)
 
 -- | Take the intersection of a list of solids 
 -- 
 -- May be more performant than chaining multiple applications of `intersection3D`
 intersections3D :: [Solid] -> Solid
-intersections3D = toBooleans BOPAlgo.Operation.Common
+intersections3D = intersections3D' . deduplicateSolids
 
 -- | While `Solid` could form a Semigroup via either `union3D` or `intersection3D`.
 -- the default Semigroup is from `union3D`.
