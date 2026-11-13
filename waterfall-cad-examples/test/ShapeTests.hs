@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module ShapeTests
 ( shapeTests
 ) where
@@ -6,9 +7,13 @@ import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Booleans as Booleans
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
+import qualified Waterfall.Path.Common as Path
+import qualified Waterfall.TwoD.Path2D as TwoD.Path2D
 import qualified Waterfall.Solids as Solids
+import Waterfall.Internal.NearZero (nearZero)
 import Linear (V2 (..), unit, _x, _z, (^*), V3 (..))
 import Data.Function ((&))
+import Data.Maybe (fromMaybe)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 
@@ -103,5 +108,20 @@ shapeTests = testGroup "Shape"
                     & Shape.silhouette
             in assertEqual "cube has one part" 1 (length . Shape.looseShapes $ s)
                 <> assertBool "silhouette area is 1-pi/100" ((< 1e-5) . abs . subtract (1-pi/100) . Shape.area $ s)
+        ]
+    , testGroup "shapePaths" 
+        [ testCase "mirrored square" $ 
+            let shape = Shape.unitSquare
+                    & TwoD.Transforms.mirror2D (unit _x)
+                paths = Shape.shapePaths shape
+                rebuilt = Shape.makeShape <$> paths
+                reversePathIsConsistent (p :: TwoD.Path2D.Path2D) = 
+                    let getEndpointsOrDie = fromMaybe (error "failed to get path endpoints") . Path.pathEndpoints 
+                        (s, e) = getEndpointsOrDie p
+                        (e', s') = getEndpointsOrDie . Path.reversePath $ p
+                    in all nearZero (s' - s) && all nearZero (e' - e) 
+                    
+            in assertBool "rebuilt shape has area 1" ((< 1e-5) . abs . subtract (1) . sum . fmap Shape.area $ rebuilt)
+                <> assertBool "reversePath is consistent" (all reversePathIsConsistent (paths <> (Path.splitPath =<< paths)))
         ]
     ]
