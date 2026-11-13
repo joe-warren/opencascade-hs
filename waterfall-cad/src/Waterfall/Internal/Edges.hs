@@ -40,7 +40,7 @@ import Control.Monad.IO.Class (liftIO)
 import Linear (V3 (..), distance, normalize)
 import Foreign.Ptr
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
-import Control.Monad (when)
+import Control.Monad (when, (<=<))
 import Waterfall.Internal.ToOpenCascade (v3ToPnt)
 import Data.Foldable (traverse_)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
@@ -54,14 +54,19 @@ edgeEndpoints edge = (`with` pure) $ do
     p2 <- liftIO . BRep.Tool.curveParamLast $ edge
     s <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve p1
     e <- (liftIO . gpPntToV3) =<< Geom.Curve.value curve p2
-    return (s, e)
+    orientation <- liftIO $ TopoDS.Shape.orientation (upcast edge)
+    if orientation == TopAbs.Orientation.Reversed
+        then return (e, s)
+        else return (s, e)
 
 edgeValue :: Ptr TopoDS.Edge -> Double -> IO (V3 Double)
 edgeValue edge v = (`with` pure) $ do
     curve <- BRep.Tool.curve edge
     p1 <- liftIO . BRep.Tool.curveParamFirst $ edge
     p2 <- liftIO . BRep.Tool.curveParamLast $ edge
-    let p' = (1-v) * p1 + v * p2
+    isForward <- liftIO $ edgeIsForward edge
+    let v' = if isForward then v else (1-v)
+    let p' = (1-v') * p1 + v' * p2
     (liftIO . gpPntToV3) =<< Geom.Curve.value curve p'
 
 allWireEndpoints :: Ptr TopoDS.Wire -> IO [(V3 Double, V3 Double)]
@@ -96,13 +101,27 @@ allSubShapesWithCopy t s = do
                 else return []
     go ShapeMap.empty
 
-
 allEdges :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Edge]
 allEdges s = traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Edge s 
 
 allWires :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Wire]
-allWires s = traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Wire s
-    
+allWires s = traverse (forwardWire <=< liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Wire s
+
+forwardWire :: Ptr TopoDS.Wire -> Acquire (Ptr TopoDS.Wire)
+forwardWire wire = do
+    edges <- wireEdges wire
+    allForward <- and <$> liftIO (traverse edgeIsForward edges)
+    if allForward 
+        then return wire
+        else do
+            builder <- MakeWire.new
+            liftIO $ traverse_ (MakeWire.addEdge builder) edges 
+            MakeWire.wire builder
+
+edgeIsForward :: Ptr TopoDS.Edge -> IO Bool
+edgeIsForward = 
+    fmap (== TopAbs.Orientation.Forward) . TopoDS.Shape.orientation . upcast
+
 wireEndpoints :: Ptr TopoDS.Wire -> IO (V3 Double, V3 Double)
 wireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
     v1 <- WireExplorer.current explorer
@@ -121,14 +140,29 @@ wireEndpoints wire = with (WireExplorer.fromWire wire) $ \explorer -> do
 edgeTangentStart :: Ptr TopoDS.Edge -> IO (V3 Double)
 edgeTangentStart e = (`with` pure) $ do
     curve <- BRep.Tool.curve e
-    p1 <- liftIO . BRep.Tool.curveParamFirst $ e
-    liftIO . gpVecToV3 =<< Geom.Curve.dn curve p1 1
+    isForward <- liftIO $ edgeIsForward e
+    p1 <- if isForward
+        then liftIO . BRep.Tool.curveParamFirst $ e
+        else liftIO . BRep.Tool.curveParamLast $ e
+    let reverseTangent =
+         if isForward
+            then id
+            else negate   
+    reverseTangent <$> (liftIO . gpVecToV3 =<< Geom.Curve.dn curve p1 1)
+
 
 edgeTangentEnd :: Ptr TopoDS.Edge -> IO (V3 Double)
 edgeTangentEnd e = (`with` pure) $ do
     curve <- BRep.Tool.curve e
-    p1 <- liftIO . BRep.Tool.curveParamLast $ e
-    liftIO . gpVecToV3 =<< Geom.Curve.dn curve p1 1
+    isForward <- liftIO $ edgeIsForward e
+    p1 <- if isForward
+        then liftIO . BRep.Tool.curveParamLast $ e
+        else liftIO . BRep.Tool.curveParamFirst $ e
+    let reverseTangent =
+         if isForward
+            then id
+            else negate   
+    reverseTangent <$> (liftIO . gpVecToV3 =<< Geom.Curve.dn curve p1 1)
 
 wireTangentStart :: Ptr TopoDS.Wire -> IO (V3 Double)
 wireTangentStart wire = with (WireExplorer.fromWire wire) $ \explorer -> do
@@ -165,7 +199,7 @@ wireEdges wire = do
 
 reverseWire :: Ptr TopoDS.Wire -> Acquire (Ptr TopoDS.Wire) 
 reverseWire wire = do
-    explorer <- WireExplorer.fromWire wire
+    explorer <- WireExplorer.fromWire =<< forwardWire wire
     makeWire <- MakeWire.new
     let runToEnd = do
             more <- liftIO $ WireExplorer.more explorer
@@ -212,7 +246,6 @@ joinWires wires = do
     traverse_ addWire $ wires
     MakeWire.wire builder
 
-    
 edgeToWire :: Ptr TopoDS.Edge -> Acquire (Ptr TopoDS.Wire)
 edgeToWire edge = do
     builder <- MakeWire.new
@@ -221,7 +254,7 @@ edgeToWire edge = do
 
 splitWires :: Ptr TopoDS.Wire -> Acquire [Ptr TopoDS.Wire]
 splitWires wire = do
-    explorer <- WireExplorer.fromWire wire
+    explorer <- WireExplorer.fromWire =<< forwardWire wire
     let makeSegment = do
             builder <- MakeWire.new
             let addOneWire lastDelta = do
@@ -263,7 +296,7 @@ wireLength = shapeLength . upcast
 
 truncateWire :: Double -> Ptr TopoDS.Wire -> Acquire (Ptr TopoDS.Wire)
 truncateWire targetLength wire = do
-    explorer <- WireExplorer.fromWire wire
+    explorer <- WireExplorer.fromWire =<< forwardWire wire
     builder <- MakeWire.new
     let go remaining = do
             more <- liftIO $ WireExplorer.more explorer
