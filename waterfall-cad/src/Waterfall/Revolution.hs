@@ -31,16 +31,20 @@ splitShapeAboutAxis shape = unsafeFromAcquire $ do
     s <- acquireShape shape 
     bnd <- Bnd.Box.new
     liftIO $ BRepBndLib.addOptimal s bnd True False
-    p1 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMin bnd
-    p2 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax bnd
-    return $ if p2 ^. _x < 0 || p1 ^. _x > 0
-        then [shape]
-        else let lo = V2 0 (p1 ^. _y)
-                 hi = (p2 ^. _xy) 
-                 mask = Shape.unitSquare
-                    & TwoD.Transforms.scale2D (hi - lo)
-                    & TwoD.Transforms.translate2D (lo)
-            in [shape `intersection` mask, shape `difference` mask]
+    isVoid <- liftIO $ Bnd.Box.isVoid bnd
+    if isVoid 
+        then return []
+        else do
+            p1 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMin bnd
+            p2 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax bnd
+            return $ if p2 ^. _x < 0 || p1 ^. _x > 0
+                then [shape]
+                else let lo = V2 0 (p1 ^. _y)
+                         hi = (p2 ^. _xy) 
+                         mask = Shape.unitSquare
+                            & TwoD.Transforms.scale2D (hi - lo)
+                            & TwoD.Transforms.translate2D (lo)
+                    in [shape `intersection` mask, shape `difference` mask]
 
 tryOneRevolutionByAngle :: Double -> Shape -> Either WaterfallError Solid
 tryOneRevolutionByAngle angle (Shape shape) =

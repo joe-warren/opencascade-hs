@@ -5,6 +5,7 @@ module SolidTests
 import qualified Waterfall.Solids as Solids
 import qualified Waterfall.Booleans as Booleans
 import qualified Waterfall.Transforms as Transforms
+import qualified Waterfall.Revolution as Revolution
 import Linear (V3 (..), unit, _x, (^*))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -40,5 +41,12 @@ solidTests = testGroup "Solid"
             let parts = Solids.looseParts
                     (Solids.centeredCube <> Transforms.translate (unit _x ^* 3) Solids.centeredCube)
             in assertBool "each part has unit volume" (all ((< 1e-6) . abs . subtract 1 . Solids.volume) parts)
+        ]
+        , testGroup "revolution"
+        [ testCase "revolution of emptyShape has zero volume" $
+            let part = Revolution.revolution mempty 
+            in assertBool "part has zero volume" (abs (Solids.volume part) < 1e-6)
+
+
         ]
     ]

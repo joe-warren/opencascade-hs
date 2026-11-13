@@ -645,4 +645,11 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                     & TwoD.Transforms.rotate2D (pi/8)
                 )
         )
+    , solidTest "revolution of shape on axis" "revolutionOfShapeOnAxis.svg" (
+            Revolution.revolution 
+                ( Shapes.unitSquare 
+                    & TwoD.Transforms.scale2D (V2 8 1)
+                    & TwoD.Transforms.rotate2D (-pi/8)
+                )
+        )
     ]
