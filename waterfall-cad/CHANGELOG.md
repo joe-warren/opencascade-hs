@@ -18,6 +18,7 @@ and this project adheres to the
 - Added `Waterfall.TwoD.Shape.area` and `Waterfall.TwoD.Shape.centroid`
 - `.stp` is now a supported extension for STEP files in `Waterfall.IO.readSolid` and `Waterfall.IO.writeSolid`
 - Added `offsetShape` and `tryOffsetShape` in `Waterfall.TwoD.Offset`
+- Added `revolutionByAngle` and `tryRevolutionByAngle` to `Waterfall.Revolution`
 
 ### Fixed
 
@@ -38,6 +39,7 @@ and this project adheres to the
     - This fixes shape construction from SVG files with endpoints that were previously processed as "not quite closed" due to rounding errors.
 - The `Show` instance on `Colour` now displays values in terms of `Waterfall.Colour.rgb24` when this is possible.
 - Emissive Colour is now converted to linear RGB when written
+- In `Waterfall.Revolution`, `revolution` and `tryRevolution` now take a `Shape` rather than a `Path2D`
 
 ## 0.8.0.0
 

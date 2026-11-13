@@ -59,6 +59,7 @@ tryRevolutionByAngle :: Double -> Shape -> Either WaterfallError Solid
 tryRevolutionByAngle angle =
     fmap mconcat . traverse (tryOneRevolutionByAngle angle) . splitShapeAboutAxis
 
+-- | Version of `revolution` that returns a `WaterfallError` on failure.
 tryRevolution :: Shape -> Either WaterfallError Solid
 tryRevolution = tryRevolutionByAngle (2*pi)
 
@@ -70,5 +71,11 @@ tryRevolution = tryRevolutionByAngle (2*pi)
 revolution :: Shape -> Solid
 revolution = fromRight mempty . tryRevolution
 
+-- | Construct a Partial Revolution of a `Shape`
+--
+-- The `Shape is rotated about the y axis, 
+-- and then rotated such that the axis of revolution is in the z-axis,
+-- the start of the wedge lies in the xz plane, 
+-- and the wedge direction is counter-clockwise about the z-axis.
 revolutionByAngle :: Double -> Shape -> Solid
 revolutionByAngle = (fromRight mempty .) . tryRevolutionByAngle

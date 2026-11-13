@@ -637,6 +637,10 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             Revolution.revolutionByAngle 6
                 (TwoD.Transforms.translate2D (unit _x ^* 0.5) Shape.unitSquare)
         )
+    , solidTest "partial revolution negative" "partialRevolutionNegative.svg" (
+        Revolution.revolutionByAngle (negate 1) 
+            (TwoD.Transforms.translate2D (unit _x ^* 1.5) Shape.unitCircle)
+        )
     , solidTest "revolution of shape cutting axis" "revolutionOfShapeCuttingAxis.svg" (
             Revolution.revolution 
                 ( Shapes.centeredSquare 
@@ -651,5 +655,14 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                     & TwoD.Transforms.scale2D (V2 8 1)
                     & TwoD.Transforms.rotate2D (-pi/8)
                 )
+        )
+    , diagramTest "silhouette of revolution" "silhouetteOfRevolution.svg" (
+        Shape.unitCircle 
+            & TwoD.Transforms.translate2D (unit _x ^* 1.5)
+            & Revolution.revolutionByAngle 1
+            & Shape.silhouette
+            & (<> TwoD.Transforms.scale2D (V2 0.1 1) Shape.unitSquare)
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
+            & TwoD.Transforms.scale2D 50
         )
     ]
