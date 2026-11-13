@@ -11,6 +11,11 @@ Bnd_Box * hs_new_Bnd_Box();
 
 void hs_delete_Bnd_Box(Bnd_Box * box);
 
+bool hs_Bnd_Box_isVoid(
+        Bnd_Box * box,
+        HSExceptionType* exType, void ** exPtr
+);
+
 gp_Pnt * hs_Bnd_Box_cornerMin(
     Bnd_Box * box,
     HSExceptionType* exType, void ** exPtr

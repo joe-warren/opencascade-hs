@@ -24,6 +24,7 @@ and this project adheres to the
 - Added `OpenCascade.BRepOffsetAPI.MakeOffset`
 - Added `OpenCascade.BOPAlgo.CellsBuilder`
 - Added `OpenCascade.BRepPrimAPI.MakeRevol.fromShapeAx1AndAngle`
+- Added `OpenCascade.Bnd.Box.isVoid`
 
 
 ### Changed

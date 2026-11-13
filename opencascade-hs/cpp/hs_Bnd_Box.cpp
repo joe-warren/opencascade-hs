@@ -10,6 +10,15 @@ void hs_delete_Bnd_Box(Bnd_Box * box){
     delete box;
 }
 
+bool hs_Bnd_Box_isVoid(
+        Bnd_Box * box,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleExWithDefault(exType, exPtr, [box]{
+        return box->IsVoid();
+    }, true);
+}
+
 gp_Pnt * hs_Bnd_Box_cornerMin(
         Bnd_Box * box,
         HSExceptionType* exType, void ** exPtr
