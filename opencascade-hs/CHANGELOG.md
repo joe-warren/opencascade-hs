@@ -26,7 +26,6 @@ and this project adheres to the
 - Added `OpenCascade.BRepPrimAPI.MakeRevol.fromShapeAx1AndAngle`
 - Added `OpenCascade.Bnd.Box.isVoid`
 
-
 ### Changed
 
 - Changes to `extra-lib-dirs` and `include-dirs`

@@ -5,12 +5,8 @@ module ExceptionTests
 
 import qualified Waterfall.Offset as Offset
 import qualified Waterfall.Fillet as Fillet
-import qualified Waterfall.Revolution as Revolution
-import qualified Waterfall.TwoD.Path2D as Path2D
-import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Solids as Solids
 import Waterfall.Error (WaterfallError (..))
-import Linear (V2 (..))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import OpenCascade.Internal.Exception (OpenCascadeException (..), testThrow)

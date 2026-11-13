@@ -74,6 +74,7 @@ data-files:
     test-data/paintedSphere.svg
     test-data/partialRevolution.svg
     test-data/partialRevolutionII.svg
+    test-data/partialRevolutionNegative.svg
     test-data/platonic.svg
     test-data/revolution.svg
     test-data/revolutionOfShapeCuttingAxis.svg

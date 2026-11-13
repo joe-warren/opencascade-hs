@@ -42,7 +42,7 @@ solidTests = testGroup "Solid"
                     (Solids.centeredCube <> Transforms.translate (unit _x ^* 3) Solids.centeredCube)
             in assertBool "each part has unit volume" (all ((< 1e-6) . abs . subtract 1 . Solids.volume) parts)
         ]
-        , testGroup "revolution"
+    , testGroup "revolution"
         [ testCase "revolution of emptyShape has zero volume" $
             let part = Revolution.revolution mempty 
             in assertBool "part has zero volume" (abs (Solids.volume part) < 1e-6)

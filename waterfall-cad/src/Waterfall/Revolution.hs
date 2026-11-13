@@ -5,26 +5,25 @@ module Waterfall.Revolution
 , tryRevolutionByAngle
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), solidFromAcquireWithCatch, emptyPaintMap)
+import Waterfall.Internal.Solid (Solid (..), solidFromAcquireWithCatch, emptyPaintMap, emptySolid)
 import Waterfall.TwoD.Internal.Shape (Shape(Shape), acquireShape)
-import Waterfall.TwoD.Shape as Shape
+import qualified Waterfall.TwoD.Shape as Shape
 import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquire)
 import qualified OpenCascade.BRepPrimAPI.MakeRevol as MakeRevol
-import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.GP as GP
-import OpenCascade.Inheritance (upcast, unsafeDowncast)
+import OpenCascade.Inheritance (upcast)
 import Waterfall.Transforms (rotate)
 import Waterfall.Error (WaterfallError)
 import Control.Monad.IO.Class (liftIO)
-import Linear (unit, _x, _y, _xy, V2 (V2))
+import Linear (unit, _x, _y, _xy, V2 (V2), Epsilon (nearZero))
 import Data.Either (fromRight)
 import qualified OpenCascade.Bnd.Box as Bnd.Box
 import qualified OpenCascade.BRepBndLib as BRepBndLib
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Control.Lens ((^.), (&))
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
-import Waterfall.Booleans (intersection, Boolean (difference))
+import Waterfall.Booleans (intersection, difference)
 
 splitShapeAboutAxis :: Shape -> [Shape]
 splitShapeAboutAxis shape = unsafeFromAcquire $ do
@@ -37,7 +36,7 @@ splitShapeAboutAxis shape = unsafeFromAcquire $ do
         else do
             p1 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMin bnd
             p2 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax bnd
-            return $ if p2 ^. _x < 0 || p1 ^. _x > 0
+            return $ if p2 ^. _x <= 0 || p1 ^. _x >= 0
                 then [shape]
                 else let lo = V2 0 (p1 ^. _y)
                          hi = (p2 ^. _xy) 
@@ -47,11 +46,15 @@ splitShapeAboutAxis shape = unsafeFromAcquire $ do
                     in [shape `intersection` mask, shape `difference` mask]
 
 tryOneRevolutionByAngle :: Double -> Shape -> Either WaterfallError Solid
-tryOneRevolutionByAngle angle (Shape shape) =
+tryOneRevolutionByAngle angle (Shape shape)
+    | nearZero angle = Right emptySolid
+    | otherwise = 
     fmap (rotate (unit _x) (pi/2)) . solidFromAcquireWithCatch emptyPaintMap $ do
         s <- acquireForeignPtr shape
         axis <- GP.oy -- revolve around the y axis
-        revol <- MakeRevol.fromShapeAx1AndAngle s axis angle True
+        -- clamp the angle to [-2*pi, 2*pi]
+        let angle' = signum angle * (min (2*pi) (abs angle))
+        revol <- MakeRevol.fromShapeAx1AndAngle s axis angle' True
         MakeShape.shape (upcast revol)
 
 -- | Version of `revolutionByAngle` that returns a `WaterfallError` on failure.
@@ -73,9 +76,11 @@ revolution = fromRight mempty . tryRevolution
 
 -- | Construct a Partial Revolution of a `Shape`
 --
--- The `Shape is rotated about the y axis, 
+-- The `Shape` is rotated about the y axis, 
 -- and then rotated such that the axis of revolution is in the z-axis,
 -- the start of the wedge lies in the xz plane, 
 -- and the wedge direction is counter-clockwise about the z-axis.
+-- 
+-- The angle is clamped to ±2π.
 revolutionByAngle :: Double -> Shape -> Solid
 revolutionByAngle = (fromRight mempty .) . tryRevolutionByAngle
