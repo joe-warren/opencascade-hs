@@ -2,6 +2,7 @@
 module OpenCascade.Bnd.Box
 ( Box
 , new
+, isVoid
 , cornerMin
 , cornerMax
 ) where
@@ -11,14 +12,24 @@ import OpenCascade.Bnd.Internal.Destructors (deleteBox)
 import OpenCascade.GP.Types (Pnt)
 import OpenCascade.GP.Internal.Destructors (deletePnt)
 import OpenCascade.Internal.Exception (wrapException)
+import OpenCascade.Internal.Bool (cBoolToBool)
 import Data.Acquire (Acquire, mkAcquire)
-import Foreign.C (CInt)
+import Foreign.C (CInt, CBool (..))
 import Foreign.Ptr (Ptr)
 
 foreign import capi unsafe "hs_Bnd_Box.h hs_new_Bnd_Box" rawNew ::  IO (Ptr Box)
 
 new :: Acquire (Ptr Box)
 new = mkAcquire rawNew deleteBox
+
+foreign import capi unsafe "hs_Bnd_Box.h hs_Bnd_Box_isVoid" rawIsVoid
+    :: Ptr Box
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO CBool
+
+isVoid :: Ptr Box -> IO Bool
+isVoid box = cBoolToBool <$> wrapException (rawIsVoid box)  
 
 foreign import capi unsafe "hs_Bnd_Box.h hs_Bnd_Box_cornerMin" rawCornerMin
     :: Ptr Box

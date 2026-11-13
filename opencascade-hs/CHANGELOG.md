@@ -23,6 +23,8 @@ and this project adheres to the
   and `OpenCascade.BRepGProp.surfacePropertiesWithEps`
 - Added `OpenCascade.BRepOffsetAPI.MakeOffset`
 - Added `OpenCascade.BOPAlgo.CellsBuilder`
+- Added `OpenCascade.BRepPrimAPI.MakeRevol.fromShapeAx1AndAngle`
+- Added `OpenCascade.Bnd.Box.isVoid`
 
 ### Changed
 

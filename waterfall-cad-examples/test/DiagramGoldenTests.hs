@@ -24,6 +24,7 @@ import qualified Waterfall.Colour as Colour
 import qualified Waterfall.Sweep as Sweep
 import qualified Waterfall.Loft as Loft
 import qualified Waterfall.Fillet as Fillet
+import qualified Waterfall.Revolution as Revolution
 import qualified Waterfall.SVG as SVG
 import Linear
 import qualified CsgExample
@@ -590,42 +591,78 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             | theta <- [0, pi/3, 2*pi/3]
             ]
         )
-     , shapeTest "intersections of identical squares" "intersectionsOfIdenticalSquares.svg" (
-          Booleans.intersections 
-                (let s = Shape.centeredSquare in [s, s, s])
-          )
-      , shapeTest "intersections with repeated Square" "intersectionsWithRepeatedSquare.svg" (
-          Booleans.intersections
-              [ Shape.centeredSquare
-              , TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
-              , Shape.centeredSquare
-              ]
-          )
-      , shapeTest "intersections with mempty Shape" "intersectionsWithMemptyShape.svg" (
-            Shape.unitCircle <>
-              Booleans.intersections
-                  [ TwoD.Transforms.uScale2D 2 $ Shape.centeredSquare
-                  , mempty
-                  , TwoD.Transforms.uScale2D 2 $ TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
-                  ]
-          )
-     , shapeTest "unions of identical squares" "unionsOfIdenticalSquares.svg" (
-            Booleans.unions $
-                (let s = Shape.centeredSquare in [s, s, s])
-            )
-      , shapeTest "unions with repeated square" "unionsWithRepeatedSquare.svg" (
-            Booleans.unions
-                [ Shape.centeredSquare
-                , TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
-                , Shape.centeredSquare
+    , shapeTest "intersections of identical squares" "intersectionsOfIdenticalSquares.svg" (
+        Booleans.intersections 
+            (let s = Shape.centeredSquare in [s, s, s])
+        )
+    , shapeTest "intersections with repeated Square" "intersectionsWithRepeatedSquare.svg" (
+        Booleans.intersections
+            [ Shape.centeredSquare
+            , TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
+            , Shape.centeredSquare
+            ]
+        )
+    , shapeTest "intersections with mempty Shape" "intersectionsWithMemptyShape.svg" (
+        Shape.unitCircle <>
+            Booleans.intersections
+                [ TwoD.Transforms.uScale2D 2 $ Shape.centeredSquare
+                , mempty
+                , TwoD.Transforms.uScale2D 2 $ TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
                 ]
-            )
-      , shapeTest "unions with mempty shape" "unionsWithMemptyShape.svg" (
-            Shape.unitCircle <>
-              Booleans.unions
-                  [ TwoD.Transforms.uScale2D 1.6 $ Shape.centeredSquare
-                  , mempty
-                  , TwoD.Transforms.uScale2D 1.6 $ TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
-                  ]
+        )
+    , shapeTest "unions of identical squares" "unionsOfIdenticalSquares.svg" (
+        Booleans.unions $
+            (let s = Shape.centeredSquare in [s, s, s])
+        )
+    , shapeTest "unions with repeated square" "unionsWithRepeatedSquare.svg" (
+        Booleans.unions
+            [ Shape.centeredSquare
+            , TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
+            , Shape.centeredSquare
+            ]
+        )
+    , shapeTest "unions with mempty shape" "unionsWithMemptyShape.svg" (
+        Shape.unitCircle <>
+            Booleans.unions
+                [ TwoD.Transforms.uScale2D 1.6 $ Shape.centeredSquare
+                , mempty
+                , TwoD.Transforms.uScale2D 1.6 $ TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
+                ]
+    )
+    , solidTest "partial revolution" "partialRevolution.svg" (
+        Revolution.revolutionByAngle 1 
+            (TwoD.Transforms.translate2D (unit _x ^* 1.5) Shape.unitCircle)
+        )
+    , solidTest "partial revolution II" "partialRevolutionII.svg" (
+            Revolution.revolutionByAngle 6
+                (TwoD.Transforms.translate2D (unit _x ^* 0.5) Shape.unitSquare)
+        )
+    , solidTest "partial revolution negative" "partialRevolutionNegative.svg" (
+        Revolution.revolutionByAngle (negate 1) 
+            (TwoD.Transforms.translate2D (unit _x ^* 1.5) Shape.unitCircle)
+        )
+    , solidTest "revolution of shape cutting axis" "revolutionOfShapeCuttingAxis.svg" (
+            Revolution.revolution 
+                ( Shapes.centeredSquare 
+                    & TwoD.Transforms.scale2D (V2 8 1)
+                    & TwoD.Transforms.translate2D (unit _x)
+                    & TwoD.Transforms.rotate2D (pi/8)
+                )
+        )
+    , solidTest "revolution of shape on axis" "revolutionOfShapeOnAxis.svg" (
+            Revolution.revolution 
+                ( Shapes.unitSquare 
+                    & TwoD.Transforms.scale2D (V2 8 1)
+                    & TwoD.Transforms.rotate2D (-pi/8)
+                )
+        )
+    , diagramTest "silhouette of revolution" "silhouetteOfRevolution.svg" (
+        Shape.unitCircle 
+            & TwoD.Transforms.translate2D (unit _x ^* 1.5)
+            & Revolution.revolutionByAngle 1
+            & Shape.silhouette
+            & (<> TwoD.Transforms.scale2D (V2 0.1 1) Shape.unitSquare)
+            & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
+            & TwoD.Transforms.scale2D 50
         )
     ]

@@ -15,6 +15,20 @@ BRepPrimAPI_MakeRevol * hs_new_BRepPrimAPI_MakeRevol_fromShapeAndAx1(
     });
 }
 
+BRepPrimAPI_MakeRevol * hs_new_BRepPrimAPI_MakeRevol_fromShapeAx1AndAngle(
+        TopoDS_Shape * shape, gp_Ax1 * axis, double angle, bool copy,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [shape, axis, angle, copy]{
+        return new BRepPrimAPI_MakeRevol(*shape, *axis, angle, copy);
+    });
+}
+
+
 void hs_delete_BRepPrimAPI_MakeRevol(BRepPrimAPI_MakeRevol * builder){
     delete builder;
 }
