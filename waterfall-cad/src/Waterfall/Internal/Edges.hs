@@ -46,6 +46,7 @@ import Data.Foldable (traverse_)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
 import qualified OpenCascade.TopAbs.Orientation as TopAbs.Orientation
+import qualified OpenCascade.TopExp as TopExp
 
 edgeEndpoints :: Ptr TopoDS.Edge -> IO (V3 Double, V3 Double)
 edgeEndpoints edge = (`with` pure) $ do
@@ -181,23 +182,27 @@ forwardEdge e = do
             lastP <- liftIO $ BRep.Tool.curveParamLast e
             firstP' <- liftIO $ Geom.Curve.reversedParameter curve firstP
             lastP' <- liftIO $ Geom.Curve.reversedParameter curve lastP
+            firstVertex <- TopExp.firstVertex e False
+            lastVertex <- TopExp.lastVertex e False
             curve' <- Geom.Curve.reversed curve
-            MakeEdge.fromCurveAndParameters curve' lastP' firstP' 
+            MakeEdge.fromCurveVerticesAndParameters curve' lastVertex firstVertex lastP' firstP' 
 
 reverseEdge :: Ptr TopoDS.Edge -> Acquire (Ptr TopoDS.Edge)
 reverseEdge e = do
     curve <- BRep.Tool.curve e 
     firstP <- liftIO $ BRep.Tool.curveParamFirst e
     lastP <- liftIO $ BRep.Tool.curveParamLast e
+    firstVertex <- TopExp.firstVertex e True
+    lastVertex <- TopExp.lastVertex e True
     isForward <- liftIO $ edgeIsForward e
     if not isForward 
         then do
-            MakeEdge.fromCurveAndParameters curve firstP lastP
+            MakeEdge.fromCurveVerticesAndParameters curve lastVertex firstVertex firstP lastP
         else do
             firstP' <- liftIO $ Geom.Curve.reversedParameter curve firstP
             lastP' <- liftIO $ Geom.Curve.reversedParameter curve lastP
             curve' <- Geom.Curve.reversed curve
-            MakeEdge.fromCurveAndParameters curve' lastP' firstP' 
+            MakeEdge.fromCurveVerticesAndParameters curve' lastVertex firstVertex lastP' firstP' 
 
 wireEdgesWithoutReversing :: Ptr TopoDS.Wire -> Acquire [Ptr TopoDS.Edge]
 wireEdgesWithoutReversing wire = do
