@@ -233,6 +233,26 @@ smallSolidTest :: TestName -> FilePath -> Solid -> TestTree
 smallSolidTest name filepath =
     diagramTest name filepath . withHeight 200 . standardSolidDiagram
 
+svgPathsTest :: TestName -> FilePath -> Either SVG.SVGError [Path2D.Path2D] -> TestTree
+svgPathsTest name filepath = 
+    doTest name filepath
+        . either 
+            (throwIO . ErrorCall . show)
+            (pure . foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible))
+
+svgPathTest :: TestName -> FilePath -> String -> TestTree
+svgPathTest name filepath = 
+    svgPathsTest name filepath . SVG.parsePath
+
+svgElementsTest :: TestName -> FilePath -> String -> TestTree
+svgElementsTest name filepath elements = 
+    let document = "<svg xmlns=\"http://www.w3.org/2000/svg\">" <> elements <> "</svg>"
+        parsed = maybe 
+            (Left (SVG.SVGError SVG.SVGTreeError "failed to parse test document"))
+            Right
+            (Svg.parseSvgFile "test.svg" (BSC8.pack document))
+    in svgPathsTest name filepath (SVG.convertDocument =<< parsed)
+
 diagramGoldenTests :: TestTree
 diagramGoldenTests = testGroup "Diagram Golden Tests" 
     [ smallSolidTest "CSG" "csg.svg" CsgExample.csgExample
@@ -665,4 +685,28 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
             & TwoD.Transforms.scale2D 50
         )
+    , svgPathTest "svg relative smooth quadratic" "svgRelativeSmoothQuadratic.svg"
+        "M 0 0 q 25 50 50 0 t 50 0 t 50 0"
+    , svgPathTest "svg smooth quadratic without control point" "svgSmoothQuadraticWithoutControlPoint.svg"
+        "M 0 0 L 50 0 T 100 50 T 150 0"
+    , svgPathTest "svg smooth cubic after cubic" "svgSmoothCubicAfterCubic.svg"
+        "M 0 50 C 0 0 50 0 50 50 S 100 100 100 50"
+    , svgPathTest "svg smooth cubic without control point" "svgSmoothCubicWithoutControlPoint.svg"
+        "M 0 0 L 0 50 S 50 100 100 50"
+    , svgPathTest "svg smooth cubic after quadratic" "svgSmoothCubicAfterQuadratic.svg"
+        "M 0 0 Q 25 50 50 0 S 100 50 100 0"
+    , svgPathTest "svg smooth quadratic after cubic" "svgSmoothQuadraticAfterCubic.svg"
+        "M 0 50 C 0 0 50 0 50 50 T 100 100"
+    , svgPathTest "svg arc with zero radius" "svgArcZeroRadius.svg"
+        "M 50 50 L 100 50 A 0 0 0 0 1 150 100 L 50 100 Z"
+    , svgPathTest "svg arc with negative radii" "svgArcNegativeRadii.svg"
+        "M 50 50 L 100 50 A -40 -25 0 0 1 150 100 L 50 100 Z"
+    , svgElementsTest "svg skewX" "svgSkewX.svg"
+        "<rect width=\"100\" height=\"50\"/><rect width=\"100\" height=\"50\" transform=\"skewX(30)\"/>"
+    , svgElementsTest "svg skewY" "svgSkewY.svg"
+        "<rect width=\"100\" height=\"50\"/><rect width=\"100\" height=\"50\" transform=\"skewY(30)\"/>"
+    , svgElementsTest "svg rounded rect position" "svgRoundedRectPosition.svg"
+        "<rect width=\"100\" height=\"100\"/><rect x=\"120\" y=\"20\" width=\"80\" height=\"60\" rx=\"20\" ry=\"10\"/>"
+    , svgElementsTest "svg rounded rect single radius" "svgRoundedRectSingleRadius.svg"
+        "<rect width=\"80\" height=\"60\" rx=\"20\"/><rect x=\"100\" width=\"80\" height=\"60\" ry=\"10\"/>"
     ]
