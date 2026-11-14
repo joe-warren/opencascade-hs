@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+### Fixed
+
+- Fixed a hang when processing relative quadratic Bezier commands 'q'
+
 ## 0.8.0.0
 
 ### Added
