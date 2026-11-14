@@ -74,7 +74,6 @@ import qualified OpenCascade.TopExp as TopExp
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.NCollection as NCollection
 import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
-import qualified OpenCascade.BRep.Tool as BRep.Tool
 import qualified OpenCascade.GeomAbs.Shape as Geom.Shape
 
 edgeToPath 
