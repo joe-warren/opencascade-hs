@@ -10,7 +10,9 @@ and this project adheres to the
 
 ### Fixed
 
-- Fixed a hang when processing relative quadratic Bezier commands 'q'
+- Fixed a hang when reading relative quadratic Bezier commands 'q'
+- Fixed support for `skew` transforms
+
 
 ## 0.8.0.0
 

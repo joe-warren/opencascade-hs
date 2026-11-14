@@ -116,7 +116,7 @@ smoothQuadraticBezierCurveToAbsolute cp2 (Just cp1) cp0 = Right (Just (cp2 + cp2
 
 smoothQuadraticBezierCurveToRelative :: V2 Double -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
 smoothQuadraticBezierCurveToRelative _ Nothing _ = Left (SVGError SVGPathError "t command must follow either an T, t, Q or q command")
-smoothQuadraticBezierCurveToRelative cp2 cp1 cp0 = smoothQuadraticBezierCurveToRelative (cp0 + cp2) cp1 cp0
+smoothQuadraticBezierCurveToRelative cp2 cp1 cp0 = smoothQuadraticBezierCurveToAbsolute (cp0 + cp2) cp1 cp0
 
 -- | Generate `Waterfall.Path2D`s from a parsed list of `Svg.PathCommand`s.
 -- 
@@ -203,8 +203,12 @@ convertTransform (Svg.Rotate angleDeg center) =
         angleRad = angleDeg * pi / 180
         back = Waterfall.translate2D center'
      in Right (back . Waterfall.rotate2D angleRad . fwd)
-convertTransform (Svg.SkewX x) = Right $ Waterfall.matTransform2D (V2 (V3 x 0 0) (V3 0 1 0))
-convertTransform (Svg.SkewY y) = Right $ Waterfall.matTransform2D (V2 (V3 1 0 0) (V3 0 y 0))
+convertTransform (Svg.SkewX angle) =
+    let t = tan (angle * pi / 180)
+    in Right $ Waterfall.matTransform2D (V2 (V3 1 t 0) (V3 0 1 0))
+convertTransform (Svg.SkewY angle) =
+    let t = tan (angle * pi / 180)
+    in Right $ Waterfall.matTransform2D (V2 (V3 1 0 0) (V3 t 1 0))
 convertTransform Svg.TransformUnknown = Left . (SVGError SVGTransformError) $ "Unknown Transform"
 
 chain :: [a -> a] -> a -> a
