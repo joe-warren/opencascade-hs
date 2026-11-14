@@ -32,6 +32,7 @@ and this project adheres to the
 - A "Noop Fillet" (with a function that matches no edges) no longer fails
 - Fixed an issue where `intersections`/`intersections3D`/`intersections2D` would give the wrong result on lists with more than two items
 - Fixed an issue where `unions`/`unions3D` and `mconcat @Solid` would give the wrong result on lists with more than two items which also contain `mempty`
+- Fixed an issue where functions on the `Path2D`s returned by `shapePaths` could give incorrect results (for instance, on a mirrored shape)
 
 ### Changed 
 
