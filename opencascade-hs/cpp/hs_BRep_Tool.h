@@ -32,6 +32,11 @@ Handle(Poly_Triangulation) * hs_BRep_Tool_triangulation(
     HSExceptionType* exType, void ** exPtr
 );
 
+bool hs_BRep_Tool_degenerated(
+        TopoDS_Edge * edge,
+        HSExceptionType* exType, void ** exPtr
+);
+
 #ifdef __cplusplus
 }
 #endif

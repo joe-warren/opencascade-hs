@@ -26,6 +26,7 @@ and this project adheres to the
 - Added `OpenCascade.BRepPrimAPI.MakeRevol.fromShapeAx1AndAngle`
 - Added `OpenCascade.Bnd.Box.isVoid`
 - Added `OpenCascade.TopExp.firstVertex` and `OpenCascade.TopExp.lastVertex`
+- Added `OpenCascade.BRep.Tool.degenerated`
 
 ### Changed
 

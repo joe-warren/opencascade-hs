@@ -5,6 +5,7 @@ module OpenCascade.BRep.Tool
 , curveParamLast
 , pnt
 , triangulation
+, degenerated
 ) where
 
 import qualified OpenCascade.Geom as Geom
@@ -18,6 +19,7 @@ import OpenCascade.Handle (Handle)
 import OpenCascade.Geom.Internal.Destructors (deleteHandleCurve)
 import OpenCascade.GP.Internal.Destructors (deletePnt)
 import OpenCascade.Internal.Exception (wrapException)
+import OpenCascade.Internal.Bool (cBoolToBool)
 import Foreign.Ptr
 import Foreign.C
 import Data.Coerce
@@ -68,3 +70,13 @@ foreign import capi unsafe "hs_BRep_Tool.h hs_BRep_Tool_triangulation" rawTriang
 
 triangulation :: Ptr TopoDS.Face -> Ptr TopLoc.Location -> Acquire (Ptr (Handle Poly.Triangulation))
 triangulation face loc = mkAcquire (wrapException $ rawTriangulation face loc) deleteHandleTriangulation
+
+
+foreign import capi unsafe "hs_BRep_Tool.h hs_BRep_Tool_degenerated" rawDegenerated
+    :: Ptr (TopoDS.Edge)
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (CBool)
+
+degenerated :: Ptr TopoDS.Edge -> IO Bool
+degenerated edge = cBoolToBool <$> wrapException (rawDegenerated edge)
