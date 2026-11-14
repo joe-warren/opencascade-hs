@@ -28,7 +28,7 @@ import Data.Foldable (Foldable(..))
 import Control.Exception (IOException, try)
 import Control.Monad (join, (<=<))
 import Data.Bifunctor (first)
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe)
 import Data.Function ((&))
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
@@ -103,19 +103,17 @@ ellipseToAbsolute rx ry angleDeg largeArcFlag sweepFlag absoluteEnd start =
     ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag (absoluteEnd - start) start
 
 smoothCurveToAbsolute :: (V2 Double, V2 Double) -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-smoothCurveToAbsolute _ Nothing _ = Left (SVGError SVGPathError "S command must follow either an S, s, C or c command")
-smoothCurveToAbsolute (cp2, cp3) (Just cp1) cp0 = Right (Just (cp3 + cp3 - cp2), Waterfall.bezierTo2D cp1 cp2 cp3 cp0) 
+smoothCurveToAbsolute (cp2, cp3) cp1May cp0 = Right (Just (cp3 + cp3 - cp2), Waterfall.bezierTo2D (fromMaybe cp0 cp1May) cp2 cp3 cp0) 
 
 smoothCurveToRelative ::  (V2 Double, V2 Double) -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-smoothCurveToRelative _ Nothing _ = Left (SVGError SVGPathError "s command must follow either an S, s, C or c command")
 smoothCurveToRelative (cp2, cp3) cp1 cp0 = smoothCurveToAbsolute (cp0 + cp2, cp0 + cp3) cp1 cp0
 
 smoothQuadraticBezierCurveToAbsolute :: V2 Double -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-smoothQuadraticBezierCurveToAbsolute _ Nothing _ = Left (SVGError SVGPathError "T command must follow either an T, t, Q or q command")
-smoothQuadraticBezierCurveToAbsolute cp2 (Just cp1) cp0 = Right (Just (cp2 + cp2 - cp1), quadraticBezierAbsolute cp0 cp1 cp2)
+smoothQuadraticBezierCurveToAbsolute cp2 cp1May cp0 = 
+    let cp1 = fromMaybe cp0 cp1May 
+    in Right (Just (cp2 + cp2 - cp1), quadraticBezierAbsolute cp0 cp1 cp2)
 
 smoothQuadraticBezierCurveToRelative :: V2 Double -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-smoothQuadraticBezierCurveToRelative _ Nothing _ = Left (SVGError SVGPathError "t command must follow either an T, t, Q or q command")
 smoothQuadraticBezierCurveToRelative cp2 cp1 cp0 = smoothQuadraticBezierCurveToAbsolute (cp0 + cp2) cp1 cp0
 
 -- | Generate `Waterfall.Path2D`s from a parsed list of `Svg.PathCommand`s.
