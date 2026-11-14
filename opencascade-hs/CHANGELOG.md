@@ -27,6 +27,9 @@ and this project adheres to the
 - Added `OpenCascade.Bnd.Box.isVoid`
 - Added `OpenCascade.TopExp.firstVertex` and `OpenCascade.TopExp.lastVertex`
 - Added `OpenCascade.BRep.Tool.degenerated`
+- Added `OpenCascade.BRep.Tool.continuity`
+- Added `OpenCascade.BRepLib.encodeRegularity`
+- Added `Eq` and `Ord` instances to `OpenCascade.Geom.Shape.Shape`
 
 ### Changed
 

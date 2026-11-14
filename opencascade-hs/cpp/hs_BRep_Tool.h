@@ -37,6 +37,11 @@ bool hs_BRep_Tool_degenerated(
         HSExceptionType* exType, void ** exPtr
 );
 
+GeomAbs_Shape hs_BRep_Tool_continuity(
+    TopoDS_Edge *edge, TopoDS_Face *face1, TopoDS_Face* face2,
+    HSExceptionType* exType, void ** exPtr
+);
+
 #ifdef __cplusplus
 }
 #endif

@@ -6,6 +6,7 @@ module OpenCascade.BRep.Tool
 , pnt
 , triangulation
 , degenerated
+, continuity
 ) where
 
 import qualified OpenCascade.Geom as Geom
@@ -24,6 +25,7 @@ import Foreign.Ptr
 import Foreign.C
 import Data.Coerce
 import Data.Acquire (Acquire, mkAcquire)
+import qualified OpenCascade.GeomAbs.Shape as GeomAbs
 
 foreign import capi unsafe "hs_BRep_Tool.h hs_BRep_Tool_curve" rawCurve
     :: Ptr (TopoDS.Edge)
@@ -80,3 +82,15 @@ foreign import capi unsafe "hs_BRep_Tool.h hs_BRep_Tool_degenerated" rawDegenera
 
 degenerated :: Ptr TopoDS.Edge -> IO Bool
 degenerated edge = cBoolToBool <$> wrapException (rawDegenerated edge)
+
+
+foreign import capi unsafe "hs_BRep_Tool.h hs_BRep_Tool_continuity" rawContinuity
+    :: Ptr (TopoDS.Edge)
+    -> Ptr (TopoDS.Face)
+    -> Ptr (TopoDS.Face)
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (CInt)
+
+continuity :: Ptr TopoDS.Edge -> Ptr TopoDS.Face -> Ptr TopoDS.Face -> IO GeomAbs.Shape
+continuity edge face1 face2 = toEnum . fromIntegral <$> wrapException (rawContinuity edge face1 face2)

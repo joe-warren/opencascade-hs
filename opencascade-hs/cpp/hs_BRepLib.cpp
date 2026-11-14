@@ -29,3 +29,14 @@ bool hs_BRepLib_buildCurve3d(
         false
     );
 }
+
+void hs_BRepLib_encodeRegularity(
+    TopoDS_Shape * shape, double angularTolerance,
+    HSExceptionType* exType, void ** exPtr
+){
+    hs_handleExVoid(exType, exPtr,
+        [shape, angularTolerance]{
+            BRepLib::EncodeRegularity(*shape, angularTolerance);
+        }
+    );
+}
