@@ -64,7 +64,7 @@ quadraticControlPoint (ControlPointQuadratic v) = Just v
 quadraticControlPoint _ = Nothing
 
 cubicControlPoint :: LastControlPoint -> Maybe (V2 Double)
-cubicControlPoint (ControlPointQuadratic v) = Just v
+cubicControlPoint (ControlPointCubic v) = Just v
 cubicControlPoint _ = Nothing
 
 pathFromToWithControlPoint :: [LastControlPoint -> V2 Double -> Either SVGError (LastControlPoint, (V2 Double, Waterfall.Path2D))] -> V2 Double -> Either SVGError (V2 Double, Waterfall.Path2D)
@@ -76,10 +76,12 @@ pathFromToWithControlPoint commands start =
         Left err -> Left err
 
 ellipseToRelative :: Double -> Double -> Double -> Bool -> Bool -> V2 Double -> V2 Double -> (V2 Double, Waterfall.Path2D)
-ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag relativeEnd 
-    | rx == 0 || ry == 0 = Waterfall.lineTo relativeEnd
+ellipseToRelative rx' ry' angleDeg largeArcFlag sweepFlag relativeEnd 
+    | rx' == 0 || ry' == 0 = Waterfall.lineRelative relativeEnd
     | otherwise = 
     let angleRads = angleDeg * pi / 180
+        ry = abs ry'
+        rx = abs rx'
         scaleFac = ry / rx
         transformForward :: Waterfall.Transformable2D a => a -> a
         transformForward = Waterfall.rotate2D (angleRads) . Waterfall.scale2D (V2 (1/scaleFac) 1)
