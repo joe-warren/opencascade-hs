@@ -75,4 +75,30 @@ Handle(Poly_Triangulation) * hs_BRep_Tool_triangulation(
     );
 }
 
+bool hs_BRep_Tool_degenerated(
+        TopoDS_Edge * edge,
+        HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleExWithDefault(
+        exType,
+        exPtr,
+        [edge]{
+            return BRep_Tool::Degenerated(*edge);
+        },
+        true
+    );
+}
 
+GeomAbs_Shape hs_BRep_Tool_continuity(
+    TopoDS_Edge *edge, TopoDS_Face *face1, TopoDS_Face* face2,
+    HSExceptionType* exType, void ** exPtr
+){
+    return hs_handleExWithDefault(
+        exType,
+        exPtr,
+        [edge, face1, face2]{
+            return BRep_Tool::Continuity(*edge, *face1, *face2);
+        },
+        GeomAbs_C0
+    );
+}

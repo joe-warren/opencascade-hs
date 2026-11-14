@@ -461,6 +461,11 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & Fillet.roundConditionalFillet (const Nothing)
             & Solids.colourSolid Colour.blue
         )
+    , solidTest "fillet cone" "filletCone.svg" (
+        Solids.unitCone
+            & Fillet.roundFillet 0.1
+            & Solids.colourSolid Colour.aqua
+        )
     , diagramTest "offset square" "offsetSquare.svg" (
         Shapes.unitSquare
             & TwoD.Offset.offsetShape 0.25

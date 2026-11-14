@@ -17,6 +17,11 @@ bool hs_BRepLib_buildCurve3d(
     HSExceptionType* exType, void ** exPtr
 );
 
+void hs_BRepLib_encodeRegularity(
+    TopoDS_Shape * shape, double angularTolerance,
+    HSExceptionType* exType, void ** exPtr
+);
+
 #ifdef __cplusplus
 }
 #endif

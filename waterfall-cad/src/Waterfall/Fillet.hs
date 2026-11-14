@@ -48,7 +48,7 @@ import qualified OpenCascade.BRepFilletAPI.MakeChamfer as MakeChamfer
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import Foreign.Ptr (Ptr)
-import Control.Monad (forM, forM_)
+import Control.Monad (forM, forM_, join)
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (upcast, SubTypeOf, unsafeDowncast)
 import Linear.V3 (V3 (..))
@@ -64,11 +64,36 @@ import Data.Foldable (find)
 import qualified OpenCascade.BRepBuilderAPI as BRepBuilderAPI
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import qualified OpenCascade.BRep.Tool as BRep.Tool
+import qualified OpenCascade.BRepLib as BRepLib
 import Waterfall.Internal.PaintHistory (remapWithBlendFunction)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
 import Waterfall.Internal.Finalizers (fromAcquirePtr)
+import qualified OpenCascade.NCollection.IndexedDataMap as NCollection.IndexedDataMap
+import qualified OpenCascade.TopExp as TopExp
+import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
+import qualified OpenCascade.NCollection as NCollection
+import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
+import qualified OpenCascade.GeomAbs.Shape as GeomAbs.Shape
 
-edgeToPath :: Ptr TopoDS.Edge -> IO Path
+canFillet 
+    :: Ptr (NCollection.IndexedDataMap.IndexedDataMap TopoDS.Shape (NCollection.List TopoDS.Shape))
+    -> Ptr TopoDS.Edge 
+    -> Acquire Bool
+canFillet m edge = do
+    isDegenerated <- liftIO $ BRep.Tool.degenerated edge
+    if isDegenerated 
+        then return False
+        else do
+            neighbours <- shapesFromListOfShape =<< NCollection.IndexedDataMap.findFromKeyShapeListOfShapeMap m (upcast edge)
+            case neighbours of 
+                [a, b] -> do
+                    continuity <- liftIO . join $ BRep.Tool.continuity edge <$> (unsafeDowncast a) <*> (unsafeDowncast b)
+                    return (continuity == GeomAbs.Shape.C0)
+                _ -> return False
+edgeToPath 
+    :: Ptr TopoDS.Edge 
+    -> IO (Path)
 edgeToPath edge = fmap (Path . ComplexRawPath) . fromAcquirePtr $ do
     builder <- MakeWire.new
     liftIO . MakeWire.addEdge builder 
@@ -76,12 +101,20 @@ edgeToPath edge = fmap (Path . ComplexRawPath) . fromAcquirePtr $ do
         =<< TopoDS.Shape.copy (upcast edge)
     MakeWire.wire builder
 
-getEdgesWithRadius :: (Integer -> Path -> Maybe Double) -> Ptr TopoDS.Shape -> Acquire [(Double, Ptr TopoDS.Edge)]
-getEdgesWithRadius f s = do
+getEdgesWithRadius 
+    :: (Integer -> Path -> Maybe Double) 
+    -> Ptr (NCollection.IndexedDataMap.IndexedDataMap TopoDS.Shape (NCollection.List TopoDS.Shape))
+    -> Ptr TopoDS.Shape 
+    -> Acquire [(Double, Ptr TopoDS.Edge)]
+getEdgesWithRadius f m s = do
     edges <- allEdges s
     fmap catMaybes . forM (zip [0..] edges) $ \(i, e) -> do
-        path <- liftIO . edgeToPath $ e
-        return $ (, e) <$> find (> 0) (f i path)
+        shouldFillet <- canFillet m e
+        if not shouldFillet 
+            then return Nothing
+            else do
+                path <- liftIO . edgeToPath $ e
+                return $ (, e) <$> (find (> 0) (f i path))
 
 trySomeIndexedConditionalFilletWithPaint
     :: (SubTypeOf BRepBuilderAPI.MakeShape a)
@@ -95,7 +128,12 @@ trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiu
     solidFromAcquireWithPaintMapWithCatch $ do
         s <- acquireSolid solid
 
-        edgesWithRadius <- getEdgesWithRadius radiusFunction s
+        liftIO $ BRepLib.encodeRegularity s 1e-4
+
+        m <- NCollection.IndexedDataMap.newShapeListOfShapeMap
+        liftIO $ TopExp.mapShapesAndAncestors s ShapeEnum.Edge ShapeEnum.Face m
+
+        edgesWithRadius <- getEdgesWithRadius radiusFunction m s
 
         if null edgesWithRadius 
             then pure (solidPaintMap solid, s)

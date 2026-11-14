@@ -31,6 +31,7 @@ data-files:
     test-data/curvySweepConcentricSquares.svg
     test-data/curvySweepTwoCircles.svg
     test-data/fillet.svg
+    test-data/filletCone.svg
     test-data/flags.svg
     test-data/foldIntersectionOfCubes.svg
     test-data/foldIntersectionOfSquares.svg

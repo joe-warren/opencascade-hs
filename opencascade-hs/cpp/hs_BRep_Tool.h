@@ -32,6 +32,16 @@ Handle(Poly_Triangulation) * hs_BRep_Tool_triangulation(
     HSExceptionType* exType, void ** exPtr
 );
 
+bool hs_BRep_Tool_degenerated(
+        TopoDS_Edge * edge,
+        HSExceptionType* exType, void ** exPtr
+);
+
+GeomAbs_Shape hs_BRep_Tool_continuity(
+    TopoDS_Edge *edge, TopoDS_Face *face1, TopoDS_Face* face2,
+    HSExceptionType* exType, void ** exPtr
+);
+
 #ifdef __cplusplus
 }
 #endif
