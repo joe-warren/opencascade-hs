@@ -68,7 +68,7 @@ import qualified OpenCascade.BRep.Tool as BRep.Tool
 import qualified OpenCascade.BRepLib as BRepLib
 import Waterfall.Internal.PaintHistory (remapWithBlendFunction)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
-import Waterfall.Internal.Finalizers (fromAcquirePtrT)
+import Waterfall.Internal.Finalizers (fromAcquirePtrT, fromAcquirePtr)
 import qualified OpenCascade.NCollection.IndexedDataMap as NCollection.IndexedDataMap
 import qualified OpenCascade.TopExp as TopExp
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
@@ -76,28 +76,30 @@ import qualified OpenCascade.NCollection as NCollection
 import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
 import qualified OpenCascade.GeomAbs.Shape as Geom.Shape
 
-edgeToPath 
+canFillet 
     :: Ptr (NCollection.IndexedDataMap.IndexedDataMap TopoDS.Shape (NCollection.List TopoDS.Shape))
     -> Ptr TopoDS.Edge 
-    -> IO (Maybe Path)
-edgeToPath m edge = fmap (fmap (Path . ComplexRawPath)) . fromAcquirePtrT $ do
+    -> Acquire Bool
+canFillet m edge = do
     isDegenerated <- liftIO $ BRep.Tool.degenerated edge
     if isDegenerated 
-        then return Nothing
+        then return False
         else do
             neighbours <- shapesFromListOfShape =<< NCollection.IndexedDataMap.findFromKeyShapeListOfShapeMap m (upcast edge)
             case neighbours of 
                 [a, b] -> do
                     continuity <- liftIO . join $ BRep.Tool.continuity edge <$> (unsafeDowncast a) <*> (unsafeDowncast b)
-                    if continuity /= Geom.Shape.C0 
-                        then return Nothing 
-                        else do 
-                            builder <- MakeWire.new
-                            liftIO . MakeWire.addEdge builder 
-                                =<<  liftIO . unsafeDowncast 
-                                =<< TopoDS.Shape.copy (upcast edge)
-                            Just <$> MakeWire.wire builder
-                _ -> return Nothing
+                    return (continuity == Geom.Shape.C0)
+                _ -> return False
+edgeToPath 
+    :: Ptr TopoDS.Edge 
+    -> IO (Path)
+edgeToPath edge = fmap (Path . ComplexRawPath) . fromAcquirePtr $ do
+    builder <- MakeWire.new
+    liftIO . MakeWire.addEdge builder 
+        =<<  liftIO . unsafeDowncast 
+        =<< TopoDS.Shape.copy (upcast edge)
+    MakeWire.wire builder
 
 getEdgesWithRadius 
     :: (Integer -> Path -> Maybe Double) 
@@ -107,8 +109,12 @@ getEdgesWithRadius
 getEdgesWithRadius f m s = do
     edges <- allEdges s
     fmap catMaybes . forM (zip [0..] edges) $ \(i, e) -> do
-        path <- liftIO . edgeToPath m $ e
-        return $ (, e) <$> (find (> 0) =<< (f i <$> path))
+        shouldFillet <- canFillet m e
+        if not shouldFillet 
+            then return Nothing
+            else do
+                path <- liftIO . edgeToPath $ e
+                return $ (, e) <$> (find (> 0) (f i path))
 
 trySomeIndexedConditionalFilletWithPaint
     :: (SubTypeOf BRepBuilderAPI.MakeShape a)
