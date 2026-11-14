@@ -278,7 +278,9 @@ convertEllipse ellipse = do
 convertRectangle :: Svg.Rectangle -> Either SVGError [Waterfall.Path2D]
 convertRectangle rect = do
     upperLeft <- convertPoint (rect ^. Svg.rectUpperLeftCorner)    
-    (rX', rY') <- each convertNumber (rect ^. Svg.rectCornerRadius)
+    (rX'', rY'') <- each convertNumber (rect ^. Svg.rectCornerRadius)
+    let rX' = if rX'' == 0 then rY'' else rX''
+    let rY' = if rY'' == 0 then rX'' else rY''
     w <- convertNumber (rect ^. Svg.rectWidth)
     h <- convertNumber (rect ^. Svg.rectHeight)
     let rX = min rX' (w/2)
@@ -293,7 +295,9 @@ convertRectangle rect = do
                 Waterfall.translate2D upperLeft &
                 Waterfall.shapePaths & 
                 return
-        else return . pure . Waterfall.pathFrom (V2 rX 0) . catMaybes $
+        else return . pure 
+                . Waterfall.translate2D upperLeft 
+                . Waterfall.pathFrom (V2 rX 0) . catMaybes $
                 [ if w' > 0 then Just (Waterfall.lineRelative (w' *^ unit _x)) else Nothing
                 , quarterCircle 
                     & scaleBevel 
