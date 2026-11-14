@@ -11,7 +11,7 @@ import qualified Waterfall.Path.Common as Path
 import qualified Waterfall.TwoD.Path2D as TwoD.Path2D
 import qualified Waterfall.Solids as Solids
 import Waterfall.Internal.NearZero (nearZero)
-import Linear (V2 (..), unit, _x, _z, (^*), V3 (..))
+import Linear (V3 (..), V2 (..), distance, unit, _x, _z, (^*))
 import Data.Function ((&))
 import Data.Maybe (fromMaybe)
 import Test.Tasty (TestTree, testGroup)
@@ -123,5 +123,24 @@ shapeTests = testGroup "Shape"
                     
             in assertBool "rebuilt shape has area 1" ((< 1e-5) . abs . subtract (1) . sum . fmap Shape.area $ rebuilt)
                 <> assertBool "reversePath is consistent" (all reversePathIsConsistent (paths <> (Path.splitPath =<< paths)))
+        , testCase "scaled silhouette" $
+              let silhouette = Solids.unitSphere
+                      & (`Booleans.difference` (Solids.unitSphere & Transforms.uScale 0.4))
+                      & (`Booleans.difference` (Solids.centeredCube & Transforms.translate (unit _x)))
+                      & Booleans.union (Solids.centeredCube
+                          & Transforms.uScale 0.8
+                          & Transforms.translate (unit _x)
+                          )
+                      & Shape.silhouette
+                  scaled = TwoD.Transforms.uScale2D 50 silhouette
+                  totalLength = sum . fmap Path.pathLength . Shape.shapePaths
+                  isClosed (p :: TwoD.Path2D.Path2D) =
+                      maybe False (\(s, e) -> distance s e < 1e-4) (Path.pathEndpoints p)
+                  rebuiltArea = sum . fmap (Shape.area . Shape.makeShape) . Shape.shapePaths $ scaled
+              in assertBool "paths are closed" (all isClosed (Shape.shapePaths scaled))
+                  <> assertBool "length scales with the shape"
+                      ((< 1e-3) . abs $ totalLength scaled - 50 * totalLength silhouette)
+                  <> assertBool "rebuilt shape keeps its area"
+                      ((< 1e-2) . abs $ rebuiltArea - Shape.area scaled)   
         ]
     ]
