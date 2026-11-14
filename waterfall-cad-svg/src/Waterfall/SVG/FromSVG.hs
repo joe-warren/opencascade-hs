@@ -21,7 +21,7 @@ import qualified Graphics.Svg as Svg
 import qualified Data.Text as T
 import Linear (V3 (..), V2 (..), zero, Metric (norm), normalize, (^*), (*^), _x, _y, unit)
 import Control.Lens ((^.), ala, each)
-import Data.Monoid (Endo (..), Last)
+import Data.Monoid (Endo (..))
 import Control.Arrow (second)
 import Prelude hiding (Foldable(..))
 import Data.Foldable (Foldable(..))
@@ -76,7 +76,9 @@ pathFromToWithControlPoint commands start =
         Left err -> Left err
 
 ellipseToRelative :: Double -> Double -> Double -> Bool -> Bool -> V2 Double -> V2 Double -> (V2 Double, Waterfall.Path2D)
-ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag relativeEnd =
+ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag relativeEnd 
+    | rx == 0 || ry == 0 = Waterfall.lineTo relativeEnd
+    | otherwise = 
     let angleRads = angleDeg * pi / 180
         scaleFac = ry / rx
         transformForward :: Waterfall.Transformable2D a => a -> a
@@ -93,8 +95,7 @@ ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag relativeEnd =
         centerPerpDistance = sqrt (radius * radius - halfTD * halfTD)
         center = (relativeEndTransformed ^* 0.5) + (p1 ^* centerPerpDistance)
         midPoint = center + (p2 ^* radius)
-        
-        in Waterfall.splice . transformForward $ Waterfall.arcVia zero midPoint relativeEndTransformed 
+    in Waterfall.splice . transformForward $ Waterfall.arcVia zero midPoint relativeEndTransformed 
 
 quadraticBezierAbsolute :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Waterfall.Path2D)
 quadraticBezierAbsolute p0 p1 p2 = (p2, Waterfall.bezier2D p0 (p0 + ((p1 - p0) ^* (2/3))) (p2 + ((p1 - p2) ^* (2/3))) p2)
