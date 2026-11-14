@@ -14,6 +14,8 @@ and this project adheres to the
 - Fixed support for `skew` transforms
 - Fixed a bug where rounded rectangles were not positioned (ignored their `x` and `y` attributes) 
 - Fixed a bug where rounded rectangles with only one radius specified would not be treated as round
+- Fixes to handling of control points in smooth curves to be closer in line to the svg spec 
+- Fixes to Arc commands ('a'/'A') where either radius is 0
 
 ## 0.8.0.0
 

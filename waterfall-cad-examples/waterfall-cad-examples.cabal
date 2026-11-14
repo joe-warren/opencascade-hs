@@ -82,7 +82,19 @@ data-files:
     test-data/silhouetteOfRevolution.svg
     test-data/sphereSection.svg
     test-data/sphereSilhouette.svg
+    test-data/svgArcNegativeRadii.svg
+    test-data/svgArcZeroRadius.svg
     test-data/svgPrism.svg
+    test-data/svgRelativeSmoothQuadratic.svg
+    test-data/svgRoundedRectPosition.svg
+    test-data/svgRoundedRectSingleRadius.svg
+    test-data/svgSkewX.svg
+    test-data/svgSkewY.svg
+    test-data/svgSmoothCubicAfterCubic.svg
+    test-data/svgSmoothCubicAfterQuadratic.svg
+    test-data/svgSmoothCubicWithoutControlPoint.svg
+    test-data/svgSmoothQuadraticAfterCubic.svg
+    test-data/svgSmoothQuadraticWithoutControlPoint.svg
     test-data/sweep.svg
     test-data/takePathFraction.svg
     test-data/text.svg
