@@ -48,7 +48,7 @@ import qualified OpenCascade.BRepFilletAPI.MakeChamfer as MakeChamfer
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import Foreign.Ptr (Ptr)
-import Control.Monad (forM, forM_)
+import Control.Monad (forM, forM_, join)
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (upcast, SubTypeOf, unsafeDowncast)
 import Linear.V3 (V3 (..))
@@ -65,27 +65,50 @@ import qualified OpenCascade.BRepBuilderAPI as BRepBuilderAPI
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BRep.Tool as BRep.Tool
+import qualified OpenCascade.BRepLib as BRepLib
 import Waterfall.Internal.PaintHistory (remapWithBlendFunction)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
 import Waterfall.Internal.Finalizers (fromAcquirePtrT)
+import qualified OpenCascade.NCollection.IndexedDataMap as NCollection.IndexedDataMap
+import qualified OpenCascade.TopExp as TopExp
+import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
+import qualified OpenCascade.NCollection as NCollection
+import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
+import qualified OpenCascade.BRep.Tool as BRep.Tool
+import qualified OpenCascade.GeomAbs.Shape as Geom.Shape
 
-edgeToPath :: Ptr TopoDS.Edge -> IO (Maybe Path)
-edgeToPath edge = fmap (fmap (Path . ComplexRawPath)) . fromAcquirePtrT $ do
+edgeToPath 
+    :: Ptr (NCollection.IndexedDataMap.IndexedDataMap TopoDS.Shape (NCollection.List TopoDS.Shape))
+    -> Ptr TopoDS.Edge 
+    -> IO (Maybe Path)
+edgeToPath m edge = fmap (fmap (Path . ComplexRawPath)) . fromAcquirePtrT $ do
     isDegenerated <- liftIO $ BRep.Tool.degenerated edge
     if isDegenerated 
         then return Nothing
         else do
-            builder <- MakeWire.new
-            liftIO . MakeWire.addEdge builder 
-                =<<  liftIO . unsafeDowncast 
-                =<< TopoDS.Shape.copy (upcast edge)
-            Just <$> MakeWire.wire builder
+            neighbours <- shapesFromListOfShape =<< NCollection.IndexedDataMap.findFromKeyShapeListOfShapeMap m (upcast edge)
+            case neighbours of 
+                [a, b] -> do
+                    continuity <- liftIO . join $ BRep.Tool.continuity edge <$> (unsafeDowncast a) <*> (unsafeDowncast b)
+                    if continuity /= Geom.Shape.C0 
+                        then return Nothing 
+                        else do 
+                            builder <- MakeWire.new
+                            liftIO . MakeWire.addEdge builder 
+                                =<<  liftIO . unsafeDowncast 
+                                =<< TopoDS.Shape.copy (upcast edge)
+                            Just <$> MakeWire.wire builder
+                _ -> return Nothing
 
-getEdgesWithRadius :: (Integer -> Path -> Maybe Double) -> Ptr TopoDS.Shape -> Acquire [(Double, Ptr TopoDS.Edge)]
-getEdgesWithRadius f s = do
+getEdgesWithRadius 
+    :: (Integer -> Path -> Maybe Double) 
+    -> Ptr (NCollection.IndexedDataMap.IndexedDataMap TopoDS.Shape (NCollection.List TopoDS.Shape))
+    -> Ptr TopoDS.Shape 
+    -> Acquire [(Double, Ptr TopoDS.Edge)]
+getEdgesWithRadius f m s = do
     edges <- allEdges s
     fmap catMaybes . forM (zip [0..] edges) $ \(i, e) -> do
-        path <- liftIO . edgeToPath $ e
+        path <- liftIO . edgeToPath m $ e
         return $ (, e) <$> (find (> 0) =<< (f i <$> path))
 
 trySomeIndexedConditionalFilletWithPaint
@@ -100,7 +123,12 @@ trySomeIndexedConditionalFilletWithPaint makeBuilder addEdge paintFunction radiu
     solidFromAcquireWithPaintMapWithCatch $ do
         s <- acquireSolid solid
 
-        edgesWithRadius <- getEdgesWithRadius radiusFunction s
+        liftIO $ BRepLib.encodeRegularity s 1e-4
+
+        m <- NCollection.IndexedDataMap.newShapeListOfShapeMap
+        liftIO $ TopExp.mapShapesAndAncestors s ShapeEnum.Edge ShapeEnum.Face m
+
+        edgesWithRadius <- getEdgesWithRadius radiusFunction m s
 
         if null edgesWithRadius 
             then pure (solidPaintMap solid, s)

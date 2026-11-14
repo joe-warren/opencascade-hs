@@ -52,6 +52,9 @@ solidTests = testGroup "Solid"
         [ testCase "fillet of sphere is noop" $
             let part = Fillet.roundConditionalFillet (Fillet.whenEndpointsNearlyEqual _z 0.1) Solids.unitSphere
             in assertBool "part has correct volume" (abs (Solids.volume part - 4*pi/3) < 1e-4)
+        , testCase "different fillet of sphere is noop" $
+            let part = Fillet.roundFillet 0.1 Solids.unitSphere
+            in assertBool "part has correct volume" (abs (Solids.volume part - 4*pi/3) < 1e-4)
         ]
     , testGroup "volume"
         [ testCase "volume of sphere" $
