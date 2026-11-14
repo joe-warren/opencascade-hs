@@ -55,6 +55,10 @@ solidTests = testGroup "Solid"
         , testCase "different fillet of sphere is noop" $
             let part = Fillet.roundFillet 0.1 Solids.unitSphere
             in assertBool "part has correct volume" (abs (Solids.volume part - 4*pi/3) < 1e-4)
+        , testCase "fillet of capsule is noop" $
+            let capsule = Solids.unitCylinder <> Solids.unitSphere <> Transforms.translate (unit _z) Solids.unitSphere
+                part = Fillet.roundFillet 0.1 capsule
+            in assertBool "part has correct volume" (abs (Solids.volume part - 7*pi/3) < 1e-4)
         ]
     , testGroup "volume"
         [ testCase "volume of sphere" $
