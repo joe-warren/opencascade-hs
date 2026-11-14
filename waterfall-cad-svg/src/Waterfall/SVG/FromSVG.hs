@@ -21,7 +21,7 @@ import qualified Graphics.Svg as Svg
 import qualified Data.Text as T
 import Linear (V3 (..), V2 (..), zero, Metric (norm), normalize, (^*), (*^), _x, _y, unit)
 import Control.Lens ((^.), ala, each)
-import Data.Monoid (Endo (..))
+import Data.Monoid (Endo (..), Last)
 import Control.Arrow (second)
 import Prelude hiding (Foldable(..))
 import Data.Foldable (Foldable(..))
@@ -54,11 +54,24 @@ instance NFData SVGError
 uncurry6 :: (a -> b -> c -> d -> e -> f -> g) -> (a, b, c, d, e, f) -> g
 uncurry6 fn (a, b, c, d, e, f) = fn a b c d e f
 
-pathFromToWithControlPoint :: [Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))] -> V2 Double -> Either SVGError (V2 Double, Waterfall.Path2D)
+data LastControlPoint = 
+    NoControlPoint 
+    | ControlPointQuadratic (V2 Double)
+    | ControlPointCubic (V2 Double)
+
+quadraticControlPoint :: LastControlPoint -> Maybe (V2 Double)
+quadraticControlPoint (ControlPointQuadratic v) = Just v
+quadraticControlPoint _ = Nothing
+
+cubicControlPoint :: LastControlPoint -> Maybe (V2 Double)
+cubicControlPoint (ControlPointQuadratic v) = Just v
+cubicControlPoint _ = Nothing
+
+pathFromToWithControlPoint :: [LastControlPoint -> V2 Double -> Either SVGError (LastControlPoint, (V2 Double, Waterfall.Path2D))] -> V2 Double -> Either SVGError (V2 Double, Waterfall.Path2D)
 pathFromToWithControlPoint commands start = 
     let go (cp, (pos, paths)) cmd = second (second (:paths)) <$> cmd cp pos
         go' b a = join (go <$> b <*> pure a)
-    in case foldl' go' (Right (Nothing, (start, []))) commands of
+    in case foldl' go' (Right (NoControlPoint, (start, []))) commands of
         Right (_cp, (end, allPaths)) -> Right (end, mconcat . reverse $ allPaths)
         Left err -> Left err
 
@@ -86,34 +99,36 @@ ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag relativeEnd =
 quadraticBezierAbsolute :: V2 Double -> V2 Double -> V2 Double -> (V2 Double, Waterfall.Path2D)
 quadraticBezierAbsolute p0 p1 p2 = (p2, Waterfall.bezier2D p0 (p0 + ((p1 - p0) ^* (2/3))) (p2 + ((p1 - p2) ^* (2/3))) p2)
 
-curveToAbsolute :: (V2 Double, V2 Double, V2 Double) -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-curveToAbsolute (cp1, cp2, cp3) _ cp0 = Right (Just (cp3 + cp3 - cp2), Waterfall.bezierTo2D cp1 cp2 cp3 cp0)
+curveToAbsolute :: (V2 Double, V2 Double, V2 Double) -> LastControlPoint -> V2 Double -> Either SVGError (LastControlPoint, (V2 Double, Waterfall.Path2D))
+curveToAbsolute (cp1, cp2, cp3) _ cp0 = Right (ControlPointCubic (cp3 + cp3 - cp2), Waterfall.bezierTo2D cp1 cp2 cp3 cp0)
 
-curveToRelative :: (V2 Double, V2 Double, V2 Double) -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-curveToRelative (cp1, cp2, cp3) _ cp0 = curveToAbsolute (cp0 + cp1, cp0 + cp2, cp0 + cp3) Nothing cp0
+curveToRelative :: (V2 Double, V2 Double, V2 Double) -> LastControlPoint -> V2 Double -> Either SVGError (LastControlPoint, (V2 Double, Waterfall.Path2D))
+curveToRelative (cp1, cp2, cp3) _ cp0 = curveToAbsolute ((cp0 + cp1), cp0 + cp2, cp0 + cp3) NoControlPoint cp0
 
-quadraticBezierAbsolute' :: (V2 Double, V2 Double) -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-quadraticBezierAbsolute' (cp1, cp2) _ cp0 = Right (Just (cp2 + cp2 - cp1), quadraticBezierAbsolute cp0 cp1 cp2)
+quadraticBezierAbsolute' :: (V2 Double, V2 Double) -> LastControlPoint -> V2 Double -> Either SVGError (LastControlPoint, (V2 Double, Waterfall.Path2D))
+quadraticBezierAbsolute' (cp1, cp2) _ cp0 = Right (ControlPointQuadratic (cp2 + cp2 - cp1), quadraticBezierAbsolute cp0 cp1 cp2)
 
-quadraticBezierRelative' :: (V2 Double, V2 Double) -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-quadraticBezierRelative' (cp1, cp2) _ cp0 = quadraticBezierAbsolute' (cp0 + cp1, cp0 + cp2) Nothing cp0
+quadraticBezierRelative' :: (V2 Double, V2 Double) -> LastControlPoint -> V2 Double -> Either SVGError (LastControlPoint, (V2 Double, Waterfall.Path2D))
+quadraticBezierRelative' (cp1, cp2) _ cp0 = quadraticBezierAbsolute' (cp0 + cp1, cp0 + cp2) NoControlPoint cp0
 
 ellipseToAbsolute :: Double -> Double -> Double -> Bool -> Bool -> V2 Double -> V2 Double -> (V2 Double, Waterfall.Path2D)
 ellipseToAbsolute rx ry angleDeg largeArcFlag sweepFlag absoluteEnd start =
     ellipseToRelative rx ry angleDeg largeArcFlag sweepFlag (absoluteEnd - start) start
 
-smoothCurveToAbsolute :: (V2 Double, V2 Double) -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-smoothCurveToAbsolute (cp2, cp3) cp1May cp0 = Right (Just (cp3 + cp3 - cp2), Waterfall.bezierTo2D (fromMaybe cp0 cp1May) cp2 cp3 cp0) 
+smoothCurveToAbsolute :: (V2 Double, V2 Double) -> LastControlPoint -> V2 Double -> Either SVGError (LastControlPoint, (V2 Double, Waterfall.Path2D))
+smoothCurveToAbsolute (cp2, cp3) cp1' cp0 = 
+    let cp1 = fromMaybe cp0 (cubicControlPoint cp1')
+    in Right (ControlPointCubic (cp3 + cp3 - cp2), Waterfall.bezierTo2D cp1 cp2 cp3 cp0) 
 
-smoothCurveToRelative ::  (V2 Double, V2 Double) -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
+smoothCurveToRelative ::  (V2 Double, V2 Double) -> LastControlPoint -> V2 Double -> Either SVGError (LastControlPoint, (V2 Double, Waterfall.Path2D))
 smoothCurveToRelative (cp2, cp3) cp1 cp0 = smoothCurveToAbsolute (cp0 + cp2, cp0 + cp3) cp1 cp0
 
-smoothQuadraticBezierCurveToAbsolute :: V2 Double -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
-smoothQuadraticBezierCurveToAbsolute cp2 cp1May cp0 = 
-    let cp1 = fromMaybe cp0 cp1May 
-    in Right (Just (cp2 + cp2 - cp1), quadraticBezierAbsolute cp0 cp1 cp2)
+smoothQuadraticBezierCurveToAbsolute :: V2 Double -> LastControlPoint -> V2 Double -> Either SVGError (LastControlPoint, (V2 Double, Waterfall.Path2D))
+smoothQuadraticBezierCurveToAbsolute cp2 cp1' cp0 = 
+    let cp1 = fromMaybe cp0 (quadraticControlPoint cp1') 
+    in Right (ControlPointQuadratic (cp2 + cp2 - cp1), quadraticBezierAbsolute cp0 cp1 cp2)
 
-smoothQuadraticBezierCurveToRelative :: V2 Double -> Maybe (V2 Double) -> V2 Double -> Either SVGError (Maybe (V2 Double), (V2 Double, Waterfall.Path2D))
+smoothQuadraticBezierCurveToRelative :: V2 Double -> LastControlPoint -> V2 Double -> Either SVGError (LastControlPoint, (V2 Double, Waterfall.Path2D))
 smoothQuadraticBezierCurveToRelative cp2 cp1 cp0 = smoothQuadraticBezierCurveToAbsolute (cp0 + cp2) cp1 cp0
 
 -- | Generate `Waterfall.Path2D`s from a parsed list of `Svg.PathCommand`s.
@@ -127,7 +142,7 @@ convertPathCommands cs =
         relativeLocation curPos Svg.OriginRelative v = curPos + v
         buildPathInProgress (origin, segments) = 
             pathFromToWithControlPoint segments origin
-        withoutControlPoint f _cp o = Right (Nothing, f o)
+        withoutControlPoint f _cp o = Right (NoControlPoint, f o)
         go (cmd:rest) pathInProgress@(o, segments) paths = 
             let goSegment ss = go rest (o, segments <> ss) paths  
             in case cmd of
