@@ -68,13 +68,13 @@ import qualified OpenCascade.BRep.Tool as BRep.Tool
 import qualified OpenCascade.BRepLib as BRepLib
 import Waterfall.Internal.PaintHistory (remapWithBlendFunction)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
-import Waterfall.Internal.Finalizers (fromAcquirePtrT, fromAcquirePtr)
+import Waterfall.Internal.Finalizers (fromAcquirePtr)
 import qualified OpenCascade.NCollection.IndexedDataMap as NCollection.IndexedDataMap
 import qualified OpenCascade.TopExp as TopExp
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.NCollection as NCollection
 import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
-import qualified OpenCascade.GeomAbs.Shape as Geom.Shape
+import qualified OpenCascade.GeomAbs.Shape as GeomAbs.Shape
 
 canFillet 
     :: Ptr (NCollection.IndexedDataMap.IndexedDataMap TopoDS.Shape (NCollection.List TopoDS.Shape))
@@ -89,7 +89,7 @@ canFillet m edge = do
             case neighbours of 
                 [a, b] -> do
                     continuity <- liftIO . join $ BRep.Tool.continuity edge <$> (unsafeDowncast a) <*> (unsafeDowncast b)
-                    return (continuity == Geom.Shape.C0)
+                    return (continuity == GeomAbs.Shape.C0)
                 _ -> return False
 edgeToPath 
     :: Ptr TopoDS.Edge 

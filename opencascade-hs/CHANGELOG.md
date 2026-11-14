@@ -29,7 +29,7 @@ and this project adheres to the
 - Added `OpenCascade.BRep.Tool.degenerated`
 - Added `OpenCascade.BRep.Tool.continuity`
 - Added `OpenCascade.BRepLib.encodeRegularity`
-- Added `Eq` and `Ord` instances to `OpenCascade.Geom.Shape.Shape`
+- Added `Eq` and `Ord` instances to `OpenCascade.GeomAbs.Shape.Shape`
 
 ### Changed
 
