@@ -64,24 +64,29 @@ import Data.Foldable (find)
 import qualified OpenCascade.BRepBuilderAPI as BRepBuilderAPI
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import qualified OpenCascade.BRep.Tool as BRep.Tool
 import Waterfall.Internal.PaintHistory (remapWithBlendFunction)
 import Waterfall.Internal.Path.Common (RawPath(ComplexRawPath))
-import Waterfall.Internal.Finalizers (fromAcquirePtr)
+import Waterfall.Internal.Finalizers (fromAcquirePtrT)
 
-edgeToPath :: Ptr TopoDS.Edge -> IO Path
-edgeToPath edge = fmap (Path . ComplexRawPath) . fromAcquirePtr $ do
-    builder <- MakeWire.new
-    liftIO . MakeWire.addEdge builder 
-        =<<  liftIO . unsafeDowncast 
-        =<< TopoDS.Shape.copy (upcast edge)
-    MakeWire.wire builder
+edgeToPath :: Ptr TopoDS.Edge -> IO (Maybe Path)
+edgeToPath edge = fmap (fmap (Path . ComplexRawPath)) . fromAcquirePtrT $ do
+    isDegenerated <- liftIO $ BRep.Tool.degenerated edge
+    if isDegenerated 
+        then return Nothing
+        else do
+            builder <- MakeWire.new
+            liftIO . MakeWire.addEdge builder 
+                =<<  liftIO . unsafeDowncast 
+                =<< TopoDS.Shape.copy (upcast edge)
+            Just <$> MakeWire.wire builder
 
 getEdgesWithRadius :: (Integer -> Path -> Maybe Double) -> Ptr TopoDS.Shape -> Acquire [(Double, Ptr TopoDS.Edge)]
 getEdgesWithRadius f s = do
     edges <- allEdges s
     fmap catMaybes . forM (zip [0..] edges) $ \(i, e) -> do
         path <- liftIO . edgeToPath $ e
-        return $ (, e) <$> find (> 0) (f i path)
+        return $ (, e) <$> (find (> 0) =<< (f i <$> path))
 
 trySomeIndexedConditionalFilletWithPaint
     :: (SubTypeOf BRepBuilderAPI.MakeShape a)
