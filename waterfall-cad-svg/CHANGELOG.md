@@ -10,9 +10,9 @@ and this project adheres to the
 
 ### Fixed
 
-- Fixed a hang when reading relative quadratic Bezier commands 'q'
+- Fixed a hang when reading relative quadratic Bezier commands ('t')
 - Fixed support for `skew` transforms
-- Fixed a bug where rounded rectangles would not be correctly transformed
+- Fixed a bug where rounded rectangles were not positioned (ignored their `x` and `y` attributes) 
 - Fixed a bug where rounded rectangles with only one radius specified would not be treated as round
 
 ## 0.8.0.0
