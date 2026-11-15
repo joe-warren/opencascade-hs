@@ -84,7 +84,6 @@ import qualified Data.Colour.SRGB.Linear as SRGB.Linear
 
 import Data.Map (Map)
 import qualified Data.Map as M
-import qualified OpenCascade.IFSelect.ReturnStatus as ReturnStatus
 
 -- | The type of exceptions thrown by IO actions defined in `Waterfall.IO`
 data WaterfallIOException = 
@@ -373,7 +372,7 @@ readSTEP :: FilePath -> IO Solid
 readSTEP filepath = fmap (`Solid` emptyPaintMap) . fromAcquirePtr $ do
     reader <- STEPReader.new
     status <- liftIO $ XSControl.Reader.readFile (upcast reader) filepath
-    unless (status == ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
+    unless (status == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
     rootCount <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
     unless (rootCount > 0) (liftIO . throwIO $ WaterfallIOException BadGeometryError filepath)
     shape <- XSControl.Reader.oneShape (upcast reader)
