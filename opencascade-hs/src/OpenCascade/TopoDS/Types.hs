@@ -23,6 +23,7 @@ import OpenCascade.TopAbs.ShapeEnum
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import Foreign.Ptr
 import Foreign.C
+import OpenCascade.Internal.Bool (cBoolToBool)
 
 
 data Shape
@@ -37,20 +38,31 @@ data Wire
 
 data Builder
 
--- duplicate definition of shape type from TopoDS.Shape
+-- duplicate definition of shape type and isNull from TopoDS.Shape
 -- to simultaniously avoid Orphan Instances + circular dependencies
 foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_ShapeType" rawShapeType :: Ptr Shape -> Ptr CInt -> Ptr (Ptr ()) -> IO CInt
 
 shapeType :: Ptr Shape -> IO ShapeEnum
 shapeType s = toEnum . fromIntegral <$> wrapException (rawShapeType s)
 
+-- isNull
+--
+foreign import capi unsafe "hs_TopoDS_Shape.h hs_TopoDS_Shape_IsNull" rawIsNull :: Ptr Shape -> Ptr CInt -> Ptr (Ptr ()) -> IO CBool
+
+isNull :: Ptr Shape -> IO Bool
+isNull s = cBoolToBool <$> wrapException (rawIsNull s)
+
 enumDowncast :: ShapeEnum -> Ptr Shape -> IO (Maybe (Ptr t))
 enumDowncast enum p = do
-    e <- shapeType p
-    return $ if e == enum 
-                then Just (castPtr p)
-                else Nothing
-
+    shapeIsNull <- isNull p
+    if shapeIsNull 
+        then return Nothing
+        else do
+            e <- shapeType p
+            return $ 
+                if e == enum 
+                    then Just (castPtr p)
+                    else Nothing
 
 instance SubTypeOf Shape Compound
 
