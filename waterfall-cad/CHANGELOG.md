@@ -34,6 +34,7 @@ and this project adheres to the
 - Fixed an issue where `unions`/`unions3D` and `mconcat @Solid` would give the wrong result on lists with more than two items which also contain `mempty`
 - Fixed an issue where functions on the `Path2D`s returned by `shapePaths` could give incorrect results (for instance, on a mirrored shape)
 - Methods in `Waterfall.Fillet` now ignore edges that are degenerate, or have greater than C0 continuity, this should make them less prone to fail
+- Improved error handling in `readSTEP` so that this throws where it used to segfault 
 
 ### Changed 
 
