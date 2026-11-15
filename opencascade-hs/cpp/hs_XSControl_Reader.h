@@ -12,7 +12,7 @@ IFSelect_ReturnStatus hs_XSControl_Reader_readFile(
     HSExceptionType* exType, void ** exPtr
 );
 
-bool hs_XSControl_Reader_transferRoots(
+int hs_XSControl_Reader_transferRoots(
     XSControl_Reader * reader,
     HSExceptionType* exType, void ** exPtr
 );

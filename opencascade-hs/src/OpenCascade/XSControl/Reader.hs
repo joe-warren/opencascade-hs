@@ -11,9 +11,8 @@ import OpenCascade.XSControl.Types (Reader)
 import OpenCascade.IFSelect.ReturnStatus (ReturnStatus)
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import OpenCascade.TopoDS.Internal.Destructors (deleteShape)
-import OpenCascade.Internal.Bool (cBoolToBool)
 import Foreign.C.String (CString, withCString)
-import Foreign.C (CInt (..), CBool (..))
+import Foreign.C (CInt (..))
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire, mkAcquire)
 import OpenCascade.Internal.Exception (wrapException)
@@ -32,10 +31,10 @@ foreign import capi unsafe "hs_XSControl_Reader.h hs_XSControl_Reader_transferRo
     :: Ptr Reader 
     -> Ptr CInt
     -> Ptr (Ptr ())
-    -> IO (CBool)
+    -> IO (CInt)
 
-transferRoots :: Ptr Reader -> IO Bool
-transferRoots reader = cBoolToBool <$> wrapException (rawTransferRoots reader)
+transferRoots :: Ptr Reader -> IO Int
+transferRoots reader = fromIntegral <$> wrapException (rawTransferRoots reader)
 
 foreign import capi unsafe "hs_XSControl_Reader.h hs_XSControl_Reader_oneShape" rawOneShape
     :: Ptr Reader  

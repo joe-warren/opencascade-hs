@@ -372,9 +372,10 @@ readSTEP :: FilePath -> IO Solid
 readSTEP filepath = fmap (`Solid` emptyPaintMap) . fromAcquirePtr $ do
     reader <- STEPReader.new
     status <- liftIO $ XSControl.Reader.readFile (upcast reader) filepath
-    _ <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
-    shape <- XSControl.Reader.oneShape (upcast reader)
     unless (status == IFSelect.ReturnStatus.Done) (liftIO . throwIO $ WaterfallIOException FileError filepath)
+    rootCount <- liftIO $ XSControl.Reader.transferRoots (upcast reader)
+    unless (rootCount > 0) (liftIO . throwIO $ WaterfallIOException BadGeometryError filepath)
+    shape <- XSControl.Reader.oneShape (upcast reader)
     shapeIsNull <- liftIO $ TopoDS.Shape.isNull shape
     when shapeIsNull (liftIO . throwIO $ WaterfallIOException BadGeometryError filepath)
     return shape
