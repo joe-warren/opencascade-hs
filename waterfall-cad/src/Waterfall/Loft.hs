@@ -36,12 +36,16 @@ tryPointedLoftWithPrecision :: Double -- ^ The loft precision, this should be a 
     -> [Path] -- ^ Series of cross-sections that the loft will pass through
     -> Maybe (V3 Double) -- ^ Optional end point for the loft
     -> Either WaterfallError Solid
-tryPointedLoftWithPrecision precision start paths end = solidFromAcquireWithCatch emptyPaintMap $ do
-    thruSections <- ThruSections.new True False precision
-    forM_ start ((liftIO . ThruSections.addVertex thruSections) <=< v3ToVertex)
-    forM_ paths (traverse (liftIO . ThruSections.addWire thruSections) <=< rawPathWire . rawPath)
-    forM_ end ((liftIO . ThruSections.addVertex thruSections) <=< v3ToVertex)
-    MakeShape.shape (upcast thruSections)
+tryPointedLoftWithPrecision precision start paths end =  
+    let totalLength = length start + length paths + length end
+    in if totalLength <= 1 || length paths == 0
+        then Right mempty 
+        else solidFromAcquireWithCatch emptyPaintMap $ do
+            thruSections <- ThruSections.new True False precision
+            forM_ start ((liftIO . ThruSections.addVertex thruSections) <=< v3ToVertex)
+            forM_ paths (traverse (liftIO . ThruSections.addWire thruSections) <=< rawPathWire . rawPath)
+            forM_ end ((liftIO . ThruSections.addVertex thruSections) <=< v3ToVertex)
+            MakeShape.shape (upcast thruSections)
 
 -- | like `pointedLoft`, but returns an Either on error
 tryPointedLoft :: 
