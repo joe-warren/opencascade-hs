@@ -55,8 +55,7 @@ makeShape path = case closeLoop path of
     (Path2D (ComplexRawPath r)) -> Shape . unsafeFromAcquirePtr  $ do
         p <- acquireForeignPtr r
         upcast <$> (MakeFace.face =<< MakeFace.fromWire p False)
-    _ -> Shape . unsafeFromAcquirePtr $
-        upcast <$> (MakeFace.face =<< MakeFace.new)
+    _ -> mempty
 
 -- | Get the paths back from a 2D shape
 -- 
