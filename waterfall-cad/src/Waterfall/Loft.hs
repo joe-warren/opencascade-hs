@@ -18,10 +18,10 @@ module Waterfall.Loft
 ) where
 
 import Linear (V3 (..))
-import Waterfall.Internal.Path (Path, rawPath)
+import Waterfall.Internal.Path (Path (Path), rawPath)
 import Waterfall.Internal.Solid (Solid (..), solidFromAcquireWithCatch, emptyPaintMap)
 import Waterfall.Internal.ToOpenCascade (v3ToVertex)
-import Waterfall.Internal.Path.Common (rawPathWire)
+import Waterfall.Internal.Path.Common (rawPathWire, RawPath (ComplexRawPath))
 import qualified OpenCascade.BRepOffsetAPI.ThruSections as ThruSections
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import Data.Either (fromRight)
@@ -29,6 +29,12 @@ import OpenCascade.Inheritance (upcast)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (forM_, (<=<))
 import Waterfall.Error (WaterfallError)
+import Data.Maybe (mapMaybe)
+
+processablePath :: Path -> Maybe Path
+processablePath p@(Path (ComplexRawPath _)) = Just p
+processablePath _ = Nothing
+
 
 -- | like `pointedLoftWithPrecision`, but returns an Either on error
 tryPointedLoftWithPrecision :: Double -- ^ The loft precision, this should be a small value, e.g. @ 1e-6 @ 
@@ -37,13 +43,14 @@ tryPointedLoftWithPrecision :: Double -- ^ The loft precision, this should be a 
     -> Maybe (V3 Double) -- ^ Optional end point for the loft
     -> Either WaterfallError Solid
 tryPointedLoftWithPrecision precision start paths end =  
-    let totalLength = length start + length paths + length end
-    in if totalLength <= 1 || length paths == 0
+    let processablePaths = mapMaybe processablePath paths
+        totalLength = length start + length processablePaths + length end
+    in if totalLength <= 1 || length processablePaths == 0
         then Right mempty 
         else solidFromAcquireWithCatch emptyPaintMap $ do
             thruSections <- ThruSections.new True False precision
             forM_ start ((liftIO . ThruSections.addVertex thruSections) <=< v3ToVertex)
-            forM_ paths (traverse (liftIO . ThruSections.addWire thruSections) <=< rawPathWire . rawPath)
+            forM_ processablePaths (traverse (liftIO . ThruSections.addWire thruSections) <=< rawPathWire . rawPath)
             forM_ end ((liftIO . ThruSections.addVertex thruSections) <=< v3ToVertex)
             MakeShape.shape (upcast thruSections)
 
