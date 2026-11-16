@@ -49,6 +49,9 @@ and this project adheres to the
 
 - Corrected Return type of `OpenCascade.XSControl.Reader.transferRoots` from `Bool` to `Int`
 - Fixed the `Enum` instance for `OpenCascade.Font.FontAspect.FontAspect` so that the correct values are sent to the kernel 
+- Corrected argument order in `OpenCascade.BRepBuilderAPI.Copy.copy`
+- Fixed `OpenCascade.Font.BRepFont.pointSize`
+- In `OpenCascade.GP.Vec2d`, `transform` and `transformed` now take a `Trsf2d`, not a `Trsf`
 
 ## 0.8.0.0
 

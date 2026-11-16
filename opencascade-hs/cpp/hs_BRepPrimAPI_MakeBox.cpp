@@ -22,7 +22,7 @@ void hs_delete_BRepPrimAPI_MakeBox(BRepPrimAPI_MakeBox* builder){
     delete builder;
 }
 
-TopoDS_Shape * hs_BRepPrimAPI_MakeBox_Solid(
+TopoDS_Solid * hs_BRepPrimAPI_MakeBox_Solid(
         BRepPrimAPI_MakeBox* builder,
         HSExceptionType* exType,
         void** exPtr
@@ -31,7 +31,7 @@ TopoDS_Shape * hs_BRepPrimAPI_MakeBox_Solid(
         exType,
         exPtr,
         [builder]{
-        return new TopoDS_Shape(builder->Solid());
+        return new TopoDS_Solid(builder->Solid());
     });
 }
 

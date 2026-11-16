@@ -65,5 +65,5 @@ double hs_Font_BRepFont_lineSpacing(Font_BRepFont * font){
 }
 
 double hs_Font_BRepFont_pointSize(Font_BRepFont * font){
-    return font->LineSpacing();
+    return font->PointSize();
 }

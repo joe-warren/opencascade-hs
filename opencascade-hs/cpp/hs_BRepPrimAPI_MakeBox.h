@@ -15,7 +15,7 @@ BRepPrimAPI_MakeBox * hs_new_BRepPrimAPI_MakeBox_fromPnts(
 
 void hs_delete_BRepPrimAPI_MakeBox(BRepPrimAPI_MakeBox* builder);
 
-TopoDS_Shape * hs_BRepPrimAPI_MakeBox_Solid(
+TopoDS_Solid * hs_BRepPrimAPI_MakeBox_Solid(
     BRepPrimAPI_MakeBox* builder,
     HSExceptionType* exType,
     void** exPtr

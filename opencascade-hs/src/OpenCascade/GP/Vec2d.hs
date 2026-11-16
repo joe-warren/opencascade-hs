@@ -269,9 +269,9 @@ scaled a b = mkAcquire (rawScaled a (CDouble b)) deleteVec2d
 
 -- transform/transformed
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Transform" transform :: Ptr Vec2d -> Ptr Trsf -> IO ()
+foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Transform" transform :: Ptr Vec2d -> Ptr Trsf2d -> IO ()
 
-foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Transformed" rawTransformed :: Ptr Vec2d -> Ptr Trsf -> IO (Ptr Vec2d)
+foreign import capi unsafe "hs_gp_Vec2d.h hs_gp_Vec2d_Transformed" rawTransformed :: Ptr Vec2d -> Ptr Trsf2d -> IO (Ptr Vec2d)
 
-transformed :: Ptr Vec2d -> Ptr Trsf -> Acquire (Ptr Vec2d)
+transformed :: Ptr Vec2d -> Ptr Trsf2d -> Acquire (Ptr Vec2d)
 transformed point trsf = mkAcquire (rawTransformed point trsf) deleteVec2d

@@ -20,4 +20,4 @@ foreign import capi unsafe "hs_BRepBuilderAPI_Copy.h hs_BRepBuilderAPI_Copy_copy
     -> IO (Ptr TopoDS.Shape)
 
 copy :: Ptr TopoDS.Shape -> Bool -> Bool -> Acquire (Ptr TopoDS.Shape)
-copy shape copyGeom copyMesh = mkAcquire (wrapException $ rawCopy shape (boolToCBool copyMesh) (boolToCBool copyGeom)) TopoDS.Destructors.deleteShape
+copy shape copyGeom copyMesh = mkAcquire (wrapException $ rawCopy shape (boolToCBool copyGeom) (boolToCBool copyMesh)) TopoDS.Destructors.deleteShape
