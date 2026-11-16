@@ -30,4 +30,20 @@ pathTests = testGroup "Path"
                 test gap = assertApproxEqual ("should have the correct length (" <> show gap <> ")") 1e-5 2 (Path.pathLength . path $ gap)
             in foldMap test [5e-8, 5e-7, 2e-6]
         ]
+    , testGroup "arc" 
+        [ testCase "exact semicircles" $ mconcat 
+            [ let r = 0.1 in 
+                assertApproxEqual "has correct length (at origin)" 1e-6  (r * pi) . Path.pathLength 
+                    $ TwoD.Path2D.arc TwoD.Path2D.Clockwise r (V2 0 0) (V2 0.2 0)
+            , let r = 0.1 in 
+                assertApproxEqual "has correct length (not at origin)" 1e-6  (r * pi) . Path.pathLength 
+                    $ TwoD.Path2D.arc TwoD.Path2D.Clockwise r (V2 0.7 0) (V2 0.9 0)
+            , let r = 1 in 
+                assertApproxEqual "has correct length (chord length 1)" 1e-6  (pi / 3) . Path.pathLength 
+                    $ TwoD.Path2D.arc TwoD.Path2D.Clockwise r (V2 0 0) (V2 1 0)
+            , let r = negate 1 in 
+                assertApproxEqual "has correct length (negative radius)" 1e-6  (pi / 3) . Path.pathLength 
+                    $ TwoD.Path2D.arc TwoD.Path2D.Clockwise r (V2 0 0) (V2 1 0)
+            ]
+        ]
     ]

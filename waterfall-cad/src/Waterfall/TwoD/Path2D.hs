@@ -33,7 +33,7 @@ module Waterfall.TwoD.Path2D
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..))
 import Waterfall.TwoD.Transforms (rotate2D)
-import Waterfall.Internal.NearZero (nearZero)
+import Waterfall.Internal.NearZero (nearZero, confusion)
 import Linear.V2 (V2(..))
 import Control.Lens ((^.))
 import Linear ((^*), _xy, distance, normalize, unangle)
@@ -54,16 +54,17 @@ instance NFData Sense where
 --
 -- `arc` is not polymorphic, as it would not be possible to define an arc in 3D space in this way.
 arc :: Sense -> Double -> V2 Double -> V2 Double -> Path2D 
-arc sense radius start end = 
+arc sense radius' start end = 
     let mid = (start + end) ^* 0.5
+        radius = abs radius'
         (V2 dx dy) = normalize $ end - start
         rotD = case sense of    
                 Clockwise -> V2 dy (-dx)
                 Counterclockwise -> V2 (-dy) dx
         dse = distance start end 
-        tangent = radius - sqrt (radius * radius - dse * dse / 4) 
+        tangent = radius - sqrt (max 0 (radius * radius - dse * dse / 4))
         arcMid = mid + rotD ^* tangent
-    in if dse > 2 * radius
+    in if dse > 2 * radius + confusion
             then error "points too far apart in arc"
             else arcVia start arcMid end  
 
