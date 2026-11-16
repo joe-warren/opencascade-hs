@@ -11,7 +11,7 @@ import Foreign.Ptr (Ptr)
 import Foreign.C.String (CString, withCString)
 import Foreign.C (CBool (..), CInt)
 import Data.Acquire (Acquire, mkAcquire)
-import OpenCascade.Internal.Bool (boolToCBool)
+import OpenCascade.Internal.Bool (boolToCBool, cBoolToBool)
 import OpenCascade.Internal.Exception (wrapException)
 import OpenCascade.Handle (Handle)
 import qualified OpenCascade.TDocStd.Types as TDocStd
@@ -31,7 +31,12 @@ foreign import capi unsafe "hs_RWGltf_CafWriter.h hs_RWGltf_CafWriter_Perform" r
     -> Ptr (Message.ProgressRange)
     -> Ptr CInt
     -> Ptr (Ptr ())
-    -> IO ()
+    -> IO CBool
 
-perform :: Ptr CafWriter -> Ptr (Handle TDocStd.Document) -> Ptr (NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString) -> Ptr (Message.ProgressRange) -> IO ()
-perform writer doc fileInfo progress = wrapException $ rawPerform writer doc fileInfo progress
+perform
+    :: Ptr CafWriter
+    -> Ptr (Handle TDocStd.Document)
+    -> Ptr (NCollection.IndexedDataMap TCollection.AsciiString TCollection.AsciiString)
+    -> Ptr (Message.ProgressRange)
+    -> IO Bool
+perform writer doc fileInfo progress = fmap cBoolToBool . wrapException $ rawPerform writer doc fileInfo progress

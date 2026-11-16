@@ -44,6 +44,7 @@ and this project adheres to the
   - On MacOS, on Apple Silicon add `/opt/homebrew/include/opencascade` to `include-dirs` and `/opt/homebrew/lib` to `extra-lib-dirs`.
     - This should add support for a homebrew install of opencascade, without having to set the environment variables that are currently documented in the README.  
 - The instances for `DiscriminatedSubTypeOf OpenCascade.TopoDS.Shape *` now reject null shapes
+- `OpenCascade.RWObj.CafWriter.perform` and `OpenCascade.RWGltf.CafWriter.perform` now returns a boolean status
 
 ### Fixed 
 

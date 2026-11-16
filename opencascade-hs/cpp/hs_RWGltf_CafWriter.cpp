@@ -12,18 +12,19 @@ void hs_delete_RWGltf_CafWriter(RWGltf_CafWriter * theWriter){
     delete theWriter;   
 }
 
-void hs_RWGltf_CafWriter_Perform(
+bool hs_RWGltf_CafWriter_Perform(
     RWGltf_CafWriter * theWriter,
     Handle(TDocStd_Document) * theDocument,
     INDEXED_DATA_MAP(TCollection_AsciiString, TCollection_AsciiString, DEFAULT_HASHER(TCollection_AsciiString)) * theFileInfo,
     Message_ProgressRange * theProgress,
     HSExceptionType* exType, void ** exPtr
 ){
-    hs_handleExVoid(
+    return hs_handleExWithDefault(
         exType,
         exPtr,
         [theWriter, theDocument, theFileInfo, theProgress]{
-            theWriter->Perform(*theDocument, *theFileInfo, *theProgress);
+            return theWriter->Perform(*theDocument, *theFileInfo, *theProgress);
         }
+        , false
     );
 }

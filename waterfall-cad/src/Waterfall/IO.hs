@@ -295,7 +295,8 @@ writeGLTFOrGLB binary linDeflection filepath solid = (`withAcquire` pure) $  do
     s <- acquireSolid solid
     mesh linDeflection s
     doc <- cafDocument s (solidPaintMap solid)
-    liftIO $ RWGltf.CafWriter.perform writer doc meta progress
+    writenOkay <- liftIO $ RWGltf.CafWriter.perform writer doc meta progress
+    liftIO . unless writenOkay . throwIO $ WaterfallIOException FileError filepath
 
 -- | Write a `Solid` to a glTF file at a given path
 --
@@ -339,7 +340,9 @@ writeOBJ linDeflection filepath solid = (`withAcquire` pure) $ do
     s <- acquireSolid solid
     mesh linDeflection s
     doc <- cafDocument s (solidPaintMap solid)
-    liftIO $ RWObj.CafWriter.perform writer doc meta progress
+    writtenOkay <- liftIO $ RWObj.CafWriter.perform writer doc meta progress
+    liftIO . unless writtenOkay . throwIO $ WaterfallIOException FileError filepath
+
 
 -- | Read a `Solid` from a file at a given path
 -- 

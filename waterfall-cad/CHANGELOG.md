@@ -45,6 +45,7 @@ and this project adheres to the
 - The `Show` instance on `Colour` now displays values in terms of `Waterfall.Colour.rgb24` when this is possible.
 - Emissive Colour is now converted to linear RGB when written
 - In `Waterfall.Revolution`, `revolution` and `tryRevolution` now take a `Shape` rather than a `Path2D`
+- `writeGLTF`, `writeGLB` and `writeOBJ` now thrown on error
 
 ## 0.8.0.0
 
