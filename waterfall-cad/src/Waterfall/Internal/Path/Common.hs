@@ -21,6 +21,7 @@ import Data.Semigroup (sconcat)
 import Data.List.NonEmpty (NonEmpty ())
 import Data.Foldable (toList)
 import Control.DeepSeq (NFData (rnf), rwhnf)
+import Waterfall.Internal.NearZero as NearZero
 
 data RawPath = EmptyRawPath | SinglePointRawPath (V3 Double) | ComplexRawPath (ForeignPtr TopoDS.Wire)
 
@@ -60,7 +61,7 @@ intersperseLines (a:b:xs) = do
             Left pnt -> pure pnt 
             Right wire -> liftIO $ fst <$> wireEndpoints wire
     let prependA = either (const id) (:) a
-    if distance ea sb < 1e-6
+    if distance ea sb < NearZero.confusion
             then prependA <$> intersperseLines (b:xs)
             else prependA <$> ((:) <$> line' ea sb <*> intersperseLines (b:xs))
 
