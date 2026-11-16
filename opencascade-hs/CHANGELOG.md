@@ -30,6 +30,8 @@ and this project adheres to the
 - Added `OpenCascade.BRep.Tool.continuity`
 - Added `OpenCascade.BRepLib.encodeRegularity`
 - Added `Eq` and `Ord` instances to `OpenCascade.GeomAbs.Shape.Shape`
+- Added `OpenCascade.BRepBuilderAPI.TransitionMode` 
+- Added `setTransitionMode` to `OpenCascade.BRepOffsetAPI.MakePipeShell`
 
 ### Changed
 

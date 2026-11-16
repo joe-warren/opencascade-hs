@@ -36,6 +36,13 @@ bool hs_BRepOffsetAPI_MakePipeShell_makeSolid(
 
 bool hs_BRepOffsetAPI_MakePipeShell_isDone(BRepOffsetAPI_MakePipeShell * builder);
 
+void hs_BRepOffsetAPI_MakePipeShell_setTransitionMode(
+    BRepOffsetAPI_MakePipeShell * builder,
+    BRepBuilderAPI_TransitionMode mode, 
+    HSExceptionType* exType,
+    void** exPtr
+);
+
 #ifdef __cplusplus
 }
 #endif

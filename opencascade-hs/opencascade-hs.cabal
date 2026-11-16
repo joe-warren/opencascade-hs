@@ -192,6 +192,7 @@ library
       OpenCascade.BRepBuilderAPI.MakeWire
       OpenCascade.BRepBuilderAPI.Sewing
       OpenCascade.BRepBuilderAPI.Transform
+      OpenCascade.BRepBuilderAPI.TransitionMode
       OpenCascade.BRepBuilderAPI.Types
       OpenCascade.BRepBuilderAPI.WireError
       OpenCascade.BRepFilletAPI

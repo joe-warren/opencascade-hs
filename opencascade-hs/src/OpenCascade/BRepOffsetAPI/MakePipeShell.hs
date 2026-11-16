@@ -4,6 +4,7 @@ module OpenCascade.BRepOffsetAPI.MakePipeShell
 , new
 , setModeFrenet
 , setDiscreteMode
+, setTransitionMode
 , add
 , makeSolid
 , isDone
@@ -11,6 +12,7 @@ module OpenCascade.BRepOffsetAPI.MakePipeShell
 
 import OpenCascade.BRepOffsetAPI.Types (MakePipeShell)
 import OpenCascade.BRepOffsetAPI.Internal.Destructors (deleteMakePipeShell)
+import qualified OpenCascade.BRepBuilderAPI.TransitionMode as BRepBuilderAPI.TransitionMode
 import qualified OpenCascade.TopoDS as TopoDS
 import OpenCascade.Internal.Bool (boolToCBool, cBoolToBool)
 import OpenCascade.Internal.Exception (wrapException)
@@ -35,6 +37,11 @@ foreign import capi unsafe "hs_BRepOffsetAPI_MakePipeShell.h hs_BRepOffsetAPI_Ma
 add :: Ptr MakePipeShell -> Ptr TopoDS.Wire -> Bool -> Bool -> IO ()
 add builder profile withContact withCorrection =
     wrapException $ rawAdd builder profile (boolToCBool withContact) (boolToCBool withCorrection)
+
+foreign import capi unsafe "hs_BRepOffsetAPI_MakePipeShell.h hs_BRepOffsetAPI_MakePipeShell_setTransitionMode" rawSetTransitionMode :: Ptr MakePipeShell -> CInt -> Ptr CInt -> Ptr (Ptr ()) -> IO ()
+
+setTransitionMode :: Ptr MakePipeShell -> BRepBuilderAPI.TransitionMode.TransitionMode -> IO ()
+setTransitionMode builder mode = wrapException (rawSetTransitionMode builder (fromIntegral . fromEnum $ mode))
 
 foreign import capi unsafe "hs_BRepOffsetAPI_MakePipeShell.h hs_BRepOffsetAPI_MakePipeShell_makeSolid" rawMakeSolid :: Ptr MakePipeShell -> Ptr CInt -> Ptr (Ptr ()) -> IO CBool
 

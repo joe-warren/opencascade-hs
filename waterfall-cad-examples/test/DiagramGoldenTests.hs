@@ -373,6 +373,11 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & Path.fromPath2D
             & (`Sweep.sweep` profile)
         )
+    , solidTest "sweep squares" "sweepSquare.svg" 
+        (   let path = Path.fromPath2D . mconcat . Shape.shapePaths $ Shape.unitSquare
+                profile = TwoD.Transforms.uScale2D 0.2 Shape.unitCircle
+            in Sweep.sweep path profile 
+        )
     , solidTest "loft squares" "loftSquares.svg" 
         ( Loft.loft
             [ Path.fromPath2D $ mconcat $ Shape.shapePaths Shape.unitSquare

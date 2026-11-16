@@ -59,6 +59,20 @@ bool hs_BRepOffsetAPI_MakePipeShell_makeSolid(
         false);
 }
 
+void hs_BRepOffsetAPI_MakePipeShell_setTransitionMode(
+    BRepOffsetAPI_MakePipeShell * builder,
+    BRepBuilderAPI_TransitionMode mode, 
+    HSExceptionType* exType,
+    void** exPtr
+){
+    hs_handleExVoid(exType, exPtr, 
+        [builder, mode]{
+            builder->SetTransitionMode(mode);
+        }
+    );
+}
+
+
 bool hs_BRepOffsetAPI_MakePipeShell_isDone(BRepOffsetAPI_MakePipeShell * builder){
     return builder->IsDone();
 }
