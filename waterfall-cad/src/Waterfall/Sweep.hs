@@ -16,8 +16,10 @@ import qualified OpenCascade.BRepOffsetAPI.MakePipeShell as MakePipeShell
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.BRepTools as BRepTools
-import OpenCascade.Inheritance (upcast, unsafeDowncast)
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import qualified OpenCascade.BRepBuilderAPI.TransitionMode as TransitionMode
 import qualified OpenCascade.TopoDS as TopoDS
+import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Control.Monad.IO.Class (liftIO)
 import Foreign.Ptr
 import Linear (V3, normalize, unit, _x, _z, cross, dot)
@@ -28,7 +30,6 @@ import Control.Monad (void, forM, filterM)
 import Data.Functor.Compose (Compose (..))
 import Data.Foldable (foldl')
 import Data.List.NonEmpty (NonEmpty((:|)))
-import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import Data.Maybe (catMaybes)
 
 rotateFace :: V3 Double -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
@@ -65,6 +66,7 @@ trySweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = fmap reassembl
     let shapeForWire wire = do
             builder <- MakePipeShell.new path
             liftIO $ do
+                MakePipeShell.setTransitionMode builder TransitionMode.RightCorner
                 MakePipeShell.setDiscreteMode builder
                 MakePipeShell.add builder wire False False
                 MakeShape.build (upcast builder)
