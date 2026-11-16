@@ -35,7 +35,6 @@ and this project adheres to the
 - Added `Eq`, `Ord` and `Bounded` instances to `OpenCascade.Font.FontAspect.FontAspect`
 - Added `Ord` and `Bounded` instances to `OpenCascade.Graphic3D.AlphaMode.AlphaMode`
 
-
 ### Changed
 
 - Changes to `extra-lib-dirs` and `include-dirs`

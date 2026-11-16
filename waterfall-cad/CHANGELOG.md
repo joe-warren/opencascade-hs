@@ -36,6 +36,7 @@ and this project adheres to the
 - Methods in `Waterfall.Fillet` now ignore edges that are degenerate, or have greater than C0 continuity, this should make them less prone to fail
 - Improved error handling in `readSTEP` so that this throws where it used to segfault 
 - `Sweep` now uses OpenCascade's "Right Corner" transition mode to handle sweeping paths with corners
+- `fontFromSystem` now loads the correct FontAspect
 
 ### Changed 
 
