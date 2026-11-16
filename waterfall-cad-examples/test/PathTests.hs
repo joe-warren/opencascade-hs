@@ -46,4 +46,10 @@ pathTests = testGroup "Path"
                     $ TwoD.Path2D.arc TwoD.Path2D.Clockwise r (V2 0 0) (V2 1 0)
             ]
         ]
+    , testGroup "takePathFraction"
+        [ testCase "line" $
+            assertApproxEqual "correct length" 1e-6 0.1 . Path.pathLength . Path.takePathFraction 0.1 $ (Path.line zero (unit _z) :: Path.Path) 
+        , testCase "tiny fraction" $
+            assertApproxEqual "correct length" 1e-6 0 . Path.pathLength . Path.takePathFraction 1e-9 $ (Path.line zero (unit _z) :: Path.Path) 
+        ]
     ]

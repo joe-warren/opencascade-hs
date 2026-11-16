@@ -39,7 +39,7 @@ import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.Internal.Finalizers (unsafeFromAcquire, unsafeFromAcquirePtr, acquireForeignPtr, unsafeFromAcquirePtrT)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Waterfall.Internal.Edges (wireEndpoints, reverseWire, splitWires, wireLength, truncateWire)
-import Waterfall.Internal.NearZero (nearZero)
+import Waterfall.Internal.NearZero (nearZero, confusion)
 import Control.Arrow (second)
 import Prelude hiding (Foldable(..))
 import Data.Foldable (Foldable(..))
@@ -280,7 +280,7 @@ pathLength p =
 takePathFraction :: forall point path. AnyPath point path => Double -> path -> path
 takePathFraction fraction p
     | fraction >= 1 = p
-    | fraction <= 0 =
+    | fraction <= confusion =
         case pathEndpoints p of
             Just (s, _) -> reconstructPath . SinglePointRawPath $ pointToV3 (Proxy :: Proxy path) s
             Nothing -> p
