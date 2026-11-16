@@ -3,7 +3,7 @@ module OpenCascade.Graphic3D.AlphaMode
 ) where
 
 -- Should match the values in Graphic3D_AlphaMode.hxx
-data AlphaMode = BlendAuto | Opaque | Mask | Blend | MaskBlend deriving (Show, Eq)
+data AlphaMode = BlendAuto | Opaque | Mask | Blend | MaskBlend deriving (Show, Eq, Ord, Bounded)
 
 -- this can't derive Enum, because Graphic3d_AlphaMode_BlendAuto is defined as -1
 instance Enum AlphaMode where
@@ -18,3 +18,10 @@ instance Enum AlphaMode where
     toEnum 2 = Blend
     toEnum 3 = MaskBlend
     toEnum _ = error "toEnum: out of range for Graphic3D.AlphaMode"
+    enumFrom x = enumFromTo x maxBound
+    enumFromThen x y = 
+        enumFromThenTo x y (
+            if fromEnum y >= fromEnum x 
+                then maxBound 
+                else minBound
+            )

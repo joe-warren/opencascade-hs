@@ -32,6 +32,8 @@ and this project adheres to the
 - Added `Eq` and `Ord` instances to `OpenCascade.GeomAbs.Shape.Shape`
 - Added `OpenCascade.BRepBuilderAPI.TransitionMode` 
 - Added `setTransitionMode` to `OpenCascade.BRepOffsetAPI.MakePipeShell`
+- Added `Eq`, `Ord` and `Bounded` instances to `OpenCascade.Font.FontAspect.FontAspect`
+- Added `Ord` and `Bounded` instances to `OpenCascade.Graphic3D.AlphaMode.AlphaMode`
 
 ### Changed
 
@@ -46,6 +48,7 @@ and this project adheres to the
 ### Fixed 
 
 - Corrected Return type of `OpenCascade.XSControl.Reader.transferRoots` from `Bool` to `Int`
+- Fixed the `Enum` instance for `OpenCascade.Font.FontAspect.FontAspect` so that the correct values are sent to the kernel 
 
 ## 0.8.0.0
 
