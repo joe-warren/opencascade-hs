@@ -125,12 +125,14 @@ typedef void BOPAlgo_Builder;
 typedef void BOPAlgo_BOP;
 typedef void BOPAlgo_CellsBuilder;
 typedef int BOPAlgo_Operation;
+typedef int BRepBuilderAPI_TransitionMode;
 typedef void IntCurvesFace_ShapeIntersector;
 typedef void GCPnts_AbscissaPoint;
 typedef void Standard_Failure;
 typedef void HS_STANDARD_FAILURE;
 typedef void STD_EXCEPTION;
 typedef void STD_RUNTIME_ERROR;
+
 
 typedef int HSExceptionType;
 
