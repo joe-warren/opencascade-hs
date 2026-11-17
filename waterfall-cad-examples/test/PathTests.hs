@@ -11,7 +11,7 @@ import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Path2D as TwoD.Path2D
 import qualified Waterfall.Solids as Solids
 import Waterfall.Internal.NearZero (nearZero)
-import Linear (V3 (..), V2 (..), distance, unit, zero, _x, _z, (^*))
+import Linear (V3 (..), V2 (..), distance, unit, zero, angle, _x, _z, (^*))
 import Data.Function ((&))
 import Data.Maybe (fromMaybe)
 import Test.Tasty (TestTree, testGroup)
@@ -51,5 +51,22 @@ pathTests = testGroup "Path"
             assertApproxEqual "correct length" 1e-6 0.1 . Path.pathLength . Path.takePathFraction 0.1 $ (Path.line zero (unit _z) :: Path.Path) 
         , testCase "tiny fraction" $
             assertApproxEqual "correct length" 1e-6 0 . Path.pathLength . Path.takePathFraction 1e-9 $ (Path.line zero (unit _z) :: Path.Path) 
+        ]
+    , testGroup "repeatLooping"
+        [ testCase "line" $
+            let seg = Path.line (angle (pi/18)) (angle (3 * pi/18))
+            in assertApproxEqual "has correct length" 1e-6 18 ((Path.pathLength . TwoD.Path2D.repeatLooping $ seg) / (Path.pathLength seg))
+        , testCase "line over negative x axis" $
+            let seg = Path.line (angle (pi + pi/18)) (angle (pi - pi/18))
+            in assertApproxEqual "has correct length" 1e-6 18 ((Path.pathLength . TwoD.Path2D.repeatLooping $ seg) / (Path.pathLength seg))
+        , testCase "line over positive y axis" $
+            let seg = Path.line (angle (pi/2 + pi/18)) (angle (pi/2 - pi/18))
+            in assertApproxEqual "has correct length" 1e-6 18 ((Path.pathLength . TwoD.Path2D.repeatLooping $ seg) / (Path.pathLength seg))
+        , testCase "line over negative y axis" $
+            let seg = Path.line (angle (3*pi/2 + pi/18)) (angle (3*pi/2 - pi/18))
+            in assertApproxEqual "has correct length" 1e-6 18 ((Path.pathLength . TwoD.Path2D.repeatLooping $ seg) / (Path.pathLength seg))
+        , testCase "line over negative y axis (reversed)" $
+            let seg = Path.line (angle (3*pi/2 - pi/18)) (angle (3*pi/2 + pi/18))
+            in assertApproxEqual "has correct length" 1e-6 18 ((Path.pathLength . TwoD.Path2D.repeatLooping $ seg) / (Path.pathLength seg))
         ]
     ]

@@ -37,6 +37,7 @@ and this project adheres to the
 - Improved error handling in `readSTEP` so that this throws where it used to segfault 
 - `Sweep` now uses OpenCascade's "Right Corner" transition mode to handle sweeping paths with corners
 - `fontFromSystem` now loads the correct FontAspect
+- Fixed a bug in `repeatLooping` when the path straddled the negative y axis
 
 ### Changed 
 

@@ -81,6 +81,16 @@ arcRelative sense radius dEnd = do
     end <- (+ dEnd)
     arcTo sense radius end
 
+-- Linear.unangle returns in the range (−π/2, 3π/2)
+-- which means that the difference between two angles returned from unangle 
+-- lies in (−2π, 2π)
+-- this clamps such an angle to the range (−π, π)
+clampAngle :: Double -> Double 
+clampAngle a 
+    | a < -pi = a + pi*2
+    | a > pi = a - pi*2
+    | otherwise = a
+
 -- | Given a Path where both endpoints are equidistant from the origin,
 -- and which subtends an angle \( φ \) from the origin that evenly divides a complete revolution, such that \(n φ = 2 π \).
 -- 
@@ -92,7 +102,7 @@ repeatLooping p =
     case pathEndpoints2D p of
         Nothing -> p
         Just (s, e) ->
-            let a = unangle (e ^. _xy) - unangle (s ^. _xy)
+            let a = clampAngle (unangle (e ^. _xy) - unangle (s ^. _xy))
             in if nearZero a 
                 then mempty
                 else let times :: Integer = round (pi * 2 / abs a)
