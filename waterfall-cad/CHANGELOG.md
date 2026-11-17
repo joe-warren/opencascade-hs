@@ -37,6 +37,10 @@ and this project adheres to the
 - Improved error handling in `readSTEP` so that this throws where it used to segfault 
 - `Sweep` now uses OpenCascade's "Right Corner" transition mode to handle sweeping paths with corners
 - `fontFromSystem` now loads the correct FontAspect
+- Lowered the threshold used when creating line segments when appending paths, as previously a gap between 1e-6 and 1e-7 could cause this to fail
+- Allow a slight tolerance in `Waterfall.TwoD.Path2D.arc` as some exact semicircles were previously incorrectly rejected, arc now accepts negative radii (but ignores the sign)
+- Prevent `takePathFraction` from crashing when the output path would have been very small
+- Fixed a bug in `repeatLooping` when the path straddled the negative y axis
 
 ### Changed 
 

@@ -33,7 +33,7 @@ module Waterfall.TwoD.Path2D
 
 import Waterfall.TwoD.Internal.Path2D (Path2D(..))
 import Waterfall.TwoD.Transforms (rotate2D)
-import Waterfall.Internal.NearZero (nearZero)
+import Waterfall.Internal.NearZero (nearZero, confusion)
 import Linear.V2 (V2(..))
 import Control.Lens ((^.))
 import Linear ((^*), _xy, distance, normalize, unangle)
@@ -54,16 +54,17 @@ instance NFData Sense where
 --
 -- `arc` is not polymorphic, as it would not be possible to define an arc in 3D space in this way.
 arc :: Sense -> Double -> V2 Double -> V2 Double -> Path2D 
-arc sense radius start end = 
+arc sense radius' start end = 
     let mid = (start + end) ^* 0.5
+        radius = abs radius'
         (V2 dx dy) = normalize $ end - start
         rotD = case sense of    
                 Clockwise -> V2 dy (-dx)
                 Counterclockwise -> V2 (-dy) dx
         dse = distance start end 
-        tangent = radius - sqrt (radius * radius - dse * dse / 4) 
+        tangent = radius - sqrt (max 0 (radius * radius - dse * dse / 4))
         arcMid = mid + rotD ^* tangent
-    in if dse > 2 * radius
+    in if dse > 2 * radius + confusion
             then error "points too far apart in arc"
             else arcVia start arcMid end  
 
@@ -80,6 +81,16 @@ arcRelative sense radius dEnd = do
     end <- (+ dEnd)
     arcTo sense radius end
 
+-- Linear.unangle returns in the range (−π/2, 3π/2)
+-- which means that the difference between two angles returned from unangle 
+-- lies in (−2π, 2π)
+-- this clamps such an angle to the range (−π, π)
+clampAngle :: Double -> Double 
+clampAngle a 
+    | a < -pi = a + pi*2
+    | a > pi = a - pi*2
+    | otherwise = a
+
 -- | Given a Path where both endpoints are equidistant from the origin,
 -- and which subtends an angle \( φ \) from the origin that evenly divides a complete revolution, such that \(n φ = 2 π \).
 -- 
@@ -91,7 +102,7 @@ repeatLooping p =
     case pathEndpoints2D p of
         Nothing -> p
         Just (s, e) ->
-            let a = unangle (e ^. _xy) - unangle (s ^. _xy)
+            let a = clampAngle (unangle (e ^. _xy) - unangle (s ^. _xy))
             in if nearZero a 
                 then mempty
                 else let times :: Integer = round (pi * 2 / abs a)
