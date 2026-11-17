@@ -5,8 +5,7 @@ import GHC.Stack (HasCallStack)
 import Control.Monad (unless)
 import Test.Tasty.HUnit (Assertion, assertFailure)
 
---assertApproxEqual :: HasCallStack => String -> Double -> Double -> Double -> Assertion
-assertApproxEqual :: (Ord a, Num a, Show a) => String -> a -> a -> a -> Assertion
+assertApproxEqual :: (HasCallStack, Ord a, Num a, Show a) => String -> a -> a -> a -> Assertion
 assertApproxEqual preface tolerance expected actual =
       unless (abs (expected - actual) <= tolerance) (assertFailure msg)
     where

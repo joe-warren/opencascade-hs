@@ -21,7 +21,7 @@ import Data.Semigroup (sconcat)
 import Data.List.NonEmpty (NonEmpty ())
 import Data.Foldable (toList)
 import Control.DeepSeq (NFData (rnf), rwhnf)
-import Waterfall.Internal.NearZero as NearZero
+import qualified Waterfall.Internal.NearZero as NearZero
 
 data RawPath = EmptyRawPath | SinglePointRawPath (V3 Double) | ComplexRawPath (ForeignPtr TopoDS.Wire)
 

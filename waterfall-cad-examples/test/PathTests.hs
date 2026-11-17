@@ -1,19 +1,10 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 module PathTests
 ( pathTests
 ) where
 
-import qualified Waterfall.TwoD.Shape as Shape
-import qualified Waterfall.Booleans as Booleans
-import qualified Waterfall.Transforms as Transforms
-import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
 import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Path2D as TwoD.Path2D
-import qualified Waterfall.Solids as Solids
-import Waterfall.Internal.NearZero (nearZero)
-import Linear (V3 (..), V2 (..), distance, unit, zero, angle, _x, _z, (^*))
-import Data.Function ((&))
-import Data.Maybe (fromMaybe)
+import Linear (V3 (..), V2 (..), zero, angle, unit, _z, (^*))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import Assertions
@@ -38,7 +29,9 @@ pathTests = testGroup "Path"
             , let r = 0.1 in 
                 assertApproxEqual "has correct length (not at origin)" 1e-6  (r * pi) . Path.pathLength 
                     $ TwoD.Path2D.arc TwoD.Path2D.Clockwise r (V2 0.7 0) (V2 0.9 0)
-            , let r = 1 in 
+            ]
+        , testCase "positive and negative radii" $ mconcat
+            [let r = 1 in 
                 assertApproxEqual "has correct length (chord length 1)" 1e-6  (pi / 3) . Path.pathLength 
                     $ TwoD.Path2D.arc TwoD.Path2D.Clockwise r (V2 0 0) (V2 1 0)
             , let r = negate 1 in 
@@ -51,6 +44,8 @@ pathTests = testGroup "Path"
             assertApproxEqual "correct length" 1e-6 0.1 . Path.pathLength . Path.takePathFraction 0.1 $ (Path.line zero (unit _z) :: Path.Path) 
         , testCase "tiny fraction" $
             assertApproxEqual "correct length" 1e-6 0 . Path.pathLength . Path.takePathFraction 1e-9 $ (Path.line zero (unit _z) :: Path.Path) 
+        , testCase "small fraction & small length" $
+            assertApproxEqual "correct length" 1e-6 0 . Path.pathLength . Path.takePathFraction 1e-5 $ (Path.line zero (unit _z ^* 1e-3) :: Path.Path) 
         ]
     , testGroup "repeatLooping"
         [ testCase "line" $

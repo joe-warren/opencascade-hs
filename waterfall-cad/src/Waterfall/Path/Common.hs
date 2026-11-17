@@ -1,4 +1,5 @@
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -278,20 +279,22 @@ pathLength p =
 -- A value of 0 (or less) returns a single point at the start of the path,
 -- a value of 1 (or greater) returns the original path.
 takePathFraction :: forall point path. AnyPath point path => Double -> path -> path
-takePathFraction fraction p
-    | fraction >= 1 = p
-    | fraction <= confusion =
-        case pathEndpoints p of
-            Just (s, _) -> reconstructPath . SinglePointRawPath $ pointToV3 (Proxy :: Proxy path) s
-            Nothing -> p
-    | otherwise =
-        case deconstructPath p of
-            ComplexRawPath r -> fromWire $ do
-                wire <- acquireForeignPtr r
-                totalLength <- liftIO $ wireLength wire
-                let targetLength = fraction * totalLength
-                truncateWire targetLength wire
-            _ -> p
+takePathFraction fraction p =
+    let len = pathLength p 
+    in if
+        | fraction >= 1 -> p
+        | fraction * len <= confusion ->
+            case pathEndpoints p of
+                Just (s, _) -> reconstructPath . SinglePointRawPath $ pointToV3 (Proxy :: Proxy path) s
+                Nothing -> p
+        | otherwise ->
+            case deconstructPath p of
+                ComplexRawPath r -> fromWire $ do
+                    wire <- acquireForeignPtr r
+                    totalLength <- liftIO $ wireLength wire
+                    let targetLength = fraction * totalLength
+                    truncateWire targetLength wire
+                _ -> p
 
 instance AnyPath (V3 Double) Path where
     reconstructPath :: RawPath -> Path
