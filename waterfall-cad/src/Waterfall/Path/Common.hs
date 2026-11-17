@@ -291,8 +291,7 @@ takePathFraction fraction p =
             case deconstructPath p of
                 ComplexRawPath r -> fromWire $ do
                     wire <- acquireForeignPtr r
-                    totalLength <- liftIO $ wireLength wire
-                    let targetLength = fraction * totalLength
+                    let targetLength = fraction * len
                     truncateWire targetLength wire
                 _ -> p
 
