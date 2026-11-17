@@ -41,6 +41,7 @@ and this project adheres to the
 - Allow a slight tolerance in `Waterfall.TwoD.Path2D.arc` as some exact semicircles were previously incorrectly rejected, arc now accepts negative radii (but ignores the sign)
 - Prevent `takePathFraction` from crashing when the output path would have been very small
 - Fixed a bug in `repeatLooping` when the path straddled the negative y axis
+- `arcVia`, `arcViaTo` and `arcViaRelative` no longer crash when the points are collinear, and the midpoint lies between the two endpoints
 
 ### Changed 
 

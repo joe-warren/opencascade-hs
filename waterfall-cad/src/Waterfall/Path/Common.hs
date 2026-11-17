@@ -55,7 +55,7 @@ import qualified OpenCascade.GP.Vec as  GP.Vec
 import qualified OpenCascade.BRepBuilderAPI.Transform as BRepBuilderAPI.Transform
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as BRepBuilderAPI.MakeShape
 import Data.Proxy (Proxy (..))
-import Linear (V3 (..), V2 (..), _xy, Epsilon)
+import Linear (V3 (..), V2 (..), _xy, norm, normalize, quadrance, Epsilon)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import Control.Lens ((^.))
 
@@ -112,16 +112,24 @@ lineRelative dEnd = do
 
 -- | Section of a circle based on three arguments, the start point, a point on the arc, and the endpoint
 arcVia :: forall point path. (AnyPath point path) => point -> point -> point -> path
-arcVia start mid end =
-    let vc = veryClose (Proxy :: Proxy path)
-    in if vc start end && vc start mid
-        then reconstructPath . SinglePointRawPath . pointToV3 (Proxy :: Proxy path) $ start
-        else edgeToPath $ do
-            s <- pointToGPPnt (Proxy :: Proxy path) start
-            m <- pointToGPPnt (Proxy :: Proxy path) mid
-            e <- pointToGPPnt (Proxy :: Proxy path) end
+arcVia start mid end
+    | vc start end && vc start mid = 
+        reconstructPath . SinglePointRawPath . pointToV3 prx $ start
+    | colinear && midBetween = line start end
+    | otherwise = edgeToPath $ do
+            s <- pointToGPPnt prx start
+            m <- pointToGPPnt prx mid
+            e <- pointToGPPnt prx end
             theArc <- MakeArcOfCircle.from3Pnts s m e
             MakeEdge.fromCurve (upcast theArc)
+    where 
+        prx = (Proxy :: Proxy path)
+        vc = veryClose prx   
+        d1 = (pointToV3 prx mid - pointToV3 prx start)
+        d2 = (pointToV3 prx end - pointToV3 prx start)
+        colinear = nearZero . norm $ (normalize d1 - normalize d2)
+        midBetween = quadrance d1 < quadrance d2
+
 
 -- | Version of `arcVia` designed to work with `pathFrom`
 --
