@@ -122,12 +122,16 @@ torus ::
     Double -- ^ The Major Radius (Distance from center of torus to center of tube)
     -> Double -- ^ The Minor Radius (Distance from center of tube to the surface of the torus)
     -> Solid
-torus major minor 
+torus major' minor' 
     | major < minor = mempty  
+    | nearZero minor = mempty
     | otherwise = solidFromAcquire emptyPaintMap
          $ MakeShape.shape 
          . Inheritance.upcast 
          =<< MakeTorus.fromRadii major minor
+    where 
+        major = abs major'
+        minor = abs minor'
 
 -- | A cone 
 -- With a point at the origin 
