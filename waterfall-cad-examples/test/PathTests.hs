@@ -1,10 +1,11 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module PathTests
 ( pathTests
 ) where
 
 import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Path2D as TwoD.Path2D
-import Linear (V3 (..), V2 (..), zero, angle, unit, _z, (^*))
+import Linear (V3 (..), V2 (..), zero, angle, unit, norm, _x, _z, (^*))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import Assertions
@@ -38,6 +39,16 @@ pathTests = testGroup "Path"
                 assertApproxEqual "has correct length (negative radius)" 1e-6  (pi / 3) . Path.pathLength 
                     $ TwoD.Path2D.arc TwoD.Path2D.Clockwise r (V2 0 0) (V2 1 0)
             ]
+        , testCase "coincident start and end" $ 
+            let p = TwoD.Path2D.arc TwoD.Path2D.Clockwise 1 (unit _x) (unit _x)
+                in assertApproxEqual "has correct length" 1e-6 0 .  Path.pathLength $ p
+        ]
+    , testGroup "arcVia" 
+        [ testCase "collinear points" $
+            let o = V2 1.2 3
+                d = V2 3 1.2
+                p :: TwoD.Path2D.Path2D = Path.arcVia o (o + d ^* 0.4) (o + d)
+            in assertApproxEqual "has correct length" 1e-6 (norm d) .  Path.pathLength $ p
         ]
     , testGroup "takePathFraction"
         [ testCase "line" $
