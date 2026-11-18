@@ -182,8 +182,7 @@ projectedRegions s projectionDir projector extractor = do
                                     indices <- traverse (liftIO . Poly.Triangle.value t) [1, 2, 3]
                                     corners <- traverse (liftIO . gpPntToV3 <=< Poly.Triangulation.node tri) indices
                                     pure (sum corners / 3)
-                                centerOfMass <- liftIO . gpPntToV3 =<< GProps.centreOfMass props
-                                let candidatePoints = (triangleCenters <> [centerOfMass])
+                                let candidatePoints = (triangleCenters)
                                         & (traverse . _z .~ 0)
 
                                 let lookupCandidateFace [] = pure Nothing
