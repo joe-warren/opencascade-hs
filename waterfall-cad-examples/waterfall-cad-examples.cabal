@@ -39,6 +39,7 @@ data-files:
     test-data/foldUnionOfSquares.svg
     test-data/gear-profile.svg
     test-data/gear.svg
+    test-data/holeWithCentreOfMassOverSolid.svg
     test-data/intersectionsOfCubes.svg
     test-data/intersectionsOfIdenticalCubes.svg
     test-data/intersectionsOfIdenticalSquares.svg

@@ -719,4 +719,19 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         "<rect width=\"100\" height=\"100\"/><rect x=\"120\" y=\"20\" width=\"80\" height=\"60\" rx=\"20\" ry=\"10\"/>"
     , svgElementsTest "svg rounded rect single radius" "svgRoundedRectSingleRadius.svg"
         "<rect width=\"80\" height=\"60\" rx=\"20\"/><rect x=\"100\" width=\"80\" height=\"60\" ry=\"10\"/>"
+        
+    , diagramTest "hole with centre of mass over solid material" "holeWithCentreOfMassOverSolid.svg" (
+              let bar lo hi = Shape.unitSquare
+                      & TwoD.Transforms.scale2D (hi - lo)
+                      & TwoD.Transforms.translate2D lo
+                  slot = Shape.unions2D
+                      [ bar (V2 (-1.2) (-1.2)) (V2 (-0.8) 1.2)
+                      , bar (V2 (-1.2) 0.8) (V2 1.2 1.2)
+                      , bar (V2 (-1.2) (-1.2)) (V2 1.2 (-0.8))
+                      ]
+                  plate = Solids.prism 0.25 (TwoD.Transforms.uScale2D 4 Shape.centeredSquare)
+                      `Booleans.difference` (Solids.prism 3 slot & Transforms.translate (V3 0 0 (-1)))
+              in withWidth 800 . Diagram.solidDiagram (V3 1 2 8)
+                    $ Solids.colourSolid Colour.aqua plate
+              )
     ]
