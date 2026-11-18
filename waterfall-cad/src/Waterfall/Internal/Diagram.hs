@@ -16,6 +16,8 @@ import Data.Traversable (forM)
 import qualified OpenCascade.HLRBRep.HLRToShape as HLRBRep.HLRToShape
 import qualified OpenCascade.Bnd.Box as Bnd.Box
 import Data.Foldable (forM_)
+import Data.List (sortOn)
+import Data.Ord (Down (..))
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.BRepBndLib as BRepBndLib
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
@@ -25,7 +27,7 @@ import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Control.Lens ((^.), (&), (.~), (<&>))
-import Linear (_x, _y, _z, V3, norm, unit)
+import Linear (V3 (..), _x, _y, _z, norm, unit, cross)
 import qualified Data.IntMap as IntMap
 import Data.Maybe (fromMaybe, catMaybes)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
@@ -177,12 +179,15 @@ projectedRegions s projectionDir projector extractor = do
                                 nullTriangulation <- liftIO $ Poly.Triangulation.isNull tri
                                 nTri <- if nullTriangulation then pure 0 else liftIO $ Poly.Triangulation.nbTriangles tri
 
-                                triangleCenters <- forM [1..nTri] $ \i -> do 
+                                triangles <- forM [1..nTri] $ \i -> do 
                                     t <- Poly.Triangulation.triangle tri i
-                                    indices <- traverse (liftIO . Poly.Triangle.value t) [1, 2, 3]
-                                    corners <- traverse (liftIO . gpPntToV3 <=< Poly.Triangulation.node tri) indices
-                                    pure (sum corners / 3)
-                                let candidatePoints = (triangleCenters)
+                                    indices <- traverse (liftIO . Poly.Triangle.value t) (V3 1 2 3)
+                                    traverse (liftIO . gpPntToV3 <=< Poly.Triangulation.node tri) indices
+                                let triangleArea (V3 a b c) = norm ((b - a) `cross` (c - a))
+                                    triangleCenter corners = (sum corners / 3)
+                                    candidatePoints = triangles
+                                        & sortOn (Down . triangleArea)
+                                        & fmap triangleCenter
                                         & (traverse . _z .~ 0)
 
                                 let lookupCandidateFace [] = pure Nothing
