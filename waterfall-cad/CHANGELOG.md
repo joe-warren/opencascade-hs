@@ -42,6 +42,7 @@ and this project adheres to the
 - Prevent `takePathFraction` from crashing when the output path would have been very small
 - Fixed a bug in `repeatLooping` when the path straddled the negative y axis
 - `arcVia`, `arcViaTo` and `arcViaRelative` no longer crash when the points are collinear, and the midpoint lies between the two endpoints
+- Fixed a bug where a `Diagram` fill could be incorrectly created for a hole if the centroid of the hole's outline overlapped with a solid face, or a small part of the hole's area overlapped with the object
 
 ### Changed 
 
