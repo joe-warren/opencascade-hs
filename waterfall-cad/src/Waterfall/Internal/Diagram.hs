@@ -15,7 +15,7 @@ import Waterfall.Internal.Edges (allEdges, buildEdgeCurve3D, allSubShapesWithCop
 import Data.Traversable (forM)
 import qualified OpenCascade.HLRBRep.HLRToShape as HLRBRep.HLRToShape
 import qualified OpenCascade.Bnd.Box as Bnd.Box
-import Data.Foldable (forM_)
+import Data.Foldable (forM_, maximumBy)
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.BRepBndLib as BRepBndLib
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
@@ -25,7 +25,7 @@ import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
 import Control.Lens ((^.), (&), (.~), (<&>))
-import Linear (_x, _y, _z, V3, norm, unit)
+import Linear (V3 (..), _x, _y, _z, norm, unit, cross)
 import qualified Data.IntMap as IntMap
 import Data.Maybe (fromMaybe, catMaybes)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
@@ -41,7 +41,7 @@ import qualified OpenCascade.BRepGProp as BRepGProp
 import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.Poly.Triangulation as Poly.Triangulation
 import qualified OpenCascade.Poly.Triangle as Poly.Triangle
-import Control.Monad ((<=<), filterM)
+import Control.Monad ((<=<), filterM, join)
 import Waterfall.Internal.ToOpenCascade (v3ToPnt, v3ToDir)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Lin as GP.Lin
@@ -53,6 +53,8 @@ import qualified OpenCascade.HLRBRep.Algo as HLRBRep.Algo
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.HLRAlgo.Projector as HLRAlgo.Projector
 import qualified OpenCascade.GP.Ax2 as GP.Ax2
+import Data.Function (on)
+import qualified Data.List.NonEmpty as NE
 
 boundaryEdges :: Ptr HLRBRep.HLRToShape -> Acquire [Ptr TopoDS.Edge]
 boundaryEdges extractor = 
@@ -171,37 +173,35 @@ projectedRegions s projectionDir projector extractor = do
                                 mesh <- IncrementalMesh.fromShapeAndLinDeflection (upcast region) tolerance
                                 liftIO $ IncrementalMesh.perform mesh
                                 loc <- TopLoc.Location.new
-                                props <- GProps.new
-                                liftIO $ BRepGProp.surfaceProperties (upcast region) props False False 
                                 tri <- BRep.Tool.triangulation region loc
                                 nullTriangulation <- liftIO $ Poly.Triangulation.isNull tri
                                 nTri <- if nullTriangulation then pure 0 else liftIO $ Poly.Triangulation.nbTriangles tri
 
-                                triangleCenters <- forM [1..nTri] $ \i -> do 
+                                triangles <- forM [1..nTri] $ \i -> do 
                                     t <- Poly.Triangulation.triangle tri i
-                                    indices <- traverse (liftIO . Poly.Triangle.value t) [1, 2, 3]
-                                    corners <- traverse (liftIO . gpPntToV3 <=< Poly.Triangulation.node tri) indices
-                                    pure (sum corners / 3)
-                                centerOfMass <- liftIO . gpPntToV3 =<< GProps.centreOfMass props
-                                let candidatePoints = (triangleCenters <> [centerOfMass])
-                                        & (traverse . _z .~ 0)
+                                    indices <- traverse (liftIO . Poly.Triangle.value t) (V3 1 2 3)
+                                    traverse (liftIO . gpPntToV3 <=< Poly.Triangulation.node tri) indices
+                                let triangleArea (V3 a b c) = norm ((b - a) `cross` (c - a)) / 2
+                                    triangleCenter corners = sum corners / 3
+                                    candidatePoint = triangles
+                                        & NE.nonEmpty
+                                        & fmap (triangleCenter 
+                                            . (maximumBy (compare `on` triangleArea)))
+                                        & traverse . _z .~ 0
 
-                                let lookupCandidateFace [] = pure Nothing
-                                    lookupCandidateFace (h:t) = do
-                                        pin <- v3ToPnt h
+                                let lookupCandidateFace point = do
+                                        pin <- v3ToPnt point
                                         p <- GP.Pnt.transformed pin inv
                                         line <- GP.Lin.new p d
                                         liftIO $ ShapeIntersector.perform intersector line (-rayBound) rayBound
                                         
                                         n <- liftIO $ ShapeIntersector.nbPnt intersector
                                         hits <- forM [1 .. n] $ \i -> (, i) <$> liftIO (ShapeIntersector.wParameter intersector i)
-                                        case hits of
-                                            [] -> lookupCandidateFace t
-                                            _ -> do
-                                                let (_, nearest) = maximum hits
-                                                hit <- ShapeIntersector.face intersector nearest
-                                                return $ Just (hit)
-                                faceMaybe <- lookupCandidateFace candidatePoints
+                                        forM (NE.nonEmpty hits) $ \h -> do
+                                            let (_, nearest) = maximum h
+                                            ShapeIntersector.face intersector nearest
+
+                                faceMaybe <- fmap join . traverse lookupCandidateFace $ candidatePoint
                                 return $ (region, faceMaybe)
 
 silhouetteShape 
