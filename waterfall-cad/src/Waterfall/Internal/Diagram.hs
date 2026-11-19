@@ -15,9 +15,7 @@ import Waterfall.Internal.Edges (allEdges, buildEdgeCurve3D, allSubShapesWithCop
 import Data.Traversable (forM)
 import qualified OpenCascade.HLRBRep.HLRToShape as HLRBRep.HLRToShape
 import qualified OpenCascade.Bnd.Box as Bnd.Box
-import Data.Foldable (forM_)
-import Data.List (sortOn)
-import Data.Ord (Down (..))
+import Data.Foldable (forM_, maximumBy)
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.BRepBndLib as BRepBndLib
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
@@ -43,7 +41,7 @@ import qualified OpenCascade.BRepGProp as BRepGProp
 import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.Poly.Triangulation as Poly.Triangulation
 import qualified OpenCascade.Poly.Triangle as Poly.Triangle
-import Control.Monad ((<=<), filterM)
+import Control.Monad ((<=<), filterM, join)
 import Waterfall.Internal.ToOpenCascade (v3ToPnt, v3ToDir)
 import qualified OpenCascade.GP.Pnt as GP.Pnt
 import qualified OpenCascade.GP.Lin as GP.Lin
@@ -55,6 +53,8 @@ import qualified OpenCascade.HLRBRep.Algo as HLRBRep.Algo
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.HLRAlgo.Projector as HLRAlgo.Projector
 import qualified OpenCascade.GP.Ax2 as GP.Ax2
+import Data.Function (on)
+import qualified Data.List.NonEmpty as NE
 
 boundaryEdges :: Ptr HLRBRep.HLRToShape -> Acquire [Ptr TopoDS.Edge]
 boundaryEdges extractor = 
@@ -185,13 +185,13 @@ projectedRegions s projectionDir projector extractor = do
                                     traverse (liftIO . gpPntToV3 <=< Poly.Triangulation.node tri) indices
                                 let triangleArea (V3 a b c) = norm ((b - a) `cross` (c - a))
                                     triangleCenter corners = (sum corners / 3)
-                                    candidatePoints = triangles
-                                        & sortOn (Down . triangleArea)
+                                    candidatePoint = triangles
+                                        & NE.nonEmpty
+                                        & fmap (maximumBy (compare `on` triangleArea))
                                         & fmap triangleCenter
                                         & (traverse . _z .~ 0)
 
-                                let lookupCandidateFace [] = pure Nothing
-                                    lookupCandidateFace (h:t) = do
+                                let lookupCandidateFace  h = do
                                         pin <- v3ToPnt h
                                         p <- GP.Pnt.transformed pin inv
                                         line <- GP.Lin.new p d
@@ -200,12 +200,12 @@ projectedRegions s projectionDir projector extractor = do
                                         n <- liftIO $ ShapeIntersector.nbPnt intersector
                                         hits <- forM [1 .. n] $ \i -> (, i) <$> liftIO (ShapeIntersector.wParameter intersector i)
                                         case hits of
-                                            [] -> lookupCandidateFace t
+                                            [] -> return Nothing
                                             _ -> do
                                                 let (_, nearest) = maximum hits
                                                 hit <- ShapeIntersector.face intersector nearest
-                                                return $ Just (hit)
-                                faceMaybe <- lookupCandidateFace candidatePoints
+                                                return $ Just hit
+                                faceMaybe <- fmap join . traverse lookupCandidateFace $ candidatePoint
                                 return $ (region, faceMaybe)
 
 silhouetteShape 
