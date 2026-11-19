@@ -173,8 +173,6 @@ projectedRegions s projectionDir projector extractor = do
                                 mesh <- IncrementalMesh.fromShapeAndLinDeflection (upcast region) tolerance
                                 liftIO $ IncrementalMesh.perform mesh
                                 loc <- TopLoc.Location.new
-                                props <- GProps.new
-                                liftIO $ BRepGProp.surfaceProperties (upcast region) props False False 
                                 tri <- BRep.Tool.triangulation region loc
                                 nullTriangulation <- liftIO $ Poly.Triangulation.isNull tri
                                 nTri <- if nullTriangulation then pure 0 else liftIO $ Poly.Triangulation.nbTriangles tri
@@ -183,28 +181,26 @@ projectedRegions s projectionDir projector extractor = do
                                     t <- Poly.Triangulation.triangle tri i
                                     indices <- traverse (liftIO . Poly.Triangle.value t) (V3 1 2 3)
                                     traverse (liftIO . gpPntToV3 <=< Poly.Triangulation.node tri) indices
-                                let triangleArea (V3 a b c) = norm ((b - a) `cross` (c - a))
-                                    triangleCenter corners = (sum corners / 3)
+                                let triangleArea (V3 a b c) = norm ((b - a) `cross` (c - a)) / 2
+                                    triangleCenter corners = sum corners / 3
                                     candidatePoint = triangles
                                         & NE.nonEmpty
-                                        & fmap (maximumBy (compare `on` triangleArea))
-                                        & fmap triangleCenter
-                                        & (traverse . _z .~ 0)
+                                        & fmap (triangleCenter 
+                                            . (maximumBy (compare `on` triangleArea)))
+                                        & traverse . _z .~ 0
 
-                                let lookupCandidateFace  h = do
-                                        pin <- v3ToPnt h
+                                let lookupCandidateFace point = do
+                                        pin <- v3ToPnt point
                                         p <- GP.Pnt.transformed pin inv
                                         line <- GP.Lin.new p d
                                         liftIO $ ShapeIntersector.perform intersector line (-rayBound) rayBound
                                         
                                         n <- liftIO $ ShapeIntersector.nbPnt intersector
                                         hits <- forM [1 .. n] $ \i -> (, i) <$> liftIO (ShapeIntersector.wParameter intersector i)
-                                        case hits of
-                                            [] -> return Nothing
-                                            _ -> do
-                                                let (_, nearest) = maximum hits
-                                                hit <- ShapeIntersector.face intersector nearest
-                                                return $ Just hit
+                                        forM (NE.nonEmpty hits) $ \h -> do
+                                            let (_, nearest) = maximum h
+                                            ShapeIntersector.face intersector nearest
+
                                 faceMaybe <- fmap join . traverse lookupCandidateFace $ candidatePoint
                                 return $ (region, faceMaybe)
 
