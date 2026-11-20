@@ -12,6 +12,7 @@ module Waterfall.Internal.Edges
 , reverseEdge
 , reverseWire
 , forwardWire
+, forwardWireAndStripZeroLengthEdges
 , intersperseLines
 , joinWires
 , splitWires
@@ -41,7 +42,7 @@ import Control.Monad.IO.Class (liftIO)
 import Linear (V3 (..), distance, normalize)
 import Foreign.Ptr
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
-import Control.Monad (when, (<=<), unless)
+import Control.Monad (when, (<=<), unless, filterM)
 import Waterfall.Internal.ToOpenCascade (v3ToPnt)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
@@ -123,13 +124,24 @@ wireFromEdges edges = do
 forwardWire :: Ptr TopoDS.Wire -> Acquire (Ptr TopoDS.Wire)
 forwardWire wire = do
     edges <- wireEdgesWithoutReversing wire
-    let isAlreadyFine e = (&&) <$> edgeIsForward e <*> edgeHasLength e
-    alreadyGood <- and <$> liftIO (traverse isAlreadyFine edges)
+    alreadyGood <- and <$> liftIO (traverse edgeIsForward edges)
     if alreadyGood 
         then return wire
         else do
             wireFromEdges =<< wireEdges wire
 
+forwardWireAndStripZeroLengthEdges :: Ptr TopoDS.Wire -> Acquire (Maybe (Ptr TopoDS.Wire))
+forwardWireAndStripZeroLengthEdges wire = do
+    edges <- wireEdgesWithoutReversing wire
+    let isAlreadyFine e = (&&) <$> edgeIsForward e <*> edgeHasLength e
+    alreadyGood <- and <$> liftIO (traverse isAlreadyFine edges)
+    if alreadyGood 
+        then return (Just wire)
+        else do
+            lengthyEdges <- liftIO . filterM edgeHasLength =<< wireEdges wire
+            if null lengthyEdges 
+                then return Nothing
+                else Just <$> wireFromEdges lengthyEdges
 edgeIsForward :: Ptr TopoDS.Edge -> IO Bool
 edgeIsForward = 
     fmap (== TopAbs.Orientation.Forward) . TopoDS.Shape.orientation . upcast

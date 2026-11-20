@@ -18,13 +18,13 @@ module Waterfall.Transforms
 , _mirrored
 ) where
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireMappingPaintMap, makeShapeHistory)
-import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr) 
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquirePtrT) 
 import Waterfall.Internal.Path.Common (RawPath(..))
-import Waterfall.Internal.NearZero (nearZero)
-import Waterfall.Internal.Edges (forwardWire)
+import Waterfall.Internal.NearZero (nearZero, confusion)
+import Waterfall.Internal.Edges (forwardWireAndStripZeroLengthEdges)
 import Linear.V3 (V3 (..))
 import Linear.V4 (V4 (..))
-import Linear (M34, M33, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z, (!*!), transpose, (!-!), (*!!), identity, quadrance, zero)
+import Linear (M34, M33, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z, (!*!), transpose, (!-!), (*!!), identity, quadrance, zero, norm, det33)
 import qualified Linear.Quaternion as Quaternion
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
@@ -44,6 +44,7 @@ import Waterfall.Internal.Path (Path(..))
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Data.Function ((&))
 import Control.Lens ((.~), Iso', iso, (^.))
+import Waterfall.Path (pathEndpoints)
 
 -- | Typeclass for objects that can be manipulated in 3D space
 class Transformable a where
@@ -80,26 +81,36 @@ transformPathSinglePointPaths f (Path (SinglePointRawPath v)) = Path . SinglePoi
 transformPathSinglePointPaths _ p = p 
 
 fromTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.Trsf) -> Path -> Path
-fromTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquirePtr $ do 
-    path <- acquireForeignPtr p
-    trsf <- mkTrsf 
-    forwardWire 
-        =<< (liftIO . unsafeDowncast)
-        =<< BRepBuilderAPI.MakeShape.shape
-        =<< fmap upcast 
-            (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
+fromTrsfPath f mkTrsf p@(Path (ComplexRawPath rawPath)) = 
+    let pathFromEndpoints = 
+            Path . maybe EmptyRawPath (SinglePointRawPath . f . fst) . pathEndpoints
+    in maybe 
+        (pathFromEndpoints p)
+        (Path . ComplexRawPath) . unsafeFromAcquirePtrT $ do 
+            path <- acquireForeignPtr rawPath
+            trsf <- mkTrsf 
+            forwardWireAndStripZeroLengthEdges 
+                =<< (liftIO . unsafeDowncast)
+                =<< BRepBuilderAPI.MakeShape.shape
+                =<< fmap upcast 
+                    (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
 fromTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
 fromTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 
 fromGTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.GTrsf) -> Path -> Path
-fromGTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquirePtr $ do 
-    path <- acquireForeignPtr p
-    trsf <- mkTrsf 
-    forwardWire
-        =<< (liftIO . unsafeDowncast) 
-        =<< BRepBuilderAPI.MakeShape.shape
-        =<< fmap upcast
-            (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
+fromGTrsfPath f mkTrsf p@(Path (ComplexRawPath rawPath)) = 
+    let pathFromEndpoints = 
+            Path . maybe EmptyRawPath (SinglePointRawPath  . f . fst) . pathEndpoints
+    in maybe 
+        (pathFromEndpoints p)
+        (Path . ComplexRawPath) . unsafeFromAcquirePtrT $ do 
+            path <- acquireForeignPtr rawPath
+            trsf <- mkTrsf 
+            forwardWireAndStripZeroLengthEdges
+                =<< (liftIO . unsafeDowncast) 
+                =<< BRepBuilderAPI.MakeShape.shape
+                =<< fmap upcast
+                    (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
 fromGTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
 fromGTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 
@@ -191,7 +202,8 @@ isOrthogonalAndScale m =
 
 matrixGTrsf :: M34 Double -> Maybe (Either (Acquire (Ptr GP.Trsf)) (Acquire (Ptr GP.GTrsf)))
 matrixGTrsf (V3 (V4 1 0 0 0) (V4 0 1 0 0) (V4 0 0 1 0)) = Nothing
-matrixGTrsf (V3 (V4 x 0 0 0) (V4 0 y 0 0) (V4 0 0 z 0)) | x == y && y == z = Just . Left . uScaleTrsf $ x
+matrixGTrsf (V3 (V4 x 0 0 0) (V4 0 y 0 0) (V4 0 0 z 0)) 
+    | x == y && y == z && not (nearZero x)= Just . Left . uScaleTrsf $ x
 matrixGTrsf m@(V3 (V4 v11 v12 v13 v14) (V4 v21 v22 v23 v24) (V4 v31 v32 v33 v34)) 
     | isOrthogonalAndScale (fmap (^. _xyz) m) = Just . Left $ do
         trsf <- GP.Trsf.new
@@ -216,8 +228,15 @@ matrixGTrsf m@(V3 (V4 v11 v12 v13 v14) (V4 v21 v22 v23 v24) (V4 v31 v32 v33 v34)
     
 instance Transformable Solid where
     matTransform :: M34 Double -> Solid -> Solid
-    matTransform = maybe id (either fromTrsfSolid fromGTrsfSolid) . matrixGTrsf 
-    
+    matTransform m 
+        |  isSingular = mempty 
+        | otherwise = maybe id (either fromTrsfSolid fromGTrsfSolid) (matrixGTrsf m)
+      where 
+        isSingular =
+            let m33 = (^. _xyz) <$> m
+                rowNorms = norm <$> m33
+            in any nearZero rowNorms || abs (det33 m33) < confusion * product rowNorms
+
     scale :: V3 Double -> Solid -> Solid
     scale factor
         | any nearZero factor = mempty 

@@ -6,7 +6,7 @@ module PathTests
 import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Path2D as TwoD.Path2D
 import qualified Waterfall.Transforms as Transforms
-import Linear (V3 (..), V2 (..), zero, angle, unit, norm, _x, _y, _z, (^*))
+import Linear (V3 (..), V4 (..), V2 (..), zero, angle, unit, norm, _x, _y, _z, (^*))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import Assertions
@@ -100,5 +100,40 @@ pathTests = testGroup "Path"
                 )
                 , testCase "uScale by zero" .
                     assertEqual "length is zero" 0.0 . Path.pathLength . Transforms.uScale 0 $ square
+                , testCase "scale that collapses the whole path" (
+                    let p :: Path.Path = Transforms.scale (V3 1 1 0) (Path.line (V3 1 2 0) (V3 1 2 5))
+                    in (assertEqual "length is zero" 0.0 . Path.pathLength $ p)
+                        <> (assertEqual "is a single point" (Just (V3 1 2 0, V3 1 2 0)) . Path.pathEndpoints $ p)
+                )
+                , testCase "matTransform by zero matrix" (
+                    let p = Transforms.matTransform zero square
+                    in (assertEqual "length is zero" 0.0 . Path.pathLength $ p)
+                        <> (assertEqual "is a single point at the origin" (Just (zero, zero)) . Path.pathEndpoints $ p)
+                )
+                , testCase "matTransform by translation with zero linear part" (
+                    let p = Transforms.matTransform (V3 (V4 0 0 0 1) (V4 0 0 0 2) (V4 0 0 0 3)) square
+                    in (assertEqual "length is zero" 0.0 . Path.pathLength $ p)
+                        <> (assertEqual "is a single point at the translation" (Just (V3 1 2 3, V3 1 2 3)) . Path.pathEndpoints $ p)
+                )
+                , testCase "matTransform by singular diagonal matrix" (
+                    let p = Transforms.matTransform (V3 (V4 1 0 0 0) (V4 0 0.5 0 0) (V4 0 0 0 0)) routeAroundCube
+                    in (assertApproxEqual "length is correct" 1e-6 3.0 . Path.pathLength $ p)
+                        <> (assertBool "has no degenerate segments" . all ((> 0) . Path.pathLength) . Path.splitPath $ p)
+                )
+                , testCase "matTransform by singular matrix that is not axis aligned" (
+                    let p = Transforms.matTransform (V3 (V4 1 0 0 0) (V4 0 1 0 0) (V4 1 1 0 0)) routeAroundCube
+                    in (assertApproxEqual "length is correct" 1e-6 (4 * sqrt 2) . Path.pathLength $ p)
+                        <> (assertBool "has no degenerate segments" . all ((> 0) . Path.pathLength) . Path.splitPath $ p)
+                )
+                , testCase "matTransform by rank one matrix" (
+                    let p = Transforms.matTransform (V3 (V4 1 0 0 0) (V4 0 0 0 0) (V4 0 0 0 0)) routeAroundCube
+                    in (assertApproxEqual "length is correct" 1e-6 2.0 . Path.pathLength $ p)
+                        <> (assertBool "has no degenerate segments" . all ((> 0) . Path.pathLength) . Path.splitPath $ p)
+                )
+                , testCase "matTransform that collapses the whole path" (
+                    let p :: Path.Path = Transforms.matTransform (V3 (V4 1 0 0 0) (V4 0 1 0 0) (V4 0 0 0 7)) (Path.line (V3 1 2 0) (V3 1 2 5))
+                    in (assertEqual "length is zero" 0.0 . Path.pathLength $ p)
+                        <> (assertEqual "is a single point" (Just (V3 1 2 7, V3 1 2 7)) . Path.pathEndpoints $ p)
+                )
                 ]
     ]
