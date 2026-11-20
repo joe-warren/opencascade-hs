@@ -229,7 +229,7 @@ matrixGTrsf m@(V3 (V4 v11 v12 v13 v14) (V4 v21 v22 v23 v24) (V4 v31 v32 v33 v34)
 instance Transformable Solid where
     matTransform :: M34 Double -> Solid -> Solid
     matTransform m 
-        |  isSingular = mempty 
+        | isSingular = mempty 
         | otherwise = maybe id (either fromTrsfSolid fromGTrsfSolid) (matrixGTrsf m)
       where 
         isSingular =
@@ -256,6 +256,10 @@ instance Transformable Solid where
     mirror :: V3 Double -> Solid -> Solid
     mirror = maybe id fromTrsfSolid . mirrorTrsf
 
+collapseToOrigin :: Path -> Path
+collapseToOrigin (Path EmptyRawPath) = Path EmptyRawPath
+collapseToOrigin _ = Path . SinglePointRawPath $ zero
+
 instance Transformable Path where
     matTransform :: M34 Double -> Path -> Path
     matTransform m = 
@@ -263,15 +267,15 @@ instance Transformable Path where
         in maybe id (either (fromTrsfPath transformPnt) (fromGTrsfPath transformPnt)) $ matrixGTrsf m
     
     scale :: V3 Double -> Path -> Path
-    scale s 
-        | nearZero . quadrance $ s = const (Path . SinglePointRawPath $ zero)
+    scale s
+        | all nearZero s = collapseToOrigin
         | otherwise = 
             let transformPnt = scale s 
             in transformPathSinglePointPaths transformPnt . applyScaleTrsf (fromTrsfPath id) (fromGTrsfPath id) (scaleTrsf s)
 
     uScale :: Double -> Path -> Path
     uScale s
-        | nearZero s = const (Path . SinglePointRawPath $ zero)
+        | nearZero s = collapseToOrigin
         | otherwise = fromTrsfPath (uScale s) (uScaleTrsf s)
 
     rotate :: V3 Double -> Double -> Path -> Path
