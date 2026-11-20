@@ -70,5 +70,9 @@ solidTests = testGroup "Solid"
     , testGroup "transforms" 
         [ testCase "scale by zero" .
             assertEqual "volume is zero" 0.0 . Solids.volume . Transforms.scale zero $ Solids.unitCube
+        , testCase "scale by vector with zero element" .
+            assertEqual "volume is zero" 0.0 . Solids.volume . Transforms.scale (V3 1 0 0.5) $ Solids.unitCube
+        , testCase "uScale by zero" .
+            assertEqual "volume is zero" 0.0 . Solids.volume . Transforms.uScale 0 $ Solids.unitCube
         ]
     ]
