@@ -5,7 +5,8 @@ module PathTests
 
 import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Path2D as TwoD.Path2D
-import Linear (V3 (..), V2 (..), zero, angle, unit, norm, _x, _z, (^*))
+import qualified Waterfall.Transforms as Transforms
+import Linear (V3 (..), V2 (..), zero, angle, unit, norm, _x, _y, _z, (^*))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import Assertions
@@ -75,4 +76,29 @@ pathTests = testGroup "Path"
             let seg = Path.line (angle (3*pi/2 - pi/18)) (angle (3*pi/2 + pi/18))
             in assertApproxEqual "has correct length" 1e-6 18 ((Path.pathLength . TwoD.Path2D.repeatLooping $ seg) / (Path.pathLength seg))
         ]
+        , testGroup "transforms" $
+            let square :: Path.Path = Path.pathFrom zero 
+                    [ Path.lineTo (unit _x)
+                    , Path.lineTo (unit _x + unit _y)
+                    , Path.lineTo (unit _y)
+                    , Path.lineTo zero
+                    ]
+                routeAroundCube :: Path.Path = Path.pathFrom zero 
+                    [ Path.lineTo (unit _x)
+                    , Path.lineTo (unit _x + unit _z)
+                    , Path.lineTo (unit _x + unit _y + unit _z)
+                    , Path.lineTo (unit _y + unit _z)
+                    , Path.lineTo (unit _y)
+                    , Path.lineTo zero
+                    ]
+            in  [ testCase "scale by zero" .
+                    assertEqual "length is zero" 0.0 . Path.pathLength . Transforms.scale zero $ square
+                , testCase "scale by vector with zero element" (
+                    let p = Transforms.scale (V3 1 0.5 0) routeAroundCube
+                    in (assertApproxEqual "length is correct"  1e-6 3.0 . Path.pathLength $ p )            
+                        <> (assertBool "has no degenerate segments" . all ((> 0 ) . Path.pathLength) . Path.splitPath $ p )
+                )
+                , testCase "uScale by zero" .
+                    assertEqual "length is zero" 0.0 . Path.pathLength . Transforms.uScale 0 $ square
+                ]
     ]

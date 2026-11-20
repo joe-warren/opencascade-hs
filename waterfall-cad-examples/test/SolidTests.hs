@@ -11,6 +11,7 @@ import Linear (V3 (..), unit, zero, _x, _z, (^*))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import qualified Waterfall.Fillet as Fillet
+import Assertions
 
 solidTests :: TestTree
 solidTests = testGroup "Solid"
@@ -70,8 +71,13 @@ solidTests = testGroup "Solid"
     , testGroup "transforms" 
         [ testCase "scale by zero" .
             assertEqual "volume is zero" 0.0 . Solids.volume . Transforms.scale zero $ Solids.unitCube
-        , testCase "scale by vector with zero element" .
-            assertEqual "volume is zero" 0.0 . Solids.volume . Transforms.scale (V3 1 0 0.5) $ Solids.unitCube
+        , testCase "scale by vector with zero element" (
+            let s = Transforms.scale (V3 1 0 0.5) $ Solids.unitCube
+            in (assertEqual "volume is zero" 0.0 . Solids.volume $ s)            
+                <> (assertApproxEqual "volume with union is correct" 1e-6 1.0 . Solids.volume . (<> Solids.centeredCube) $ s)
+                <> (assertEqual "union has one part" 1 . length . Solids.looseParts . (<> Solids.centeredCube) $ s)
+                <> (assertEqual "has no parts" 0 . length . Solids.looseParts $ s)
+        )
         , testCase "uScale by zero" .
             assertEqual "volume is zero" 0.0 . Solids.volume . Transforms.uScale 0 $ Solids.unitCube
         ]

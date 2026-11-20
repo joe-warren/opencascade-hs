@@ -11,6 +11,7 @@ module Waterfall.Internal.Edges
 , buildEdgeCurve3D
 , reverseEdge
 , reverseWire
+, forwardWire
 , intersperseLines
 , joinWires
 , splitWires
@@ -40,7 +41,7 @@ import Control.Monad.IO.Class (liftIO)
 import Linear (V3 (..), distance, normalize)
 import Foreign.Ptr
 import qualified OpenCascade.BRepBuilderAPI.MakeWire as MakeWire
-import Control.Monad (when, (<=<))
+import Control.Monad (when, (<=<), unless)
 import Waterfall.Internal.ToOpenCascade (v3ToPnt)
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
@@ -112,7 +113,8 @@ wireFromEdges edges = do
     builder <- MakeWire.new
     let addAll [] = pure ()
         addAll (e:es) = do
-                MakeWire.addEdge builder e
+                hasNoLength <- nearZero <$> edgeLength e
+                unless hasNoLength $ MakeWire.addEdge builder e
                 done <- MakeWire.isDone builder
                 when done (addAll es)
     liftIO $ addAll edges
@@ -121,8 +123,9 @@ wireFromEdges edges = do
 forwardWire :: Ptr TopoDS.Wire -> Acquire (Ptr TopoDS.Wire)
 forwardWire wire = do
     edges <- wireEdgesWithoutReversing wire
-    allForward <- and <$> liftIO (traverse edgeIsForward edges)
-    if allForward 
+    let isAlreadyFine e = (&&) <$> edgeIsForward e <*> edgeHasLength e
+    alreadyGood <- and <$> liftIO (traverse isAlreadyFine edges)
+    if alreadyGood 
         then return wire
         else do
             wireFromEdges =<< wireEdges wire
@@ -130,6 +133,9 @@ forwardWire wire = do
 edgeIsForward :: Ptr TopoDS.Edge -> IO Bool
 edgeIsForward = 
     fmap (== TopAbs.Orientation.Forward) . TopoDS.Shape.orientation . upcast
+
+edgeHasLength :: Ptr TopoDS.Edge -> IO Bool
+edgeHasLength = fmap (not . nearZero) . edgeLength
 
 wireEndpoints :: Ptr TopoDS.Wire -> IO (V3 Double, V3 Double)
 wireEndpoints wire = with (WireExplorer.fromWire =<< forwardWire wire) $ \explorer -> do

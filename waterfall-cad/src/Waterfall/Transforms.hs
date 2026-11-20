@@ -21,9 +21,10 @@ import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireMappi
 import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr) 
 import Waterfall.Internal.Path.Common (RawPath(..))
 import Waterfall.Internal.NearZero (nearZero)
+import Waterfall.Internal.Edges (forwardWire)
 import Linear.V3 (V3 (..))
 import Linear.V4 (V4 (..))
-import Linear (M34, M33, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z, (!*!), transpose, (!-!), (*!!), identity)
+import Linear (M34, M33, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z, (!*!), transpose, (!-!), (*!!), identity, Epsilon (), quadrance, zero)
 import qualified Linear.Quaternion as Quaternion
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
@@ -82,7 +83,8 @@ fromTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.Trsf) -> Path -> Pat
 fromTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquirePtr $ do 
     path <- acquireForeignPtr p
     trsf <- mkTrsf 
-    (liftIO . unsafeDowncast)
+    forwardWire 
+        =<< (liftIO . unsafeDowncast)
         =<< BRepBuilderAPI.MakeShape.shape
         =<< fmap upcast 
             (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
@@ -93,7 +95,8 @@ fromGTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.GTrsf) -> Path -> P
 fromGTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquirePtr $ do 
     path <- acquireForeignPtr p
     trsf <- mkTrsf 
-    (liftIO . unsafeDowncast) 
+    forwardWire
+        =<< (liftIO . unsafeDowncast) 
         =<< BRepBuilderAPI.MakeShape.shape
         =<< fmap upcast
             (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
@@ -212,11 +215,14 @@ instance Transformable Solid where
     matTransform = maybe id (either fromTrsfSolid fromGTrsfSolid) . matrixGTrsf 
     
     scale :: V3 Double -> Solid -> Solid
-    scale factor = 
-        applyScaleTrsf fromTrsfSolid fromGTrsfSolid (scaleTrsf factor)
+    scale factor
+        | any nearZero factor = mempty 
+        | otherwise = applyScaleTrsf fromTrsfSolid fromGTrsfSolid (scaleTrsf factor)
 
     uScale :: Double -> Solid -> Solid
-    uScale = fromTrsfSolid . uScaleTrsf
+    uScale factor
+        | nearZero factor = mempty
+        | otherwise =  fromTrsfSolid . uScaleTrsf $ factor
 
     rotate :: V3 Double -> Double -> Solid -> Solid
     rotate axis angle = fromTrsfSolid (rotateTrsf axis angle)
@@ -234,12 +240,16 @@ instance Transformable Path where
         in maybe id (either (fromTrsfPath transformPnt) (fromGTrsfPath transformPnt)) $ matrixGTrsf m
     
     scale :: V3 Double -> Path -> Path
-    scale s =
-        let transformPnt = scale s 
-        in transformPathSinglePointPaths transformPnt . applyScaleTrsf (fromTrsfPath id) (fromGTrsfPath id) (scaleTrsf s)
+    scale s 
+        | nearZero . quadrance $ s = const (Path . SinglePointRawPath $ zero)
+        | otherwise = 
+            let transformPnt = scale s 
+            in transformPathSinglePointPaths transformPnt . applyScaleTrsf (fromTrsfPath id) (fromGTrsfPath id) (scaleTrsf s)
 
     uScale :: Double -> Path -> Path
-    uScale s = fromTrsfPath (uScale s) (uScaleTrsf s)
+    uScale s
+        | nearZero s = const (Path . SinglePointRawPath $ zero)
+        | otherwise = fromTrsfPath (uScale s) (uScaleTrsf s)
 
     rotate :: V3 Double -> Double -> Path -> Path
     rotate axis angle = fromTrsfPath (rotate axis angle) (rotateTrsf axis angle)
