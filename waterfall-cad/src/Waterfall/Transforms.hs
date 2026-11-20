@@ -24,7 +24,7 @@ import Waterfall.Internal.NearZero (nearZero)
 import Waterfall.Internal.Edges (forwardWire)
 import Linear.V3 (V3 (..))
 import Linear.V4 (V4 (..))
-import Linear (M34, M33, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z, (!*!), transpose, (!-!), (*!!), identity, Epsilon (), quadrance, zero)
+import Linear (M34, M33, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z, (!*!), transpose, (!-!), (*!!), identity, quadrance, zero)
 import qualified Linear.Quaternion as Quaternion
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
@@ -36,7 +36,7 @@ import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.BRepBuilderAPI.Transform  as BRepBuilderAPI.Transform
 import qualified OpenCascade.BRepBuilderAPI.GTransform  as BRepBuilderAPI.GTransform
 import qualified OpenCascade.BRepBuilderAPI.MakeShape  as BRepBuilderAPI.MakeShape
-import Control.Monad (when)
+import Control.Monad (when, void)
 import Control.Monad.IO.Class (liftIO)
 import Data.Acquire
 import Foreign.Ptr
@@ -125,14 +125,14 @@ scaleTrsf (V3 x y z ) =
                         then uScaleTrsf (abs x)
                         else GP.Trsf.new 
                     when (x < 0) $ do
-                        mirrorX <- mirrorTrsf (unit _x)
-                        liftIO $ GP.Trsf.multiply trsf mirrorX
+                        mirrorX <- sequence (mirrorTrsf (unit _x))
+                        void . liftIO $ traverse (GP.Trsf.multiply trsf) mirrorX
                     when (y < 0) $ do
-                        mirrorY <- mirrorTrsf (unit _y)
-                        liftIO $ GP.Trsf.multiply trsf mirrorY
+                        mirrorY <- sequence $ (mirrorTrsf (unit _y))
+                        void . liftIO $ traverse (GP.Trsf.multiply trsf) mirrorY
                     when (z < 0) $ do
-                        mirrorZ <- mirrorTrsf (unit _z)
-                        liftIO $ GP.Trsf.multiply trsf mirrorZ
+                        mirrorZ <- sequence $ mirrorTrsf (unit _z)
+                        void . liftIO $ traverse (GP.Trsf.multiply trsf) mirrorZ
                     return trsf
             , if isUniform
                 then Nothing
@@ -152,14 +152,16 @@ uScaleTrsf factor = do
     liftIO $ GP.Trsf.setScale trsf o factor 
     return trsf
 
-rotateTrsf :: V3 Double -> Double -> Acquire (Ptr GP.Trsf)
-rotateTrsf (V3 ax ay az) angle = do
-    trsf <- GP.Trsf.new
-    o <- GP.origin
-    dir <- GP.Dir.new ax ay az
-    axis <- GP.Ax1.new o dir
-    liftIO $ GP.Trsf.setRotationAboutAxisAngle trsf axis angle
-    return trsf
+rotateTrsf :: V3 Double -> Double -> Maybe (Acquire (Ptr GP.Trsf))
+rotateTrsf v@(V3 ax ay az) angle
+    | all nearZero v = Nothing
+    | otherwise = Just $ do
+        trsf <- GP.Trsf.new
+        o <- GP.origin
+        dir <- GP.Dir.new ax ay az
+        axis <- GP.Ax1.new o dir
+        liftIO $ GP.Trsf.setRotationAboutAxisAngle trsf axis angle
+        return trsf
 
 translateTrsf :: V3 Double -> Acquire (Ptr GP.Trsf)
 translateTrsf (V3 x y z) = do
@@ -168,15 +170,17 @@ translateTrsf (V3 x y z) = do
     liftIO $ GP.Trsf.setTranslation trsf vec
     return trsf
 
-mirrorTrsf :: V3 Double -> Acquire (Ptr GP.Trsf)
-mirrorTrsf (V3 x y z) = do
-    trsf <- GP.Trsf.new
-    dir <- GP.Dir.new x y z
-    axis <- GP.xoy
-    liftIO $ do 
-        GP.Ax2.setDirection axis dir
-        GP.Trsf.setMirrorAboutAx2 trsf axis
-    return trsf
+mirrorTrsf :: V3 Double -> Maybe (Acquire (Ptr GP.Trsf))
+mirrorTrsf v@(V3 x y z) 
+    | all nearZero v = Nothing
+    | otherwise = Just $ do
+        trsf <- GP.Trsf.new
+        dir <- GP.Dir.new x y z
+        axis <- GP.xoy
+        liftIO $ do 
+            GP.Ax2.setDirection axis dir
+            GP.Trsf.setMirrorAboutAx2 trsf axis
+        return trsf
 
 -- is a matrix a combination of an Orthogonal Matrix + a uniform Scale
 isOrthogonalAndScale :: M33 Double -> Bool
@@ -225,13 +229,13 @@ instance Transformable Solid where
         | otherwise =  fromTrsfSolid . uScaleTrsf $ factor
 
     rotate :: V3 Double -> Double -> Solid -> Solid
-    rotate axis angle = fromTrsfSolid (rotateTrsf axis angle)
+    rotate axis angle = maybe id fromTrsfSolid (rotateTrsf axis angle)
 
     translate :: V3 Double -> Solid -> Solid
     translate = fromTrsfSolid . translateTrsf
 
     mirror :: V3 Double -> Solid -> Solid
-    mirror = fromTrsfSolid . mirrorTrsf
+    mirror = maybe id fromTrsfSolid . mirrorTrsf
 
 instance Transformable Path where
     matTransform :: M34 Double -> Path -> Path
@@ -252,13 +256,13 @@ instance Transformable Path where
         | otherwise = fromTrsfPath (uScale s) (uScaleTrsf s)
 
     rotate :: V3 Double -> Double -> Path -> Path
-    rotate axis angle = fromTrsfPath (rotate axis angle) (rotateTrsf axis angle)
+    rotate axis angle = maybe id (fromTrsfPath (rotate axis angle)) (rotateTrsf axis angle)
 
     translate :: V3 Double -> Path -> Path
     translate v = fromTrsfPath (translate v) (translateTrsf v)
     
     mirror :: V3 Double -> Path -> Path
-    mirror v = fromTrsfPath (mirror v) (mirrorTrsf v)
+    mirror v = maybe id (fromTrsfPath (mirror v)) (mirrorTrsf v)
 
 instance Transformable (V3 Double) where
     matTransform :: M34 Double -> V3 Double -> V3 Double
@@ -272,15 +276,19 @@ instance Transformable (V3 Double) where
     uScale = (*^)
 
     rotate :: V3 Double -> Double -> V3 Double -> V3 Double 
-    rotate axis angle = Quaternion.rotate (Quaternion.axisAngle axis angle)
+    rotate axis angle 
+        | all nearZero axis = id
+        | otherwise = Quaternion.rotate (Quaternion.axisAngle axis angle)
 
     translate :: V3 Double -> V3 Double -> V3 Double 
     translate = (+)
 
     mirror :: V3 Double -> V3 Double -> V3 Double 
-    mirror mirrorVec toMirror = 
-        let nm = normalize mirrorVec
-        in toMirror - (2 * (nm `dot` toMirror) *^ nm)
+    mirror mirrorVec toMirror
+        | all nearZero mirrorVec = toMirror
+        | otherwise = 
+            let nm = normalize mirrorVec
+            in toMirror - (2 * (nm `dot` toMirror) *^ nm)
 
 -- | Every translation is an isomorphism
 _translated :: Transformable t => V3 Double -> Iso' t t
