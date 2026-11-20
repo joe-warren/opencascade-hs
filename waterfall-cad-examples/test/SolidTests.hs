@@ -7,7 +7,7 @@ import qualified Waterfall.Booleans as Booleans
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.Revolution as Revolution
 import qualified Waterfall.TwoD.Shape as TwoD.Shape
-import Linear (V3 (..), unit, _x, _z, (^*))
+import Linear (V3 (..), unit, zero, _x, _z, (^*))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import qualified Waterfall.Fillet as Fillet
@@ -66,5 +66,9 @@ solidTests = testGroup "Solid"
             assertBool "sphere has correct volume" (abs (Solids.volume Solids.unitSphere - 4*pi/3) < 1e-4)
         , testCase "volume of prism of empty shape" $ 
             assertEqual "volume is zero" 0.0 (Solids.volume . Solids.prism 1.0 . TwoD.Shape.makeShape $ mempty)
+        ]
+    , testGroup "transforms" 
+        [ testCase "scale by zero" .
+            assertEqual "volume is zero" 0.0 . Solids.volume . Transforms.scale zero $ Solids.unitCube
         ]
     ]
