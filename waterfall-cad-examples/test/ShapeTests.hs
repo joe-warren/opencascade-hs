@@ -11,11 +11,12 @@ import qualified Waterfall.Path.Common as Path
 import qualified Waterfall.TwoD.Path2D as TwoD.Path2D
 import qualified Waterfall.Solids as Solids
 import Waterfall.Internal.NearZero (nearZero)
-import Linear (V3 (..), V2 (..), distance, unit, _x, _z, (^*))
+import Linear (V3 (..), V2 (..), distance, unit, zero, normalize, identity, outer, (!-!), _x, _z, (^*))
 import Data.Function ((&))
 import Data.Maybe (fromMaybe)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
+import Assertions
 
 shapeTests :: TestTree
 shapeTests = testGroup "Shape"
@@ -142,5 +143,61 @@ shapeTests = testGroup "Shape"
                       ((< 1e-3) . abs $ totalLength scaled - 50 * totalLength silhouette)
                   <> assertBool "rebuilt shape keeps its area"
                       ((< 1e-2) . abs $ rebuiltArea - Shape.area scaled)   
+        ]
+    , testGroup "transforms"
+        [ testCase "scale2D by zero" (
+            let s = TwoD.Transforms.scale2D zero Shape.unitSquare
+            in (assertEqual "area is zero" 0.0 . Shape.area $ s)
+                <> (assertEqual "has no parts" 0 . length . Shape.looseShapes $ s)
+        )
+        , testCase "scale2D by vector with zero element" (
+            let s = TwoD.Transforms.scale2D (V2 1 0) Shape.unitSquare
+            in (assertEqual "area is zero" 0.0 . Shape.area $ s)
+                <> (assertApproxEqual "area with union is correct" 1e-6 1.0 . Shape.area . (<> Shape.centeredSquare) $ s)
+                <> (assertEqual "union has one part" 1 . length . Shape.looseShapes . (<> Shape.centeredSquare) $ s)
+                <> (assertEqual "has no parts" 0 . length . Shape.looseShapes $ s)
+        )
+        , testCase "uScale2D by zero" (
+            let s = TwoD.Transforms.uScale2D 0 Shape.unitSquare
+            in (assertEqual "area is zero" 0.0 . Shape.area $ s)
+                <> (assertEqual "has no parts" 0 . length . Shape.looseShapes $ s)
+        )
+        , testCase "matTransform2D by zero matrix" (
+            let s = TwoD.Transforms.matTransform2D zero Shape.unitSquare
+            in (assertEqual "area is zero" 0.0 . Shape.area $ s)
+                <> (assertEqual "has no parts" 0 . length . Shape.looseShapes $ s)
+        )
+        , testCase "matTransform2D by translation with zero linear part" (
+            let s = TwoD.Transforms.matTransform2D (V2 (V3 0 0 1) (V3 0 0 2)) Shape.unitSquare
+            in (assertEqual "area is zero" 0.0 . Shape.area $ s)
+                <> (assertEqual "has no parts" 0 . length . Shape.looseShapes $ s)
+        )
+        , testCase "matTransform2D by singular diagonal matrix" (
+            let s = TwoD.Transforms.matTransform2D (V2 (V3 1 0 0) (V3 0 0 0)) Shape.unitSquare
+            in (assertEqual "area is zero" 0.0 . Shape.area $ s)
+                <> (assertApproxEqual "area with union is correct" 1e-6 1.0 . Shape.area . (<> Shape.centeredSquare) $ s)
+                <> (assertEqual "has no parts" 0 . length . Shape.looseShapes $ s)
+        )
+        , testCase "matTransform2D by singular matrix that is not axis aligned" (
+            let s = TwoD.Transforms.matTransform2D (V2 (V3 1 1 0) (V3 1 1 0)) Shape.unitSquare
+            in (assertEqual "area is zero" 0.0 . Shape.area $ s)
+                <> (assertApproxEqual "area with union is correct" 1e-6 1.0 . Shape.area . (<> Shape.centeredSquare) $ s)
+                <> (assertEqual "has no parts" 0 . length . Shape.looseShapes $ s)
+        )
+        , testCase "matTransform2D by projection onto a line" (
+            let n = normalize (V2 1 2)
+                projection = identity !-! outer n n
+                s = TwoD.Transforms.matTransform2D (fmap (\(V2 a b) -> V3 a b 0) projection) Shape.unitSquare
+            in (assertApproxEqual "area with union is correct" 1e-6 1.0 . Shape.area . (<> Shape.centeredSquare) $ s)
+                <> (assertEqual "has no parts" 0 . length . Shape.looseShapes $ s)
+        )
+        , testCase "matTransform2D by shear preserves area" .
+            assertApproxEqual "area is correct" 1e-6 1.0 . Shape.area
+                . TwoD.Transforms.matTransform2D (V2 (V3 1 1 0) (V3 0 1 0)) $ Shape.unitSquare
+        , testCase "matTransform2D by small invertible matrix is not empty" (
+            let s = TwoD.Transforms.matTransform2D (V2 (V3 0.001 0 0) (V3 0 0.002 0)) Shape.unitSquare
+            in (assertApproxEqual "area is correct" 1e-10 2e-6 . Shape.area $ s)
+                <> (assertEqual "has one part" 1 . length . Shape.looseShapes $ s)
+        )
         ]
     ]
