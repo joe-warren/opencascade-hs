@@ -18,12 +18,13 @@ module Waterfall.Transforms
 , _mirrored
 ) where
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquireMappingPaintMap, makeShapeHistory)
-import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr) 
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtrT) 
 import Waterfall.Internal.Path.Common (RawPath(..))
-import Waterfall.Internal.NearZero (nearZero)
+import Waterfall.Internal.NearZero (nearZero, confusion)
+import Waterfall.Internal.Edges (forwardWireAndStripZeroLengthEdges)
 import Linear.V3 (V3 (..))
 import Linear.V4 (V4 (..))
-import Linear (M34, M33, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z, (!*!), transpose, (!-!), (*!!), identity)
+import Linear (M34, M33, (*^), normalize, dot, (!*), unit, _w, _xyz, _x, _y, _z, (!*!), transpose, (!-!), (*!!), identity, zero, norm, det33)
 import qualified Linear.Quaternion as Quaternion
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
@@ -35,7 +36,7 @@ import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.BRepBuilderAPI.Transform  as BRepBuilderAPI.Transform
 import qualified OpenCascade.BRepBuilderAPI.GTransform  as BRepBuilderAPI.GTransform
 import qualified OpenCascade.BRepBuilderAPI.MakeShape  as BRepBuilderAPI.MakeShape
-import Control.Monad (when)
+import Control.Monad (when, void)
 import Control.Monad.IO.Class (liftIO)
 import Data.Acquire
 import Foreign.Ptr
@@ -43,6 +44,7 @@ import Waterfall.Internal.Path (Path(..))
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Data.Function ((&))
 import Control.Lens ((.~), Iso', iso, (^.))
+import Waterfall.Path (pathEndpoints)
 
 -- | Typeclass for objects that can be manipulated in 3D space
 class Transformable a where
@@ -79,24 +81,36 @@ transformPathSinglePointPaths f (Path (SinglePointRawPath v)) = Path . SinglePoi
 transformPathSinglePointPaths _ p = p 
 
 fromTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.Trsf) -> Path -> Path
-fromTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquirePtr $ do 
-    path <- acquireForeignPtr p
-    trsf <- mkTrsf 
-    (liftIO . unsafeDowncast)
-        =<< BRepBuilderAPI.MakeShape.shape
-        =<< fmap upcast 
-            (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
+fromTrsfPath f mkTrsf p@(Path (ComplexRawPath rawPath)) = 
+    let pathFromEndpoints = 
+            Path . maybe EmptyRawPath (SinglePointRawPath . f . fst) . pathEndpoints
+    in maybe 
+        (pathFromEndpoints p)
+        (Path . ComplexRawPath) . unsafeFromAcquirePtrT $ do 
+            path <- acquireForeignPtr rawPath
+            trsf <- mkTrsf 
+            forwardWireAndStripZeroLengthEdges 
+                =<< (liftIO . unsafeDowncast)
+                =<< BRepBuilderAPI.MakeShape.shape
+                =<< fmap upcast 
+                    (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
 fromTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
 fromTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 
 fromGTrsfPath :: (V3 Double -> V3 Double) -> Acquire (Ptr GP.GTrsf) -> Path -> Path
-fromGTrsfPath _ mkTrsf (Path (ComplexRawPath p)) = Path . ComplexRawPath . unsafeFromAcquirePtr $ do 
-    path <- acquireForeignPtr p
-    trsf <- mkTrsf 
-    (liftIO . unsafeDowncast) 
-        =<< BRepBuilderAPI.MakeShape.shape
-        =<< fmap upcast
-            (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
+fromGTrsfPath f mkTrsf p@(Path (ComplexRawPath rawPath)) = 
+    let pathFromEndpoints = 
+            Path . maybe EmptyRawPath (SinglePointRawPath  . f . fst) . pathEndpoints
+    in maybe 
+        (pathFromEndpoints p)
+        (Path . ComplexRawPath) . unsafeFromAcquirePtrT $ do 
+            path <- acquireForeignPtr rawPath
+            trsf <- mkTrsf 
+            forwardWireAndStripZeroLengthEdges
+                =<< (liftIO . unsafeDowncast) 
+                =<< BRepBuilderAPI.MakeShape.shape
+                =<< fmap upcast
+                    (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
 fromGTrsfPath f _ (Path (SinglePointRawPath v)) = Path . SinglePointRawPath . f $ v
 fromGTrsfPath _ _ (Path EmptyRawPath) = Path EmptyRawPath
 
@@ -122,14 +136,14 @@ scaleTrsf (V3 x y z ) =
                         then uScaleTrsf (abs x)
                         else GP.Trsf.new 
                     when (x < 0) $ do
-                        mirrorX <- mirrorTrsf (unit _x)
-                        liftIO $ GP.Trsf.multiply trsf mirrorX
+                        mirrorX <- sequence (mirrorTrsf (unit _x))
+                        void . liftIO $ traverse (GP.Trsf.multiply trsf) mirrorX
                     when (y < 0) $ do
-                        mirrorY <- mirrorTrsf (unit _y)
-                        liftIO $ GP.Trsf.multiply trsf mirrorY
+                        mirrorY <- sequence $ (mirrorTrsf (unit _y))
+                        void . liftIO $ traverse (GP.Trsf.multiply trsf) mirrorY
                     when (z < 0) $ do
-                        mirrorZ <- mirrorTrsf (unit _z)
-                        liftIO $ GP.Trsf.multiply trsf mirrorZ
+                        mirrorZ <- sequence $ mirrorTrsf (unit _z)
+                        void . liftIO $ traverse (GP.Trsf.multiply trsf) mirrorZ
                     return trsf
             , if isUniform
                 then Nothing
@@ -149,14 +163,16 @@ uScaleTrsf factor = do
     liftIO $ GP.Trsf.setScale trsf o factor 
     return trsf
 
-rotateTrsf :: V3 Double -> Double -> Acquire (Ptr GP.Trsf)
-rotateTrsf (V3 ax ay az) angle = do
-    trsf <- GP.Trsf.new
-    o <- GP.origin
-    dir <- GP.Dir.new ax ay az
-    axis <- GP.Ax1.new o dir
-    liftIO $ GP.Trsf.setRotationAboutAxisAngle trsf axis angle
-    return trsf
+rotateTrsf :: V3 Double -> Double -> Maybe (Acquire (Ptr GP.Trsf))
+rotateTrsf v@(V3 ax ay az) angle
+    | all nearZero v = Nothing
+    | otherwise = Just $ do
+        trsf <- GP.Trsf.new
+        o <- GP.origin
+        dir <- GP.Dir.new ax ay az
+        axis <- GP.Ax1.new o dir
+        liftIO $ GP.Trsf.setRotationAboutAxisAngle trsf axis angle
+        return trsf
 
 translateTrsf :: V3 Double -> Acquire (Ptr GP.Trsf)
 translateTrsf (V3 x y z) = do
@@ -165,15 +181,17 @@ translateTrsf (V3 x y z) = do
     liftIO $ GP.Trsf.setTranslation trsf vec
     return trsf
 
-mirrorTrsf :: V3 Double -> Acquire (Ptr GP.Trsf)
-mirrorTrsf (V3 x y z) = do
-    trsf <- GP.Trsf.new
-    dir <- GP.Dir.new x y z
-    axis <- GP.xoy
-    liftIO $ do 
-        GP.Ax2.setDirection axis dir
-        GP.Trsf.setMirrorAboutAx2 trsf axis
-    return trsf
+mirrorTrsf :: V3 Double -> Maybe (Acquire (Ptr GP.Trsf))
+mirrorTrsf v@(V3 x y z) 
+    | all nearZero v = Nothing
+    | otherwise = Just $ do
+        trsf <- GP.Trsf.new
+        dir <- GP.Dir.new x y z
+        axis <- GP.xoy
+        liftIO $ do 
+            GP.Ax2.setDirection axis dir
+            GP.Trsf.setMirrorAboutAx2 trsf axis
+        return trsf
 
 -- is a matrix a combination of an Orthogonal Matrix + a uniform Scale
 isOrthogonalAndScale :: M33 Double -> Bool
@@ -184,7 +202,8 @@ isOrthogonalAndScale m =
 
 matrixGTrsf :: M34 Double -> Maybe (Either (Acquire (Ptr GP.Trsf)) (Acquire (Ptr GP.GTrsf)))
 matrixGTrsf (V3 (V4 1 0 0 0) (V4 0 1 0 0) (V4 0 0 1 0)) = Nothing
-matrixGTrsf (V3 (V4 x 0 0 0) (V4 0 y 0 0) (V4 0 0 z 0)) | x == y && y == z = Just . Left . uScaleTrsf $ x
+matrixGTrsf (V3 (V4 x 0 0 0) (V4 0 y 0 0) (V4 0 0 z 0)) 
+    | x == y && y == z && not (nearZero x)= Just . Left . uScaleTrsf $ x
 matrixGTrsf m@(V3 (V4 v11 v12 v13 v14) (V4 v21 v22 v23 v24) (V4 v31 v32 v33 v34)) 
     | isOrthogonalAndScale (fmap (^. _xyz) m) = Just . Left $ do
         trsf <- GP.Trsf.new
@@ -209,23 +228,37 @@ matrixGTrsf m@(V3 (V4 v11 v12 v13 v14) (V4 v21 v22 v23 v24) (V4 v31 v32 v33 v34)
     
 instance Transformable Solid where
     matTransform :: M34 Double -> Solid -> Solid
-    matTransform = maybe id (either fromTrsfSolid fromGTrsfSolid) . matrixGTrsf 
-    
+    matTransform m 
+        | isSingular = mempty 
+        | otherwise = maybe id (either fromTrsfSolid fromGTrsfSolid) (matrixGTrsf m)
+      where 
+        isSingular =
+            let m33 = (^. _xyz) <$> m
+                rowNorms = norm <$> m33
+            in any nearZero rowNorms || abs (det33 m33) < confusion * product rowNorms
+
     scale :: V3 Double -> Solid -> Solid
-    scale factor = 
-        applyScaleTrsf fromTrsfSolid fromGTrsfSolid (scaleTrsf factor)
+    scale factor
+        | any nearZero factor = mempty 
+        | otherwise = applyScaleTrsf fromTrsfSolid fromGTrsfSolid (scaleTrsf factor)
 
     uScale :: Double -> Solid -> Solid
-    uScale = fromTrsfSolid . uScaleTrsf
+    uScale factor
+        | nearZero factor = mempty
+        | otherwise =  fromTrsfSolid . uScaleTrsf $ factor
 
     rotate :: V3 Double -> Double -> Solid -> Solid
-    rotate axis angle = fromTrsfSolid (rotateTrsf axis angle)
+    rotate axis angle = maybe id fromTrsfSolid (rotateTrsf axis angle)
 
     translate :: V3 Double -> Solid -> Solid
     translate = fromTrsfSolid . translateTrsf
 
     mirror :: V3 Double -> Solid -> Solid
-    mirror = fromTrsfSolid . mirrorTrsf
+    mirror = maybe id fromTrsfSolid . mirrorTrsf
+
+collapseToOrigin :: Path -> Path
+collapseToOrigin (Path EmptyRawPath) = Path EmptyRawPath
+collapseToOrigin _ = Path . SinglePointRawPath $ zero
 
 instance Transformable Path where
     matTransform :: M34 Double -> Path -> Path
@@ -234,21 +267,25 @@ instance Transformable Path where
         in maybe id (either (fromTrsfPath transformPnt) (fromGTrsfPath transformPnt)) $ matrixGTrsf m
     
     scale :: V3 Double -> Path -> Path
-    scale s =
-        let transformPnt = scale s 
-        in transformPathSinglePointPaths transformPnt . applyScaleTrsf (fromTrsfPath id) (fromGTrsfPath id) (scaleTrsf s)
+    scale s
+        | all nearZero s = collapseToOrigin
+        | otherwise = 
+            let transformPnt = scale s 
+            in transformPathSinglePointPaths transformPnt . applyScaleTrsf (fromTrsfPath id) (fromGTrsfPath id) (scaleTrsf s)
 
     uScale :: Double -> Path -> Path
-    uScale s = fromTrsfPath (uScale s) (uScaleTrsf s)
+    uScale s
+        | nearZero s = collapseToOrigin
+        | otherwise = fromTrsfPath (uScale s) (uScaleTrsf s)
 
     rotate :: V3 Double -> Double -> Path -> Path
-    rotate axis angle = fromTrsfPath (rotate axis angle) (rotateTrsf axis angle)
+    rotate axis angle = maybe id (fromTrsfPath (rotate axis angle)) (rotateTrsf axis angle)
 
     translate :: V3 Double -> Path -> Path
     translate v = fromTrsfPath (translate v) (translateTrsf v)
     
     mirror :: V3 Double -> Path -> Path
-    mirror v = fromTrsfPath (mirror v) (mirrorTrsf v)
+    mirror v = maybe id (fromTrsfPath (mirror v)) (mirrorTrsf v)
 
 instance Transformable (V3 Double) where
     matTransform :: M34 Double -> V3 Double -> V3 Double
@@ -262,15 +299,19 @@ instance Transformable (V3 Double) where
     uScale = (*^)
 
     rotate :: V3 Double -> Double -> V3 Double -> V3 Double 
-    rotate axis angle = Quaternion.rotate (Quaternion.axisAngle axis angle)
+    rotate axis angle 
+        | all nearZero axis = id
+        | otherwise = Quaternion.rotate (Quaternion.axisAngle axis angle)
 
     translate :: V3 Double -> V3 Double -> V3 Double 
     translate = (+)
 
     mirror :: V3 Double -> V3 Double -> V3 Double 
-    mirror mirrorVec toMirror = 
-        let nm = normalize mirrorVec
-        in toMirror - (2 * (nm `dot` toMirror) *^ nm)
+    mirror mirrorVec toMirror
+        | all nearZero mirrorVec = toMirror
+        | otherwise = 
+            let nm = normalize mirrorVec
+            in toMirror - (2 * (nm `dot` toMirror) *^ nm)
 
 -- | Every translation is an isomorphism
 _translated :: Transformable t => V3 Double -> Iso' t t

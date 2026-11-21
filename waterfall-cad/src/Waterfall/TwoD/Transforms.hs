@@ -19,9 +19,9 @@ module Waterfall.TwoD.Transforms
 ) where
 
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
-import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr)
-import Waterfall.Internal.NearZero (nearZero)
-import Linear (M23, M22, (*^), normalize, dot, V3 (..), V2 (..), (!*), _xy, _z, _y, _x, unit, transpose, (!*!), (!-!), (*!!), identity)
+import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquirePtrT)
+import Waterfall.Internal.NearZero (nearZero, confusion)
+import Linear (M23, M22, (*^), normalize, dot, V3 (..), V2 (..), (!*), _xy, _z, _y, _x, unit, transpose, (!*!), (!-!), (*!!), identity, zero, norm, det22)
 import qualified OpenCascade.GP.Trsf as GP.Trsf
 import qualified OpenCascade.GP as GP
 import qualified OpenCascade.GP.GTrsf as GP.GTrsf
@@ -42,6 +42,9 @@ import Control.Lens ((.~), (%~), Iso', iso, (^.), over)
 import Waterfall.Internal.Path.Common (RawPath(..))
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import Control.Monad (when)
+import Waterfall.Path (pathEndpoints)
+import Waterfall.Internal.Edges (forwardWireAndStripZeroLengthEdges)
+import Data.Foldable (traverse_)
 
 -- | Typeclass for objects that can be manipulated in 2D space
 class Transformable2D a where
@@ -60,15 +63,26 @@ class Transformable2D a where
     -- Note that in order to maintain consistency with 'Waterfall.Transforms.Transformable',
     -- the mirror is in the line / perpendicular / to the vector, not in the line / parallel / to the vector
     mirror2D :: V2 Double -> a -> a
+    
+v2ToV3 :: V2 Double -> V3 Double
+v2ToV3 xy = zero & _xy .~ xy
+
+pathFromEndpoints :: (V2 Double -> V2 Double) -> Path2D -> Path2D
+pathFromEndpoints f =
+    Path2D . maybe EmptyRawPath (SinglePointRawPath . v2ToV3 .  f . fst) . pathEndpoints
 
 fromTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Ptr GP.Trsf) -> Path2D -> Path2D
-fromTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquirePtr $ do 
-    path <- acquireForeignPtr p
-    trsf <- mkTrsf 
-    (liftIO . unsafeDowncast) 
-        =<< BRepBuilderAPI.MakeShape.shape
-        =<< fmap upcast
-            (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
+fromTrsfPath f mkTrsf p@(Path2D (ComplexRawPath rawPath)) = 
+    maybe 
+        (pathFromEndpoints f p)
+        (Path2D . ComplexRawPath) . unsafeFromAcquirePtrT $ do 
+            path <- acquireForeignPtr rawPath
+            trsf <- mkTrsf 
+            forwardWireAndStripZeroLengthEdges 
+                =<< (liftIO . unsafeDowncast) 
+                =<< BRepBuilderAPI.MakeShape.shape
+                =<< fmap upcast
+                    (BRepBuilderAPI.Transform.fromShapeTrsfAndCopy (upcast path) trsf True)
 fromTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $ (v & _xy %~ f)
 fromTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
 
@@ -82,13 +96,17 @@ fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquirePtr $ do
     if isNegative then TopoDS.Shape.reversed res else pure res
     
 fromGTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Ptr GP.GTrsf) -> Path2D -> Path2D
-fromGTrsfPath _ mkTrsf (Path2D (ComplexRawPath p)) = Path2D . ComplexRawPath . unsafeFromAcquirePtr  $ do 
-    path <- acquireForeignPtr p
-    trsf <- mkTrsf 
-    (liftIO . unsafeDowncast) 
-        =<< BRepBuilderAPI.MakeShape.shape
-        =<< fmap upcast
-            (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
+fromGTrsfPath f mkTrsf p@(Path2D (ComplexRawPath rawPath)) =
+    maybe 
+        (pathFromEndpoints f p)
+        (Path2D . ComplexRawPath) . unsafeFromAcquirePtrT $ do 
+            path <- acquireForeignPtr rawPath
+            trsf <- mkTrsf 
+            forwardWireAndStripZeroLengthEdges 
+                =<< (liftIO . unsafeDowncast) 
+                =<< BRepBuilderAPI.MakeShape.shape
+                =<< fmap upcast
+                    (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy (upcast path) trsf True)
 
 fromGTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $ (v & _xy %~ f)
 fromGTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
@@ -111,7 +129,7 @@ isOrthogonalAndScale m =
 
 matrixGTrsf :: M23 Double -> Maybe (Either (Acquire (Ptr GP.Trsf)) (Acquire (Ptr GP.GTrsf)))
 matrixGTrsf (V2 (V3 1 0 0) (V3 0 1 0)) = Nothing
-matrixGTrsf (V2 (V3 x 0 0) (V3 0 y 0)) | nearZero (x-y)= Just . Left . uScaleTrsf $ x
+matrixGTrsf (V2 (V3 x 0 0) (V3 0 y 0)) | nearZero (x-y) && not (nearZero x) = Just . Left . uScaleTrsf $ x
 matrixGTrsf m@(V2 (V3 v11 v12 v13) (V3 v21 v22 v23)) 
     | isOrthogonalAndScale (fmap (^. _xy ) m) = Just . Left $ do
         trsf <- GP.Trsf.new
@@ -160,11 +178,11 @@ scaleTrsfs (V2 x y) =
                         then uScaleTrsf (abs x)
                         else GP.Trsf.new
                     when (x < 0) $ do
-                        mirrorX <- mirrorTrsf (unit _x)
-                        liftIO $ GP.Trsf.multiply trsf mirrorX
+                        mirrorX <- sequence $ mirrorTrsf (unit _x)
+                        liftIO $ traverse_ (GP.Trsf.multiply trsf) mirrorX
                     when (y < 0) $ do
-                        mirrorY <- mirrorTrsf (unit _y)
-                        liftIO $ GP.Trsf.multiply trsf mirrorY
+                        mirrorY <- sequence $ mirrorTrsf (unit _y)
+                        liftIO $ traverse_ (GP.Trsf.multiply trsf) mirrorY
                     return trsf
 
             , if isUniform 
@@ -195,19 +213,25 @@ translateTrsf (V2 x y) = do
     liftIO $ GP.Trsf.setTranslation trsf vec
     return trsf
     
-mirrorTrsf :: V2 Double -> Acquire (Ptr GP.Trsf)
-mirrorTrsf (V2 x y) = do 
-    trsf <- GP.Trsf.new
-    dir <- GP.Dir.new x y 0
-    axis <- GP.xoy
-    liftIO $ do
-        GP.Ax2.setDirection axis dir
-        GP.Trsf.setMirrorAboutAx2 trsf axis
-    return trsf
+mirrorTrsf :: V2 Double -> Maybe (Acquire (Ptr GP.Trsf))
+mirrorTrsf v@(V2 x y) 
+    | all nearZero v = Nothing
+    | otherwise = Just $ do 
+        trsf <- GP.Trsf.new
+        dir <- GP.Dir.new x y 0
+        axis <- GP.xoy
+        liftIO $ do
+            GP.Ax2.setDirection axis dir
+            GP.Trsf.setMirrorAboutAx2 trsf axis
+        return trsf
 
 transformPathSinglePointPaths :: (V3 Double -> V3 Double) -> Path2D -> Path2D
 transformPathSinglePointPaths f (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath . f $ v 
 transformPathSinglePointPaths _ p = p 
+
+collapseToOrigin :: Path2D -> Path2D
+collapseToOrigin (Path2D EmptyRawPath) = Path2D EmptyRawPath
+collapseToOrigin _ = Path2D . SinglePointRawPath $ zero
 
 instance Transformable2D Path2D where
     matTransform2D :: M23 Double -> Path2D -> Path2D
@@ -219,38 +243,53 @@ instance Transformable2D Path2D where
     rotate2D a = fromTrsfPath (rotate2D a) (rotateTrsf a)
     
     scale2D :: V2 Double -> Path2D -> Path2D
-    scale2D s = 
+    scale2D s 
+        | all nearZero s = collapseToOrigin 
+        | otherwise = 
         let transformPnt = over _xy (scale2D s)
          in transformPathSinglePointPaths transformPnt 
             . applyScaleTrsfs (fromTrsfPath id) (fromGTrsfPath id) (scaleTrsfs s)
 
     uScale2D :: Double -> Path2D -> Path2D
-    uScale2D s = fromTrsfPath (uScale2D s) (uScaleTrsf s)
+    uScale2D s 
+        | nearZero s = collapseToOrigin
+        | otherwise = fromTrsfPath (uScale2D s) (uScaleTrsf s)
 
     translate2D :: V2 Double -> Path2D -> Path2D
     translate2D v = fromTrsfPath (translate2D v) (translateTrsf v)
 
     mirror2D :: V2 Double -> Path2D -> Path2D
-    mirror2D v = fromTrsfPath (mirror2D v) (mirrorTrsf v)
+    mirror2D v = maybe id (fromTrsfPath (mirror2D v)) (mirrorTrsf v)
 
 instance Transformable2D Shape where
     matTransform2D :: M23 Double -> Shape -> Shape
-    matTransform2D = maybe id (either fromTrsfShape fromGTrsfShape) . matrixGTrsf
+    matTransform2D m 
+        | isSingular = mempty 
+        | otherwise = maybe id (either fromTrsfShape fromGTrsfShape) (matrixGTrsf m)
+      where
+        isSingular = 
+            let m22 = (^. _xy) <$> m
+                rowNorms = norm <$> m22
+            in any nearZero rowNorms || abs (det22 m22) < confusion * product rowNorms
 
     rotate2D :: Double -> Shape -> Shape
     rotate2D = fromTrsfShape . rotateTrsf  
     
     scale2D :: V2 Double -> Shape -> Shape
-    scale2D = applyScaleTrsfs fromTrsfShape fromGTrsfShape . scaleTrsfs
+    scale2D factor 
+        | any nearZero factor = mempty
+        | otherwise = applyScaleTrsfs fromTrsfShape fromGTrsfShape (scaleTrsfs factor)
 
     uScale2D :: Double -> Shape -> Shape
-    uScale2D = fromTrsfShape . uScaleTrsf
+    uScale2D factor 
+        | nearZero factor = mempty
+        | otherwise = fromTrsfShape (uScaleTrsf factor) 
 
     translate2D :: V2 Double -> Shape -> Shape
     translate2D = fromTrsfShape .translateTrsf
 
     mirror2D :: V2 Double -> Shape -> Shape
-    mirror2D = fromTrsfShape . mirrorTrsf
+    mirror2D = maybe id fromTrsfShape . mirrorTrsf
 
 instance Transformable2D (V2 Double) where
     matTransform2D :: M23 Double -> V2 Double -> V2 Double
@@ -273,9 +312,11 @@ instance Transformable2D (V2 Double) where
     translate2D = (+)
 
     mirror2D :: V2 Double -> V2 Double -> V2 Double 
-    mirror2D mirrorVec toMirror = 
-        let nm = normalize mirrorVec
-        in toMirror - (2 * (nm `dot` toMirror) *^ nm)
+    mirror2D mirrorVec toMirror 
+        | all nearZero mirrorVec = toMirror
+        | otherwise = 
+            let nm = normalize mirrorVec
+            in toMirror - (2 * (nm `dot` toMirror) *^ nm)
 
 -- | Every translation is an isomorphism
 _translated2D :: Transformable2D t => V2 Double -> Iso' t t
