@@ -23,7 +23,9 @@ Handle(Geom_BezierCurve) * hs_Geom_BezierCurve_toHandle(Geom_BezierCurve * curve
 }
 
 Handle(Geom_BezierCurve) * hs_Geom_BezierCurve_copy(Handle(Geom_BezierCurve) * curve){
-    return new Handle(Geom_BezierCurve)(new Geom_BezierCurve(**curve));
+    return new Handle(Geom_BezierCurve)(
+        Handle(Geom_BezierCurve)::DownCast((*curve)->Copy())
+    );
 }
 
 int hs_Geom_BezierCurve_nbPoles(Handle(Geom_BezierCurve)* h){
