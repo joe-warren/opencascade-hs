@@ -7,10 +7,11 @@ import qualified Waterfall.Booleans as Booleans
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.Revolution as Revolution
 import qualified Waterfall.TwoD.Shape as TwoD.Shape
-import Linear (V3 (..), unit, _x, _z, (^*))
+import Linear (V3 (..), V4 (..), unit, zero, _x, _z, (^*), normalize, identity, outer, (!-!))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import qualified Waterfall.Fillet as Fillet
+import Assertions
 
 solidTests :: TestTree
 solidTests = testGroup "Solid"
@@ -66,5 +67,61 @@ solidTests = testGroup "Solid"
             assertBool "sphere has correct volume" (abs (Solids.volume Solids.unitSphere - 4*pi/3) < 1e-4)
         , testCase "volume of prism of empty shape" $ 
             assertEqual "volume is zero" 0.0 (Solids.volume . Solids.prism 1.0 . TwoD.Shape.makeShape $ mempty)
+        ]
+    , testGroup "transforms" 
+        [ testCase "scale by zero" .
+            assertEqual "volume is zero" 0.0 . Solids.volume . Transforms.scale zero $ Solids.unitCube
+        , testCase "scale by vector with zero element" (
+            let s = Transforms.scale (V3 1 0 0.5) $ Solids.unitCube
+            in (assertEqual "volume is zero" 0.0 . Solids.volume $ s)            
+                <> (assertApproxEqual "volume with union is correct" 1e-6 1.0 . Solids.volume . (<> Solids.centeredCube) $ s)
+                <> (assertEqual "union has one part" 1 . length . Solids.looseParts . (<> Solids.centeredCube) $ s)
+                <> (assertEqual "has no parts" 0 . length . Solids.looseParts $ s)
+        )
+        , testCase "uScale by zero" .
+            assertEqual "volume is zero" 0.0 . Solids.volume . Transforms.uScale 0 $ Solids.unitCube
+        , testCase "matTransform by zero matrix" (
+            let s = Transforms.matTransform zero Solids.unitCube
+            in (assertEqual "volume is zero" 0.0 . Solids.volume $ s)
+                <> (assertEqual "has no parts" 0 . length . Solids.looseParts $ s)
+        )
+        , testCase "matTransform by translation with zero linear part" (
+            let s = Transforms.matTransform (V3 (V4 0 0 0 1) (V4 0 0 0 2) (V4 0 0 0 3)) Solids.unitCube
+            in (assertEqual "volume is zero" 0.0 . Solids.volume $ s)
+                <> (assertEqual "has no parts" 0 . length . Solids.looseParts $ s)
+        )
+        , testCase "matTransform by singular diagonal matrix" (
+            let s = Transforms.matTransform (V3 (V4 1 0 0 0) (V4 0 0 0 0) (V4 0 0 0.5 0)) Solids.unitCube
+            in (assertEqual "volume is zero" 0.0 . Solids.volume $ s)
+                <> (assertApproxEqual "volume with union is correct" 1e-6 1.0 . Solids.volume . (<> Solids.centeredCube) $ s)
+                <> (assertEqual "has no parts" 0 . length . Solids.looseParts $ s)
+        )
+        , testCase "matTransform by singular matrix that is not axis aligned" (
+            let s = Transforms.matTransform (V3 (V4 1 0 0 0) (V4 0 1 0 0) (V4 1 1 0 0)) Solids.unitCube
+            in (assertEqual "volume is zero" 0.0 . Solids.volume $ s)
+                <> (assertApproxEqual "volume with union is correct" 1e-6 1.0 . Solids.volume . (<> Solids.centeredCube) $ s)
+                <> (assertEqual "has no parts" 0 . length . Solids.looseParts $ s)
+        )
+        , testCase "matTransform by rank one matrix" (
+            let s = Transforms.matTransform (V3 (V4 1 1 1 0) (V4 1 1 1 0) (V4 1 1 1 0)) Solids.unitCube
+            in (assertEqual "volume is zero" 0.0 . Solids.volume $ s)
+                <> (assertApproxEqual "volume with union is correct" 1e-6 1.0 . Solids.volume . (<> Solids.centeredCube) $ s)
+                <> (assertEqual "has no parts" 0 . length . Solids.looseParts $ s)
+        )
+        , testCase "matTransform by projection onto a plane" (
+            let n = normalize (V3 1 2 3)
+                projection = identity !-! outer n n
+                s = Transforms.matTransform (fmap (\(V3 a b c) -> V4 a b c 0) projection) Solids.unitCube
+            in (assertApproxEqual "volume with union is correct" 1e-6 1.0 . Solids.volume . (<> Solids.centeredCube) $ s)
+                <> (assertEqual "has no parts" 0 . length . Solids.looseParts $ s)
+        )
+        , testCase "matTransform by shear preserves volume" .
+            assertApproxEqual "volume is correct" 1e-6 1.0 . Solids.volume 
+                . Transforms.matTransform (V3 (V4 1 1 0 0) (V4 0 1 0 0) (V4 0 0 1 0)) $ Solids.unitCube
+        , testCase "matTransform by small invertible matrix is not empty" (
+            let s = Transforms.matTransform (V3 (V4 0.001 0 0 0) (V4 0 0.002 0 0) (V4 0 0 0.003 0)) Solids.unitCube
+            in (assertApproxEqual "volume is correct" 1e-12 6e-9 . Solids.volume $ s)
+                <> (assertEqual "has one part" 1 . length . Solids.looseParts $ s)
+        )
         ]
     ]
