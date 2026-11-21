@@ -44,6 +44,7 @@ import qualified Data.Map as M
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Either (partitionEithers)
 import Waterfall.Internal.Diagram (buildSolidDiagramFills)
+import Waterfall.Internal.NearZero (nearZero)
 import Waterfall.TwoD.Shape (shapePaths)
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData (rnf), rwhnf)
@@ -121,52 +122,54 @@ instance NFData Visibility where rnf = rwhnf
 -- 
 -- Uses an orthographic projection, viewed from the provided direction
 solidDiagram :: V3 Double -> Solid -> Diagram
-solidDiagram projectionDirection solid =  unsafeFromAcquire $ do
-    s' <- acquireSolid solid
-    algo <- HLRBRep.Algo.new
-    liftIO $ HLRBRep.Algo.add algo s'
-    o <- GP.origin
-    d <- v3ToDir projectionDirection
-    projector <- HLRAlgo.Projector.fromAx2 =<< GP.Ax2.newAutoX o d
-    liftIO $ do 
-        HLRBRep.Algo.projector algo projector
-        HLRBRep.Algo.update algo
-        HLRBRep.Algo.hide algo
+solidDiagram projectionDirection solid
+    | all nearZero projectionDirection = mempty
+    | otherwise = unsafeFromAcquire $ do
+        s' <- acquireSolid solid
+        algo <- HLRBRep.Algo.new
+        liftIO $ HLRBRep.Algo.add algo s'
+        o <- GP.origin
+        d <- v3ToDir projectionDirection
+        projector <- HLRAlgo.Projector.fromAx2 =<< GP.Ax2.newAutoX o d
+        liftIO $ do 
+            HLRBRep.Algo.projector algo projector
+            HLRBRep.Algo.update algo
+            HLRBRep.Algo.hide algo
 
-    extractor <- HLRBRep.HLRToShape.fromAlgo algo
+        extractor <- HLRBRep.HLRToShape.fromAlgo algo
 
-    theLines <- fmap M.fromList . sequence $
-        [ do
-            compoundOfEdges <- HLRBRep.HLRToShape.compoundOfEdges 
-                extractor 
-                (lineTypeToOpenCascade lt) 
-                (visibility == Visible) 
-                False
-            rawEdges <- allEdges compoundOfEdges
-            wires <- liftIO . fromAcquirePtrT $ traverse ( edgeToWire <=< buildEdgeCurve3D) rawEdges
-            return ((lt, visibility), Path2D . ComplexRawPath <$> wires)
+        theLines <- fmap M.fromList . sequence $
+            [ do
+                compoundOfEdges <- HLRBRep.HLRToShape.compoundOfEdges 
+                    extractor 
+                    (lineTypeToOpenCascade lt) 
+                    (visibility == Visible) 
+                    False
+                rawEdges <- allEdges compoundOfEdges
+                wires <- liftIO . fromAcquirePtrT $ traverse ( edgeToWire <=< buildEdgeCurve3D) rawEdges
+                return ((lt, visibility), Path2D . ComplexRawPath <$> wires)
 
-        | lt <- 
-            [ OutLine
-            , SharpLine
-            , RawLine HLRBRep.IsoLine
-            , RawLine HLRBRep.Rg1Line
-            , RawLine HLRBRep.RgNLine
-        ]
-        , visibility <- [Visible, Hidden]
-        ]
+            | lt <- 
+                [ OutLine
+                , SharpLine
+                , RawLine HLRBRep.IsoLine
+                , RawLine HLRBRep.Rg1Line
+                , RawLine HLRBRep.RgNLine
+            ]
+            , visibility <- [Visible, Hidden]
+            ]
 
-    theFills <-  buildSolidDiagramFills 
-        (solidPaintMap solid) 
-        s' 
-        projectionDirection 
-        projector
-        extractor 
+        theFills <-  buildSolidDiagramFills 
+            (solidPaintMap solid) 
+            s' 
+            projectionDirection 
+            projector
+            extractor 
 
-    return $ Diagram 
-        { getDiagramLines = theLines
-        , getDiagramFills = theFills
-        }
+        return $ Diagram 
+            { getDiagramLines = theLines
+            , getDiagramFills = theFills
+            }
         
 
 -- | Produce a `Diagram` from a `Path2D`

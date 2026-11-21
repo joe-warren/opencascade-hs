@@ -316,8 +316,10 @@ momentOfInertia :: V3 Double -- ^ Point on the Axis of the Moment
     -> V3 Double -- ^ Direction of the Axis of the Moment 
     -> Solid
     -> Double 
-momentOfInertia center axis = gPropQuery $ \gprop -> do
-    pnt <- GP.Pnt.new (center ^. _x) (center ^. _y) (center ^. _z)
-    dir <- GP.Dir.new (axis ^. _x) (axis ^. _y) (axis ^. _z)
-    ax1 <- GP.Ax1.new pnt dir
-    liftIO $ GProps.momentOfInertia gprop ax1
+momentOfInertia center axis
+    | all nearZero axis = const 0
+    | otherwise = gPropQuery $ \gprop -> do
+        pnt <- GP.Pnt.new (center ^. _x) (center ^. _y) (center ^. _z)
+        dir <- GP.Dir.new (axis ^. _x) (axis ^. _y) (axis ^. _z)
+        ax1 <- GP.Ax1.new pnt dir
+        liftIO $ GProps.momentOfInertia gprop ax1
