@@ -2,4 +2,5 @@
 dist-newstyle/
 waterfall-cad-examples/test-results/*
 playground/dist/
+**/.stack-work-occt8
 *~

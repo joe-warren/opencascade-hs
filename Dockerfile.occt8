@@ -1,0 +1,41 @@
+FROM ubuntu:24.04
+
+ARG OCCT_VERSION=8.0.1
+ENV OCCT_PREFIX=/opt/occt \
+    DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates curl bzip2 xz-utils git \
+        build-essential libgmp-dev libtinfo-dev zlib1g-dev libnuma-dev && \
+    curl -sSL https://get.haskellstack.org/ | sh && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN case "$(dpkg --print-architecture)" in \
+        amd64) MAMBA_PLATFORM=linux-64 ;; \
+        arm64) MAMBA_PLATFORM=linux-aarch64 ;; \
+        *) echo "unsupported architecture" >&2; exit 1 ;; \
+    esac && \
+    curl -Ls "https://micro.mamba.pm/api/micromamba/${MAMBA_PLATFORM}/latest" \
+        | tar -xj -C /usr/local bin/micromamba && \
+    micromamba create -y -r /opt/micromamba -p "$OCCT_PREFIX" \
+        --override-channels -c conda-forge "occt=${OCCT_VERSION}=novtk_*" && \
+    micromamba clean -a -y && \
+    grep OCC_VERSION_COMPLETE "$OCCT_PREFIX/include/opencascade/Standard_Version.hxx"
+
+ENV LD_LIBRARY_PATH=/opt/occt/lib \
+    STACK_ROOT=/stack-root
+
+RUN printf '%s\n' \
+    '#!/bin/sh' \
+    'exec stack --allow-different-user \' \
+    '    --work-dir .stack-work-occt8 \' \
+    '    --extra-include-dirs="$OCCT_PREFIX/include/opencascade" \' \
+    '    --extra-include-dirs="$OCCT_PREFIX/include" \' \
+    '    --extra-lib-dirs="$OCCT_PREFIX/lib" \' \
+    '    "$@"' \
+    > /usr/local/bin/occt8-stack && chmod +x /usr/local/bin/occt8-stack
+
+WORKDIR /src
+ENTRYPOINT ["occt8-stack"]
+CMD ["build", "--test", "--no-run-tests"]
