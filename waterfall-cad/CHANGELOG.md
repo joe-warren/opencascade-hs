@@ -43,6 +43,7 @@ and this project adheres to the
 - Fixed a bug in `repeatLooping` when the path straddled the negative y axis
 - `arcVia`, `arcViaTo` and `arcViaRelative` no longer crash when the points are collinear, and the midpoint lies between the two endpoints
 - Fixed a bug where a `Diagram` fill could be incorrectly created for a hole if the centroid of the hole's outline overlapped with a solid face, or a small part of the hole's area overlapped with the object
+- Fixed a number of issues where passing specific arguments to methods of `Transformable` and `Transformable2D` would result in exceptions or bad geometry
 
 ### Changed 
 
