@@ -10,6 +10,9 @@ import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
 import Linear (V3 (..), V4 (..), V2 (..), zero, angle, unit, norm, _x, _y, _z, (^*))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
+import Waterfall.SVG.ToSVG (path2DToPathCommands)
+import Control.Exception (evaluate)
+import Control.Monad (void)
 import Assertions
 
 
@@ -198,4 +201,14 @@ pathTests = testGroup "Path"
                         <> (assertEqual "reversed length is zero" 0.0 . Path.pathLength . Path.reversePath $ p)
                 )
                 ]
+    , testGroup "svg export"
+        [ testCase "exporting part of a bezier leaves the path and its source unchanged" $ 
+            let source = TwoD.Path2D.bezier (V2 0 0) (V2 1 2) (V2 3 2) (V2 4 0) :: TwoD.Path2D.Path2D
+                half = Path.takePathFraction 0.5 source
+                export = void . evaluate . length . show . path2DToPathCommands $ half
+            in export
+                <> (assertApproxEqual "source length is unchanged" 1e-6 5.268364935508777 . Path.pathLength $ source)
+                <> (assertApproxEqual "exported path length is unchanged" 1e-6 2.634182467542634 . Path.pathLength $ half)
+                <> (assertApproxEqual "exported path still ends halfway along the source" 1e-6 0 . maybe 1 (norm . subtract (V2 2 1.5) . snd) . Path.pathEndpoints $ half)
+        ]
     ]
