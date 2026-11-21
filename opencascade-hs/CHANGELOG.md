@@ -35,6 +35,7 @@ and this project adheres to the
 - Added `Eq`, `Ord` and `Bounded` instances to `OpenCascade.Font.FontAspect.FontAspect`
 - Added `Ord` and `Bounded` instances to `OpenCascade.Graphic3D.AlphaMode.AlphaMode`
 - Added `copy` method to `OpenCascade.Geom.BezierCurve`
+- Added `isDone` method to `OpenCascade.BRepBuilderAPI.MakeShape`
 
 ### Changed
 
@@ -98,7 +99,6 @@ and this project adheres to the
 - Added `OpenCascade.Standard.Failure.getTypeName`
 - Added `OpenCascade.BRepAlgoAPI.Types`
 - Added `OpenCascade.NCollection.List`
-- Added `isDone` method to `OpenCascade.BRepBuilderAPI.MakeShape`
 
 ### Changed
 
