@@ -34,6 +34,7 @@ and this project adheres to the
 - Added `setTransitionMode` to `OpenCascade.BRepOffsetAPI.MakePipeShell`
 - Added `Eq`, `Ord` and `Bounded` instances to `OpenCascade.Font.FontAspect.FontAspect`
 - Added `Ord` and `Bounded` instances to `OpenCascade.Graphic3D.AlphaMode.AlphaMode`
+- Added `copy` method to `OpenCascade.Geom.BezierCurve`
 
 ### Changed
 
@@ -98,7 +99,6 @@ and this project adheres to the
 - Added `OpenCascade.BRepAlgoAPI.Types`
 - Added `OpenCascade.NCollection.List`
 - Added `isDone` method to `OpenCascade.BRepBuilderAPI.MakeShape`
-- Added `copy` method to `OpenCascade.Geom.BezierCurve`
 
 ### Changed
 
