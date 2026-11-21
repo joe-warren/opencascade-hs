@@ -94,7 +94,7 @@ bezierToPathCommand :: Ptr TopoDS.Edge -> Ptr BRepAdaptor.Curve.Curve -> Acquire
 bezierToPathCommand edge curve = do 
     firstParam <- liftIO $ BRep.Tool.curveParamFirst edge
     lastParam <- liftIO $ BRep.Tool.curveParamLast edge
-    bezier <- BRepAdaptor.Curve.bezier curve
+    bezier <- Geom.BezierCurve.copy =<< BRepAdaptor.Curve.bezier curve
     liftIO $ Geom.BezierCurve.segment bezier firstParam lastParam 
     bezierCurveToPathCommand edge bezier
 

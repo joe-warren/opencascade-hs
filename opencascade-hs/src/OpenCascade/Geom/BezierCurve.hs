@@ -1,6 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
 module OpenCascade.Geom.BezierCurve 
 ( fromPnts
+, copy
 , toHandle
 , nbPoles
 , pole
@@ -29,6 +30,14 @@ foreign import capi unsafe "hs_Geom_BezierCurve.h hs_new_Geom_BezierCurve_fromPn
 
 fromPnts :: Ptr (Array1 Pnt) -> Acquire (Ptr BezierCurve)
 fromPnts arr = mkAcquire (wrapException $ rawFromPnts arr) (deleteBezierCurve)
+
+
+foreign import capi unsafe "hs_Geom_BezierCurve.h hs_Geom_BezierCurve_copy" rawCopy
+    :: Ptr (Handle BezierCurve)
+    -> IO (Ptr (Handle BezierCurve))
+
+copy :: Ptr (Handle BezierCurve) -> Acquire (Ptr (Handle BezierCurve))
+copy theCurve = mkAcquire (rawCopy theCurve) deleteHandleBezierCurve
 
 foreign import capi unsafe "hs_Geom_BezierCurve.h hs_Geom_BezierCurve_toHandle" rawToHandle :: Ptr BezierCurve -> IO (Ptr (Handle BezierCurve))
 
