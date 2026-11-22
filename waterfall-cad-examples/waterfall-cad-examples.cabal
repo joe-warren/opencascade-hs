@@ -71,6 +71,7 @@ data-files:
     test-data/offsetHoleNegative.svg
     test-data/offsetHolePositive.svg
     test-data/offsetOfCompound.svg
+    test-data/offsetOfScaledCylinder.svg
     test-data/offsetSquare.svg
     test-data/orthogonalMatrix.svg
     test-data/orthogonalMatrixTwoD.svg

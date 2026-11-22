@@ -487,6 +487,11 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             <> Transforms.translate (unit _z ^* 4) s''
             <> Transforms.translate ((unit _x + unit _z) ^* 4) (mask s'')
     )
+    , solidTest "offset of scaled cylinder" "offsetOfScaledCylinder.svg" (
+        Solids.unitCylinder 
+            & Transforms.scale (V3 1 1 3)
+            & Offset.offset 0.5
+    )
     , diagramTest "offset square" "offsetSquare.svg" (
         Shapes.unitSquare
             & TwoD.Offset.offsetShape 0.25
