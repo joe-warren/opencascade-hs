@@ -471,6 +471,22 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & Fillet.roundFillet 0.1
             & Solids.colourSolid Colour.aqua
         )
+    , solidTest "offset hole" "offsetHole.svg" (
+        let s = (Solids.centeredCube & Transforms.uScale 3 & Solids.colourSolid Colour.aqua)
+                    `Booleans.difference` (Solids.centeredCube & Solids.colourSolid Colour.fuchsia)
+            mask x = x `Booleans.difference` (
+                Solids.centeredCube 
+                    & Transforms.translate (unit _y * 0.5) 
+                    & Transforms.uScale 3 
+                    & Solids.colourSolid Colour.lime
+                )
+            s' = Offset.offset 0.2 s
+            s'' = Offset.offset (-0.2) (s)
+        in  s'
+            <> Transforms.translate (unit _x ^* 4) (mask s')
+            <> Transforms.translate (unit _z ^* 4) s''
+            <> Transforms.translate ((unit _x + unit _z) ^* 4) (mask s'')
+    )
     , diagramTest "offset square" "offsetSquare.svg" (
         Shapes.unitSquare
             & TwoD.Offset.offsetShape 0.25
