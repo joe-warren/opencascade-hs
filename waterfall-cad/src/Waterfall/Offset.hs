@@ -70,9 +70,9 @@ combineShellsToSolid s = do
     go
     upcast <$> MakeSolid.solid makeSolid
 
-getCompoundAsSolids :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
-getCompoundAsSolids s = do
-    explorer <-  TopExp.Explorer.new s TopAbs.ShapeEnum.Solid
+getCompoundAsShells :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
+getCompoundAsShells s = do
+    explorer <-  TopExp.Explorer.new s TopAbs.ShapeEnum.Shell
     let go = do
             isMore <- liftIO $ TopExp.Explorer.more explorer
             if not isMore
@@ -123,7 +123,7 @@ tryOffsetWithToleranceWithPaint tolerance paintFn value solid
         fmap mconcat
         . solidFromAcquireTWithPaintMapWithCatch
         $ traverse (offsetOneWithTolerance tolerance value paintFn (solidPaintMap solid))
-        =<< getCompoundAsSolids
+        =<< getCompoundAsShells
         =<< acquireSolid solid
 
 -- | Version of `offsetWithTolerance` that returns an error on failure
