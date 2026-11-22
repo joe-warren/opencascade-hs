@@ -477,7 +477,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             mask x = x `Booleans.difference` (
                 Solids.centeredCube 
                     & Transforms.translate (unit _y * 0.5) 
-                    & Transforms.uScale 3 
+                    & Transforms.uScale 4 
                     & Solids.colourSolid Colour.lime
                 )
             s' = Offset.offset 0.2 s
