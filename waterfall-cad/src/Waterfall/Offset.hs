@@ -29,7 +29,7 @@ module Waterfall.Offset
 , tryOffsetWithToleranceWithPaint
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, acquireFacePaints, fromAcquirePaints, PaintMap (..), makeShapeHistory, solidFromAcquireTWithPaintMapWithCatch)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, acquireFacePaints, fromAcquirePaints, PaintMap (..), makeShapeHistory, solidFromAcquireTWithPaintMapWithCatch, intersections3D)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
@@ -38,9 +38,7 @@ import qualified OpenCascade.BRepOffset.Mode as Mode
 import qualified OpenCascade.GeomAbs.JoinType as GeomAbs.JoinType
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import qualified OpenCascade.TopoDS.Types as TopoDS
-import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
-import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
 import Control.Monad (when, filterM)
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
@@ -55,10 +53,11 @@ import Waterfall.Internal.PaintHistory (remapWithBlendFunction)
 import Data.List.NonEmpty (NonEmpty)
 import Waterfall.Paint (Paint)
 import qualified Data.List.NonEmpty as NE
+import Data.Functor.Compose (Compose (..))
 
 combineShellsToSolid :: Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 combineShellsToSolid s = do
-    explorer <- TopExp.Explorer.new s TopAbs.ShapeEnum.Shell
+    explorer <- TopExp.Explorer.new s ShapeEnum.Shell
     makeSolid <- MakeSolid.new
     let go = do
             isMore <- liftIO $ TopExp.Explorer.more explorer
@@ -69,19 +68,6 @@ combineShellsToSolid s = do
                 go
     go
     upcast <$> MakeSolid.solid makeSolid
-
-getCompoundAsSolids :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
-getCompoundAsSolids s = do
-    explorer <-  TopExp.Explorer.new s TopAbs.ShapeEnum.Solid
-    let go = do
-            isMore <- liftIO $ TopExp.Explorer.more explorer
-            if not isMore
-                then pure []
-                else  do
-                    solid <- TopoDS.Shape.copy =<< liftIO (TopExp.Explorer.value explorer)
-                    liftIO $ TopExp.Explorer.next explorer
-                    (solid :) <$> go
-    go
 
 
 filterPaintMap :: Ptr TopoDS.Shape -> PaintMap -> Acquire PaintMap
@@ -120,10 +106,12 @@ tryOffsetWithToleranceWithPaint
 tryOffsetWithToleranceWithPaint tolerance paintFn value solid
     | nearZero value = Right solid
     | otherwise =
-        fmap mconcat
+        fmap (mconcat . fmap intersections3D . getCompose)
         . solidFromAcquireTWithPaintMapWithCatch
         $ traverse (offsetOneWithTolerance tolerance value paintFn (solidPaintMap solid))
-        =<< getCompoundAsSolids
+        =<< fmap Compose
+        . traverse (allSubShapesWithCopy ShapeEnum.Shell)
+        =<< allSubShapesWithCopy ShapeEnum.Solid
         =<< acquireSolid solid
 
 -- | Version of `offsetWithTolerance` that returns an error on failure
