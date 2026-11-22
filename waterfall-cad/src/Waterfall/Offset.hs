@@ -39,7 +39,6 @@ import qualified OpenCascade.GeomAbs.JoinType as GeomAbs.JoinType
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import qualified OpenCascade.TopoDS.Types as TopoDS
 import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
-import qualified OpenCascade.TopAbs.ShapeEnum as TopAbs.ShapeEnum
 import Control.Monad (when, filterM)
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
@@ -58,7 +57,7 @@ import Data.Functor.Compose (Compose (..))
 
 combineShellsToSolid :: Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 combineShellsToSolid s = do
-    explorer <- TopExp.Explorer.new s TopAbs.ShapeEnum.Shell
+    explorer <- TopExp.Explorer.new s ShapeEnum.Shell
     makeSolid <- MakeSolid.new
     let go = do
             isMore <- liftIO $ TopExp.Explorer.more explorer
