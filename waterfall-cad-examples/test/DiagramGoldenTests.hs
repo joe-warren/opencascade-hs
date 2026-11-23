@@ -277,7 +277,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         , solidTest "Flags" "flags.svg" FlagExample.flagExample
         , smallSolidTest "Loose Parts" "loose-parts.svg" LoosePartsExample.loosePartsExample
         ]
-    , testGroup "Differently Scaled Cubes" 
+    , testGroup "Transforms" 
         [ solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
             (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
         , solidTest "Negative Scaled Cube II" "negativeScaledCube-II.svg" 
@@ -286,36 +286,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             (Transforms.scale (V3 (negate 10) (negate 10) 10) Solids.unitCube)
         , solidTest "Negative Scaled Cuboid" "negativeScaledCuboid.svg" 
             (Transforms.scale (V3 (negate 1) 2 3) Solids.unitCube)
-        ]
-    , testGroup "Two-D Unions"
-        [ solidTest "Union 2D" "union2D.svg" 
-            ( Shape.unitCircle
-                & TwoD.Transforms.translate2D (V2 0.5 0.5)
-                & Booleans.union Shape.unitCircle
-                & TwoD.Transforms.scale2D 10
-                &  Solids.prism 5
-            )
-        , diagramTest "Union 2D Diagram" "union2Ddiagram.svg" 
-            ( Shape.unitCircle
-                & TwoD.Transforms.translate2D (V2 0.5 0.5)
-                & Booleans.union Shape.unitCircle
-                & TwoD.Transforms.scale2D 50
-                & Shape.shapePaths
-                & foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible)
-            )
-        , diagramTest "mconcat 2D Diagram" "mconcat2Ddiagram.svg" 
-            ( foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible) 
-                . Shape.shapePaths
-                . mconcat $
-                [ Shape.unitCircle
-                    & TwoD.Transforms.translate2D (V2 0.5 0.5 ^* fromIntegral i)
-                    & TwoD.Transforms.scale2D 50
-                | i :: Int <- [0 .. 3]
-                ]
-            )
-        ]
-    , testGroup "Transform Edge Cases"
-        [ solidTest "scale near unity" "nearUnityScale.svg" 
+        , solidTest "scale near unity" "nearUnityScale.svg" 
             . Solids.colourSolid Colour.red $
             (Transforms.scale (V3 0.9999999999999998 1 1) Solids.unitCylinder
                 <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
@@ -355,7 +326,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 <> TwoD.Transforms.translate2D (V2 (-1) 0) Shape.centeredSquare
             )
         ]
-    testGroup "Sweeps"
+    , testGroup "Sweeps"
         [ solidTest "curvy sweep" "curvySweep.svg" 
             ( Path2D.bezier (V2 0 0) (V2 0 10) (V2 10 10) (V2 10 0)
                 & Path.fromPath2D
@@ -386,7 +357,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 in Sweep.sweep path profile 
             )
         ]
-    testGroup "Lofts"
+    , testGroup "Lofts"
         [ solidTest "loft squares" "loftSquares.svg" 
             ( Loft.loft
                 [ Path.fromPath2D $ mconcat $ Shape.shapePaths Shape.unitSquare
@@ -394,7 +365,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 ]
             )
         ]
-    testGroup "Loose Parts/Shapes"
+    , testGroup "Loose Parts and Shapes"
         [ solidTest "looseParts with Colour then transform" "loosePartsThenTransform.svg" $ 
             let a = Solids.centeredCube 
                     & Solids.colourSolid Colour.maroon
@@ -601,34 +572,33 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                         | theta <- [0, pi/3, 2*pi/3]
                         ]
                 )
-             , solidTest "intersections of identical cubes" "intersectionsOfIdenticalCubes.svg" (
-                  Booleans.intersections $
-                      Solids.colourSolid
-                          <$> [Colour.red, Colour.lime, Colour.aqua]
-                          <*> pure Solids.centeredCube
-                  )
-              , solidTest "intersections with repeated cube" "intersectionsWithRepeatedCube.svg" (
-                  Booleans.intersections
-                      [ Solids.colourSolid Colour.red Solids.centeredCube
-                      , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z)
-          (pi/4) Solids.centeredCube)
-                      , Solids.colourSolid Colour.aqua Solids.centeredCube
-                      ]
-                  )
-              , solidTest "intersections with mempty" "intersectionsWithMempty.svg" (
-                  Solids.colourSolid Colour.red Solids.unitSphere <>
-                      Booleans.intersections
-                          [ Transforms.uScale 2 $ Solids.centeredCube
-                          , mempty
-                          , Transforms.uScale 2 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
-                          ]
-                  )
-             , solidTest "unions of identical cubes" "unionsOfIdenticalCubes.svg" (
-                  Booleans.unions $
-                      Solids.colourSolid
-                          <$> [Colour.red, Colour.lime, Colour.aqua]
-                          <*> pure Solids.centeredCube
-                  )
+            , solidTest "intersections of identical cubes" "intersectionsOfIdenticalCubes.svg" (
+                 Booleans.intersections $
+                    Solids.colourSolid
+                        <$> [Colour.red, Colour.lime, Colour.aqua]
+                        <*> pure Solids.centeredCube
+                )
+            , solidTest "intersections with repeated cube" "intersectionsWithRepeatedCube.svg" (
+                Booleans.intersections
+                    [ Solids.colourSolid Colour.red Solids.centeredCube
+                    , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z) (pi/4) Solids.centeredCube)
+                    , Solids.colourSolid Colour.aqua Solids.centeredCube
+                    ]
+                )
+            , solidTest "intersections with mempty" "intersectionsWithMempty.svg" (
+                Solids.colourSolid Colour.red Solids.unitSphere <>
+                    Booleans.intersections
+                        [ Transforms.uScale 2 $ Solids.centeredCube
+                        , mempty
+                        , Transforms.uScale 2 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
+                        ]
+                    )
+            , solidTest "unions of identical cubes" "unionsOfIdenticalCubes.svg" (
+                Booleans.unions $
+                    Solids.colourSolid
+                        <$> [Colour.red, Colour.lime, Colour.aqua]
+                        <*> pure Solids.centeredCube
+                )
             , solidTest "unions with repeated cube" "unionsWithRepeatedCube.svg" (
                 Booleans.unions
                     [ Solids.colourSolid Colour.red Solids.centeredCube
@@ -647,7 +617,32 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 )
             ]
         , testGroup "Two-D"
-            [ shapeTest "intersections of squares" "intersectionsOfSquares.svg" (
+            [ solidTest "Union 2D" "union2D.svg" 
+                ( Shape.unitCircle
+                    & TwoD.Transforms.translate2D (V2 0.5 0.5)
+                    & Booleans.union Shape.unitCircle
+                    & TwoD.Transforms.scale2D 10
+                    &  Solids.prism 5
+                )
+            , diagramTest "Union 2D Diagram" "union2Ddiagram.svg" 
+                ( Shape.unitCircle
+                    & TwoD.Transforms.translate2D (V2 0.5 0.5)
+                    & Booleans.union Shape.unitCircle
+                    & TwoD.Transforms.scale2D 50
+                    & Shape.shapePaths
+                    & foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible)
+                )
+            , diagramTest "mconcat 2D Diagram" "mconcat2Ddiagram.svg" 
+                ( foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible) 
+                    . Shape.shapePaths
+                    . mconcat $
+                    [ Shape.unitCircle
+                        & TwoD.Transforms.translate2D (V2 0.5 0.5 ^* fromIntegral i)
+                        & TwoD.Transforms.scale2D 50
+                    | i :: Int <- [0 .. 3]
+                    ]
+                )
+            , shapeTest "intersections of squares" "intersectionsOfSquares.svg" (
                 Booleans.intersections
                     [
                     Shape.centeredSquare
@@ -719,7 +714,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 )
             ]
         ]
-    testGroup "Revolutions" 
+    , testGroup "Revolutions" 
         [ solidTest "partial revolution" "partialRevolution.svg" (
             Revolution.revolutionByAngle 1 
                 (TwoD.Transforms.translate2D (unit _x ^* 1.5) Shape.unitCircle)
@@ -788,7 +783,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         , svgElementsTest "svg rounded rect single radius" "svgRoundedRectSingleRadius.svg"
             "<rect width=\"80\" height=\"60\" rx=\"20\"/><rect x=\"100\" width=\"80\" height=\"60\" ry=\"10\"/>"
         ]
-    , testGroup "Errata"
+    , testGroup "Diagram Fills"
         [ diagramTest "hole with centre of mass over solid material" "holeWithCentreOfMassOverSolid.svg" (
               let bar lo hi = Shape.unitSquare
                       & TwoD.Transforms.scale2D (hi - lo)
