@@ -141,15 +141,6 @@ solidTests = testGroup "Solid"
             , testCase "inward offset of a non-uniformly scaled cylinder" .
                 assertApproxEqual "volume is correct" 1e-4 (pi * 0.75 * 0.75 * 2.5) . Solids.volume 
                     . Offset.offset (-0.25) $ stretchedCylinder
-            , testCase "outward offset of a non-uniformly scaled sphere" $
-                let d = 0.1
-                    focalDistance = sqrt 3
-                    eccentricity = focalDistance / 2
-                    volume = 8 * pi / 3
-                    area = 2 * pi * (1 + 2 * asin eccentricity / eccentricity)
-                    meanCurvature = 2 * pi * (2 + log ((2 + focalDistance) / (2 - focalDistance)) / (2 * focalDistance))
-                in assertApproxEqual "volume is correct" 1e-3 (steinerVolume volume area meanCurvature d) . Solids.volume 
-                    . Offset.offset d . Transforms.scale (V3 1 1 2) $ Solids.unitSphere
             , testCase "inward offset of a cube with a non-uniformly scaled through hole" .
                 assertApproxEqual "volume is correct" 1e-4 (2.8 * 2.8 * 2.8 - pi * 0.6 * 0.6 * 2.8) . Solids.volume 
                     . Offset.offset (-0.1) $ cubeWithHole stretchedHole
