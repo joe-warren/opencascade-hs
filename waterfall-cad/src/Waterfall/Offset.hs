@@ -16,6 +16,8 @@ The documentation for @MakeOffsetShape@ lists the following constraints
 * The algorithm may fail if the shape S contains vertices where more than 3 edges converge.
 * Since 3d-offset algorithm involves intersection of surfaces, it is under limitations of surface intersection algorithm.
 * A result cannot be generated if the underlying geometry of S is BSpline with continuity C0.
+
+We work around the first and last of these constraints by splitting any face that is not C1 continuous along its discontinuities.
 -}
 module Waterfall.Offset
 ( offset
@@ -29,7 +31,7 @@ module Waterfall.Offset
 , tryOffsetWithToleranceWithPaint
 ) where
 
-import Waterfall.Internal.Solid (Solid (..), acquireSolid, acquireFacePaints, fromAcquirePaints, PaintMap (..), makeShapeHistory, solidFromAcquireTWithPaintMapWithCatch, intersections3D)
+import Waterfall.Internal.Solid (Solid (..), acquireSolid, acquireFacePaints, fromAcquirePaints, PaintMap (..), makeShapeHistory, solidFromAcquireTWithPaintMapWithCatch, intersections3D, shapeDivideHistory, mapPaintMap, solidFromAcquireWithPaintMapWithCatch)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
@@ -54,6 +56,9 @@ import Data.List.NonEmpty (NonEmpty)
 import Waterfall.Paint (Paint)
 import qualified Data.List.NonEmpty as NE
 import Data.Functor.Compose (Compose (..))
+import qualified OpenCascade.ShapeUpgrade.ShapeDivideContinuity as ShapeUpgrade.ShapeDivideContinuity
+import qualified OpenCascade.GeomAbs.Shape as GeomAbs.Shape
+import qualified OpenCascade.ShapeUpgrade.ShapeDivide as ShapeUpgrade.ShapeDivide
 
 combineShellsToSolid :: Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 combineShellsToSolid s = do
@@ -69,6 +74,20 @@ combineShellsToSolid s = do
     go
     upcast <$> MakeSolid.solid makeSolid
 
+splitC0BSplines' :: PaintMap -> Ptr TopoDS.Shape -> Acquire (PaintMap, Ptr TopoDS.Shape)
+splitC0BSplines' paintMap s = do
+    shapeDivide <- ShapeUpgrade.ShapeDivideContinuity.fromShape s
+    liftIO $ ShapeUpgrade.ShapeDivideContinuity.setBoundaryCriterion shapeDivide GeomAbs.Shape.C1
+    liftIO $ ShapeUpgrade.ShapeDivideContinuity.setSurfaceCriterion shapeDivide GeomAbs.Shape.C1
+    liftIO $ ShapeUpgrade.ShapeDivideContinuity.setPCurveCriterion shapeDivide GeomAbs.Shape.C1
+    performed <- liftIO $ ShapeUpgrade.ShapeDivide.perform (upcast shapeDivide) True
+    if performed 
+        then mapPaintMap (paintMap, shapeDivideHistory (upcast shapeDivide))
+        else return (paintMap, s)
+
+splitC0BSplines :: Solid -> Either WaterfallError Solid
+splitC0BSplines solid = solidFromAcquireWithPaintMapWithCatch
+    (splitC0BSplines' (solidPaintMap solid) =<< acquireSolid solid)
 
 filterPaintMap :: Ptr TopoDS.Shape -> PaintMap -> Acquire PaintMap
 filterPaintMap _ (UniformPaint paint) = pure (UniformPaint paint)
@@ -95,7 +114,6 @@ offsetOneWithTolerance tolerance value paintFn paintMap s = do
         =<< filterPaintMap s paintMap
     (newPaintMap,) <$> combineShellsToSolid shell
 
-
 -- | Version of `tryOffsetWithTolerance` that exposes how to assign `Paint` to the generated parts of the surface
 tryOffsetWithToleranceWithPaint
     :: Double -- ^ Tolerance, this can be relatively small
@@ -105,14 +123,15 @@ tryOffsetWithToleranceWithPaint
     -> Either WaterfallError Solid
 tryOffsetWithToleranceWithPaint tolerance paintFn value solid
     | nearZero value = Right solid
-    | otherwise =
+    | otherwise = do 
+        continuousSolid <- splitC0BSplines solid
         fmap (mconcat . fmap intersections3D . getCompose)
-        . solidFromAcquireTWithPaintMapWithCatch
-        $ traverse (offsetOneWithTolerance tolerance value paintFn (solidPaintMap solid))
-        =<< fmap Compose
-        . traverse (allSubShapesWithCopy ShapeEnum.Shell)
-        =<< allSubShapesWithCopy ShapeEnum.Solid
-        =<< acquireSolid solid
+            . solidFromAcquireTWithPaintMapWithCatch
+            $ traverse (offsetOneWithTolerance tolerance value paintFn (solidPaintMap continuousSolid))
+            =<< fmap Compose
+            . traverse (allSubShapesWithCopy ShapeEnum.Shell)
+            =<< allSubShapesWithCopy ShapeEnum.Solid
+            =<< acquireSolid continuousSolid
 
 -- | Version of `offsetWithTolerance` that returns an error on failure
 tryOffsetWithTolerance

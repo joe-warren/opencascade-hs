@@ -113,9 +113,12 @@ extra-source-files:
     cpp/hs_RWMesh_CafReader.h
     cpp/hs_RWObj_CafReader.h
     cpp/hs_RWObj_CafWriter.h
+    cpp/hs_ShapeBuild_ReShape.h
     cpp/hs_ShapeConstruct_Curve.h
     cpp/hs_ShapeExtend_WireData.h
     cpp/hs_ShapeFix_Solid.h
+    cpp/hs_ShapeUpgrade_ShapeDivide.h
+    cpp/hs_ShapeUpgrade_ShapeDivideContinuity.h
     cpp/hs_ShapeUpgrade_UnifySameDomain.h
     cpp/hs_Standard_Failure.h
     cpp/hs_STEPCAFControl_Writer.h
@@ -331,6 +334,9 @@ library
       OpenCascade.RWObj.CafWriter
       OpenCascade.RWObj.Internal.Destructors
       OpenCascade.RWObj.Types
+      OpenCascade.ShapeBuild.Internal.Destructors
+      OpenCascade.ShapeBuild.ReShape
+      OpenCascade.ShapeBuild.Types
       OpenCascade.ShapeConstruct.Curve
       OpenCascade.ShapeConstruct.Internal.Destructors
       OpenCascade.ShapeConstruct.Types
@@ -342,6 +348,8 @@ library
       OpenCascade.ShapeFix.Solid
       OpenCascade.ShapeFix.Types
       OpenCascade.ShapeUpgrade.Internal.Destructors
+      OpenCascade.ShapeUpgrade.ShapeDivide
+      OpenCascade.ShapeUpgrade.ShapeDivideContinuity
       OpenCascade.ShapeUpgrade.Types
       OpenCascade.ShapeUpgrade.UnifySameDomain
       OpenCascade.Standard.Failure
@@ -526,9 +534,12 @@ library
         cpp/hs_RWMesh_CafReader.cpp
         cpp/hs_RWObj_CafReader.cpp
         cpp/hs_RWObj_CafWriter.cpp
+        cpp/hs_ShapeBuild_ReShape.cpp
         cpp/hs_ShapeConstruct_Curve.cpp
         cpp/hs_ShapeExtend_WireData.cpp
         cpp/hs_ShapeFix_Solid.cpp
+        cpp/hs_ShapeUpgrade_ShapeDivide.cpp
+        cpp/hs_ShapeUpgrade_ShapeDivideContinuity.cpp
         cpp/hs_ShapeUpgrade_UnifySameDomain.cpp
         cpp/hs_Standard_Failure.cpp
         cpp/hs_STEPCAFControl_Writer.cpp

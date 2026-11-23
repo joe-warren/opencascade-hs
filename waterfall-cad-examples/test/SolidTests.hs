@@ -7,6 +7,8 @@ import qualified Waterfall.Booleans as Booleans
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.Revolution as Revolution
 import qualified Waterfall.TwoD.Shape as TwoD.Shape
+import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
+import qualified Waterfall.Offset as Offset
 import Linear (V3 (..), V4 (..), unit, zero, _x, _z, (^*), normalize, identity, outer, (!-!))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -124,4 +126,27 @@ solidTests = testGroup "Solid"
                 <> (assertEqual "has one part" 1 . length . Solids.looseParts $ s)
         )
         ]
+    , testGroup "offset" $ 
+        let steinerVolume volume area meanCurvature d = 
+                volume + area * d + meanCurvature * d * d + 4 * pi * d * d * d / 3
+            stretchedCylinder = Transforms.scale (V3 1 1 3) Solids.unitCylinder
+            stretchedHole = Transforms.scale (V3 0.5 0.5 5) Solids.centeredCylinder
+            prismHole = Transforms.translate (V3 0 0 (-2.5)) . Solids.prism 5 . TwoD.Transforms.uScale2D 0.5 $ TwoD.Shape.unitCircle
+            cubeWithHole = Booleans.difference (Transforms.uScale 3 Solids.centeredCube)
+        in  [ testCase "outward offset of a non-uniformly scaled cylinder" $
+                let d = 0.5
+                    expected = steinerVolume (3 * pi) (8 * pi) (3 * pi + pi * pi) d
+                in assertApproxEqual "volume is correct" 1e-3 expected . Solids.volume 
+                    . Offset.offset d $ stretchedCylinder
+            , testCase "inward offset of a non-uniformly scaled cylinder" .
+                assertApproxEqual "volume is correct" 1e-4 (pi * 0.75 * 0.75 * 2.5) . Solids.volume 
+                    . Offset.offset (-0.25) $ stretchedCylinder
+            , testCase "inward offset of a cube with a non-uniformly scaled through hole" .
+                assertApproxEqual "volume is correct" 1e-4 (2.8 * 2.8 * 2.8 - pi * 0.6 * 0.6 * 2.8) . Solids.volume 
+                    . Offset.offset (-0.1) $ cubeWithHole stretchedHole
+            , testCase "outward offset of a cube with a non-uniformly scaled through hole" $
+                let offsetVolume = Solids.volume . Offset.offset 0.1 . cubeWithHole
+                in (assertApproxEqual "volume matches the same hole made without scaling" 1e-4 (offsetVolume prismHole) . offsetVolume $ stretchedHole)
+                    <> (assertEqual "has one part" 1 . length . Solids.looseParts . Offset.offset 0.1 . cubeWithHole $ stretchedHole)
+            ]
     ]
