@@ -36,6 +36,8 @@ and this project adheres to the
 - Added `Ord` and `Bounded` instances to `OpenCascade.Graphic3D.AlphaMode.AlphaMode`
 - Added `copy` method to `OpenCascade.Geom.BezierCurve`
 - Added `isDone` method to `OpenCascade.BRepBuilderAPI.MakeShape`
+- Added `OpenCascade.ShapeUpgrade.ShapeDivide` and `OpenCascade.ShapeUpgrade.ShapeDivideContinuity`
+- Added `OpenCascade.ShapeBuild.ReShape` and `OpenCascade.ShapeBuild.Types`
 
 ### Changed
 

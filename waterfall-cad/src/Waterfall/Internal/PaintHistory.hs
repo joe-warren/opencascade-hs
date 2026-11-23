@@ -49,7 +49,6 @@ remapWithBlendFunction' paintFunction s edges history paints = do
     let filletSurfacesFor :: Ptr TopoDS.Shape -> Acquire [(Ptr TopoDS.Face, Paint)]
         filletSurfacesFor edge = do
             faces <- liftIO . filterM (fmap (== ShapeEnum.Face) . TopoDS.Shape.shapeType)
-                =<< shapesFromListOfShape 
                 =<< historyGenerated history edge
             if null faces then pure [] else do
                 neighbours <- shapesFromListOfShape =<<

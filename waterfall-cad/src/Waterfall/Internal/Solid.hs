@@ -16,14 +16,17 @@ module Waterfall.Internal.Solid
 , solidFromAcquireWithCatch
 , solidFromAcquireTWithCatch
 , solidFromAcquireMappingPaintMap
+, solidFromAcquireWithPaintMap
 , solidFromAcquireTWithPaintMap
 , solidFromAcquireWithPaintMapWithCatch
 , solidFromAcquireTWithPaintMapWithCatch
 , solidFromAcquireMappingPaintMapWithCatch
 , remapPaints
+, mapPaintMap 
 , materialiseFacePaints
 , makeShapeHistory
 , bopBuilderHistory
+, shapeDivideHistory
 , union3D
 , difference3D
 , intersection3D
@@ -59,12 +62,14 @@ import Data.Bifunctor.Flip (Flip (..))
 import Waterfall.Error (WaterfallError)
 import Waterfall.Paint (Paint, paintIsDefined)
 import Data.Functor.Compose (Compose(..))
-import qualified OpenCascade.NCollection as NCollection
 import Control.Monad (filterM, forM_, (<=<))
 import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape, deduplicateTopoDSShapes, containsShapeKind)
 import Foreign.ForeignPtr (ForeignPtr)
 import Control.DeepSeq (NFData (rnf), liftRnf, liftRnf2, rwhnf)
 import qualified OpenCascade.NCollection.List as NCollection.List
+import qualified OpenCascade.ShapeUpgrade.Types as ShapeUpgrade
+import qualified OpenCascade.ShapeBuild.ReShape as ShapeBuild.ReShape
+import qualified OpenCascade.ShapeUpgrade.ShapeDivide as ShapeBuild.ShapeDivide
 
 data PaintMap 
     = UniformPaint Paint
@@ -182,8 +187,8 @@ emptySolid =  (`Solid` emptyPaintMap) . unsafeFromAcquirePtr $ upcast <$> (MakeS
 
 -- | this is used to abstract between `MakeShape` and `BOPAlgo.Builder`
 data History = History 
-    { historyModified :: Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.List TopoDS.Shape))
-    , historyGenerated :: Ptr TopoDS.Shape -> Acquire (Ptr (NCollection.List TopoDS.Shape))
+    { historyModified :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
+    , historyGenerated :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
     , historyIsDeleted :: Ptr TopoDS.Shape -> IO Bool
     , historyResult :: Acquire (Ptr TopoDS.Shape)
     }
@@ -191,18 +196,33 @@ data History = History
 makeShapeHistory :: Ptr MakeShape -> History
 makeShapeHistory builder =
     History 
-        (MakeShape.modified builder)
-        (MakeShape.generated builder)
+        (shapesFromListOfShape <=< MakeShape.modified builder)
+        (shapesFromListOfShape <=< MakeShape.generated builder)
         (MakeShape.isDeleted builder)
         (MakeShape.shape builder)
 
 bopBuilderHistory :: Ptr BOPAlgo.Builder.Builder -> History
 bopBuilderHistory builder = 
     History 
-        (BOPAlgo.Builder.modified builder)
-        (BOPAlgo.Builder.generated builder)
+        (shapesFromListOfShape <=< BOPAlgo.Builder.modified builder)
+        (shapesFromListOfShape <=< BOPAlgo.Builder.generated builder)
         (BOPAlgo.Builder.isDeleted builder)
         (BOPAlgo.Builder.shape builder)
+
+shapeDivideHistory :: Ptr ShapeUpgrade.ShapeDivide -> History
+shapeDivideHistory shapeDivide = History 
+    (\shape -> do 
+        reshape <- ShapeBuild.ShapeDivide.getContext shapeDivide
+        recorded <- liftIO $ ShapeBuild.ReShape.isRecorded reshape shape
+        if not recorded 
+            then return []
+            else allSubShapesWithCopy ShapeEnum.Face
+                =<< ShapeBuild.ReShape.apply reshape shape ShapeEnum.Face
+    )
+    (const . pure $ mempty)
+    (const . pure $ False)
+    (ShapeBuild.ShapeDivide.result shapeDivide)
+
 
 -- | for a builder, and a shape, return:
 --
@@ -211,10 +231,8 @@ bopBuilderHistory builder =
 -- * otherwise, return the shape
 remap :: History -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
 remap history s = do
-        modified <- shapesFromListOfShape
-                =<< historyModified history s
-        generated <- shapesFromListOfShape
-                =<< historyGenerated history s
+        modified <- historyModified history s
+        generated <- historyGenerated history s
         inputShapeType <- liftIO $ TopoDS.Shape.shapeType s
         sameTypeGenerated <- liftIO $ 
             filterM (fmap (== inputShapeType) . TopoDS.Shape.shapeType) generated

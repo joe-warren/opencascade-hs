@@ -492,6 +492,16 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
             & Transforms.scale (V3 1 1 3)
             & Offset.offset 0.5
     )
+    , solidTest "offset of through hole cylinder" "offsetOfThroughHole.svg" (
+        let a = Solids.centeredCube
+                & Transforms.scale (V3 3 3 0.5)
+                & Solids.colourSolid Colour.blue
+            b = Solids.centeredCylinder
+                    & Transforms.scale (V3 1 1 3)
+                    & Solids.colourSolid Colour.red
+        in Offset.offsetWithPaint (Paint.mixPaints) 0.25 (a `Booleans.difference` b)
+            & Transforms.rotate (unit _x) (pi/2)
+    )
     , diagramTest "offset square" "offsetSquare.svg" (
         Shapes.unitSquare
             & TwoD.Offset.offsetShape 0.25
