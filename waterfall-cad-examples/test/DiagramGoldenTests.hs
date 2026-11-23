@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
 module DiagramGoldenTests
 ( diagramGoldenTests
 ) where
@@ -57,6 +58,9 @@ import qualified LoosePartsExample
 import qualified Waterfall.Paint as Paint
 import qualified Waterfall as Shapes
 import qualified Waterfall.TwoD.Offset as TwoD.Offset
+import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
@@ -196,6 +200,23 @@ doTest testName goldenPath makeDiagram =
             compareOutput path a b
         )
         updateGoldenFile
+
+        
+galleryGoldenTest :: GoldenSpec -> TestTree
+galleryGoldenTest spec = 
+    let goldenPath = "README.md"
+        qualifyGoldenPath = (</> "test-data" </> goldenPath) <$> Paths.getDataDir
+        readGoldenFile = T.readFile =<< qualifyGoldenPath
+        updateGoldenFile = T.writeFile ("test-data" </> goldenPath)
+    in goldenTest 
+        "Golden README.md"
+        readGoldenFile
+        (pure . printGoldenSpec $ spec)
+        (\a b -> if a == b 
+            then pure Nothing 
+            else pure . Just $ "test-data/README.md needs negenerating"
+        )
+        updateGoldenFile
     
 standardSolidDiagram :: Solid -> Diagram
 standardSolidDiagram = withWidth 800 . Diagram.solidDiagram (V3 2 3 1)
@@ -214,37 +235,37 @@ withHeight = normalizeSize (^. _y)
 withWidth :: Double -> Diagram -> Diagram
 withWidth = normalizeSize (^. _x) 
 
-diagramTest :: TestName -> FilePath -> Diagram -> TestTree
+diagramTest :: TestName -> FilePath -> Diagram -> GoldenSpec
 diagramTest name filepath =
-    doTest name filepath . pure
+    GoldenCase name filepath . pure
 
-shapeTest :: TestName -> FilePath -> Shape -> TestTree
+shapeTest :: TestName -> FilePath -> Shape -> GoldenSpec
 shapeTest name filepath = 
     diagramTest name filepath
         . foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible)
         . Shape.shapePaths
         . TwoD.Transforms.uScale2D 100
 
-solidTest :: TestName -> FilePath -> Solid -> TestTree
+solidTest :: TestName -> FilePath -> Solid -> GoldenSpec
 solidTest name filepath = 
     diagramTest name filepath . standardSolidDiagram
 
-smallSolidTest :: TestName -> FilePath -> Solid -> TestTree
+smallSolidTest :: TestName -> FilePath -> Solid -> GoldenSpec
 smallSolidTest name filepath =
     diagramTest name filepath . withHeight 200 . standardSolidDiagram
 
-svgPathsTest :: TestName -> FilePath -> Either SVG.SVGError [Path2D.Path2D] -> TestTree
+svgPathsTest :: TestName -> FilePath -> Either SVG.SVGError [Path2D.Path2D] -> GoldenSpec
 svgPathsTest name filepath = 
-    doTest name filepath
+    GoldenCase name filepath
         . either 
             (throwIO . ErrorCall . show)
             (pure . foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible))
 
-svgPathTest :: TestName -> FilePath -> String -> TestTree
+svgPathTest :: TestName -> FilePath -> String -> GoldenSpec
 svgPathTest name filepath = 
     svgPathsTest name filepath . SVG.parsePath
 
-svgElementsTest :: TestName -> FilePath -> String -> TestTree
+svgElementsTest :: TestName -> FilePath -> String -> GoldenSpec
 svgElementsTest name filepath elements = 
     let document = "<svg xmlns=\"http://www.w3.org/2000/svg\">" <> elements <> "</svg>"
         parsed = maybe 
@@ -253,505 +274,563 @@ svgElementsTest name filepath elements =
             (Svg.parseSvgFile "test.svg" (BSC8.pack document))
     in svgPathsTest name filepath (SVG.convertDocument =<< parsed)
 
+data GoldenSpec 
+    = GoldenGroup TestName [GoldenSpec]
+    | GoldenCase TestName FilePath (IO Diagram)
+
+evalGoldenSpec :: GoldenSpec -> TestTree
+evalGoldenSpec (GoldenGroup name children) = testGroup name (evalGoldenSpec <$> children)
+evalGoldenSpec (GoldenCase testName filePath action) = doTest testName filePath action
+
+printGoldenSpec :: GoldenSpec -> Text
+printGoldenSpec s =
+    let go level (GoldenGroup name children) = 
+            T.replicate level "#" <> " " <> T.pack name <> "\n" 
+                <> T.unlines (go (level+1) <$> children)
+        go _ (GoldenCase testName filePath _) = 
+            "#### " <> T.pack testName <> "\n" 
+                <> "![" <> T.pack testName <> "](" <> T.pack filePath <> ")"
+     in go 1 s
+     
 diagramGoldenTests :: TestTree
-diagramGoldenTests = testGroup "Diagram Golden Tests" 
-    [ smallSolidTest "CSG" "csg.svg" CsgExample.csgExample
-    , solidTest "Gear" "gear.svg" $ GearExample.gearExample 1 5 20 (20*pi/180)
-    , smallSolidTest "Revolution" "revolution.svg" RevolutionExample.revolutionExample
-    , smallSolidTest "Sweep" "sweep.svg" SweepExample.sweepExample
-    , solidTest "Offset" "offset.svg" OffsetExample.offsetExample
-    , doTest "Text" "text.svg" $ do
-        projectRoot <- Paths.getDataDir 
-        standardSolidDiagram <$> TextExample.textExample 
-            (projectRoot </> "test-data/fonts/varela/VarelaRound-Regular.ttf")
-            12.0
-            "Waterfall-CAD"
-            10
-    , smallSolidTest "Bound" "bounding-boxes.svg" BoundingBoxExample.boundingBoxExample
-    , solidTest "Loft" "loft.svg" LoftExample.loftExample
-    , solidTest "Fillet" "fillet.svg" FilletExample.filletExample
-    , smallSolidTest "2D Booleans" "2d-booleans.svg"  TwoDBooleansExample.twoDBooleansExample
-    , solidTest "Platonic Solids" "platonic.svg" PlatonicSolidsExample.platonicSolidsExample
-    , solidTest "Take Path Fraction" "takePathFraction.svg" TakePathFractionExample.takePathFractionExample
-    , solidTest "Flags" "flags.svg" FlagExample.flagExample
-    , smallSolidTest "Loose Parts" "loose-parts.svg" LoosePartsExample.loosePartsExample
-    , solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
-        (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
-    , solidTest "Negative Scaled Cube II" "negativeScaledCube-II.svg" 
-        (Transforms.scale (negate $ V3 1 1 1) Solids.unitCube)
-    , solidTest "Negative Scaled Cube III" "negativeScaledCube-III.svg" 
-        (Transforms.scale (V3 (negate 10) (negate 10) 10) Solids.unitCube)
-    , solidTest "Negative Scaled Cuboid" "negativeScaledCuboid.svg" 
-        (Transforms.scale (V3 (negate 1) 2 3) Solids.unitCube)
-    , solidTest "Offset of Compound" "offsetOfCompound.svg" 
-        (Offset.offset 1 $ (id <> Transforms.translate (unit _x ^* 3)) Solids.unitCube)
-    , solidTest "Union 2D" "union2D.svg" 
-        ( Shape.unitCircle
-            & TwoD.Transforms.translate2D (V2 0.5 0.5)
-            & Booleans.union Shape.unitCircle
-            & TwoD.Transforms.scale2D 10
-            &  Solids.prism 5
-        )
-    , diagramTest "Union 2D Diagram" "union2Ddiagram.svg" 
-        ( Shape.unitCircle
-            & TwoD.Transforms.translate2D (V2 0.5 0.5)
-            & Booleans.union Shape.unitCircle
-            & TwoD.Transforms.scale2D 50
-            & Shape.shapePaths
-            & foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible)
-        )
-    , diagramTest "mconcat 2D Diagram" "mconcat2Ddiagram.svg" 
-        ( foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible) 
-            . Shape.shapePaths
-            . mconcat $
-            [ Shape.unitCircle
-                & TwoD.Transforms.translate2D (V2 0.5 0.5 ^* fromIntegral i)
-                & TwoD.Transforms.scale2D 50
-            | i :: Int <- [0 .. 3]
-            ]
-        )
-    , solidTest "scale near unity" "nearUnityScale.svg" 
-        . Solids.colourSolid Colour.red $
-        (Transforms.scale (V3 0.9999999999999998 1 1) Solids.unitCylinder
-            <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
-        )
-    , solidTest "orthogonal matrix" "orthogonalMatrix.svg"
-        . Solids.colourSolid Colour.red $
-        -- rotation by 1 radian around the -y axis
-        ( Transforms.matTransform 
-            (V3 (V4 (sin 1) 0 (cos 1) 0)
-                (V4 0 1 0 0)
-                (V4 (cos 1) 0 (-sin 1) 0))
-            Solids.unitCylinder
-            <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
-        )
-    , shapeTest "scale near unity (twoD)" "nearUnityScaleTwoD.svg" 
-        ( TwoD.Transforms.scale2D (V2 0.9999999999999998 1) Shape.unitCircle
-            <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
-        )
-    , shapeTest "orthogonal matrix (twoD)" "orthogonalMatrixTwoD.svg" 
-        ( TwoD.Transforms.matTransform2D 
-            (V2 (V3 (sin 1) (cos 1) 0)
-                (V3 (cos 1) (-sin 1) 0)
+diagramGoldenTests = 
+    testGroup "Golden Tests"
+        [ evalGoldenSpec goldenSpec
+        , galleryGoldenTest goldenSpec
+        ]
+
+goldenSpec :: GoldenSpec
+goldenSpec = GoldenGroup "Diagram Golden Tests" 
+    [ GoldenGroup "Example Objects"
+        [ smallSolidTest "CSG" "csg.svg" CsgExample.csgExample
+        , solidTest "Gear" "gear.svg" $ GearExample.gearExample 1 5 20 (20*pi/180)
+        , smallSolidTest "Revolution" "revolution.svg" RevolutionExample.revolutionExample
+        , smallSolidTest "Sweep" "sweep.svg" SweepExample.sweepExample
+        , solidTest "Offset" "offset.svg" OffsetExample.offsetExample
+        , GoldenCase "Text" "text.svg" $ do
+            projectRoot <- Paths.getDataDir 
+            standardSolidDiagram <$> TextExample.textExample 
+                (projectRoot </> "test-data/fonts/varela/VarelaRound-Regular.ttf")
+                12.0
+                "Waterfall-CAD"
+                10
+        , smallSolidTest "Bound" "bounding-boxes.svg" BoundingBoxExample.boundingBoxExample
+        , solidTest "Loft" "loft.svg" LoftExample.loftExample
+        , solidTest "Fillet" "fillet.svg" FilletExample.filletExample
+        , smallSolidTest "2D Booleans" "2d-booleans.svg"  TwoDBooleansExample.twoDBooleansExample
+        , solidTest "Platonic Solids" "platonic.svg" PlatonicSolidsExample.platonicSolidsExample
+        , solidTest "Take Path Fraction" "takePathFraction.svg" TakePathFractionExample.takePathFractionExample
+        , solidTest "Flags" "flags.svg" FlagExample.flagExample
+        , smallSolidTest "Loose Parts" "loose-parts.svg" LoosePartsExample.loosePartsExample
+        ]
+    , GoldenGroup "Transforms" 
+        [ solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
+            (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
+        , solidTest "Negative Scaled Cube II" "negativeScaledCube-II.svg" 
+            (Transforms.scale (negate $ V3 1 1 1) Solids.unitCube)
+        , solidTest "Negative Scaled Cube III" "negativeScaledCube-III.svg" 
+            (Transforms.scale (V3 (negate 10) (negate 10) 10) Solids.unitCube)
+        , solidTest "Negative Scaled Cuboid" "negativeScaledCuboid.svg" 
+            (Transforms.scale (V3 (negate 1) 2 3) Solids.unitCube)
+        , solidTest "scale near unity" "nearUnityScale.svg" 
+            . Solids.colourSolid Colour.red $
+            (Transforms.scale (V3 0.9999999999999998 1 1) Solids.unitCylinder
+                <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
             )
-        Shape.unitSquare
-            <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
-        )
-    , shapeTest "negative determinant GTrsf (twoD)" "negativeDeterminantGTrsfTwoD.svg"
-        ( TwoD.Transforms.matTransform2D (V2 (V3 1 1 0) (V3 1 0 0)) Shape.centeredSquare
-            <> TwoD.Transforms.translate2D (V2 0.5 0) Shape.centeredSquare
-        )
-    , shapeTest "negative non-uniform scale (twoD)" "negativeNonUniformScaleTwoD.svg"
-        ( TwoD.Transforms.scale2D (V2 2 (-1)) Shape.unitSquare
-            <> TwoD.Transforms.translate2D (V2 1.5 0) Shape.centeredSquare
-        )
-    , shapeTest "negative uniform scale (twoD)" "negativeUniformScaleTwoD.svg"
-        ( TwoD.Transforms.scale2D (V2 (-1) (-1)) Shape.unitSquare
-            <> TwoD.Transforms.translate2D (V2 (-1) 0) Shape.centeredSquare
-        )
-    , solidTest "curvy sweep" "curvySweep.svg" 
-        ( Path2D.bezier (V2 0 0) (V2 0 10) (V2 10 10) (V2 10 0)
-            & Path.fromPath2D
-            & (`Sweep.sweep` Shape.unitCircle)
-        )
-    , solidTest "curvy sweep two circles" "curvySweepTwoCircles.svg" 
-        ( let profile = mconcat 
-                [ TwoD.Transforms.translate2D (unit _x ^* i) Shape.unitCircle 
-                | i <- [-1.5, 1.5]
+        , solidTest "orthogonal matrix" "orthogonalMatrix.svg"
+            . Solids.colourSolid Colour.red $
+            -- rotation by 1 radian around the -y axis
+            ( Transforms.matTransform 
+                (V3 (V4 (sin 1) 0 (cos 1) 0)
+                    (V4 0 1 0 0)
+                    (V4 (cos 1) 0 (-sin 1) 0))
+                Solids.unitCylinder
+                <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
+            )
+        , shapeTest "scale near unity (twoD)" "nearUnityScaleTwoD.svg" 
+            ( TwoD.Transforms.scale2D (V2 0.9999999999999998 1) Shape.unitCircle
+                <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
+            )
+        , shapeTest "orthogonal matrix (twoD)" "orthogonalMatrixTwoD.svg" 
+            ( TwoD.Transforms.matTransform2D 
+                (V2 (V3 (sin 1) (cos 1) 0)
+                    (V3 (cos 1) (-sin 1) 0)
+                )
+            Shape.unitSquare
+                <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
+            )
+        , shapeTest "negative determinant GTrsf (twoD)" "negativeDeterminantGTrsfTwoD.svg"
+            ( TwoD.Transforms.matTransform2D (V2 (V3 1 1 0) (V3 1 0 0)) Shape.centeredSquare
+                <> TwoD.Transforms.translate2D (V2 0.5 0) Shape.centeredSquare
+            )
+        , shapeTest "negative non-uniform scale (twoD)" "negativeNonUniformScaleTwoD.svg"
+            ( TwoD.Transforms.scale2D (V2 2 (-1)) Shape.unitSquare
+                <> TwoD.Transforms.translate2D (V2 1.5 0) Shape.centeredSquare
+            )
+        , shapeTest "negative uniform scale (twoD)" "negativeUniformScaleTwoD.svg"
+            ( TwoD.Transforms.scale2D (V2 (-1) (-1)) Shape.unitSquare
+                <> TwoD.Transforms.translate2D (V2 (-1) 0) Shape.centeredSquare
+            )
+        ]
+    , GoldenGroup "Sweeps"
+        [ solidTest "curvy sweep" "curvySweep.svg" 
+            ( Path2D.bezier (V2 0 0) (V2 0 10) (V2 10 10) (V2 10 0)
+                & Path.fromPath2D
+                & (`Sweep.sweep` Shape.unitCircle)
+            )
+        , solidTest "curvy sweep two circles" "curvySweepTwoCircles.svg" 
+            ( let profile = mconcat 
+                    [ TwoD.Transforms.translate2D (unit _x ^* i) Shape.unitCircle 
+                    | i <- [-1.5, 1.5]
+                    ]
+              in Path2D.bezier (V2 0 0) (V2 0 10) (V2 10 10) (V2 10 0)
+                & Path.fromPath2D
+                & (`Sweep.sweep` profile)
+            )
+        , solidTest "curvy sweep concentric squares" "curvySweepConcentricSquares.svg" 
+            ( let profile = 
+                    ( TwoD.Transforms.uScale2D 2 Shape.centeredSquare
+                        `Booleans.difference`
+                            TwoD.Transforms.uScale2D 1.5 Shape.centeredSquare
+                    ) <> Shape.centeredSquare
+              in Path2D.bezier (V2 0 0) (V2 0 (-10)) (V2 10 (-10)) (V2 10 0)
+                & Path.fromPath2D
+                & (`Sweep.sweep` profile)
+            )
+        , solidTest "sweep squares" "sweepSquare.svg" 
+            (   let path = Path.fromPath2D . mconcat . Shape.shapePaths $ Shape.unitSquare
+                    profile = TwoD.Transforms.uScale2D 0.2 Shape.unitCircle
+                in Sweep.sweep path profile 
+            )
+        ]
+    , GoldenGroup "Lofts"
+        [ solidTest "loft squares" "loftSquares.svg" 
+            ( Loft.loft
+                [ Path.fromPath2D $ mconcat $ Shape.shapePaths Shape.unitSquare
+                , Transforms.translate (V3 0 0 10) $ Path.fromPath2D $ mconcat $ Shape.shapePaths Shape.unitSquare
                 ]
-          in Path2D.bezier (V2 0 0) (V2 0 10) (V2 10 10) (V2 10 0)
-            & Path.fromPath2D
-            & (`Sweep.sweep` profile)
-        )
-    , solidTest "curvy sweep concentric squares" "curvySweepConcentricSquares.svg" 
-        ( let profile = 
-                ( TwoD.Transforms.uScale2D 2 Shape.centeredSquare
-                    `Booleans.difference`
-                        TwoD.Transforms.uScale2D 1.5 Shape.centeredSquare
-                ) <> Shape.centeredSquare
-          in Path2D.bezier (V2 0 0) (V2 0 (-10)) (V2 10 (-10)) (V2 10 0)
-            & Path.fromPath2D
-            & (`Sweep.sweep` profile)
-        )
-    , solidTest "sweep squares" "sweepSquare.svg" 
-        (   let path = Path.fromPath2D . mconcat . Shape.shapePaths $ Shape.unitSquare
-                profile = TwoD.Transforms.uScale2D 0.2 Shape.unitCircle
-            in Sweep.sweep path profile 
-        )
-    , solidTest "loft squares" "loftSquares.svg" 
-        ( Loft.loft
-            [ Path.fromPath2D $ mconcat $ Shape.shapePaths Shape.unitSquare
-            , Transforms.translate (V3 0 0 10) $ Path.fromPath2D $ mconcat $ Shape.shapePaths Shape.unitSquare
-            ]
-        )
-    , doTest "read svg and make prism" "svgPrism.svg" $ do
-        projectRoot <- Paths.getDataDir 
-        Right gearProfile <- SVG.readSVG (projectRoot </> "test-data/gear-profile.svg")
-        let s = foldMap (Solids.prism 1 . Shape.makeShape) gearProfile
-        return $ standardSolidDiagram s
-    , solidTest "looseParts with Colour then transform" "loosePartsThenTransform.svg" $ 
-        let a = Solids.centeredCube 
-                & Solids.colourSolid Colour.maroon
-                & Transforms.translate (unit _x) 
-            b = Solids.centeredCube 
-                & Solids.colourSolid Colour.navy
-                & Transforms.translate (unit _x ^* (-1))
-            separator = Solids.centeredCube
-                & Solids.colourSolid Colour.lime
-                & Transforms.scale (V3 5 0.1 5)
-        in ((a <> b) `Booleans.difference` separator)
-                & Solids.looseParts
-                & fmap (Transforms.rotate (unit _z) (pi/2))
-                & take 3
-                & mconcat
-    , diagramTest "looseShapes diagram" "looseShapesDiagram.svg" 
-        ( Shape.unitCircle
-            & (`Booleans.difference` TwoD.Transforms.scale2D (V2 0.1 3) Shape.centeredSquare)
-            & (`Booleans.difference` TwoD.Transforms.scale2D (V2 3 0.1) Shape.centeredSquare)
-            & Shape.looseShapes
-            & zipWith TwoD.Transforms.uScale2D [1, 1.05 ..]
-            & zipWith Diagram.shapeDiagram
-                (Paint.paintWithColour <$> [Colour.red, Colour.blue, Colour.green, Colour.yellow])
-            & mconcat
-            & TwoD.Transforms.scale2D 50
-        )
-    , diagramTest "sphere section" "sphereSection.svg" (
-        Solids.unitSphere 
-            & Shape.section
-            & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
-            & TwoD.Transforms.scale2D 50
-        )
-    , diagramTest "compound section" "compoundSection.svg" (
-        Solids.unitSphere
-            & (`Booleans.difference` (Solids.unitSphere & Transforms.uScale 0.4))
-            & (`Booleans.difference` (Solids.centeredCube & Transforms.translate (unit _x)))
-            & Booleans.union (Solids.centeredCube 
-                & Transforms.uScale 0.8
-                & Transforms.translate (unit _x)
-                )
-            & Shape.section
-            & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
-            & TwoD.Transforms.scale2D 50
-        )
-    , solidTest "painted sphere" "paintedSphere.svg" (
-        Solids.unitSphere
-            & Solids.colourSolid Colour.blue
-        )
-    , diagramTest "sphere silhouette" "sphereSilhouette.svg" (
-        Solids.unitSphere 
-            & Shape.silhouette
-            & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
-            & TwoD.Transforms.scale2D 50
-        )
-    , diagramTest "torus silhouette" "torusSilhouette.svg" (
-        Solids.torus 2 1
-            & Shape.silhouette
-            & Diagram.shapeDiagram (Paint.paintWithColour Colour.yellow)
-            & TwoD.Transforms.scale2D 50
-        )
-    , diagramTest "compound silhouette" "compoundSilhouette.svg" (
-        Solids.unitSphere
-            & (`Booleans.difference` (Solids.unitSphere & Transforms.uScale 0.4))
-            & (`Booleans.difference` (Solids.centeredCube & Transforms.translate (unit _x)))
-            & Booleans.union (Solids.centeredCube 
-                & Transforms.uScale 0.8
-                & Transforms.translate (unit _x)
-                )
-            & Shape.silhouette
-            & Diagram.shapeDiagram (Paint.paintWithColour Colour.aqua)
-            & TwoD.Transforms.scale2D 50
-        )
-    , solidTest "noop fillet cube" "noopFilletCube.svg" (
-        Solids.unitCube
-            & Fillet.roundConditionalFillet (const Nothing)
-            & Solids.colourSolid Colour.blue
-        )
-    , solidTest "fillet cone" "filletCone.svg" (
-        Solids.unitCone
-            & Fillet.roundFillet 0.1
-            & Solids.colourSolid Colour.aqua
-        )
-    , solidTest "offset hole" "offsetHole.svg" (
-        let s = (Solids.centeredCube & Transforms.uScale 3 & Solids.colourSolid Colour.aqua)
-                    `Booleans.difference` (Solids.centeredCube & Solids.colourSolid Colour.fuchsia)
-            mask x = x `Booleans.difference` (
-                Solids.centeredCube 
-                    & Transforms.translate (unit _y * 0.5) 
-                    & Transforms.uScale 4 
+            )
+        ]
+    , GoldenGroup "Loose Parts and Shapes"
+        [ solidTest "looseParts with Colour then transform" "loosePartsThenTransform.svg" $ 
+            let a = Solids.centeredCube 
+                    & Solids.colourSolid Colour.maroon
+                    & Transforms.translate (unit _x) 
+                b = Solids.centeredCube 
+                    & Solids.colourSolid Colour.navy
+                    & Transforms.translate (unit _x ^* (-1))
+                separator = Solids.centeredCube
                     & Solids.colourSolid Colour.lime
-                )
-            s' = Offset.offset 0.2 s
-            s'' = Offset.offset (-0.2) (s)
-        in  s'
-            <> Transforms.translate (unit _x ^* 4) (mask s')
-            <> Transforms.translate (unit _z ^* 4) s''
-            <> Transforms.translate ((unit _x + unit _z) ^* 4) (mask s'')
-    )
-    , solidTest "offset of scaled cylinder" "offsetOfScaledCylinder.svg" (
-        Solids.unitCylinder 
-            & Transforms.scale (V3 1 1 3)
-            & Offset.offset 0.5
-    )
-    , solidTest "offset of through hole cylinder" "offsetOfThroughHole.svg" (
-        let a = Solids.centeredCube
-                & Transforms.scale (V3 3 3 0.5)
+                    & Transforms.scale (V3 5 0.1 5)
+            in ((a <> b) `Booleans.difference` separator)
+                    & Solids.looseParts
+                    & fmap (Transforms.rotate (unit _z) (pi/2))
+                    & take 3
+                    & mconcat
+        , diagramTest "looseShapes diagram" "looseShapesDiagram.svg" 
+            ( Shape.unitCircle
+                & (`Booleans.difference` TwoD.Transforms.scale2D (V2 0.1 3) Shape.centeredSquare)
+                & (`Booleans.difference` TwoD.Transforms.scale2D (V2 3 0.1) Shape.centeredSquare)
+                & Shape.looseShapes
+                & zipWith TwoD.Transforms.uScale2D [1, 1.05 ..]
+                & zipWith Diagram.shapeDiagram
+                    (Paint.paintWithColour <$> [Colour.red, Colour.blue, Colour.green, Colour.yellow])
+                & mconcat
+                & TwoD.Transforms.scale2D 50
+            )
+        ]
+    , GoldenGroup "Sections" 
+        [ diagramTest "sphere section" "sphereSection.svg" (
+            Solids.unitSphere 
+                & Shape.section
+                & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
+                & TwoD.Transforms.scale2D 50
+            )
+        , diagramTest "compound section" "compoundSection.svg" (
+            Solids.unitSphere
+                & (`Booleans.difference` (Solids.unitSphere & Transforms.uScale 0.4))
+                & (`Booleans.difference` (Solids.centeredCube & Transforms.translate (unit _x)))
+                & Booleans.union (Solids.centeredCube 
+                    & Transforms.uScale 0.8
+                    & Transforms.translate (unit _x)
+                    )
+                & Shape.section
+                & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
+                & TwoD.Transforms.scale2D 50
+            )
+        ]
+    , GoldenGroup "Silhouettes"   
+        [ diagramTest "sphere silhouette" "sphereSilhouette.svg" (
+            Solids.unitSphere 
+                & Shape.silhouette
+                & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
+                & TwoD.Transforms.scale2D 50
+            )
+        , diagramTest "torus silhouette" "torusSilhouette.svg" (
+            Solids.torus 2 1
+                & Shape.silhouette
+                & Diagram.shapeDiagram (Paint.paintWithColour Colour.yellow)
+                & TwoD.Transforms.scale2D 50
+            )
+        , diagramTest "compound silhouette" "compoundSilhouette.svg" (
+            Solids.unitSphere
+                & (`Booleans.difference` (Solids.unitSphere & Transforms.uScale 0.4))
+                & (`Booleans.difference` (Solids.centeredCube & Transforms.translate (unit _x)))
+                & Booleans.union (Solids.centeredCube 
+                    & Transforms.uScale 0.8
+                    & Transforms.translate (unit _x)
+                    )
+                & Shape.silhouette
+                & Diagram.shapeDiagram (Paint.paintWithColour Colour.aqua)
+                & TwoD.Transforms.scale2D 50
+            )
+        ]
+    , GoldenGroup "Painted Primitives"
+        [ solidTest "painted sphere" "paintedSphere.svg" (
+            Solids.unitSphere
                 & Solids.colourSolid Colour.blue
-            b = Solids.centeredCylinder
+            )
+        ]
+    , GoldenGroup "Fillets" 
+        [ solidTest "noop fillet cube" "noopFilletCube.svg" (
+            Solids.unitCube
+                & Fillet.roundConditionalFillet (const Nothing)
+                & Solids.colourSolid Colour.blue
+            )
+        , solidTest "fillet cone" "filletCone.svg" (
+            Solids.unitCone
+                & Fillet.roundFillet 0.1
+                & Solids.colourSolid Colour.aqua
+            )
+        ]
+    , GoldenGroup "Offsets"
+        [ GoldenGroup "Three-D"
+            [ solidTest "Offset of Compound" "offsetOfCompound.svg" 
+                (Offset.offset 1 $ (id <> Transforms.translate (unit _x ^* 3)) Solids.unitCube)
+            , solidTest "offset hole" "offsetHole.svg" (
+                let s = (Solids.centeredCube & Transforms.uScale 3 & Solids.colourSolid Colour.aqua)
+                            `Booleans.difference` (Solids.centeredCube & Solids.colourSolid Colour.fuchsia)
+                    mask x = x `Booleans.difference` (
+                        Solids.centeredCube 
+                            & Transforms.translate (unit _y * 0.5) 
+                            & Transforms.uScale 4 
+                            & Solids.colourSolid Colour.lime
+                        )
+                    s' = Offset.offset 0.2 s
+                    s'' = Offset.offset (-0.2) (s)
+                in  s'
+                    <> Transforms.translate (unit _x ^* 4) (mask s')
+                    <> Transforms.translate (unit _z ^* 4) s''
+                    <> Transforms.translate ((unit _x + unit _z) ^* 4) (mask s'')
+            )
+            , solidTest "offset of scaled cylinder" "offsetOfScaledCylinder.svg" (
+                Solids.unitCylinder 
                     & Transforms.scale (V3 1 1 3)
-                    & Solids.colourSolid Colour.red
-        in Offset.offsetWithPaint (Paint.mixPaints) 0.25 (a `Booleans.difference` b)
-            & Transforms.rotate (unit _x) (pi/2)
-    )
-    , diagramTest "offset square" "offsetSquare.svg" (
-        Shapes.unitSquare
-            & TwoD.Offset.offsetShape 0.25
-            & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
-            & TwoD.Transforms.scale2D 50
-        )
-    , diagramTest "offset cross positive" "offsetCrossPositive.svg" (
-        (TwoD.Transforms.scale2D (V2 1 3) Shapes.centeredSquare 
-            <> TwoD.Transforms.scale2D (V2 3 1) Shapes.centeredSquare)
-            & TwoD.Offset.offsetShape 0.25
-            & Diagram.shapeDiagram (Paint.paintWithColour Colour.yellow)
-            & TwoD.Transforms.scale2D 50
-        )
-    , diagramTest "offset cross negative" "offsetCrossNegative.svg" (
-        (TwoD.Transforms.scale2D (V2 1 3) Shapes.centeredSquare 
-            <> TwoD.Transforms.scale2D (V2 3 1) Shapes.centeredSquare)
-            & TwoD.Offset.offsetShape (negate 0.25)
-            & Diagram.shapeDiagram (Paint.paintWithColour Colour.teal)
-            & TwoD.Transforms.scale2D 50
-        )
-    , diagramTest "offset hole positive" "offsetHolePositive.svg" (
-        (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare 
-            `Booleans.difference` Shapes.unitCircle)
-            & TwoD.Offset.offsetShape 0.25
-            & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
-            & TwoD.Transforms.scale2D 50
-        )
-    , diagramTest "offset hole negative" "offsetHoleNegative.svg" (
-        (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare 
-            `Booleans.difference` Shapes.unitCircle)
-            & TwoD.Offset.offsetShape (negate 0.1)
-            & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
-            & TwoD.Transforms.scale2D 50
-        )
-    , solidTest "intersections of cubes" "intersectionsOfCubes.svg" (
-        Booleans.intersections $
-            zipWith Solids.colourSolid
-                [Colour.red, Colour.lime, Colour.aqua] 
-                [
-                Solids.centeredCube
-                    & Transforms.rotate (unit _z) theta
-                | theta <- [0, pi/3, 2*pi/3]
-                ]
-        )
-    , solidTest "unions of cubes" "unionsOfCubes.svg" (
-        Booleans.unions $
-            zipWith Solids.colourSolid
-                [Colour.red, Colour.lime, Colour.aqua] 
-                [
-                Solids.centeredCube
-                    & Transforms.rotate (unit _z) theta
-                | theta <- [0, pi/3, 2*pi/3]
-                ]
-        )
-    , solidTest "fold intersection of cubes" "foldIntersectionOfCubes.svg" (
-        foldl1 Booleans.intersection $
-            zipWith Solids.colourSolid
-                [Colour.red, Colour.lime, Colour.aqua] 
-                [
-                Solids.centeredCube
-                    & Transforms.rotate (unit _z) theta
-                | theta <- [0, pi/3, 2*pi/3]
-                ]
-        )
-    , solidTest "fold union of cubes" "foldUnionOfCubes.svg" (
-        foldl' Booleans.union mempty $
-            zipWith Solids.colourSolid
-                [Colour.red, Colour.lime, Colour.aqua] 
-                [
-                Solids.centeredCube
-                    & Transforms.rotate (unit _z) theta
-                | theta <- [0, pi/3, 2*pi/3]
-                ]
-        )
-     , solidTest "intersections of identical cubes" "intersectionsOfIdenticalCubes.svg" (
-          Booleans.intersections $
-              Solids.colourSolid
-                  <$> [Colour.red, Colour.lime, Colour.aqua]
-                  <*> pure Solids.centeredCube
-          )
-      , solidTest "intersections with repeated cube" "intersectionsWithRepeatedCube.svg" (
-          Booleans.intersections
-              [ Solids.colourSolid Colour.red Solids.centeredCube
-              , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z)
-  (pi/4) Solids.centeredCube)
-              , Solids.colourSolid Colour.aqua Solids.centeredCube
-              ]
-          )
-      , solidTest "intersections with mempty" "intersectionsWithMempty.svg" (
-          Solids.colourSolid Colour.red Solids.unitSphere <>
-              Booleans.intersections
-                  [ Transforms.uScale 2 $ Solids.centeredCube
-                  , mempty
-                  , Transforms.uScale 2 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
-                  ]
-          )
-     , solidTest "unions of identical cubes" "unionsOfIdenticalCubes.svg" (
-          Booleans.unions $
-              Solids.colourSolid
-                  <$> [Colour.red, Colour.lime, Colour.aqua]
-                  <*> pure Solids.centeredCube
-          )
-    , solidTest "unions with repeated cube" "unionsWithRepeatedCube.svg" (
-        Booleans.unions
-            [ Solids.colourSolid Colour.red Solids.centeredCube
-            , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z)
-  (pi/4) Solids.centeredCube)
-            , Solids.colourSolid Colour.aqua Solids.centeredCube
-            ]
-        )
-    , solidTest "unions with mempty" "unionsWithMempty.svg" (
-        Solids.colourSolid Colour.red Solids.unitSphere <>
-            Booleans.unions
-              [ Transforms.uScale 1.5 $ Solids.centeredCube
-              , mempty
-              , Transforms.uScale 1.5 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
-              ]
-        )
-    , shapeTest "intersections of squares" "intersectionsOfSquares.svg" (
-        Booleans.intersections
-            [
-            Shape.centeredSquare
-                & TwoD.Transforms.rotate2D theta
-            | theta <- [0, pi/3, 2*pi/3]
-            ]
-        )
-    , shapeTest "unions of squares" "unionsOfSquares.svg" (
-        Booleans.unions
-            [
-            Shape.centeredSquare
-                & TwoD.Transforms.rotate2D theta
-            | theta <- [0, pi/3, 2*pi/3]
-            ]
-        )
-    , shapeTest "fold intersection of squares" "foldIntersectionOfSquares.svg" (
-        foldl1 Booleans.intersection
-            [
-            Shape.centeredSquare
-                & TwoD.Transforms.rotate2D theta
-            | theta <- [0, pi/3, 2*pi/3]
-            ]
-        )
-    , shapeTest "fold union of squares" "foldUnionOfSquares.svg" (
-        foldl' Booleans.union mempty $
-            [
-            Shape.centeredSquare
-                & TwoD.Transforms.rotate2D theta
-            | theta <- [0, pi/3, 2*pi/3]
-            ]
-        )
-    , shapeTest "intersections of identical squares" "intersectionsOfIdenticalSquares.svg" (
-        Booleans.intersections 
-            (let s = Shape.centeredSquare in [s, s, s])
-        )
-    , shapeTest "intersections with repeated Square" "intersectionsWithRepeatedSquare.svg" (
-        Booleans.intersections
-            [ Shape.centeredSquare
-            , TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
-            , Shape.centeredSquare
-            ]
-        )
-    , shapeTest "intersections with mempty Shape" "intersectionsWithMemptyShape.svg" (
-        Shape.unitCircle <>
-            Booleans.intersections
-                [ TwoD.Transforms.uScale2D 2 $ Shape.centeredSquare
-                , mempty
-                , TwoD.Transforms.uScale2D 2 $ TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
-                ]
-        )
-    , shapeTest "unions of identical squares" "unionsOfIdenticalSquares.svg" (
-        Booleans.unions $
-            (let s = Shape.centeredSquare in [s, s, s])
-        )
-    , shapeTest "unions with repeated square" "unionsWithRepeatedSquare.svg" (
-        Booleans.unions
-            [ Shape.centeredSquare
-            , TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
-            , Shape.centeredSquare
-            ]
-        )
-    , shapeTest "unions with mempty shape" "unionsWithMemptyShape.svg" (
-        Shape.unitCircle <>
-            Booleans.unions
-                [ TwoD.Transforms.uScale2D 1.6 $ Shape.centeredSquare
-                , mempty
-                , TwoD.Transforms.uScale2D 1.6 $ TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
-                ]
-    )
-    , solidTest "partial revolution" "partialRevolution.svg" (
-        Revolution.revolutionByAngle 1 
-            (TwoD.Transforms.translate2D (unit _x ^* 1.5) Shape.unitCircle)
-        )
-    , solidTest "partial revolution II" "partialRevolutionII.svg" (
-            Revolution.revolutionByAngle 6
-                (TwoD.Transforms.translate2D (unit _x ^* 0.5) Shape.unitSquare)
-        )
-    , solidTest "partial revolution negative" "partialRevolutionNegative.svg" (
-        Revolution.revolutionByAngle (negate 1) 
-            (TwoD.Transforms.translate2D (unit _x ^* 1.5) Shape.unitCircle)
-        )
-    , solidTest "revolution of shape cutting axis" "revolutionOfShapeCuttingAxis.svg" (
-            Revolution.revolution 
-                ( Shapes.centeredSquare 
-                    & TwoD.Transforms.scale2D (V2 8 1)
-                    & TwoD.Transforms.translate2D (unit _x)
-                    & TwoD.Transforms.rotate2D (pi/8)
+                    & Offset.offset 0.5
+            )
+            , solidTest "offset of through hole cylinder" "offsetOfThroughHole.svg" (
+                let a = Solids.centeredCube
+                        & Transforms.scale (V3 3 3 0.5)
+                        & Solids.colourSolid Colour.blue
+                    b = Solids.centeredCylinder
+                            & Transforms.scale (V3 1 1 3)
+                            & Solids.colourSolid Colour.red
+                in Offset.offsetWithPaint (Paint.mixPaints) 0.25 (a `Booleans.difference` b)
+                    & Transforms.rotate (unit _x) (pi/2)
+            )
+        ]
+        , GoldenGroup "Two-D"
+            [ diagramTest "offset square" "offsetSquare.svg" (
+                Shapes.unitSquare
+                    & TwoD.Offset.offsetShape 0.25
+                    & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
+                    & TwoD.Transforms.scale2D 50
                 )
-        )
-    , solidTest "revolution of shape on axis" "revolutionOfShapeOnAxis.svg" (
-            Revolution.revolution 
-                ( Shapes.unitSquare 
-                    & TwoD.Transforms.scale2D (V2 8 1)
-                    & TwoD.Transforms.rotate2D (-pi/8)
+            , diagramTest "offset cross positive" "offsetCrossPositive.svg" (
+                (TwoD.Transforms.scale2D (V2 1 3) Shapes.centeredSquare 
+                    <> TwoD.Transforms.scale2D (V2 3 1) Shapes.centeredSquare)
+                    & TwoD.Offset.offsetShape 0.25
+                    & Diagram.shapeDiagram (Paint.paintWithColour Colour.yellow)
+                    & TwoD.Transforms.scale2D 50
                 )
-        )
-    , diagramTest "silhouette of revolution" "silhouetteOfRevolution.svg" (
-        Shape.unitCircle 
-            & TwoD.Transforms.translate2D (unit _x ^* 1.5)
-            & Revolution.revolutionByAngle 1
-            & Shape.silhouette
-            & (<> TwoD.Transforms.scale2D (V2 0.1 1) Shape.unitSquare)
-            & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
-            & TwoD.Transforms.scale2D 50
-        )
-    , svgPathTest "svg relative smooth quadratic" "svgRelativeSmoothQuadratic.svg"
-        "M 0 0 q 25 50 50 0 t 50 0 t 50 0"
-    , svgPathTest "svg smooth quadratic without control point" "svgSmoothQuadraticWithoutControlPoint.svg"
-        "M 0 0 L 50 0 T 100 50 T 150 0"
-    , svgPathTest "svg smooth cubic after cubic" "svgSmoothCubicAfterCubic.svg"
-        "M 0 50 C 0 0 50 0 50 50 S 100 100 100 50"
-    , svgPathTest "svg smooth cubic without control point" "svgSmoothCubicWithoutControlPoint.svg"
-        "M 0 0 L 0 50 S 50 100 100 50"
-    , svgPathTest "svg smooth cubic after quadratic" "svgSmoothCubicAfterQuadratic.svg"
-        "M 0 0 Q 25 50 50 0 S 100 50 100 0"
-    , svgPathTest "svg smooth quadratic after cubic" "svgSmoothQuadraticAfterCubic.svg"
-        "M 0 50 C 0 0 50 0 50 50 T 100 100"
-    , svgPathTest "svg arc with zero radius" "svgArcZeroRadius.svg"
-        "M 50 50 L 100 50 A 0 0 0 0 1 150 100 L 50 100 Z"
-    , svgPathTest "svg arc with negative radii" "svgArcNegativeRadii.svg"
-        "M 50 50 L 100 50 A -40 -25 0 0 1 150 100 L 50 100 Z"
-    , svgElementsTest "svg skewX" "svgSkewX.svg"
-        "<rect width=\"100\" height=\"50\"/><rect width=\"100\" height=\"50\" transform=\"skewX(30)\"/>"
-    , svgElementsTest "svg skewY" "svgSkewY.svg"
-        "<rect width=\"100\" height=\"50\"/><rect width=\"100\" height=\"50\" transform=\"skewY(30)\"/>"
-    , svgElementsTest "svg rounded rect position" "svgRoundedRectPosition.svg"
-        "<rect width=\"100\" height=\"100\"/><rect x=\"120\" y=\"20\" width=\"80\" height=\"60\" rx=\"20\" ry=\"10\"/>"
-    , svgElementsTest "svg rounded rect single radius" "svgRoundedRectSingleRadius.svg"
-        "<rect width=\"80\" height=\"60\" rx=\"20\"/><rect x=\"100\" width=\"80\" height=\"60\" ry=\"10\"/>"
-        
-    , diagramTest "hole with centre of mass over solid material" "holeWithCentreOfMassOverSolid.svg" (
+            , diagramTest "offset cross negative" "offsetCrossNegative.svg" (
+                (TwoD.Transforms.scale2D (V2 1 3) Shapes.centeredSquare 
+                    <> TwoD.Transforms.scale2D (V2 3 1) Shapes.centeredSquare)
+                    & TwoD.Offset.offsetShape (negate 0.25)
+                    & Diagram.shapeDiagram (Paint.paintWithColour Colour.teal)
+                    & TwoD.Transforms.scale2D 50
+                )
+            , diagramTest "offset hole positive" "offsetHolePositive.svg" (
+                (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare 
+                    `Booleans.difference` Shapes.unitCircle)
+                    & TwoD.Offset.offsetShape 0.25
+                    & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
+                    & TwoD.Transforms.scale2D 50
+                )
+            , diagramTest "offset hole negative" "offsetHoleNegative.svg" (
+                (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare 
+                    `Booleans.difference` Shapes.unitCircle)
+                    & TwoD.Offset.offsetShape (negate 0.1)
+                    & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
+                    & TwoD.Transforms.scale2D 50
+                )
+            ]
+        ]
+    , GoldenGroup "Booleans"
+        [ GoldenGroup "Three-D"
+            [ solidTest "intersections of cubes" "intersectionsOfCubes.svg" (
+                Booleans.intersections $
+                    zipWith Solids.colourSolid
+                        [Colour.red, Colour.lime, Colour.aqua] 
+                        [
+                        Solids.centeredCube
+                            & Transforms.rotate (unit _z) theta
+                        | theta <- [0, pi/3, 2*pi/3]
+                        ]
+                )
+            , solidTest "unions of cubes" "unionsOfCubes.svg" (
+                Booleans.unions $
+                    zipWith Solids.colourSolid
+                        [Colour.red, Colour.lime, Colour.aqua] 
+                        [
+                        Solids.centeredCube
+                            & Transforms.rotate (unit _z) theta
+                        | theta <- [0, pi/3, 2*pi/3]
+                        ]
+                )
+            , solidTest "fold intersection of cubes" "foldIntersectionOfCubes.svg" (
+                foldl1 Booleans.intersection $
+                    zipWith Solids.colourSolid
+                        [Colour.red, Colour.lime, Colour.aqua] 
+                        [
+                        Solids.centeredCube
+                            & Transforms.rotate (unit _z) theta
+                        | theta <- [0, pi/3, 2*pi/3]
+                        ]
+                )
+            , solidTest "fold union of cubes" "foldUnionOfCubes.svg" (
+                foldl' Booleans.union mempty $
+                    zipWith Solids.colourSolid
+                        [Colour.red, Colour.lime, Colour.aqua] 
+                        [
+                        Solids.centeredCube
+                            & Transforms.rotate (unit _z) theta
+                        | theta <- [0, pi/3, 2*pi/3]
+                        ]
+                )
+            , solidTest "intersections of identical cubes" "intersectionsOfIdenticalCubes.svg" (
+                 Booleans.intersections $
+                    Solids.colourSolid
+                        <$> [Colour.red, Colour.lime, Colour.aqua]
+                        <*> pure Solids.centeredCube
+                )
+            , solidTest "intersections with repeated cube" "intersectionsWithRepeatedCube.svg" (
+                Booleans.intersections
+                    [ Solids.colourSolid Colour.red Solids.centeredCube
+                    , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z) (pi/4) Solids.centeredCube)
+                    , Solids.colourSolid Colour.aqua Solids.centeredCube
+                    ]
+                )
+            , solidTest "intersections with mempty" "intersectionsWithMempty.svg" (
+                Solids.colourSolid Colour.red Solids.unitSphere <>
+                    Booleans.intersections
+                        [ Transforms.uScale 2 $ Solids.centeredCube
+                        , mempty
+                        , Transforms.uScale 2 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
+                        ]
+                    )
+            , solidTest "unions of identical cubes" "unionsOfIdenticalCubes.svg" (
+                Booleans.unions $
+                    Solids.colourSolid
+                        <$> [Colour.red, Colour.lime, Colour.aqua]
+                        <*> pure Solids.centeredCube
+                )
+            , solidTest "unions with repeated cube" "unionsWithRepeatedCube.svg" (
+                Booleans.unions
+                    [ Solids.colourSolid Colour.red Solids.centeredCube
+                    , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z)
+          (pi/4) Solids.centeredCube)
+                    , Solids.colourSolid Colour.aqua Solids.centeredCube
+                    ]
+                )
+            , solidTest "unions with mempty" "unionsWithMempty.svg" (
+                Solids.colourSolid Colour.red Solids.unitSphere <>
+                    Booleans.unions
+                      [ Transforms.uScale 1.5 $ Solids.centeredCube
+                      , mempty
+                      , Transforms.uScale 1.5 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
+                      ]
+                )
+            ]
+        , GoldenGroup "Two-D"
+            [ solidTest "Union 2D" "union2D.svg" 
+                ( Shape.unitCircle
+                    & TwoD.Transforms.translate2D (V2 0.5 0.5)
+                    & Booleans.union Shape.unitCircle
+                    & TwoD.Transforms.scale2D 10
+                    &  Solids.prism 5
+                )
+            , diagramTest "Union 2D Diagram" "union2Ddiagram.svg" 
+                ( Shape.unitCircle
+                    & TwoD.Transforms.translate2D (V2 0.5 0.5)
+                    & Booleans.union Shape.unitCircle
+                    & TwoD.Transforms.scale2D 50
+                    & Shape.shapePaths
+                    & foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible)
+                )
+            , diagramTest "mconcat 2D Diagram" "mconcat2Ddiagram.svg" 
+                ( foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible) 
+                    . Shape.shapePaths
+                    . mconcat $
+                    [ Shape.unitCircle
+                        & TwoD.Transforms.translate2D (V2 0.5 0.5 ^* fromIntegral i)
+                        & TwoD.Transforms.scale2D 50
+                    | i :: Int <- [0 .. 3]
+                    ]
+                )
+            , shapeTest "intersections of squares" "intersectionsOfSquares.svg" (
+                Booleans.intersections
+                    [
+                    Shape.centeredSquare
+                        & TwoD.Transforms.rotate2D theta
+                    | theta <- [0, pi/3, 2*pi/3]
+                    ]
+                )
+            , shapeTest "unions of squares" "unionsOfSquares.svg" (
+                Booleans.unions
+                    [
+                    Shape.centeredSquare
+                        & TwoD.Transforms.rotate2D theta
+                    | theta <- [0, pi/3, 2*pi/3]
+                    ]
+                )
+            , shapeTest "fold intersection of squares" "foldIntersectionOfSquares.svg" (
+                foldl1 Booleans.intersection
+                    [
+                    Shape.centeredSquare
+                        & TwoD.Transforms.rotate2D theta
+                    | theta <- [0, pi/3, 2*pi/3]
+                    ]
+                )
+            , shapeTest "fold union of squares" "foldUnionOfSquares.svg" (
+                foldl' Booleans.union mempty $
+                    [
+                    Shape.centeredSquare
+                        & TwoD.Transforms.rotate2D theta
+                    | theta <- [0, pi/3, 2*pi/3]
+                    ]
+                )
+            , shapeTest "intersections of identical squares" "intersectionsOfIdenticalSquares.svg" (
+                Booleans.intersections 
+                    (let s = Shape.centeredSquare in [s, s, s])
+                )
+            , shapeTest "intersections with repeated Square" "intersectionsWithRepeatedSquare.svg" (
+                Booleans.intersections
+                    [ Shape.centeredSquare
+                    , TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
+                    , Shape.centeredSquare
+                    ]
+                )
+            , shapeTest "intersections with mempty Shape" "intersectionsWithMemptyShape.svg" (
+                Shape.unitCircle <>
+                    Booleans.intersections
+                        [ TwoD.Transforms.uScale2D 2 $ Shape.centeredSquare
+                        , mempty
+                        , TwoD.Transforms.uScale2D 2 $ TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
+                        ]
+                )
+            , shapeTest "unions of identical squares" "unionsOfIdenticalSquares.svg" (
+                Booleans.unions $
+                    (let s = Shape.centeredSquare in [s, s, s])
+                )
+            , shapeTest "unions with repeated square" "unionsWithRepeatedSquare.svg" (
+                Booleans.unions
+                    [ Shape.centeredSquare
+                    , TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
+                    , Shape.centeredSquare
+                    ]
+                )
+            , shapeTest "unions with mempty shape" "unionsWithMemptyShape.svg" (
+                Shape.unitCircle <>
+                    Booleans.unions
+                        [ TwoD.Transforms.uScale2D 1.6 $ Shape.centeredSquare
+                        , mempty
+                        , TwoD.Transforms.uScale2D 1.6 $ TwoD.Transforms.rotate2D (pi/4) Shape.centeredSquare
+                        ]
+                )
+            ]
+        ]
+    , GoldenGroup "Revolutions" 
+        [ solidTest "partial revolution" "partialRevolution.svg" (
+            Revolution.revolutionByAngle 1 
+                (TwoD.Transforms.translate2D (unit _x ^* 1.5) Shape.unitCircle)
+            )
+        , solidTest "partial revolution II" "partialRevolutionII.svg" (
+                Revolution.revolutionByAngle 6
+                    (TwoD.Transforms.translate2D (unit _x ^* 0.5) Shape.unitSquare)
+            )
+        , solidTest "partial revolution negative" "partialRevolutionNegative.svg" (
+            Revolution.revolutionByAngle (negate 1) 
+                (TwoD.Transforms.translate2D (unit _x ^* 1.5) Shape.unitCircle)
+            )
+        , solidTest "revolution of shape cutting axis" "revolutionOfShapeCuttingAxis.svg" (
+                Revolution.revolution 
+                    ( Shapes.centeredSquare 
+                        & TwoD.Transforms.scale2D (V2 8 1)
+                        & TwoD.Transforms.translate2D (unit _x)
+                        & TwoD.Transforms.rotate2D (pi/8)
+                    )
+            )
+        , solidTest "revolution of shape on axis" "revolutionOfShapeOnAxis.svg" (
+                Revolution.revolution 
+                    ( Shapes.unitSquare 
+                        & TwoD.Transforms.scale2D (V2 8 1)
+                        & TwoD.Transforms.rotate2D (-pi/8)
+                    )
+            )
+        , diagramTest "silhouette of revolution" "silhouetteOfRevolution.svg" (
+            Shape.unitCircle 
+                & TwoD.Transforms.translate2D (unit _x ^* 1.5)
+                & Revolution.revolutionByAngle 1
+                & Shape.silhouette
+                & (<> TwoD.Transforms.scale2D (V2 0.1 1) Shape.unitSquare)
+                & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
+                & TwoD.Transforms.scale2D 50
+            )
+        ]
+    , GoldenGroup "SVG"
+        [ GoldenCase "read svg and make prism" "svgPrism.svg" $ do
+            projectRoot <- Paths.getDataDir 
+            Right gearProfile <- SVG.readSVG (projectRoot </> "test-data/gear-profile.svg")
+            let s = foldMap (Solids.prism 1 . Shape.makeShape) gearProfile
+            return $ standardSolidDiagram s
+        , svgPathTest "svg relative smooth quadratic" "svgRelativeSmoothQuadratic.svg"
+            "M 0 0 q 25 50 50 0 t 50 0 t 50 0"
+        , svgPathTest "svg smooth quadratic without control point" "svgSmoothQuadraticWithoutControlPoint.svg"
+            "M 0 0 L 50 0 T 100 50 T 150 0"
+        , svgPathTest "svg smooth cubic after cubic" "svgSmoothCubicAfterCubic.svg"
+            "M 0 50 C 0 0 50 0 50 50 S 100 100 100 50"
+        , svgPathTest "svg smooth cubic without control point" "svgSmoothCubicWithoutControlPoint.svg"
+            "M 0 0 L 0 50 S 50 100 100 50"
+        , svgPathTest "svg smooth cubic after quadratic" "svgSmoothCubicAfterQuadratic.svg"
+            "M 0 0 Q 25 50 50 0 S 100 50 100 0"
+        , svgPathTest "svg smooth quadratic after cubic" "svgSmoothQuadraticAfterCubic.svg"
+            "M 0 50 C 0 0 50 0 50 50 T 100 100"
+        , svgPathTest "svg arc with zero radius" "svgArcZeroRadius.svg"
+            "M 50 50 L 100 50 A 0 0 0 0 1 150 100 L 50 100 Z"
+        , svgPathTest "svg arc with negative radii" "svgArcNegativeRadii.svg"
+            "M 50 50 L 100 50 A -40 -25 0 0 1 150 100 L 50 100 Z"
+        , svgElementsTest "svg skewX" "svgSkewX.svg"
+            "<rect width=\"100\" height=\"50\"/><rect width=\"100\" height=\"50\" transform=\"skewX(30)\"/>"
+        , svgElementsTest "svg skewY" "svgSkewY.svg"
+            "<rect width=\"100\" height=\"50\"/><rect width=\"100\" height=\"50\" transform=\"skewY(30)\"/>"
+        , svgElementsTest "svg rounded rect position" "svgRoundedRectPosition.svg"
+            "<rect width=\"100\" height=\"100\"/><rect x=\"120\" y=\"20\" width=\"80\" height=\"60\" rx=\"20\" ry=\"10\"/>"
+        , svgElementsTest "svg rounded rect single radius" "svgRoundedRectSingleRadius.svg"
+            "<rect width=\"80\" height=\"60\" rx=\"20\"/><rect x=\"100\" width=\"80\" height=\"60\" ry=\"10\"/>"
+        ]
+    , GoldenGroup "Diagram Fills"
+        [ diagramTest "hole with centre of mass over solid material" "holeWithCentreOfMassOverSolid.svg" (
               let bar lo hi = Shape.unitSquare
                       & TwoD.Transforms.scale2D (hi - lo)
                       & TwoD.Transforms.translate2D lo
@@ -765,4 +844,5 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
               in withWidth 800 . Diagram.solidDiagram (V3 1 2 8)
                     $ Solids.colourSolid Colour.aqua plate
               )
+        ]
     ]
