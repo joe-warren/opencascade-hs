@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
 module DiagramGoldenTests
 ( diagramGoldenTests
 ) where
@@ -57,6 +58,9 @@ import qualified LoosePartsExample
 import qualified Waterfall.Paint as Paint
 import qualified Waterfall as Shapes
 import qualified Waterfall.TwoD.Offset as TwoD.Offset
+import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 
 xmlToSvg :: String -> XML.Element -> Either String Svg.Document
 xmlToSvg fileDesc = maybe (Left $ "failed to parse " <> fileDesc) Right . Svg.parseSvgFile "file.svg" . BSC8.pack . XML.showTopElement 
@@ -196,6 +200,23 @@ doTest testName goldenPath makeDiagram =
             compareOutput path a b
         )
         updateGoldenFile
+
+        
+galleryGoldenTest :: GoldenSpec -> TestTree
+galleryGoldenTest spec = 
+    let goldenPath = "README.md"
+        qualifyGoldenPath = (</> "test-data" </> goldenPath) <$> Paths.getDataDir
+        readGoldenFile = T.readFile =<< qualifyGoldenPath
+        updateGoldenFile = T.writeFile ("test-data" </> goldenPath)
+    in goldenTest 
+        "Golden README.md"
+        readGoldenFile
+        (pure . printGoldenSpec $ spec)
+        (\a b -> if a == b 
+            then pure Nothing 
+            else pure . Just $ "test-data/README.md needs negenerating"
+        )
+        updateGoldenFile
     
 standardSolidDiagram :: Solid -> Diagram
 standardSolidDiagram = withWidth 800 . Diagram.solidDiagram (V3 2 3 1)
@@ -214,37 +235,37 @@ withHeight = normalizeSize (^. _y)
 withWidth :: Double -> Diagram -> Diagram
 withWidth = normalizeSize (^. _x) 
 
-diagramTest :: TestName -> FilePath -> Diagram -> TestTree
+diagramTest :: TestName -> FilePath -> Diagram -> GoldenSpec
 diagramTest name filepath =
-    doTest name filepath . pure
+    GoldenCase name filepath . pure
 
-shapeTest :: TestName -> FilePath -> Shape -> TestTree
+shapeTest :: TestName -> FilePath -> Shape -> GoldenSpec
 shapeTest name filepath = 
     diagramTest name filepath
         . foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible)
         . Shape.shapePaths
         . TwoD.Transforms.uScale2D 100
 
-solidTest :: TestName -> FilePath -> Solid -> TestTree
+solidTest :: TestName -> FilePath -> Solid -> GoldenSpec
 solidTest name filepath = 
     diagramTest name filepath . standardSolidDiagram
 
-smallSolidTest :: TestName -> FilePath -> Solid -> TestTree
+smallSolidTest :: TestName -> FilePath -> Solid -> GoldenSpec
 smallSolidTest name filepath =
     diagramTest name filepath . withHeight 200 . standardSolidDiagram
 
-svgPathsTest :: TestName -> FilePath -> Either SVG.SVGError [Path2D.Path2D] -> TestTree
+svgPathsTest :: TestName -> FilePath -> Either SVG.SVGError [Path2D.Path2D] -> GoldenSpec
 svgPathsTest name filepath = 
-    doTest name filepath
+    GoldenCase name filepath
         . either 
             (throwIO . ErrorCall . show)
             (pure . foldMap (Diagram.pathDiagram Diagram.OutLine Diagram.Visible))
 
-svgPathTest :: TestName -> FilePath -> String -> TestTree
+svgPathTest :: TestName -> FilePath -> String -> GoldenSpec
 svgPathTest name filepath = 
     svgPathsTest name filepath . SVG.parsePath
 
-svgElementsTest :: TestName -> FilePath -> String -> TestTree
+svgElementsTest :: TestName -> FilePath -> String -> GoldenSpec
 svgElementsTest name filepath elements = 
     let document = "<svg xmlns=\"http://www.w3.org/2000/svg\">" <> elements <> "</svg>"
         parsed = maybe 
@@ -253,15 +274,40 @@ svgElementsTest name filepath elements =
             (Svg.parseSvgFile "test.svg" (BSC8.pack document))
     in svgPathsTest name filepath (SVG.convertDocument =<< parsed)
 
+data GoldenSpec 
+    = GoldenGroup TestName [GoldenSpec]
+    | GoldenCase TestName FilePath (IO Diagram)
+
+evalGoldenSpec :: GoldenSpec -> TestTree
+evalGoldenSpec (GoldenGroup name children) = testGroup name (evalGoldenSpec <$> children)
+evalGoldenSpec (GoldenCase testName filePath action) = doTest testName filePath action
+
+printGoldenSpec :: GoldenSpec -> Text
+printGoldenSpec s =
+    let go level (GoldenGroup name children) = 
+            T.replicate level "#" <> " " <> T.pack name <> "\n" 
+                <> T.unlines (go (level+1) <$> children)
+        go _ (GoldenCase testName filePath _) = 
+            "#### " <> T.pack testName <> "\n" 
+                <> "![" <> T.pack testName <> "](" <> T.pack filePath <> ")"
+     in go 1 s
+     
 diagramGoldenTests :: TestTree
-diagramGoldenTests = testGroup "Diagram Golden Tests" 
-    [ testGroup "Example Objects"
+diagramGoldenTests = 
+    testGroup "Golden Tests"
+        [ evalGoldenSpec goldenSpec
+        , galleryGoldenTest goldenSpec
+        ]
+
+goldenSpec :: GoldenSpec
+goldenSpec = GoldenGroup "Diagram Golden Tests" 
+    [ GoldenGroup "Example Objects"
         [ smallSolidTest "CSG" "csg.svg" CsgExample.csgExample
         , solidTest "Gear" "gear.svg" $ GearExample.gearExample 1 5 20 (20*pi/180)
         , smallSolidTest "Revolution" "revolution.svg" RevolutionExample.revolutionExample
         , smallSolidTest "Sweep" "sweep.svg" SweepExample.sweepExample
         , solidTest "Offset" "offset.svg" OffsetExample.offsetExample
-        , doTest "Text" "text.svg" $ do
+        , GoldenCase "Text" "text.svg" $ do
             projectRoot <- Paths.getDataDir 
             standardSolidDiagram <$> TextExample.textExample 
                 (projectRoot </> "test-data/fonts/varela/VarelaRound-Regular.ttf")
@@ -277,7 +323,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         , solidTest "Flags" "flags.svg" FlagExample.flagExample
         , smallSolidTest "Loose Parts" "loose-parts.svg" LoosePartsExample.loosePartsExample
         ]
-    , testGroup "Transforms" 
+    , GoldenGroup "Transforms" 
         [ solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
             (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
         , solidTest "Negative Scaled Cube II" "negativeScaledCube-II.svg" 
@@ -326,7 +372,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 <> TwoD.Transforms.translate2D (V2 (-1) 0) Shape.centeredSquare
             )
         ]
-    , testGroup "Sweeps"
+    , GoldenGroup "Sweeps"
         [ solidTest "curvy sweep" "curvySweep.svg" 
             ( Path2D.bezier (V2 0 0) (V2 0 10) (V2 10 10) (V2 10 0)
                 & Path.fromPath2D
@@ -357,7 +403,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 in Sweep.sweep path profile 
             )
         ]
-    , testGroup "Lofts"
+    , GoldenGroup "Lofts"
         [ solidTest "loft squares" "loftSquares.svg" 
             ( Loft.loft
                 [ Path.fromPath2D $ mconcat $ Shape.shapePaths Shape.unitSquare
@@ -365,7 +411,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 ]
             )
         ]
-    , testGroup "Loose Parts and Shapes"
+    , GoldenGroup "Loose Parts and Shapes"
         [ solidTest "looseParts with Colour then transform" "loosePartsThenTransform.svg" $ 
             let a = Solids.centeredCube 
                     & Solids.colourSolid Colour.maroon
@@ -393,7 +439,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 & TwoD.Transforms.scale2D 50
             )
         ]
-    , testGroup "Sections" 
+    , GoldenGroup "Sections" 
         [ diagramTest "sphere section" "sphereSection.svg" (
             Solids.unitSphere 
                 & Shape.section
@@ -413,7 +459,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 & TwoD.Transforms.scale2D 50
             )
         ]
-    , testGroup "Silhouettes"   
+    , GoldenGroup "Silhouettes"   
         [ diagramTest "sphere silhouette" "sphereSilhouette.svg" (
             Solids.unitSphere 
                 & Shape.silhouette
@@ -439,13 +485,13 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 & TwoD.Transforms.scale2D 50
             )
         ]
-    , testGroup "Painted Primitives"
+    , GoldenGroup "Painted Primitives"
         [ solidTest "painted sphere" "paintedSphere.svg" (
             Solids.unitSphere
                 & Solids.colourSolid Colour.blue
             )
         ]
-    , testGroup "Fillets" 
+    , GoldenGroup "Fillets" 
         [ solidTest "noop fillet cube" "noopFilletCube.svg" (
             Solids.unitCube
                 & Fillet.roundConditionalFillet (const Nothing)
@@ -457,8 +503,8 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 & Solids.colourSolid Colour.aqua
             )
         ]
-    , testGroup "Offsets"
-        [ testGroup "Three-D"
+    , GoldenGroup "Offsets"
+        [ GoldenGroup "Three-D"
             [ solidTest "Offset of Compound" "offsetOfCompound.svg" 
                 (Offset.offset 1 $ (id <> Transforms.translate (unit _x ^* 3)) Solids.unitCube)
             , solidTest "offset hole" "offsetHole.svg" (
@@ -493,7 +539,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                     & Transforms.rotate (unit _x) (pi/2)
             )
         ]
-        , testGroup "Two-D"
+        , GoldenGroup "Two-D"
             [ diagramTest "offset square" "offsetSquare.svg" (
                 Shapes.unitSquare
                     & TwoD.Offset.offsetShape 0.25
@@ -530,8 +576,8 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 )
             ]
         ]
-    , testGroup "Booleans"
-        [ testGroup "Three-D"
+    , GoldenGroup "Booleans"
+        [ GoldenGroup "Three-D"
             [ solidTest "intersections of cubes" "intersectionsOfCubes.svg" (
                 Booleans.intersections $
                     zipWith Solids.colourSolid
@@ -616,7 +662,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                       ]
                 )
             ]
-        , testGroup "Two-D"
+        , GoldenGroup "Two-D"
             [ solidTest "Union 2D" "union2D.svg" 
                 ( Shape.unitCircle
                     & TwoD.Transforms.translate2D (V2 0.5 0.5)
@@ -714,7 +760,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 )
             ]
         ]
-    , testGroup "Revolutions" 
+    , GoldenGroup "Revolutions" 
         [ solidTest "partial revolution" "partialRevolution.svg" (
             Revolution.revolutionByAngle 1 
                 (TwoD.Transforms.translate2D (unit _x ^* 1.5) Shape.unitCircle)
@@ -752,8 +798,8 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
                 & TwoD.Transforms.scale2D 50
             )
         ]
-    , testGroup "SVG"
-        [ doTest "read svg and make prism" "svgPrism.svg" $ do
+    , GoldenGroup "SVG"
+        [ GoldenCase "read svg and make prism" "svgPrism.svg" $ do
             projectRoot <- Paths.getDataDir 
             Right gearProfile <- SVG.readSVG (projectRoot </> "test-data/gear-profile.svg")
             let s = foldMap (Solids.prism 1 . Shape.makeShape) gearProfile
@@ -783,7 +829,7 @@ diagramGoldenTests = testGroup "Diagram Golden Tests"
         , svgElementsTest "svg rounded rect single radius" "svgRoundedRectSingleRadius.svg"
             "<rect width=\"80\" height=\"60\" rx=\"20\"/><rect x=\"100\" width=\"80\" height=\"60\" ry=\"10\"/>"
         ]
-    , testGroup "Diagram Fills"
+    , GoldenGroup "Diagram Fills"
         [ diagramTest "hole with centre of mass over solid material" "holeWithCentreOfMassOverSolid.svg" (
               let bar lo hi = Shape.unitSquare
                       & TwoD.Transforms.scale2D (hi - lo)
