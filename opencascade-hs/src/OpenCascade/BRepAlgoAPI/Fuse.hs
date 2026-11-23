@@ -1,6 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepAlgoAPI.Fuse
 ( Fuse
+, new
 , fromShapes
 ) where
 
@@ -11,6 +12,12 @@ import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C (CInt)
 import Foreign.Ptr
 import Data.Acquire
+
+foreign import capi unsafe "hs_BRepAlgoAPI_Fuse.h hs_new_BRepAlgoAPI_Fuse" rawNew
+    :: IO (Ptr Fuse)
+
+new :: Acquire (Ptr Fuse)
+new = mkAcquire rawNew deleteFuse
 
 foreign import capi unsafe "hs_BRepAlgoAPI_Fuse.h hs_new_BRepAlgoAPI_Fuse_fromShapes" rawFromShapes
     :: Ptr TopoDS.Shape

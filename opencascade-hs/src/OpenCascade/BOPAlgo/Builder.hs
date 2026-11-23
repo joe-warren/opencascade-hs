@@ -5,6 +5,7 @@ module OpenCascade.BOPAlgo.Builder
 , addArgument
 , setRunParallel
 , setFuzzyValue
+, setNonDestructive
 , shape
 , perform
 , modified
@@ -44,6 +45,11 @@ foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_SetRunParall
 
 setRunParallel :: Ptr Builder -> Bool -> IO ()
 setRunParallel builder = rawSetRunParallel builder . boolToCBool
+
+foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_SetNonDestructive" rawSetNonDestructive :: Ptr Builder -> CBool -> IO ()
+
+setNonDestructive :: Ptr Builder -> Bool -> IO ()
+setNonDestructive builder = rawSetNonDestructive builder . boolToCBool
 
 foreign import capi unsafe "hs_BOPAlgo_Builder.h hs_BOPAlgo_Builder_Shape" rawShape
     :: Ptr Builder

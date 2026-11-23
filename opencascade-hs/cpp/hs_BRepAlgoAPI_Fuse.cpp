@@ -4,6 +4,10 @@
 
 #include <TopoDS_Shape.hxx>
 
+BRepAlgoAPI_Fuse * hs_new_BRepAlgoAPI_Fuse(){
+    return new BRepAlgoAPI_Fuse();
+}
+
 BRepAlgoAPI_Fuse * hs_new_BRepAlgoAPI_Fuse_fromShapes(
         TopoDS_Shape * a, TopoDS_Shape * b,
         HSExceptionType* exType,

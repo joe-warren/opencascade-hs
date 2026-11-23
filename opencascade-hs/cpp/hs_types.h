@@ -124,6 +124,8 @@ typedef void BRepAlgoAPI_Fuse;
 typedef void BRepAlgoAPI_Cut;
 typedef void BRepAlgoAPI_Common;
 typedef void BRepAlgoAPI_Section;
+typedef void BRepAlgoAPI_BuilderAlgo;
+typedef void BRepAlgoAPI_BooleanOperation;
 typedef void BOPAlgo_Builder;
 typedef void BOPAlgo_BOP;
 typedef void BOPAlgo_CellsBuilder;

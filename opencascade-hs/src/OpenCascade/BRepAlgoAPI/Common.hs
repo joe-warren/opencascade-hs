@@ -1,6 +1,7 @@
 {-# LANGUAGE CApiFFI #-}
 module OpenCascade.BRepAlgoAPI.Common
 ( Common
+, new
 , fromShapes
 ) where
 
@@ -11,6 +12,12 @@ import OpenCascade.Internal.Exception (wrapException)
 import Foreign.C (CInt)
 import Foreign.Ptr
 import Data.Acquire
+
+foreign import capi unsafe "hs_BRepAlgoAPI_Common.h hs_new_BRepAlgoAPI_Common" rawNew
+    :: IO (Ptr Common)
+
+new :: Acquire (Ptr Common)
+new = mkAcquire rawNew deleteCommon
 
 foreign import capi unsafe "hs_BRepAlgoAPI_Common.h hs_new_BRepAlgoAPI_Common_fromShapes" rawFromShapes
     :: Ptr TopoDS.Shape

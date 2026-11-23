@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+BRepAlgoAPI_Cut * hs_new_BRepAlgoAPI_Cut();
+
 BRepAlgoAPI_Cut * hs_new_BRepAlgoAPI_Cut_fromShapes(
     TopoDS_Shape * a, TopoDS_Shape * b,
     HSExceptionType* exType,

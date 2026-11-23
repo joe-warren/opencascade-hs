@@ -38,6 +38,9 @@ and this project adheres to the
 - Added `isDone` method to `OpenCascade.BRepBuilderAPI.MakeShape`
 - Added `OpenCascade.ShapeUpgrade.ShapeDivide` and `OpenCascade.ShapeUpgrade.ShapeDivideContinuity`
 - Added `OpenCascade.ShapeBuild.ReShape` and `OpenCascade.ShapeBuild.Types`
+- Added `setNonDestructive` to `OpenCascade.BOPAlgo.Builder`
+- Added `OpenCascade.BRepAlgoAPI.BuilderAlgo` and `OpenCascade.BRepAlgoAPI.BooleanOperation`
+- Added nullary `new` constructor to `OpenCascade.BRepAlgoAPI.Fuse`, `OpenCascade.BRepAlgoAPI.Cut` and `OpenCascade.BRepAlgoAPI.Common`
 
 ### Changed
 
