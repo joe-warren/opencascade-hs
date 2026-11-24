@@ -24,7 +24,7 @@ axisAlignedBoundingBox s =
         else Just . unsafeFromAcquire $ do
             solid <- acquireSolid s
             theBox <- Bnd.Box.new
-            liftIO $ BRepBndLib.addOptimal solid theBox True False
+            liftIO $ BRepBndLib.addOptimal solid theBox False False
             p1 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMin theBox
             p2 <- liftIO . gpPntToV3 =<< Bnd.Box.cornerMax theBox
             return (p1, p2)

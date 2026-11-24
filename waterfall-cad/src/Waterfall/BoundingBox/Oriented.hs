@@ -46,7 +46,7 @@ orientedBoundingBox s =
         else Just . OrientedBoundingBox . unsafeFromAcquirePtr $ do
             obb <- OBB.new
             solid <- acquireSolid s
-            liftIO $ BRepBndLib.addOBB solid obb True True True
+            liftIO $ BRepBndLib.addOBB solid obb False True True
             return obb
 
 queryOBB :: (Ptr OBB -> Acquire (V3 Double)) -> OrientedBoundingBox -> V3 Double
