@@ -15,7 +15,7 @@ void hs_BRepAlgoAPI_BuilderAlgo_setArguments(
     return hs_handleExVoid(
         exType,
         exPtr,
-        [builder ,tools]{
-        builder->SetArguments(*tools);
+        [builder, arguments]{
+        builder->SetArguments(*arguments);
     });
 }
