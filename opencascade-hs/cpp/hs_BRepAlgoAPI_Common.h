@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+BRepAlgoAPI_Common * hs_new_BRepAlgoAPI_Common();
+
 BRepAlgoAPI_Common * hs_new_BRepAlgoAPI_Common_fromShapes(
     TopoDS_Shape * a, TopoDS_Shape * b,
     HSExceptionType* exType,

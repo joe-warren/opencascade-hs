@@ -46,6 +46,7 @@ and this project adheres to the
 - Fixed a number of issues where passing specific arguments to methods of `Transformable` and `Transformable2D` would result in exceptions or bad geometry
 - Offset now supports objects with internal cavities
 - Offset now supports objects with faces that are not C1 continuous, by splitting on their discontinuities before processing. Such faces include the faces of a (non-uniformly) scaled cylinder, so offsets can be computed on these when they couldn't previously.
+- Fixed an issue where Boolean operations could modify their arguments
 
 ### Changed 
 

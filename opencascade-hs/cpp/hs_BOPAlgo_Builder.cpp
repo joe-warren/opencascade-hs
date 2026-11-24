@@ -42,6 +42,10 @@ void hs_BOPAlgo_Builder_SetRunParallel(BOPAlgo_Builder * builder, bool runParall
     builder->SetRunParallel(runParallel);
 }
 
+void hs_BOPAlgo_Builder_SetNonDestructive(BOPAlgo_Builder * builder, bool nonDestructive){
+    builder->SetNonDestructive(nonDestructive);
+}
+
 void hs_BOPAlgo_Builder_Perform(
         BOPAlgo_Builder * builder,
         HSExceptionType* exType,

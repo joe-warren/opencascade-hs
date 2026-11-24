@@ -136,6 +136,7 @@ projectedRegions s projectionDir projector extractor = do
                 [oneEdge] -> pure [oneEdge]
                 _ -> do
                     fuser <- BOPAlgo.Builder.new 
+                    liftIO $ BOPAlgo.Builder.setNonDestructive fuser True
                     liftIO $ BOPAlgo.Builder.setFuzzyValue fuser tolerance
                     forM_ boundary (liftIO . BOPAlgo.Builder.addArgument fuser . upcast)
                     liftIO $ BOPAlgo.Builder.perform fuser

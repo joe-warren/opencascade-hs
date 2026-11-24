@@ -20,9 +20,7 @@ import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, u
 import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
 import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
-import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import OpenCascade.BRepBuilderAPI (MakeShape)
-import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.BOPAlgo.Operation as BOPAlgo.Operation
 import qualified OpenCascade.BOPAlgo.BOP as BOPAlgo.BOP
@@ -40,6 +38,10 @@ import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import Waterfall.Internal.FromOpenCascade (containsShapeKind, deduplicateTopoDSShapes)
 import qualified OpenCascade.BOPAlgo.CellsBuilder as CellsBuilder
 import qualified OpenCascade.NCollection.List as NCollection.List
+import OpenCascade.BRepAlgoAPI (BooleanOperation, BuilderAlgo)
+import Waterfall.Internal.ToOpenCascade (shapeSingletonList)
+import qualified OpenCascade.BRepAlgoAPI.BuilderAlgo as BuilderAlgo
+import qualified OpenCascade.BRepAlgoAPI.BooleanOperation as BooleanOperation
 
 -- | A Region in 2D Space 
 -- 
@@ -63,11 +65,21 @@ acquireShape (Shape ptr) = acquireForeignPtr ptr
 shapeFromAcquire :: Acquire (Ptr TopoDS.Shape) -> Shape
 shapeFromAcquire = Shape . unsafeFromAcquirePtr
 
-toBoolean2D :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape.Shape -> Ptr TopoDS.Shape.Shape -> Acquire (Ptr a)) -> Shape -> Shape -> Shape
+toBoolean2D
+    :: (SubTypeOf MakeShape a
+    , SubTypeOf BooleanOperation a
+    , SubTypeOf BuilderAlgo a)
+    => (Acquire (Ptr a)) -> Shape -> Shape -> Shape
 toBoolean2D f (Shape ptrA) (Shape ptrB) = Shape . unsafeFromAcquirePtr $ do
     a <- acquireForeignPtr ptrA
     b <- acquireForeignPtr ptrB
-    r <- MakeShape.shape =<< fmap upcast (f a b)
+    builder <- f 
+    liftIO $ BuilderAlgo.setNonDestructive (upcast builder) True
+    liftIO . BuilderAlgo.setArguments (upcast builder) =<< shapeSingletonList a
+    liftIO . BooleanOperation.setTools (upcast builder) =<< shapeSingletonList b
+    liftIO $ MakeShape.build (upcast builder)
+
+    r <- MakeShape.shape (upcast builder)
     unifier <- UnifySameDomain.fromShape r False True False
     liftIO $ UnifySameDomain.build unifier
     UnifySameDomain.shape unifier
@@ -75,17 +87,17 @@ toBoolean2D f (Shape ptrA) (Shape ptrB) = Shape . unsafeFromAcquirePtr $ do
 -- | Take the union of two 2D shapes.
 -- The region occupied by either one of them
 union2D :: Shape -> Shape -> Shape
-union2D = toBoolean2D Fuse.fromShapes
+union2D = toBoolean2D Fuse.new
 
 -- | Take the difference of two 2D shapes.
 -- The region occupied by the first, but not the second
 difference2D :: Shape -> Shape -> Shape
-difference2D = toBoolean2D Cut.fromShapes
+difference2D = toBoolean2D Cut.new
 
 -- | Take the intersection of two 2D shapes.
 -- The region occupied by both of them
 intersection2D :: Shape -> Shape -> Shape
-intersection2D = toBoolean2D Common.fromShapes
+intersection2D = toBoolean2D Common.new
 
 toBooleans2D :: BOPAlgo.Operation.Operation -> [Shape] -> Shape
 toBooleans2D _ [] = emptyShape
@@ -97,6 +109,7 @@ toBooleans2D op (h:shapes) = Shape . unsafeFromAcquirePtr $ do
     let builder = upcast bop
     liftIO $ do
         BOPAlgo.BOP.setOperation bop op
+        BOPAlgo.Builder.setNonDestructive builder True
         BOPAlgo.Builder.addArgument builder firstPtr
         traverse_ (BOPAlgo.BOP.addTool bop) ptrs
         BOPAlgo.Builder.setRunParallel builder True
@@ -128,6 +141,7 @@ intersections2D' ss
     | otherwise  = shapeFromAcquire $ do
     builder <- CellsBuilder.new 
     liftIO $ BOPAlgo.Builder.setRunParallel (upcast builder) True
+    liftIO $ BOPAlgo.Builder.setNonDestructive (upcast builder) True
     listToTake <- NCollection.List.newListOfShape
     shapes <- traverse acquireShape ss
     forM_ shapes (liftIO . NCollection.List.appendListOfShape listToTake)

@@ -46,6 +46,9 @@ import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BRepAlgoAPI.Fuse as Fuse
 import qualified OpenCascade.BRepAlgoAPI.Cut as Cut
 import qualified OpenCascade.BRepAlgoAPI.Common as Common
+import OpenCascade.BRepAlgoAPI (BuilderAlgo, BooleanOperation)
+import qualified OpenCascade.BRepAlgoAPI.BuilderAlgo as BuilderAlgo
+import qualified OpenCascade.BRepAlgoAPI.BooleanOperation as BooleanOperation
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import OpenCascade.BRepBuilderAPI (MakeShape)
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
@@ -57,6 +60,7 @@ import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import OpenCascade.Inheritance (SubTypeOf(..), upcast, unsafeDowncast)
 import Waterfall.Internal.Finalizers (acquireForeignPtr, fromAcquirePtrT, unsafeFromAcquire, unsafeFromAcquirePtr, unsafeFromAcquirePtrTWithCatch, unsafeFromAcquirePtrWithCatch, unsafeFromAcquirePtrT)
 import Waterfall.Internal.Edges (allSubShapesWithCopy)
+import Waterfall.Internal.ToOpenCascade (shapeSingletonList)
 import Data.Foldable (traverse_)
 import Data.Bifunctor.Flip (Flip (..))
 import Waterfall.Error (WaterfallError)
@@ -70,6 +74,7 @@ import qualified OpenCascade.NCollection.List as NCollection.List
 import qualified OpenCascade.ShapeUpgrade.Types as ShapeUpgrade
 import qualified OpenCascade.ShapeBuild.ReShape as ShapeBuild.ReShape
 import qualified OpenCascade.ShapeUpgrade.ShapeDivide as ShapeBuild.ShapeDivide
+import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 
 data PaintMap 
     = UniformPaint Paint
@@ -293,12 +298,20 @@ solidFromAcquireMappingPaintMapWithCatch :: Acquire (PaintMap, History) -> Eithe
 solidFromAcquireMappingPaintMapWithCatch f = 
     solidFromAcquireWithPaintMapWithCatch (mapPaintMap =<< f)
 
-toBoolean :: (SubTypeOf MakeShape a) => (Ptr TopoDS.Shape -> Ptr TopoDS.Shape -> Acquire (Ptr a)) -> Solid -> Solid -> Solid
+toBoolean 
+    :: (SubTypeOf MakeShape a
+    , SubTypeOf BooleanOperation a
+    , SubTypeOf BuilderAlgo a)
+    => (Acquire (Ptr a)) -> Solid -> Solid -> Solid
 toBoolean f (Solid ptrA paintMapA) (Solid ptrB paintMapB) = solidFromAcquireMappingPaintMap $ do
     a <- acquireForeignPtr ptrA
     b <- acquireForeignPtr ptrB
-    builder <- f a b
-    
+    builder <- f
+    liftIO $ BuilderAlgo.setNonDestructive (upcast builder) True
+    liftIO . BuilderAlgo.setArguments (upcast builder) =<< shapeSingletonList a
+    liftIO . BooleanOperation.setTools (upcast builder) =<< shapeSingletonList b
+    liftIO $ MakeShape.build (upcast builder)
+
     materialisedPaintMap <- case (paintMapA, paintMapB) of
         (UniformPaint paintA, UniformPaint paintB) | paintA == paintB -> pure paintMapA
         _ -> liftIO $ FacePaints <$> fromAcquirePaints (
@@ -311,8 +324,7 @@ toBoolean f (Solid ptrA paintMapA) (Solid ptrB paintMapB) = solidFromAcquireMapp
 --
 -- The region occupied by either one of them.
 union3D :: Solid -> Solid -> Solid
-union3D = toBoolean Fuse.fromShapes
-
+union3D = toBoolean Fuse.new
 
 matchesUniformPaint :: Paint -> PaintMap -> Bool
 matchesUniformPaint pa (UniformPaint pb) = pa == pb
@@ -327,6 +339,7 @@ toBooleans op solids@(h:t) = solidFromAcquireMappingPaintMap $ do
     bop <- BOPAlgo.BOP.new
     let builder = upcast bop
     liftIO $ do
+        BOPAlgo.Builder.setNonDestructive builder True
         BOPAlgo.BOP.setOperation bop op
         BOPAlgo.Builder.addArgument builder firstPtr
         traverse_ (BOPAlgo.BOP.addTool bop) ptrs
@@ -354,13 +367,13 @@ unions3D = toBooleans BOPAlgo.Operation.Fuse
 -- 
 -- The region occupied by the first, but not the second.
 difference3D :: Solid -> Solid -> Solid
-difference3D = toBoolean Cut.fromShapes
+difference3D = toBoolean Cut.new
 
 -- | Take the intersection of two solids 
 --
 -- The region occupied by both of them.
 intersection3D :: Solid -> Solid -> Solid
-intersection3D = toBoolean Common.fromShapes
+intersection3D = toBoolean Common.new
 
 deduplicateSolids :: [Solid] -> [Solid]
 deduplicateSolids = deduplicateTopoDSShapes acquireSolid
@@ -377,6 +390,7 @@ intersections3D' solids@(h:t)
     | otherwise  = solidFromAcquireMappingPaintMap $ do
     builder <- CellsBuilder.new 
     liftIO $ BOPAlgo.Builder.setRunParallel (upcast builder) True
+    liftIO $ BOPAlgo.Builder.setNonDestructive (upcast builder) True
     listToTake <- NCollection.List.newListOfShape
     shapes <- traverse acquireSolid solids
     forM_ shapes (liftIO . NCollection.List.appendListOfShape listToTake)

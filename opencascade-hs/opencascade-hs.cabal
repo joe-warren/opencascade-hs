@@ -29,6 +29,8 @@ extra-source-files:
     cpp/hs_BOPAlgo_Tools.h
     cpp/hs_BRep_Tool.h
     cpp/hs_BRepAdaptor_Curve.h
+    cpp/hs_BRepAlgoAPI_BooleanOperation.h
+    cpp/hs_BRepAlgoAPI_BuilderAlgo.h
     cpp/hs_BRepAlgoAPI_Common.h
     cpp/hs_BRepAlgoAPI_Cut.h
     cpp/hs_BRepAlgoAPI_Fuse.h
@@ -174,6 +176,8 @@ library
       OpenCascade.BRepAdaptor.Internal.Destructors
       OpenCascade.BRepAdaptor.Types
       OpenCascade.BRepAlgoAPI
+      OpenCascade.BRepAlgoAPI.BooleanOperation
+      OpenCascade.BRepAlgoAPI.BuilderAlgo
       OpenCascade.BRepAlgoAPI.Common
       OpenCascade.BRepAlgoAPI.Cut
       OpenCascade.BRepAlgoAPI.Fuse
@@ -450,6 +454,8 @@ library
         cpp/hs_BOPAlgo_Tools.cpp
         cpp/hs_BRep_Tool.cpp
         cpp/hs_BRepAdaptor_Curve.cpp
+        cpp/hs_BRepAlgoAPI_BooleanOperation.cpp
+        cpp/hs_BRepAlgoAPI_BuilderAlgo.cpp
         cpp/hs_BRepAlgoAPI_Common.cpp
         cpp/hs_BRepAlgoAPI_Cut.cpp
         cpp/hs_BRepAlgoAPI_Fuse.cpp

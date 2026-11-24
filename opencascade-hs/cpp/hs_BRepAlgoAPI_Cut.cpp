@@ -4,6 +4,10 @@
 
 #include <TopoDS_Shape.hxx>
 
+BRepAlgoAPI_Cut * hs_new_BRepAlgoAPI_Cut(){
+    return new BRepAlgoAPI_Cut();
+}
+
 BRepAlgoAPI_Cut * hs_new_BRepAlgoAPI_Cut_fromShapes(
         TopoDS_Shape * a, TopoDS_Shape * b,
         HSExceptionType* exType,
