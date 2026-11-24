@@ -47,6 +47,7 @@ and this project adheres to the
 - Offset now supports objects with internal cavities
 - Offset now supports objects with faces that are not C1 continuous, by splitting on their discontinuities before processing. Such faces include the faces of a (non-uniformly) scaled cylinder, so offsets can be computed on these when they couldn't previously.
 - Fixed an issue where Boolean operations could modify their arguments
+- Fixed an issue where glTF node transforms were ignored by `readGLTF`/`readGLB`
 
 ### Changed 
 

@@ -104,8 +104,8 @@ remesh s = do
             faceAsFace <- liftIO . unsafeDowncast $ faceAsShape
             loc <- TopLoc.Location.new
             orientation <- liftIO $ TopoDS.Shape.orientation faceAsShape
-            trsf <- TopLoc.Location.toGPTrsf loc
             triangulation <- BRep.Tool.triangulation faceAsFace loc
+            trsf <- TopLoc.Location.toGPTrsf loc
             triCount <- liftIO $ Poly.Triangulation.nbTriangles triangulation
             forM_ [1..triCount] $ \i -> do
                 triangle <- Poly.Triangulation.triangle triangulation i
