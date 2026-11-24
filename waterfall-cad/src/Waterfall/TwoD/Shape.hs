@@ -46,6 +46,9 @@ import Control.Lens ((^.))
 import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
+import qualified OpenCascade.BRepAlgoAPI.BuilderAlgo as BuilderAlgo
+import qualified OpenCascade.BRepAlgoAPI.BooleanOperation as BooleanOperation
+import Waterfall.Internal.ToOpenCascade (shapeSingletonList)
 
 -- | Construct a 2D Shape from a path 
 --
@@ -127,7 +130,12 @@ section :: Solid -> Shape
 section solid = Shape . unsafeFromAcquirePtr $ do
     s <- acquireSolid solid
     face <- MakeFace.face =<< MakeFace.fromPln =<< GP.Pln.new
-    MakeShape.shape . upcast =<< Common.fromShapes s (upcast face)
+    builder <- Common.new
+    liftIO $ BuilderAlgo.setNonDestructive (upcast builder) True
+    liftIO . BuilderAlgo.setArguments (upcast builder) =<< shapeSingletonList s
+    liftIO . BooleanOperation.setTools (upcast builder) =<< shapeSingletonList (upcast face)
+    liftIO $ MakeShape.build (upcast builder)
+    MakeShape.shape (upcast builder)
 
 -- | Compute the Shadow of a `Solid` projected onto the @xy@ plane
 silhouette :: Solid -> Shape
