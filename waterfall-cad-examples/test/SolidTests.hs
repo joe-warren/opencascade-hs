@@ -13,6 +13,9 @@ import Linear (V3 (..), V4 (..), unit, zero, _x, _z, (^*), normalize, identity, 
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import qualified Waterfall.Fillet as Fillet
+import Control.Exception (evaluate)
+import Data.Function ((&))
+import Control.Monad (void)
 import Assertions
 
 solidTests :: TestTree
@@ -149,4 +152,29 @@ solidTests = testGroup "Solid"
                 in (assertApproxEqual "volume matches the same hole made without scaling" 1e-4 (offsetVolume prismHole) . offsetVolume $ stretchedHole)
                     <> (assertEqual "has one part" 1 . length . Solids.looseParts . Offset.offset 0.1 . cubeWithHole $ stretchedHole)
             ]
+    , testGroup "booleans"
+        [ testGroup "leave their arguments unchanged" $
+            [ testCase name $ do 
+                let tor = Solids.torus torRadius 0.5
+                    r1 = 0.4998
+                    r2 = 0.4999
+                    ballVolume r = 4 / 3 * pi * r ^ (3 :: Int)
+                    probe r = Solids.volume(tor `Booleans.intersection` ball r)
+                    ball r = Solids.unitSphere
+                        & Transforms.uScale r
+                        & Transforms.translate (unit _x ^* torRadius)  
+                before <- evaluate (probe r1)
+                void . evaluate . Solids.volume $ (bop tor $ ball 0.5)
+                after <- evaluate (probe r2)
+                assertApproxEqual "before" 1e-6 (ballVolume r1) before
+                assertApproxEqual "after" 1e-6 (ballVolume r2) after
+                | (name, torRadius, bop) <- 
+                    [ ("intersection", 2, Booleans.intersection)
+                    , ("union", 3, Booleans.union)
+                    , ("difference", 4, Booleans.difference)
+                    , ("intersections", 5, \a b -> Booleans.intersections [a, b])
+                    , ("unions", 6, \a b -> Booleans.unions [a, b])
+                    ]
+            ]
+        ]
     ]
