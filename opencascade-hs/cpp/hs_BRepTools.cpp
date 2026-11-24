@@ -16,3 +16,16 @@ TopoDS_Wire * hs_BRepTools_OuterWire(
         }
     );
 }
+
+void hs_BRepTools_Clean(
+        TopoDS_Shape * shape, bool force,
+        HSExceptionType* exType, void ** exPtr
+){
+    hs_handleExVoid(
+        exType,
+        exPtr,
+        [shape, force]{
+            BRepTools::Clean(*shape, force);
+        }
+    );
+}

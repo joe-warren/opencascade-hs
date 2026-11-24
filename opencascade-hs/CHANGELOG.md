@@ -41,6 +41,7 @@ and this project adheres to the
 - Added `setNonDestructive` to `OpenCascade.BOPAlgo.Builder`
 - Added `OpenCascade.BRepAlgoAPI.BuilderAlgo` and `OpenCascade.BRepAlgoAPI.BooleanOperation`
 - Added nullary `new` constructor to `OpenCascade.BRepAlgoAPI.Fuse`, `OpenCascade.BRepAlgoAPI.Cut` and `OpenCascade.BRepAlgoAPI.Common`
+- Added `OpenCascade.BRepTools.clean`
 
 ### Changed
 

@@ -12,6 +12,11 @@ TopoDS_Wire * hs_BRepTools_OuterWire(
         HSExceptionType* exType, void ** exPtr
 );
 
+void hs_BRepTools_Clean(
+        TopoDS_Shape * shape, bool force,
+        HSExceptionType* exType, void ** exPtr
+);
+
 #ifdef __cplusplus
 }
 #endif
