@@ -49,6 +49,7 @@ and this project adheres to the
 - Fixed an issue where Boolean operations could modify their arguments
 - Fixed an issue where glTF node transforms were ignored by `readGLTF`/`readGLB`
 - Stopped using mesh data to compute bounding boxes, as this led to a different result for Solids that had/had not been written using a mesh format, breaking referential transparency
+- Mesh data is now cleared after writing a mesh format. Prior to this, writing a solid at a high resolution, then at a low one would reuse the high resolution mesh
 
 ### Changed 
 

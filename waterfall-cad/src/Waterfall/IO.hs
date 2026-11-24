@@ -58,7 +58,7 @@ import qualified OpenCascade.Quantity.TypeOfColor as Quantity.TypeOfColor
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (unless, when, forM, forM_, (<=<))
 import Waterfall.Internal.Finalizers (acquireForeignPtr, fromAcquirePtr)
-import Data.Acquire ( Acquire, withAcquire )
+import Data.Acquire ( Acquire, withAcquire, mkAcquire)
 import Foreign.Ptr (Ptr)
 import Data.Char (toLower)
 import System.FilePath (takeExtension)
@@ -81,6 +81,7 @@ import qualified OpenCascade.Graphic3D.AlphaMode as AlphaMode
 import qualified OpenCascade.Graphic3D.TypeOfBackfacingModel as TypeOfBackfacingModel
 import qualified Data.Colour.SRGB as SRGB
 import qualified Data.Colour.SRGB.Linear as SRGB.Linear
+import qualified OpenCascade.BRepTools as BRepTools
 
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -273,7 +274,9 @@ addColourToCafWriter s shapeLabel paintMap = do
 mesh :: Double -> Ptr TopoDS.Shape -> Acquire ()
 mesh linDeflection s = do
     mesher <- BRepMesh.IncrementalMesh.fromShapeAndLinDeflection s linDeflection
-    liftIO $ BRepMesh.IncrementalMesh.perform mesher
+    mkAcquire
+        (BRepTools.clean s False >> BRepMesh.IncrementalMesh.perform mesher)
+        (const $ BRepTools.clean s False)
 
 cafDocument
     :: Ptr TopoDS.Shape 
