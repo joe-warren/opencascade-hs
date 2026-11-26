@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeApplications #-}
 module Waterfall.Internal.Diagram
 ( buildSolidDiagramFills
 , silhouetteShape
@@ -11,7 +12,7 @@ import Foreign (Ptr)
 import qualified OpenCascade.HLRBRep.Types as HLRBRep
 import qualified OpenCascade.HLRBRep.TypeOfResultingEdge as HLRBRep
 import qualified OpenCascade.TopoDS as TopoDS
-import Waterfall.Internal.Edges (allEdges, buildEdgeCurve3D, allSubShapesWithCopy)
+import Waterfall.Internal.Edges (allEdges, buildEdgeCurve3D)
 import Data.Traversable (forM)
 import qualified OpenCascade.HLRBRep.HLRToShape as HLRBRep.HLRToShape
 import qualified OpenCascade.Bnd.Box as Bnd.Box
@@ -19,11 +20,10 @@ import Data.Foldable (forM_, maximumBy)
 import Control.Monad.IO.Class (liftIO)
 import qualified OpenCascade.BRepBndLib as BRepBndLib
 import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
-import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
 import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
 import OpenCascade.Inheritance (upcast)
-import Waterfall.Internal.FromOpenCascade (gpPntToV3, subShapes)
+import Waterfall.Internal.FromOpenCascade (gpPntToV3, subShapes, subShapesOf)
 import Control.Lens ((^.), (&), (.~), (<&>))
 import Linear (V3 (..), _x, _y, _z, norm, unit, cross)
 import qualified Data.IntMap as IntMap
@@ -55,6 +55,7 @@ import qualified OpenCascade.HLRAlgo.Projector as HLRAlgo.Projector
 import qualified OpenCascade.GP.Ax2 as GP.Ax2
 import Data.Function (on)
 import qualified Data.List.NonEmpty as NE
+import Data.Proxy (Proxy(..))
 
 boundaryEdges :: Ptr HLRBRep.HLRToShape -> Acquire [Ptr TopoDS.Edge]
 boundaryEdges extractor = 
@@ -88,7 +89,7 @@ calcRayBound s = do
 pruneDangling :: [Ptr TopoDS.Edge] -> Acquire [Ptr TopoDS.Edge]
 pruneDangling edges = do
     withVertices <- forM edges $ \e -> do
-        (e, ) <$> allSubShapesWithCopy ShapeEnum.Vertex (upcast e)
+        (e, ) <$> subShapesOf (Proxy @TopoDS.Vertex) (upcast e)
     let loop current = do
             vertexIndex <- liftIO $ ShapeMap.fromList (zip (concatMap snd current) [0 :: Int ..])
             labelled <- forM current $ \(e, vs) ->
@@ -110,7 +111,7 @@ mergeRegions regions = do
     unifier <- UnifySameDomain.fromShape (upcast compound) False True False
     liftIO $ UnifySameDomain.build unifier
     sameDomain <- UnifySameDomain.shape unifier
-    liftIO . fmap (fmap Shape) . fromAcquirePtrT $ allSubShapesWithCopy ShapeEnum.Face sameDomain
+    liftIO . fmap (fmap Shape) . fromAcquirePtrT $ subShapesOf (Proxy @TopoDS.Face) sameDomain
 
 faceArea :: Ptr TopoDS.Face -> Acquire Double
 faceArea face = do

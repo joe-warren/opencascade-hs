@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeApplications #-}
 module Waterfall.Solids 
 ( Solid
 , emptySolid
@@ -25,13 +26,12 @@ module Waterfall.Solids
 
 
 import Waterfall.Internal.Solid (Solid (..), PaintMap (..), solidFromAcquire, acquireSolid, emptySolid, emptyPaintMap, solidFromAcquireTWithPaintMap)
-import Waterfall.Internal.Edges (allSubShapesWithCopy)
 import Waterfall.Paint (Paint, paintWithColour)
 import Waterfall.Internal.Finalizers (NoPtr, acquireForeignPtr, unsafeFromAcquire)
 import Control.DeepSeq (NFData)
 import Waterfall.TwoD.Internal.Shape (rawShape)
 import Waterfall.Internal.ToOpenCascade (v3ToVertex)
-import Waterfall.Internal.FromOpenCascade (gpPntToV3)
+import Waterfall.Internal.FromOpenCascade (gpPntToV3, subShapesOf)
 import Waterfall.Internal.Remesh (makeSolidFromShell)
 import Waterfall.Transforms (translate, rotate)
 import Waterfall.Internal.NearZero (nearZero)
@@ -51,7 +51,6 @@ import qualified OpenCascade.BRepPrimAPI.MakeSphere as MakeSphere
 import qualified OpenCascade.BRepPrimAPI.MakeCylinder as MakeCylinder
 import qualified OpenCascade.BRepPrimAPI.MakeCone as MakeCone
 import qualified OpenCascade.BRepPrimAPI.MakeTorus as MakeTorus
-import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
 import qualified OpenCascade.GP as GP
@@ -70,6 +69,7 @@ import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
 import Data.Maybe (isJust)
+import Data.Proxy (Proxy(..))
 
 -- | A cube with side lengths of 1, one vertex on the origin, another on \( (1, 1, 1) \)
 unitCube :: Solid
@@ -285,12 +285,12 @@ looseParts s = solidFromAcquireTWithPaintMap $ do
     solid <- acquireSolid s
     childSolids <- 
         filterM (fmap (>0) . liftIO . TopoDS.Shape.nbChildren)
-            =<< allSubShapesWithCopy ShapeEnum.Solid solid
+            =<< subShapesOf (Proxy @TopoDS.Solid) solid
     forM childSolids $ \child -> do
         newPaintMap <- case solidPaintMap s of 
             UniformPaint p -> pure . UniformPaint $ p
             FacePaints paints -> do
-                faces <- liftIO . ShapeMap.fromList . fmap (,()) =<< allSubShapesWithCopy ShapeEnum.Face child
+                faces <- liftIO . ShapeMap.fromList . fmap (,()) =<< subShapesOf (Proxy @TopoDS.Face) child
                 let exists = fmap isJust . liftIO . ShapeMap.lookup faces . Inheritance.upcast <=< acquireForeignPtr . fst
                 newPaints <- filterM exists paints
                 return (FacePaints newPaints)

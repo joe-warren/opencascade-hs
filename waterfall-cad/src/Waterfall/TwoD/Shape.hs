@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 module Waterfall.TwoD.Shape
 ( Shape
 , makeShape
@@ -24,10 +25,9 @@ import Waterfall.TwoD.Internal.Shape (Shape (..), union2D, difference2D, interse
 import Waterfall.TwoD.Internal.Path2D (Path2D (..))
 import Waterfall.TwoD.Transforms (translate2D, rotate2D)
 import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquirePtrT, unsafeFromAcquire, NoPtr)
-import Waterfall.Internal.Edges (allWires, allSubShapesWithCopy)
+import Waterfall.Internal.Edges (allWires)
 import qualified OpenCascade.BRepBuilderAPI.MakeFace as MakeFace
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
-import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.GP.Pln as GP.Pln
 import OpenCascade.Inheritance (upcast)
 import Linear (unit, _x, _y, _xy, zero, V2 (..))
@@ -45,10 +45,12 @@ import Data.Acquire (Acquire)
 import Control.Lens ((^.))
 import qualified OpenCascade.GProp.GProps as GProps
 import qualified OpenCascade.BRepGProp as BRepGProp
-import Waterfall.Internal.FromOpenCascade (gpPntToV3)
+import Waterfall.Internal.FromOpenCascade (gpPntToV3, subShapesOf)
 import qualified OpenCascade.BRepAlgoAPI.BuilderAlgo as BuilderAlgo
 import qualified OpenCascade.BRepAlgoAPI.BooleanOperation as BooleanOperation
 import Waterfall.Internal.ToOpenCascade (shapeSingletonList)
+import qualified OpenCascade.TopoDS as TopoDS
+import Data.Proxy (Proxy(..))
 
 -- | Construct a 2D Shape from a path 
 --
@@ -122,7 +124,7 @@ looseShapes :: Shape -> [Shape]
 looseShapes (Shape r) = fmap Shape . unsafeFromAcquirePtrT $ do
     shape <- acquireForeignPtr r
     filterM (fmap (>0) . liftIO . TopoDS.Shape.nbChildren)
-        =<< allSubShapesWithCopy ShapeEnum.Face shape
+        =<< subShapesOf (Proxy @TopoDS.Face) shape
 
 -- | Compute the cross-section of a `Solid` on the @xy@ plane
 --

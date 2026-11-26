@@ -35,23 +35,20 @@ module Waterfall.Offset
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, acquireFacePaints, fromAcquirePaints, PaintMap (..), makeShapeHistory, solidFromAcquireTWithPaintMapWithCatch, intersections3D, shapeDivideHistory, mapPaintMap, solidFromAcquireWithPaintMapWithCatch)
 import qualified OpenCascade.BRepOffsetAPI.MakeOffsetShape as MakeOffsetShape
 import Control.Monad.IO.Class (liftIO)
-import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
+import OpenCascade.Inheritance (SubTypeOf(upcast))
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
 import qualified OpenCascade.BRepOffset.Mode as Mode
 import qualified OpenCascade.GeomAbs.JoinType as GeomAbs.JoinType
 import qualified OpenCascade.BRepBuilderAPI.MakeSolid as MakeSolid
 import qualified OpenCascade.TopoDS.Types as TopoDS
-import qualified OpenCascade.TopExp.Explorer as TopExp.Explorer
-import Control.Monad (when, filterM)
+import Control.Monad (filterM, forM_)
 import Foreign.Ptr (Ptr)
 import Data.Acquire (Acquire)
 import Waterfall.Internal.NearZero (nearZero)
 import Waterfall.Error (WaterfallError)
 import Data.Either (fromRight)
-import Waterfall.Internal.Edges (allSubShapesWithCopy)
-import Waterfall.Internal.FromOpenCascade (subShapes)
+import Waterfall.Internal.FromOpenCascade (subShapes, subShapesOf)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
-import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import Data.Maybe (isJust)
 import Waterfall.Internal.PaintHistory (remapWithBlendFunction)
 import Data.List.NonEmpty (NonEmpty)
@@ -61,19 +58,13 @@ import Data.Functor.Compose (Compose (..))
 import qualified OpenCascade.ShapeUpgrade.ShapeDivideContinuity as ShapeUpgrade.ShapeDivideContinuity
 import qualified OpenCascade.GeomAbs.Shape as GeomAbs.Shape
 import qualified OpenCascade.ShapeUpgrade.ShapeDivide as ShapeUpgrade.ShapeDivide
+import Data.Proxy (Proxy(..))
 
 combineShellsToSolid :: Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
 combineShellsToSolid s = do
-    explorer <- TopExp.Explorer.new s ShapeEnum.Shell
+    shells <- subShapes s
     makeSolid <- MakeSolid.new
-    let go = do
-            isMore <- liftIO $ TopExp.Explorer.more explorer
-            when isMore $ do
-                shell <- liftIO $ unsafeDowncast =<< TopExp.Explorer.value explorer
-                liftIO $ MakeSolid.add makeSolid shell
-                liftIO $ TopExp.Explorer.next explorer
-                go
-    go
+    liftIO $ forM_ shells (MakeSolid.add makeSolid)
     upcast <$> MakeSolid.solid makeSolid
 
 splitC0BSplines' :: PaintMap -> Ptr TopoDS.Shape -> Acquire (PaintMap, Ptr TopoDS.Shape)
@@ -131,8 +122,8 @@ tryOffsetWithToleranceWithPaint tolerance paintFn value solid
             . solidFromAcquireTWithPaintMapWithCatch
             $ traverse (offsetOneWithTolerance tolerance value paintFn (solidPaintMap continuousSolid))
             =<< fmap Compose
-            . traverse (allSubShapesWithCopy ShapeEnum.Shell)
-            =<< allSubShapesWithCopy ShapeEnum.Solid
+            . traverse (subShapesOf (Proxy @TopoDS.Shell))
+            =<< subShapesOf (Proxy @TopoDS.Solid)
             =<< acquireSolid continuousSolid
 
 -- | Version of `offsetWithTolerance` that returns an error on failure

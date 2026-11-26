@@ -11,6 +11,7 @@ module Waterfall.Internal.FromOpenCascade
 , containsShapeKind
 , HasShapeKind (shapeKind)
 , subShapes
+, subShapesOf
 ) where
 
 import qualified OpenCascade.GP.Pnt as GP.Pnt
@@ -97,9 +98,9 @@ instance HasShapeKind TopoDS.Solid where
 instance HasShapeKind TopoDS.Vertex where
     shapeKind _ = ShapeEnum.Vertex
 
-subShapes :: forall a. (HasShapeKind a, DiscriminatedSubTypeOf TopoDS.Shape a) => Ptr TopoDS.Shape -> Acquire [Ptr a]
-subShapes s = do 
-    explorer <- Explorer.new s (shapeKind (Proxy @a))
+subShapesOf :: forall a. (HasShapeKind a) => Proxy a -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
+subShapesOf proxy s = do 
+    explorer <- Explorer.new s (shapeKind proxy)
     let go acc = do
             isMore <- liftIO $ Explorer.more explorer
             if isMore 
@@ -109,11 +110,13 @@ subShapes s = do
                     (newAcc, add) <- case isPresent of 
                         Nothing -> do 
                             v' <- TopoDS.Shape.copy v
-                            v'' <- liftIO $ unsafeDowncast v'
                             newMap <- liftIO $ ShapeMap.addIfAbsent (v', ()) acc
-                            return (newMap, (v'':))
+                            return (newMap, (v':))
                         Just _ -> pure (acc, id) 
                     liftIO $ Explorer.next explorer
                     add <$> go newAcc
                 else return []
     go ShapeMap.empty
+
+subShapes :: forall a. (HasShapeKind a, DiscriminatedSubTypeOf TopoDS.Shape a) => Ptr TopoDS.Shape -> Acquire [Ptr a]
+subShapes = traverse (liftIO . unsafeDowncast) <=< subShapesOf (Proxy @a)

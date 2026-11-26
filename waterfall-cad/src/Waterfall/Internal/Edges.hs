@@ -2,7 +2,6 @@ module Waterfall.Internal.Edges
 ( edgeEndpoints
 , edgeValue
 , wireEndpoints
-, allSubShapesWithCopy
 , allWireEndpoints
 , allWires
 , allEdges
@@ -26,8 +25,6 @@ import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BRep.Tool as BRep.Tool
 import qualified OpenCascade.Geom.Curve as Geom.Curve
 import qualified OpenCascade.BRepTools.WireExplorer as WireExplorer
-import qualified OpenCascade.TopExp.Explorer as Explorer 
-import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import qualified OpenCascade.BRepLib as BRepLib
 import Waterfall.Internal.NearZero (nearZero)
@@ -83,25 +80,6 @@ allWireEndpoints wire = with (WireExplorer.fromWire =<< forwardWire wire) $ \exp
             else pure []
     runToEnd
 
-allSubShapesWithCopy :: ShapeEnum.ShapeEnum -> Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Shape]
-allSubShapesWithCopy t s = do 
-    explorer <- Explorer.new s t
-    let go acc = do
-            isMore <- liftIO $ Explorer.more explorer
-            if isMore 
-                then do
-                    v <- liftIO $ Explorer.value explorer
-                    isPresent <- liftIO $ ShapeMap.lookup acc v
-                    (newAcc, add) <- case isPresent of 
-                        Nothing -> do 
-                            v' <- TopoDS.Shape.copy v
-                            newMap <- liftIO $ ShapeMap.addIfAbsent (v', ()) acc
-                            return (newMap, (v':))
-                        Just _ -> pure (acc, id) 
-                    liftIO $ Explorer.next explorer
-                    add <$> go newAcc
-                else return []
-    go ShapeMap.empty
 
 allEdges :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Edge]
 allEdges = subShapes 

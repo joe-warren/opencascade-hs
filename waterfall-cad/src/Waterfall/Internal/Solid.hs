@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE TypeApplications #-}
 module Waterfall.Internal.Solid 
 ( Solid (..)
 , PaintMap (..)
@@ -59,7 +60,6 @@ import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import OpenCascade.Inheritance (SubTypeOf(..), upcast, unsafeDowncast)
 import Waterfall.Internal.Finalizers (acquireForeignPtr, fromAcquirePtrT, unsafeFromAcquire, unsafeFromAcquirePtr, unsafeFromAcquirePtrTWithCatch, unsafeFromAcquirePtrWithCatch, unsafeFromAcquirePtrT)
-import Waterfall.Internal.Edges (allSubShapesWithCopy)
 import Waterfall.Internal.ToOpenCascade (shapeSingletonList)
 import Data.Foldable (traverse_)
 import Data.Bifunctor.Flip (Flip (..))
@@ -67,14 +67,14 @@ import Waterfall.Error (WaterfallError)
 import Waterfall.Paint (Paint, paintIsDefined)
 import Data.Functor.Compose (Compose(..))
 import Control.Monad (filterM, forM_, (<=<))
-import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape, deduplicateTopoDSShapes, containsShapeKind, subShapes)
+import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape, deduplicateTopoDSShapes, containsShapeKind, subShapes, subShapesOf)
 import Foreign.ForeignPtr (ForeignPtr)
 import Control.DeepSeq (NFData (rnf), liftRnf, liftRnf2, rwhnf)
 import qualified OpenCascade.NCollection.List as NCollection.List
 import qualified OpenCascade.ShapeUpgrade.Types as ShapeUpgrade
 import qualified OpenCascade.ShapeBuild.ReShape as ShapeBuild.ReShape
 import qualified OpenCascade.ShapeUpgrade.ShapeDivide as ShapeBuild.ShapeDivide
-import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
+import Data.Proxy (Proxy(..))
 
 data PaintMap 
     = UniformPaint Paint
@@ -221,7 +221,7 @@ shapeDivideHistory shapeDivide = History
         recorded <- liftIO $ ShapeBuild.ReShape.isRecorded reshape shape
         if not recorded 
             then return []
-            else allSubShapesWithCopy ShapeEnum.Face
+            else subShapesOf (Proxy @TopoDS.Face)
                 =<< ShapeBuild.ReShape.apply reshape shape ShapeEnum.Face
     )
     (const . pure $ mempty)
