@@ -70,9 +70,13 @@ makeShape path = case closeLoop path of
 -- @
 -- shapePaths . makeShape ≡ pure
 -- @
--- 
--- Although this can only hold when the shape has one boundary path, 
--- and is not guaranteed
+--
+-- Although this only holds when the shape has one boundary path,
+-- the path is closed (because `makeShape` will close it otherwise),
+-- and the boundary path is counter-clockwise.
+-- A clockwise boundary path is reversed,
+-- and the start point may change.
+-- The specifics of this are not guaranteed.
 shapePaths :: Shape -> [Path2D] 
 shapePaths (Shape r) = fmap (Path2D . ComplexRawPath) . unsafeFromAcquirePtrT $ do
     s <- acquireForeignPtr r 
