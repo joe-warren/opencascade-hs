@@ -6,10 +6,13 @@ import qualified Waterfall.Solids as Solids
 import qualified Waterfall.Booleans as Booleans
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.Revolution as Revolution
+import qualified Waterfall.Sweep as Sweep
 import qualified Waterfall.TwoD.Shape as TwoD.Shape
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
+import qualified Waterfall.TwoD.Offset as TwoD.Offset
 import qualified Waterfall.Offset as Offset
-import Linear (V3 (..), V4 (..), unit, zero, _x, _z, (^*), normalize, identity, outer, (!-!))
+import qualified Waterfall.Path as Path
+import Linear (V2 (..), V3 (..), V4 (..), unit, zero, _x, _y, _z, (^*), normalize, identity, outer, (!-!))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import qualified Waterfall.Fillet as Fillet
@@ -175,6 +178,67 @@ solidTests = testGroup "Solid"
                     , ("intersections", 5, \a b -> Booleans.intersections [a, b])
                     , ("unions", 6, \a b -> Booleans.unions [a, b])
                     ]
+            ]
+        ]
+    , testGroup "Sweep"
+        [ testGroup "Should have a correct volume"
+            [ testGroup shapeName 
+                [ testCase ("axis-" <> axisName) $
+                    let path = Path.line zero axis
+                        sweeped = Sweep.sweep path shape
+                        prismed = Solids.prism 1 shape
+                    in assertApproxEqual 
+                            "Should be consistent with Prism" 
+                            1e-6 
+                            (Solids.volume prismed)
+                            (Solids.volume sweeped)
+                        <> assertApproxEqual 
+                            "Should be consistent with area" 
+                            1e-6 
+                            (TwoD.Shape.area shape)
+                            (Solids.volume sweeped)
+                | (axisName, axis) <- 
+                    [ ("X", unit _x)
+                    , ("Y", unit _y)
+                    , ("Z", unit _z)
+                    ]
+                ]
+            | (shapeName, shape) <-
+                [ ("square", TwoD.Shape.unitSquare)
+                , ("offset square", TwoD.Offset.offsetShape 0.2 $ TwoD.Shape.unitSquare)
+                , ("negative offset square", TwoD.Offset.offsetShape (-0.2) $ TwoD.Shape.unitSquare)
+                , ("offset polygon", TwoD.Offset.offsetShape 0.2 $ TwoD.Shape.unitPolygon 3)
+                , ("(offset square) minus circle", 
+                    TwoD.Offset.offsetShape 1 TwoD.Shape.unitSquare
+                        `Booleans.difference` TwoD.Transforms.uScale2D 0.25 TwoD.Shape.unitCircle
+                    )
+                , ("offset (square minus circle)", 
+                    TwoD.Offset.offsetShape 0.1 (
+                        TwoD.Shape.centeredSquare
+                            `Booleans.difference` TwoD.Transforms.uScale2D 0.25 TwoD.Shape.unitCircle
+                        )
+                    )
+                , ("(offset square) plus square", 
+                    TwoD.Offset.offsetShape 0.1 TwoD.Shape.centeredSquare
+                        <> TwoD.Transforms.translate2D (unit _x ^* 4) TwoD.Shape.centeredSquare
+                    )
+                , ("square minus circle", 
+                        TwoD.Shape.centeredSquare
+                            `Booleans.difference` TwoD.Transforms.uScale2D 0.25 TwoD.Shape.unitCircle
+                    )
+                , ("mirror (square minus circle)", 
+                    TwoD.Transforms.mirror2D (unit _x) (
+                        TwoD.Shape.centeredSquare
+                            `Booleans.difference` TwoD.Transforms.uScale2D 0.25 TwoD.Shape.unitCircle
+                        )
+                    )
+                , ("scale (square minus circle)", 
+                    TwoD.Transforms.scale2D (V2 1 2) (
+                        TwoD.Shape.centeredSquare
+                            `Booleans.difference` TwoD.Transforms.uScale2D 0.25 TwoD.Shape.unitCircle
+                        )
+                    )
+                ]
             ]
         ]
     ]

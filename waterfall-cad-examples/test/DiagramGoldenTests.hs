@@ -425,6 +425,13 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
                     profile = TwoD.Transforms.uScale2D 0.2 Shape.unitCircle
                 in Sweep.sweep path profile 
             )
+        , solidTest "curvy sweep of offset shape" "curvySweepOffsetShape.svg" 
+            ( Path2D.bezier (V2 0 0) (V2 0 (-10)) (V2 10 (-10)) (V2 10 0)
+                & Path.fromPath2D
+                & (`Sweep.sweep` 
+                    TwoD.Transforms.rotate2D pi
+                        (TwoD.Offset.offsetShape 0.5 (Shape.unitPolygon 3)))
+            )
         ]
     , GoldenGroup "Lofts"
         [ solidTest "loft squares" "loftSquares.svg" 

@@ -6,7 +6,7 @@ module Waterfall.Sweep
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, emptyPaintMap, solidFromAcquireTWithCatch)
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.Internal.Path.Common (RawPath (..))
-import Waterfall.Internal.Edges (wireTangentStart, wireEndpoints, allWires)
+import Waterfall.Internal.Edges (wireTangentStart, wireEndpoints)
 import Waterfall.Internal.Finalizers (acquireForeignPtr)
 import Waterfall.Internal.NearZero (nearZero)
 import Waterfall.Internal.FromOpenCascade (subShapes)
@@ -83,7 +83,7 @@ trySweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = fmap reassembl
                         . fmap not 
                         .  TopoDS.Shape.isSame (upcast outerWire)
                         . upcast
-                    ) =<< allWires (upcast face)
+                    ) =<< subShapes (upcast face)
                 (Just .) .  (:|) <$> shapeForWire outerWire
                     <*> forM innerWires shapeForWire
 trySweep _ _ = Right mempty

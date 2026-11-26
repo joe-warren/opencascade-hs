@@ -72,6 +72,8 @@
 ![curvy sweep concentric squares](curvySweepConcentricSquares.svg)
 #### sweep squares
 ![sweep squares](sweepSquare.svg)
+#### curvy sweep of offset shape
+![curvy sweep of offset shape](curvySweepOffsetShape.svg)
 
 ## Lofts
 #### loft squares
