@@ -12,6 +12,7 @@ module OpenCascade.BRepBuilderAPI.MakeFace
 , isDone
 , error
 , fromPln
+, fromPlnAndWire
 ) where
 
 import Prelude hiding (error)
@@ -111,6 +112,19 @@ foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_M
 
 fromPln :: Ptr GP.Pln -> Acquire (Ptr MakeFace)
 fromPln pln = mkAcquire (wrapException $ rawFromPln pln) deleteMakeFace
+
+-- fromPlnAndWire
+
+foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_new_BRepBuilderAPI_MakeFace_fromPlnAndWire" rawFromPlnAndWire
+    :: Ptr GP.Pln
+    -> Ptr TopoDS.Wire
+    -> CBool
+    -> Ptr CInt
+    -> Ptr (Ptr ())
+    -> IO (Ptr MakeFace)
+
+fromPlnAndWire :: Ptr GP.Pln -> Ptr TopoDS.Wire -> Bool -> Acquire (Ptr MakeFace)
+fromPlnAndWire pln wire inside = mkAcquire (wrapException $ rawFromPlnAndWire pln wire (boolToCBool inside)) deleteMakeFace
 
 -- add
 foreign import capi unsafe "hs_BRepBuilderAPI_MakeFace.h hs_BRepBuilderAPI_MakeFace_Add" rawAdd
