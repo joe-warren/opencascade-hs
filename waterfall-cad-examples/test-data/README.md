@@ -30,6 +30,7 @@
 ![Loose Parts](loose-parts.svg)
 
 ## Transforms
+### Three-D
 #### Negative Scaled Cube
 ![Negative Scaled Cube](negativeScaledCube.svg)
 #### Negative Scaled Cube II
@@ -42,16 +43,23 @@
 ![scale near unity](nearUnityScale.svg)
 #### orthogonal matrix
 ![orthogonal matrix](orthogonalMatrix.svg)
-#### scale near unity (twoD)
-![scale near unity (twoD)](nearUnityScaleTwoD.svg)
-#### orthogonal matrix (twoD)
-![orthogonal matrix (twoD)](orthogonalMatrixTwoD.svg)
-#### negative determinant GTrsf (twoD)
-![negative determinant GTrsf (twoD)](negativeDeterminantGTrsfTwoD.svg)
-#### negative non-uniform scale (twoD)
-![negative non-uniform scale (twoD)](negativeNonUniformScaleTwoD.svg)
-#### negative uniform scale (twoD)
-![negative uniform scale (twoD)](negativeUniformScaleTwoD.svg)
+
+### Two-D
+#### scale near unity
+![scale near unity](nearUnityScaleTwoD.svg)
+#### orthogonal matrix
+![orthogonal matrix](orthogonalMatrixTwoD.svg)
+#### negative determinant GTrsf
+![negative determinant GTrsf](negativeDeterminantGTrsfTwoD.svg)
+#### negative non-uniform scale
+![negative non-uniform scale](negativeNonUniformScaleTwoD.svg)
+#### negative uniform scale
+![negative uniform scale](negativeUniformScaleTwoD.svg)
+#### negative non-uniform scale with hole
+![negative non-uniform scale with hole](negativeNonUniformScaleWithHoleTwoD.svg)
+#### negative uniform scale with hole
+![negative uniform scale with hole](negativeUniformScaleWithHoleTwoD.svg)
+
 
 ## Sweeps
 #### curvy sweep
@@ -111,14 +119,60 @@
 ### Two-D
 #### offset square
 ![offset square](offsetSquare.svg)
+#### offset rectangle
+![offset rectangle](offsetRectangle.svg)
+#### offset rectangle negative
+![offset rectangle negative](offsetRectangleNegative.svg)
+#### offset ellipse
+![offset ellipse](offsetEllipse.svg)
+#### offset ellipse negative
+![offset ellipse negative](offsetEllipseNegative.svg)
+#### offset rectangle and ellipse
+![offset rectangle and ellipse](offsetRectangleEllipse.svg)
 #### offset cross positive
 ![offset cross positive](offsetCrossPositive.svg)
 #### offset cross negative
 ![offset cross negative](offsetCrossNegative.svg)
 #### offset hole positive
 ![offset hole positive](offsetHolePositive.svg)
+#### offset hole scaled
+![offset hole scaled](offsetHoleScaled.svg)
 #### offset hole negative
 ![offset hole negative](offsetHoleNegative.svg)
+#### offset curved shape positive
+![offset curved shape positive](offsetCurvedShapePositive.svg)
+#### offset curved shape negative
+![offset curved shape negative](offsetCurvedShapeNegative.svg)
+#### offset curved shape scaled negative
+![offset curved shape scaled negative](offsetCurvedShapeScaledNegative.svg)
+#### offset square with curved hole negative
+![offset square with curved hole negative](offsetSquareCurvedHoleNegative.svg)
+#### offset square hole scaled tall negative
+![offset square hole scaled tall negative](offsetSquareHoleScaledTallNegative.svg)
+#### offset hole breaks through negative
+![offset hole breaks through negative](offsetHoleBreaksThroughNegative.svg)
+#### offset ring with island positive
+![offset ring with island positive](offsetRingWithIslandPositive.svg)
+#### offset ring with island negative
+![offset ring with island negative](offsetRingWithIslandNegative.svg)
+#### offset round tripped scaled square
+![offset round tripped scaled square](offsetRoundTrippedScaledSquare.svg)
+#### offset round tripped scaled circle
+![offset round tripped scaled circle](offsetRoundTrippedScaledCircle.svg)
+#### offset curved shape with square hole negative
+![offset curved shape with square hole negative](offsetCurvedShapeSquareHoleNegative.svg)
+#### offset square hole scaled wide negative
+![offset square hole scaled wide negative](offsetSquareHoleScaledWideNegative.svg)
+#### offset square hole sheared negative
+![offset square hole sheared negative](offsetSquareHoleShearedNegative.svg)
+#### offset square hole mirrored and scaled negative
+![offset square hole mirrored and scaled negative](offsetSquareHoleMirroredScaledNegative.svg)
+#### offset scaled paths with hole negative
+![offset scaled paths with hole negative](offsetScaledPathsHoleNegative.svg)
+#### offset D with D hole scaled negative
+![offset D with D hole scaled negative](offsetDWithDHoleScaledNegative.svg)
+#### offset two scaled holed squares negative
+![offset two scaled holed squares negative](offsetTwoScaledHoledSquaresNegative.svg)
 
 
 ## Booleans

@@ -32,6 +32,12 @@ import qualified OpenCascade.GP.Vec as GP.Vec
 import qualified OpenCascade.BRepBuilderAPI.MakeShape  as BRepBuilderAPI.MakeShape
 import qualified OpenCascade.BRepBuilderAPI.Transform  as BRepBuilderAPI.Transform
 import qualified OpenCascade.BRepBuilderAPI.GTransform  as BRepBuilderAPI.GTransform
+import qualified OpenCascade.BRepBuilderAPI.MakeFace as BRepBuilderAPI.MakeFace
+import qualified OpenCascade.TopoDS as TopoDS
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
+import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
+import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
+import qualified OpenCascade.BRepTools as BRepTools
 import OpenCascade.Inheritance (upcast, unsafeDowncast)
 import Control.Monad.IO.Class (liftIO)
 import Data.Acquire
@@ -40,11 +46,12 @@ import Waterfall.TwoD.Internal.Shape (Shape(..))
 import Data.Function ((&))
 import Control.Lens ((.~), (%~), Iso', iso, (^.), over)
 import Waterfall.Internal.Path.Common (RawPath(..))
-import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
-import Control.Monad (when)
+import Waterfall.Internal.FromOpenCascade (subShapes)
 import Waterfall.Path (pathEndpoints)
 import Waterfall.Internal.Edges (forwardWireAndStripZeroLengthEdges)
 import Data.Foldable (traverse_)
+import Control.Monad (filterM, forM_, when, (<=<))
+import qualified OpenCascade.GP.Pln as GP.Pln
 
 -- | Typeclass for objects that can be manipulated in 2D space
 class Transformable2D a where
@@ -93,7 +100,9 @@ fromTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquirePtr $ do
     builder <- BRepBuilderAPI.Transform.fromShapeTrsfAndCopy shape trsf True 
     isNegative <- liftIO $ GP.Trsf.isNegative trsf
     res <- BRepBuilderAPI.MakeShape.shape (upcast builder)
-    if isNegative then TopoDS.Shape.reversed res else pure res
+    if isNegative 
+        then planariseFaces True =<< TopoDS.Shape.reversed res 
+        else pure res
     
 fromGTrsfPath :: (V2 Double -> V2 Double) -> Acquire (Ptr GP.GTrsf) -> Path2D -> Path2D
 fromGTrsfPath f mkTrsf p@(Path2D (ComplexRawPath rawPath)) =
@@ -111,6 +120,27 @@ fromGTrsfPath f mkTrsf p@(Path2D (ComplexRawPath rawPath)) =
 fromGTrsfPath f _ (Path2D (SinglePointRawPath v)) = Path2D . SinglePointRawPath $ (v & _xy %~ f)
 fromGTrsfPath _ _ (Path2D EmptyRawPath) = Path2D EmptyRawPath
 
+planariseFaces :: Bool -> Ptr TopoDS.Shape -> Acquire (Ptr TopoDS.Shape)
+planariseFaces reversed s = do
+    faces <- subShapes s
+    compoundBuilder <- TopoDS.Builder.new
+    compound <- TopoDS.Compound.new
+    liftIO $ TopoDS.Builder.makeCompound compoundBuilder compound
+    pln <- GP.Pln.new
+    let reverseMaybe = 
+            if reversed 
+                then liftIO . unsafeDowncast <=< TopoDS.Shape.reversed . upcast 
+                else pure
+    forM_ faces $ \f -> do
+        outer <- BRepTools.outerWire f
+        wires <- subShapes (upcast f)
+        inner <- filterM (liftIO . fmap not . TopoDS.Shape.isSame (upcast outer) . upcast) wires
+        builder <- BRepBuilderAPI.MakeFace.fromPlnAndWire pln outer True
+        forM_ inner (liftIO . BRepBuilderAPI.MakeFace.add builder <=< reverseMaybe)
+        liftIO . TopoDS.Builder.add compoundBuilder (upcast compound) . upcast
+            =<< BRepBuilderAPI.MakeFace.face builder
+    return . upcast $ compound
+
 fromGTrsfShape :: Acquire (Ptr GP.GTrsf) -> Shape -> Shape
 fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquirePtr $ do 
     shape <- acquireForeignPtr theRawShape 
@@ -119,7 +149,7 @@ fromGTrsfShape mkTrsf (Shape theRawShape) = Shape . unsafeFromAcquirePtr $ do
     res <- BRepBuilderAPI.MakeShape.shape 
         =<< fmap upcast
         (BRepBuilderAPI.GTransform.fromShapeGTrsfAndCopy shape trsf True)
-    if isNegative then TopoDS.Shape.reversed res else pure res
+    planariseFaces isNegative =<< if isNegative then TopoDS.Shape.reversed res else pure res
 
 isOrthogonalAndScale :: M22 Double -> Bool
 isOrthogonalAndScale m =

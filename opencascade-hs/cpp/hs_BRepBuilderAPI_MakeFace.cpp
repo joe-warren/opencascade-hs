@@ -20,6 +20,19 @@ BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace_fromPln(
     });
 }
 
+BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace_fromPlnAndWire(
+        gp_Pln * pln, TopoDS_Wire* wire, bool inside,
+        HSExceptionType* exType,
+        void** exPtr
+){
+    return hs_handleEx(
+        exType,
+        exPtr,
+        [pln, wire, inside]{
+        return new BRepBuilderAPI_MakeFace(*pln, *wire, inside);
+    });
+}
+
 void hs_delete_BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeFace * builder){
     delete builder;
 }

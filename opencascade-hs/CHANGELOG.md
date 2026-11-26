@@ -42,6 +42,7 @@ and this project adheres to the
 - Added `OpenCascade.BRepAlgoAPI.BuilderAlgo` and `OpenCascade.BRepAlgoAPI.BooleanOperation`
 - Added nullary `new` constructor to `OpenCascade.BRepAlgoAPI.Fuse`, `OpenCascade.BRepAlgoAPI.Cut` and `OpenCascade.BRepAlgoAPI.Common`
 - Added `OpenCascade.BRepTools.clean`
+- Added `OpenCascade.BRepBuilderAPI.MakeFace.fromPlnAndWire`
 
 ### Changed
 

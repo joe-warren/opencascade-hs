@@ -47,6 +47,12 @@ BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace_fromPln(
         void** exPtr
 );
 
+BRepBuilderAPI_MakeFace * hs_new_BRepBuilderAPI_MakeFace_fromPlnAndWire(
+    gp_Pln * pln, TopoDS_Wire* wire, bool inside,
+    HSExceptionType* exType,
+    void** exPtr
+);
+
 void hs_BRepBuilderAPI_MakeFace_Add(
     BRepBuilderAPI_MakeFace* builder, TopoDS_Wire* wire,
     HSExceptionType* exType,

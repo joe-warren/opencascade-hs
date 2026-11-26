@@ -155,8 +155,6 @@ compareOutput inputPath expected actual =
         let (expectedRenderedCropped, actualRenderedCropped) = cropToSmallest expectedRendered actualRendered
             (width, height) = size expectedRenderedCropped
 
-        
-
         let mismatchedCount = getSum $
                 foldMapOf 
                     zippingTraversal
@@ -324,53 +322,71 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
         , smallSolidTest "Loose Parts" "loose-parts.svg" LoosePartsExample.loosePartsExample
         ]
     , GoldenGroup "Transforms" 
-        [ solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
-            (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
-        , solidTest "Negative Scaled Cube II" "negativeScaledCube-II.svg" 
-            (Transforms.scale (negate $ V3 1 1 1) Solids.unitCube)
-        , solidTest "Negative Scaled Cube III" "negativeScaledCube-III.svg" 
-            (Transforms.scale (V3 (negate 10) (negate 10) 10) Solids.unitCube)
-        , solidTest "Negative Scaled Cuboid" "negativeScaledCuboid.svg" 
-            (Transforms.scale (V3 (negate 1) 2 3) Solids.unitCube)
-        , solidTest "scale near unity" "nearUnityScale.svg" 
-            . Solids.colourSolid Colour.red $
-            (Transforms.scale (V3 0.9999999999999998 1 1) Solids.unitCylinder
-                <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
-            )
-        , solidTest "orthogonal matrix" "orthogonalMatrix.svg"
-            . Solids.colourSolid Colour.red $
-            -- rotation by 1 radian around the -y axis
-            ( Transforms.matTransform 
-                (V3 (V4 (sin 1) 0 (cos 1) 0)
-                    (V4 0 1 0 0)
-                    (V4 (cos 1) 0 (-sin 1) 0))
-                Solids.unitCylinder
-                <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
-            )
-        , shapeTest "scale near unity (twoD)" "nearUnityScaleTwoD.svg" 
-            ( TwoD.Transforms.scale2D (V2 0.9999999999999998 1) Shape.unitCircle
-                <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
-            )
-        , shapeTest "orthogonal matrix (twoD)" "orthogonalMatrixTwoD.svg" 
-            ( TwoD.Transforms.matTransform2D 
-                (V2 (V3 (sin 1) (cos 1) 0)
-                    (V3 (cos 1) (-sin 1) 0)
+        [ GoldenGroup "Three-D"
+            [ solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
+                (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
+            , solidTest "Negative Scaled Cube II" "negativeScaledCube-II.svg" 
+                (Transforms.scale (negate $ V3 1 1 1) Solids.unitCube)
+            , solidTest "Negative Scaled Cube III" "negativeScaledCube-III.svg" 
+                (Transforms.scale (V3 (negate 10) (negate 10) 10) Solids.unitCube)
+            , solidTest "Negative Scaled Cuboid" "negativeScaledCuboid.svg" 
+                (Transforms.scale (V3 (negate 1) 2 3) Solids.unitCube)
+            , solidTest "scale near unity" "nearUnityScale.svg" 
+                . Solids.colourSolid Colour.red $
+                (Transforms.scale (V3 0.9999999999999998 1 1) Solids.unitCylinder
+                    <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
                 )
-            Shape.unitSquare
-                <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
-            )
-        , shapeTest "negative determinant GTrsf (twoD)" "negativeDeterminantGTrsfTwoD.svg"
-            ( TwoD.Transforms.matTransform2D (V2 (V3 1 1 0) (V3 1 0 0)) Shape.centeredSquare
-                <> TwoD.Transforms.translate2D (V2 0.5 0) Shape.centeredSquare
-            )
-        , shapeTest "negative non-uniform scale (twoD)" "negativeNonUniformScaleTwoD.svg"
-            ( TwoD.Transforms.scale2D (V2 2 (-1)) Shape.unitSquare
-                <> TwoD.Transforms.translate2D (V2 1.5 0) Shape.centeredSquare
-            )
-        , shapeTest "negative uniform scale (twoD)" "negativeUniformScaleTwoD.svg"
-            ( TwoD.Transforms.scale2D (V2 (-1) (-1)) Shape.unitSquare
-                <> TwoD.Transforms.translate2D (V2 (-1) 0) Shape.centeredSquare
-            )
+            , solidTest "orthogonal matrix" "orthogonalMatrix.svg"
+                . Solids.colourSolid Colour.red $
+                -- rotation by 1 radian around the -y axis
+                ( Transforms.matTransform 
+                    (V3 (V4 (sin 1) 0 (cos 1) 0)
+                        (V4 0 1 0 0)
+                        (V4 (cos 1) 0 (-sin 1) 0))
+                    Solids.unitCylinder
+                    <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
+                )
+            ]
+        , GoldenGroup "Two-D"
+            [ shapeTest "scale near unity" "nearUnityScaleTwoD.svg" 
+                ( TwoD.Transforms.scale2D (V2 0.9999999999999998 1) Shape.unitCircle
+                    <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
+                )
+            , shapeTest "orthogonal matrix" "orthogonalMatrixTwoD.svg" 
+                ( TwoD.Transforms.matTransform2D 
+                    (V2 (V3 (sin 1) (cos 1) 0)
+                        (V3 (cos 1) (-sin 1) 0)
+                    )
+                Shape.unitSquare
+                    <> TwoD.Transforms.translate2D (V2 0 0.5) Shape.unitSquare
+                )
+            , shapeTest "negative determinant GTrsf" "negativeDeterminantGTrsfTwoD.svg"
+                ( TwoD.Transforms.matTransform2D (V2 (V3 1 1 0) (V3 1 0 0)) Shape.centeredSquare
+                    <> TwoD.Transforms.translate2D (V2 0.5 0) Shape.centeredSquare
+                )
+            , shapeTest "negative non-uniform scale" "negativeNonUniformScaleTwoD.svg"
+                ( TwoD.Transforms.scale2D (V2 2 (-1)) Shape.unitSquare
+                    <> TwoD.Transforms.translate2D (V2 1.5 0) Shape.centeredSquare
+                )
+            , shapeTest "negative uniform scale" "negativeUniformScaleTwoD.svg"
+                ( TwoD.Transforms.scale2D (V2 (-1) (-1)) Shape.unitSquare
+                    <> TwoD.Transforms.translate2D (V2 (-1) 0) Shape.centeredSquare
+                )
+            , shapeTest "negative non-uniform scale with hole" "negativeNonUniformScaleWithHoleTwoD.svg"
+                ( Shape.centeredSquare 
+                    & TwoD.Transforms.uScale2D 2.5
+                    & (`Booleans.difference` Shape.unitCircle)
+                    & TwoD.Transforms.scale2D (V2 (-1) 1.2)
+                    & (<> Shape.centeredSquare)
+                )
+            , shapeTest "negative uniform scale with hole" "negativeUniformScaleWithHoleTwoD.svg"
+                ( Shape.centeredSquare 
+                    & TwoD.Transforms.uScale2D 2.5
+                    & (`Booleans.difference` Shape.unitCircle)
+                    & TwoD.Transforms.scale2D (V2 (-1) 1)
+                    & (<> Shape.centeredSquare)
+                )
+            ]
         ]
     , GoldenGroup "Sweeps"
         [ solidTest "curvy sweep" "curvySweep.svg" 
@@ -539,9 +555,62 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
                     & Transforms.rotate (unit _x) (pi/2)
             )
         ]
-        , GoldenGroup "Two-D"
-            [ diagramTest "offset square" "offsetSquare.svg" (
+        , GoldenGroup "Two-D" $
+            let curvedPath :: Path2D.Path2D
+                curvedPath = Path2D.pathFrom (V2 (-1) 0)
+                        [ Path2D.bezierTo (V2 (-1) 1) (V2 (-0.5) 1.5) (V2 0 1)
+                        , Path2D.bezierTo (V2 0.5 0.5) (V2 1 1) (V2 1 0)
+                        , Path2D.bezierTo (V2 1 (-1)) (V2 0.5 (-1.2)) (V2 0 (-1))
+                        , Path2D.bezierTo (V2 (-0.5) (-0.8)) (V2 (-1) (-1)) (V2 (-1) 0)
+                      ]
+                squareWithSquareHole :: Shape
+                squareWithSquareHole =
+                        TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare
+                            `Booleans.difference` TwoD.Transforms.uScale2D 0.6 Shapes.centeredSquare
+                ringWithIsland :: Shape
+                ringWithIsland =
+                        (TwoD.Transforms.uScale2D 3 Shapes.centeredSquare
+                            `Booleans.difference` TwoD.Transforms.uScale2D 1.6 Shapes.centeredSquare)
+                            <> TwoD.Transforms.uScale2D 0.4 (Shape.makeShape curvedPath)
+
+            in [ diagramTest "offset square" "offsetSquare.svg" (
                 Shapes.unitSquare
+                    & TwoD.Offset.offsetShape 0.25
+                    & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
+                    & TwoD.Transforms.scale2D 50
+                )
+            , diagramTest "offset rectangle" "offsetRectangle.svg" (
+                Shapes.unitSquare
+                    & TwoD.Transforms.scale2D (V2 1.2 3.4)
+                    & TwoD.Offset.offsetShape 0.25
+                    & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
+                    & TwoD.Transforms.scale2D 50
+                )
+            , diagramTest "offset rectangle negative" "offsetRectangleNegative.svg" (
+                Shapes.unitSquare
+                    & TwoD.Transforms.scale2D (V2 1.2 3.4)
+                    & TwoD.Offset.offsetShape (-0.25)
+                    & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
+                    & TwoD.Transforms.scale2D 50
+                )
+            , diagramTest "offset ellipse" "offsetEllipse.svg" (
+                Shapes.unitCircle
+                    & TwoD.Transforms.scale2D (V2 1.2 3.4)
+                    & TwoD.Offset.offsetShape 0.25
+                    & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
+                    & TwoD.Transforms.scale2D 50
+                )
+            , diagramTest "offset ellipse negative" "offsetEllipseNegative.svg" (
+                Shapes.unitCircle
+                    & TwoD.Transforms.scale2D (V2 1.2 3.4)
+                    & TwoD.Offset.offsetShape (-0.25)
+                    & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
+                    & TwoD.Transforms.scale2D 50
+                )
+            , diagramTest "offset rectangle and ellipse" "offsetRectangleEllipse.svg" (
+                Shapes.unitSquare
+                    & (<> TwoD.Transforms.translate2D (unit _x ^* 2.5) Shapes.unitCircle)
+                    & TwoD.Transforms.scale2D (V2 1.2 3.4)
                     & TwoD.Offset.offsetShape 0.25
                     & Diagram.shapeDiagram (Paint.paintWithColour Colour.green)
                     & TwoD.Transforms.scale2D 50
@@ -567,12 +636,116 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
                     & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
                     & TwoD.Transforms.scale2D 50
                 )
+            , diagramTest "offset hole scaled" "offsetHoleScaled.svg" (
+                (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare 
+                    `Booleans.difference` Shapes.unitCircle)
+                    & TwoD.Transforms.scale2D (V2 1.25 1.5)
+                    & TwoD.Offset.offsetShape 0.25
+                    & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
+                    & TwoD.Transforms.scale2D 50
+                )
             , diagramTest "offset hole negative" "offsetHoleNegative.svg" (
                 (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare 
                     `Booleans.difference` Shapes.unitCircle)
                     & TwoD.Offset.offsetShape (negate 0.1)
                     & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
                     & TwoD.Transforms.scale2D 50
+                )
+            , shapeTest "offset curved shape positive" "offsetCurvedShapePositive.svg" (
+                Shape.makeShape curvedPath
+                    & TwoD.Offset.offsetShape 0.25
+                )
+            , shapeTest "offset curved shape negative" "offsetCurvedShapeNegative.svg" (
+                Shape.makeShape curvedPath
+                    & TwoD.Offset.offsetShape (-0.25)
+                )
+            , shapeTest "offset curved shape scaled negative" "offsetCurvedShapeScaledNegative.svg" (
+                Shape.makeShape curvedPath
+                    & TwoD.Transforms.scale2D (V2 1.5 1)
+                    & TwoD.Offset.offsetShape (-0.1)
+                )
+            , shapeTest "offset square with curved hole negative" "offsetSquareCurvedHoleNegative.svg" (
+                (TwoD.Transforms.uScale2D 3 Shapes.centeredSquare
+                    `Booleans.difference` TwoD.Transforms.uScale2D 0.6 (Shape.makeShape curvedPath))
+                    & TwoD.Offset.offsetShape (-0.1)
+                )
+            , shapeTest "offset square hole scaled tall negative" "offsetSquareHoleScaledTallNegative.svg" (
+                squareWithSquareHole
+                    & TwoD.Transforms.scale2D (V2 1 1.5)
+                    & TwoD.Offset.offsetShape (-0.1)
+                )
+            , shapeTest "offset hole breaks through negative" "offsetHoleBreaksThroughNegative.svg" (
+                (TwoD.Transforms.uScale2D 2.2 Shapes.centeredSquare
+                    `Booleans.difference` TwoD.Transforms.translate2D (V2 0.6 0) (TwoD.Transforms.uScale2D 0.4 Shapes.unitCircle))
+                    & TwoD.Offset.offsetShape (-0.2)
+                )
+            , shapeTest "offset ring with island positive" "offsetRingWithIslandPositive.svg" (
+                ringWithIsland
+                    & TwoD.Offset.offsetShape 0.25
+                )
+            , shapeTest "offset ring with island negative" "offsetRingWithIslandNegative.svg" (
+                ringWithIsland
+                    & TwoD.Offset.offsetShape (-0.1)
+                )
+            , shapeTest "offset round tripped scaled square" "offsetRoundTrippedScaledSquare.svg" (
+                Shapes.centeredSquare
+                    & TwoD.Transforms.scale2D (V2 1.5 1)
+                    & foldMap Shape.makeShape . Shape.shapePaths
+                    & TwoD.Offset.offsetShape 0.25
+                )
+            , shapeTest "offset round tripped scaled circle" "offsetRoundTrippedScaledCircle.svg" (
+                Shapes.unitCircle
+                    & TwoD.Transforms.scale2D (V2 1.5 1)
+                    & foldMap Shape.makeShape . Shape.shapePaths
+                    & TwoD.Offset.offsetShape 0.25
+                )
+            , shapeTest "offset curved shape with square hole negative" "offsetCurvedShapeSquareHoleNegative.svg" (
+                (Shape.makeShape curvedPath
+                    `Booleans.difference` TwoD.Transforms.uScale2D 0.5 Shapes.centeredSquare)
+                    & TwoD.Offset.offsetShape (-0.1)
+                )
+            , shapeTest "offset square hole scaled wide negative" "offsetSquareHoleScaledWideNegative.svg" (
+                squareWithSquareHole
+                    & TwoD.Transforms.scale2D (V2 1.5 1)
+                    & TwoD.Offset.offsetShape (-0.1)
+                )
+            , shapeTest "offset square hole sheared negative" "offsetSquareHoleShearedNegative.svg" (
+                squareWithSquareHole
+                    & TwoD.Transforms.matTransform2D (V2 (V3 1 0.5 0) (V3 0 1.5 0))
+                    & TwoD.Offset.offsetShape (-0.1)
+                )
+            , shapeTest "offset square hole mirrored and scaled negative" "offsetSquareHoleMirroredScaledNegative.svg" (
+                squareWithSquareHole
+                    & TwoD.Transforms.scale2D (V2 (-1.5) 1)
+                    & TwoD.Offset.offsetShape (-0.1)
+                )
+            , shapeTest "offset scaled paths with hole negative" "offsetScaledPathsHoleNegative.svg" (
+                let square :: Double -> Path2D.Path2D
+                    square s = Path2D.pathFrom (V2 (-s) (-s))
+                        [ Path2D.lineTo (V2 s (-s))
+                        , Path2D.lineTo (V2 s s)
+                        , Path2D.lineTo (V2 (-s) s)
+                        , Path2D.lineTo (V2 (-s) (-s))
+                        ]
+                    scaledSquare = Shape.makeShape . TwoD.Transforms.scale2D (V2 1.5 1) . square
+                in (scaledSquare 1.1 `Booleans.difference` scaledSquare 0.3)
+                    & TwoD.Offset.offsetShape (-0.1)
+                )
+            , shapeTest "offset D with D hole scaled negative" "offsetDWithDHoleScaledNegative.svg" (
+                let dShape = Shape.makeShape $ Path2D.pathFrom (V2 (-1) (-1))
+                        [ Path2D.lineTo (V2 0 (-1))
+                        , Path2D.bezierTo (V2 1.5 (-1)) (V2 1.5 1) (V2 0 1)
+                        , Path2D.lineTo (V2 (-1) 1)
+                        , Path2D.lineTo (V2 (-1) (-1))
+                        ]
+                in (dShape `Booleans.difference` TwoD.Transforms.uScale2D 0.3 dShape)
+                    & TwoD.Transforms.scale2D (V2 1.5 1)
+                    & TwoD.Offset.offsetShape (-0.1)
+                )
+            , shapeTest "offset two scaled holed squares negative" "offsetTwoScaledHoledSquaresNegative.svg" (
+                TwoD.Transforms.scale2D (V2 1.5 1) squareWithSquareHole
+                    & ((<>) <*> TwoD.Transforms.translate2D (V2 4 0))
+                    & TwoD.Offset.offsetShape (-0.1)
                 )
             ]
         ]

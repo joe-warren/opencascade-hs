@@ -58,22 +58,47 @@ data-files:
     test-data/nearUnityScaleTwoD.svg
     test-data/negativeDeterminantGTrsfTwoD.svg
     test-data/negativeNonUniformScaleTwoD.svg
+    test-data/negativeNonUniformScaleWithHoleTwoD.svg
     test-data/negativeScaledCube-II.svg
     test-data/negativeScaledCube-III.svg
     test-data/negativeScaledCube.svg
     test-data/negativeScaledCuboid.svg
     test-data/negativeUniformScaleTwoD.svg
+    test-data/negativeUniformScaleWithHoleTwoD.svg
     test-data/noopFilletCube.svg
     test-data/offset.svg
     test-data/offsetCrossNegative.svg
     test-data/offsetCrossPositive.svg
+    test-data/offsetCurvedShapeNegative.svg
+    test-data/offsetCurvedShapePositive.svg
+    test-data/offsetCurvedShapeScaledNegative.svg
+    test-data/offsetCurvedShapeSquareHoleNegative.svg
+    test-data/offsetDWithDHoleScaledNegative.svg
+    test-data/offsetEllipse.svg
+    test-data/offsetEllipseNegative.svg
     test-data/offsetHole.svg
+    test-data/offsetHoleBreaksThroughNegative.svg
     test-data/offsetHoleNegative.svg
     test-data/offsetHolePositive.svg
+    test-data/offsetHoleScaled.svg
     test-data/offsetOfCompound.svg
     test-data/offsetOfScaledCylinder.svg
     test-data/offsetOfThroughHole.svg
+    test-data/offsetRectangle.svg
+    test-data/offsetRectangleEllipse.svg
+    test-data/offsetRectangleNegative.svg
+    test-data/offsetRingWithIslandNegative.svg
+    test-data/offsetRingWithIslandPositive.svg
+    test-data/offsetRoundTrippedScaledCircle.svg
+    test-data/offsetRoundTrippedScaledSquare.svg
+    test-data/offsetScaledPathsHoleNegative.svg
     test-data/offsetSquare.svg
+    test-data/offsetSquareCurvedHoleNegative.svg
+    test-data/offsetSquareHoleMirroredScaledNegative.svg
+    test-data/offsetSquareHoleScaledTallNegative.svg
+    test-data/offsetSquareHoleScaledWideNegative.svg
+    test-data/offsetSquareHoleShearedNegative.svg
+    test-data/offsetTwoScaledHoledSquaresNegative.svg
     test-data/orthogonalMatrix.svg
     test-data/orthogonalMatrixTwoD.svg
     test-data/paintedSphere.svg

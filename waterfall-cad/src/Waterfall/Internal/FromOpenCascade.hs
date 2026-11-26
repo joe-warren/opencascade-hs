@@ -1,4 +1,7 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Waterfall.Internal.FromOpenCascade
 ( gpPntToV3
 , gpVecToV3
@@ -6,6 +9,8 @@ module Waterfall.Internal.FromOpenCascade
 , shapesFromListOfShape
 , deduplicateTopoDSShapes
 , containsShapeKind
+, HasShapeKind (shapeKind)
+, subShapes
 ) where
 
 import qualified OpenCascade.GP.Pnt as GP.Pnt
@@ -15,6 +20,7 @@ import qualified OpenCascade.GP as GP
 import qualified OpenCascade.NCollection as NCollection
 import qualified OpenCascade.NCollection.List.Iterator as NCollection.List.Iterator
 import qualified OpenCascade.TopoDS as TopoDS 
+import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import Linear (V3 (..))
 import Foreign.Ptr
 import Data.Acquire (Acquire)
@@ -25,8 +31,11 @@ import Data.Maybe (isJust)
 import Data.Foldable (foldrM)
 import Control.DeepSeq (NFData)
 import OpenCascade.TopAbs (ShapeEnum)
+import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.TopExp.Explorer as Explorer
 import Control.Monad ((<=<))
+import OpenCascade.Inheritance (unsafeDowncast, DiscriminatedSubTypeOf)
+import Data.Proxy (Proxy (Proxy))
     
 gpPntToV3 :: Ptr GP.Pnt -> IO (V3 Double)
 gpPntToV3 pnt = V3 <$> GP.Pnt.getX pnt <*> GP.Pnt.getY pnt <*> GP.Pnt.getZ pnt
@@ -66,3 +75,45 @@ deduplicateTopoDSShapes toShape ss =
 containsShapeKind :: ShapeEnum -> Ptr TopoDS.Shape -> Acquire Bool
 containsShapeKind kind = 
     liftIO . Explorer.more <=< (`Explorer.new` kind)
+
+class HasShapeKind a where
+    shapeKind :: Proxy a -> ShapeEnum
+
+instance HasShapeKind TopoDS.Face where
+    shapeKind _ = ShapeEnum.Face
+
+instance HasShapeKind TopoDS.Wire where
+    shapeKind _ = ShapeEnum.Wire
+
+instance HasShapeKind TopoDS.Edge where
+    shapeKind _ = ShapeEnum.Edge
+
+instance HasShapeKind TopoDS.Shell where
+    shapeKind _ = ShapeEnum.Shell
+
+instance HasShapeKind TopoDS.Solid where
+    shapeKind _ = ShapeEnum.Solid
+
+instance HasShapeKind TopoDS.Vertex where
+    shapeKind _ = ShapeEnum.Vertex
+
+subShapes :: forall a. (HasShapeKind a, DiscriminatedSubTypeOf TopoDS.Shape a) => Ptr TopoDS.Shape -> Acquire [Ptr a]
+subShapes s = do 
+    explorer <- Explorer.new s (shapeKind (Proxy @a))
+    let go acc = do
+            isMore <- liftIO $ Explorer.more explorer
+            if isMore 
+                then do
+                    v <- liftIO $ Explorer.value explorer
+                    isPresent <- liftIO $ ShapeMap.lookup acc v
+                    (newAcc, add) <- case isPresent of 
+                        Nothing -> do 
+                            v' <- TopoDS.Shape.copy v
+                            v'' <- liftIO $ unsafeDowncast v'
+                            newMap <- liftIO $ ShapeMap.addIfAbsent (v', ()) acc
+                            return (newMap, (v'':))
+                        Just _ -> pure (acc, id) 
+                    liftIO $ Explorer.next explorer
+                    add <$> go newAcc
+                else return []
+    go ShapeMap.empty
