@@ -74,6 +74,7 @@ library
       Waterfall.Path.Common
       Waterfall.Revolution
       Waterfall.Solid
+      Waterfall.Solids
       Waterfall.Sweep
       Waterfall.Transforms
       Waterfall.TwoD.Booleans

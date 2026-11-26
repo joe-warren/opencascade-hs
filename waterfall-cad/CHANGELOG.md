@@ -60,6 +60,7 @@ and this project adheres to the
 - In `Waterfall.Revolution`, `revolution` and `tryRevolution` now take a `Shape` rather than a `Path2D`
 - `writeGLTF`, `writeGLB` and `writeOBJ` now throw on error
 - Changes to `Shape` and `makeShape` may impact the order and direction in which paths are returned by `shapePaths`
+- The `Waterfall.Solids` module has moved to `Waterfall.Solid` to match the `Solid` type, `Waterfall.Solids` exists but is marked as deprecated
 
 ## 0.8.0.0
 
