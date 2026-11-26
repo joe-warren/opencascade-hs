@@ -386,6 +386,13 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
                     & TwoD.Transforms.scale2D (V2 (-1) 1)
                     & (<> Shape.centeredSquare)
                 )
+            , shapeTest "negative matTransform with hole" "negativeMatTransformWithHoleTwoD.svg"
+                ( Shape.centeredSquare
+                    & TwoD.Transforms.uScale2D 2.5
+                    & (`Booleans.difference` Shape.unitCircle)
+                    & TwoD.Transforms.matTransform2D (V2 (V3 1 1 0) (V3 1 0 0))
+                    & (<> TwoD.Transforms.uScale2D 0.5 Shape.centeredSquare)
+                )
             ]
         ]
     , GoldenGroup "Sweeps"

@@ -59,6 +59,8 @@
 ![negative non-uniform scale with hole](negativeNonUniformScaleWithHoleTwoD.svg)
 #### negative uniform scale with hole
 ![negative uniform scale with hole](negativeUniformScaleWithHoleTwoD.svg)
+#### negative matTransform with hole
+![negative matTransform with hole](negativeMatTransformWithHoleTwoD.svg)
 
 
 ## Sweeps
