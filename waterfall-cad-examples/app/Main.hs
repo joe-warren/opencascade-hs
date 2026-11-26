@@ -22,7 +22,7 @@ import Waterfall.SVG (writeDiagramSVG)
 import DarkModeSVG (writeDarkModeSVG)
 import Waterfall.IO (writeSTL, writeSTEP, writeGLTF, writeGLB, writeOBJ)
 import qualified Waterfall.Diagram as Diagram
-import qualified Waterfall.Solids as Solids
+import qualified Waterfall.Solid as Solid
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
 import qualified Options.Applicative as OA
 import Linear (V2 (..), V3 (..), _x, _y)
@@ -39,7 +39,7 @@ normalizeSize (getter, target) d =
             in TwoD.Transforms.uScale2D (target / s) d
         Nothing -> d
 
-outputOption :: OA.Parser (Solids.Solid -> IO ()) 
+outputOption :: OA.Parser (Solid.Solid -> IO ()) 
 outputOption =
     let stlOption = (flip writeSTL) <$> OA.strOption (OA.long "stl" <> OA.metavar "Stl file to write results to")
         gltfOption = (flip writeGLTF) <$> OA.strOption (OA.long "gltf" <> OA.metavar "GLTF file to write results to")
@@ -68,7 +68,7 @@ outputOption =
         stepOption = writeSTEP <$> OA.strOption (OA.long "step" <> OA.metavar "Stl file to write results to")
      in meshOptions <|> stepOption <|> svgOptions
 
-exampleOption :: OA.Parser (IO Solids.Solid)
+exampleOption :: OA.Parser (IO Solid.Solid)
 exampleOption = 
     fmap pure (
       OA.flag' csgExample (OA.long "csg" <> OA.help "example from the wikipedia page on Constructive Solid Geometry" ) <|>

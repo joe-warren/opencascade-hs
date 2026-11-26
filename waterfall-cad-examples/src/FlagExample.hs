@@ -10,7 +10,7 @@ module FlagExample
 ) where
 
 import Waterfall (Solid)
-import qualified Waterfall.Solids as Solids
+import qualified Waterfall.Solid as Solid
 import qualified Waterfall.TwoD.Shape as Shape
 import Waterfall (Colour)
 import qualified Waterfall.Colour as Colour
@@ -228,20 +228,20 @@ welshFlag =
         dragonInnerHoles = fold . parsePath $ welshFlagInnerHoles
         dragonOuter = fold . parsePath $ welshFlagOuter
         dragonOuterHoles = fold . parsePath $ welshFlagOuterHoles
-        extrudePath = mconcat . fmap (Solids.prism (flagDims ^. _z) . Shape.makeShape)
-        inner = Solids.colourSolid red . (`Booleans.difference` extrudePath dragonInnerHoles) . extrudePath $ dragonInner
-        outline = Solids.colourSolid Colour.black . (`Booleans.difference` extrudePath dragonOuterHoles) . extrudePath $ dragonOuter
+        extrudePath = mconcat . fmap (Solid.prism (flagDims ^. _z) . Shape.makeShape)
+        inner = Solid.colourSolid red . (`Booleans.difference` extrudePath dragonInnerHoles) . extrudePath $ dragonInner
+        outline = Solid.colourSolid Colour.black . (`Booleans.difference` extrudePath dragonOuterHoles) . extrudePath $ dragonOuter
 
-        sky = Solids.unitCube 
+        sky = Solid.unitCube 
             & Transforms.scale (flagDims & _y %~ (/2))
             & (`Booleans.difference` outline)
-            & Solids.colourSolid Colour.white
+            & Solid.colourSolid Colour.white
 
-        field = Solids.unitCube 
+        field = Solid.unitCube 
             & Transforms.scale (flagDims & _y %~ (/2))
             & Transforms.translate (flagDims ^* 0.5 & _xz .~ zero)
             & (`Booleans.difference` outline)
-            & Solids.colourSolid green
+            & Solid.colourSolid green
 
     in (sky <> field <> outline <> inner)
         & Transforms.mirror (unit _y)
@@ -250,26 +250,26 @@ welshFlag =
 trinidadAndTobagoFlag :: Solid
 trinidadAndTobagoFlag = 
     let red = Colour.rgb24 0xDA1A35
-        field =  Solids.unitCube 
+        field =  Solid.unitCube 
             & Transforms.scale flagDims
-            & Solids.colourSolid red
+            & Solid.colourSolid red
         stripeAngle = negate $ atan ((15 + sqrt 33)/24)
-        stripe width = Solids.centeredCube 
+        stripe width = Solid.centeredCube 
             & Transforms.scale (V3 (flagDims ^. _y * 2) (width * 800/30) (flagDims ^. _z))
             & Transforms.rotate (unit _z) stripeAngle 
             & Transforms.translate (flagDims ^* 0.5)
             & Booleans.intersection field
     in field 
-        <> (Solids.colourSolid Colour.white (stripe 6)) 
-        <> (Solids.colourSolid Colour.black (stripe 4)) 
+        <> (Solid.colourSolid Colour.white (stripe 6)) 
+        <> (Solid.colourSolid Colour.black (stripe 4)) 
 
 stripedFlag :: [Colour] -> Solid
 stripedFlag colours = 
     let stripeHeight = (flagDims ^. _y / realToFrac (length colours))
-        oneStripe = Solids.unitCube 
+        oneStripe = Solid.unitCube 
             & Transforms.scale (flagDims & _y .~ stripeHeight)
         f acc colour = Transforms.translate (unit _y ^* stripeHeight) acc 
-            <> Solids.colourSolid colour oneStripe
+            <> Solid.colourSolid colour oneStripe
     in foldl' f mempty colours
 
 prideFlag :: Solid
@@ -296,22 +296,22 @@ flagsOnPole flags =
         metalicPaint = Paint.paintWithColour Colour.silver
             <> Paint.paintWithMetallic 0.8
             <> Paint.paintWithRoughness 0.05
-        pole = Solids.unitCylinder 
+        pole = Solid.unitCylinder 
             & Transforms.scale (V3 poleR poleR poleH)
-            & (<> (Solids.unitSphere 
+            & (<> (Solid.unitSphere 
                 & Transforms.uScale (poleR * 2)
                 & Transforms.translate (poleH *^ unit _z)
             ))
-            & Solids.paintSolid metalicPaint
+            & Solid.paintSolid metalicPaint
         flagOnPole flag = flag 
             & Transforms.translate ((flagDims ^. _z * negate 0.5) *^ unit _z)
             & Transforms.rotate (unit _x) (pi/2)
             & Transforms.translate ((flagDims ^. _y * 0.95) *^ unit _z)
             & (<> pole)
             & Transforms.rotate (unit _y) (0.2)
-        base = Solids.centeredCylinder 
+        base = Solid.centeredCylinder 
             & Transforms.scale (V3 60 60 160)
-            & Solids.paintSolid metalicPaint
+            & Solid.paintSolid metalicPaint
         in base <> mconcat [
                 flagOnPole f
                     & Transforms.rotate (unit _z) (pi * 2 * realToFrac i / realToFrac (length flags))

@@ -15,7 +15,7 @@ module GearExample
 , playgroundGearExample
 ) where 
 
-import qualified Waterfall.Solids as Solids
+import qualified Waterfall.Solid as Solid
 import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.TwoD.Path2D as Path2D
 import Waterfall.TwoD.Transforms (rotate2D)
@@ -143,13 +143,13 @@ genGearToothData m z phi =
             , Just $ Path2D.arcTo Path2D.Counterclockwise fRad filletNext
         ]
 -- Thickness, Module, Number Teeth, pressure Angle 
-gearExample :: Double -> Double -> Int -> Double -> Solids.Solid
+gearExample :: Double -> Double -> Int -> Double -> Solid.Solid
 gearExample thickness moduleLength nGears pressureAngle =
     let segment = genGearToothData moduleLength nGears pressureAngle
         path = Path2D.repeatLooping segment
         --path = mconcat [rotate2D (-fromIntegral n * pi * 2 / fromIntegral nGears) segment | n <- [0..nGears]]
-    in Solids.prism thickness . Shape.makeShape $ path
+    in Solid.prism thickness . Shape.makeShape $ path
 
 -- | This is intended to be viewed via the WASM playground
-playgroundGearExample :: Solids.Solid
+playgroundGearExample :: Solid.Solid
 playgroundGearExample = gearExample 10 5 20 (20*pi/180)

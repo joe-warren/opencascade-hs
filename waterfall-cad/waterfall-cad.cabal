@@ -73,7 +73,7 @@ library
       Waterfall.Path
       Waterfall.Path.Common
       Waterfall.Revolution
-      Waterfall.Solids
+      Waterfall.Solid
       Waterfall.Sweep
       Waterfall.Transforms
       Waterfall.TwoD.Booleans

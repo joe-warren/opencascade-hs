@@ -7,9 +7,9 @@ that make up the waterfall-cad package.
 module Waterfall 
 (
 -- | `Solid` is the main data type in the Waterfall-CAD API,
--- The "Waterfall.Solids" module is the easiest way to construct 
+-- The "Waterfall.Solid" module is the easiest way to construct 
 -- instances of `Solid`.
-  module Waterfall.Solids
+  module Waterfall.Solid
 -- | The functions in this module can be used to transform `Solid`s.
 , module Waterfall.Transforms
 -- | `Solid`s can be combined together with 
@@ -80,7 +80,7 @@ import Waterfall.Offset
 import Waterfall.Path.Common
 import Waterfall.Path
 import Waterfall.Revolution
-import Waterfall.Solids
+import Waterfall.Solid
 import Waterfall.Sweep
 import Waterfall.Loft
 import Waterfall.Transforms

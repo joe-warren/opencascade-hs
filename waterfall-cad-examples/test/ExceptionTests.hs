@@ -5,7 +5,7 @@ module ExceptionTests
 
 import qualified Waterfall.Offset as Offset
 import qualified Waterfall.Fillet as Fillet
-import qualified Waterfall.Solids as Solids
+import qualified Waterfall.Solid as Solid
 import Waterfall.Error (WaterfallError (..))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -44,7 +44,7 @@ expectFailure f expected =
         )
 
 
-writeTmpStl :: Solids.Solid -> IO ()
+writeTmpStl :: Solid.Solid -> IO ()
 writeTmpStl s = do
     file <- emptySystemTempFile "solid.stl"
     IO.writeSTL 0.1 file s
@@ -52,12 +52,12 @@ writeTmpStl s = do
 exceptionTests :: TestTree
 exceptionTests = testGroup "Exception Tests"
     [ -- It's a little weird that this fails at IO time, whereas _some_ operations will fail with an OpenCascade exception when the operation is performed
-      testCase "Bad Offset" $ checkFailure (writeTmpStl $ Offset.offset (negate 1) Solids.centeredCube) 
+      testCase "Bad Offset" $ checkFailure (writeTmpStl $ Offset.offset (negate 1) Solid.centeredCube) 
             $ \case 
                 WaterfallIOException FileError _ -> Nothing
                 e -> Just $ "Expected WaterfallIOException\ngot: " <> show e
     , testCase "Bad Fillet" $ assertEqual "Bad Fillet"
-        (fromLeft (error "expected failure") $ Fillet.tryRoundFillet 2 Solids.centeredCube)
+        (fromLeft (error "expected failure") $ Fillet.tryRoundFillet 2 Solid.centeredCube)
         (WaterfallError $ OpenCascadeStandardFailure "StdFail_NotDone" "BRep_API: command not done" "")
     , testCase "Throw Std Exception" $ with (RuntimeError.new "Some Exception Text") $ \re -> 
         expectFailure (testThrow (upcast re)) (OpenCascadeStdException "Some Exception Text")

@@ -5,7 +5,7 @@ module FilletExample (
     filletExample
 ) where
 
-import Waterfall.Solids( Solid, centeredCube )
+import Waterfall.Solid( Solid, centeredCube )
 import Waterfall.Transforms (translate)
 import Waterfall.Fillet
     ( roundFillet

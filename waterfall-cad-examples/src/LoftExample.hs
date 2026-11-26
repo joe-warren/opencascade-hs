@@ -9,7 +9,7 @@ import Linear (V3 (..))
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.TwoD.Transforms as Transforms2D
 import qualified Waterfall.Booleans as Booleans
-import qualified Waterfall.Solids as Solids
+import qualified Waterfall.Solid as Solid
 import qualified Waterfall.Sweep as Sweep
 import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Loft as Loft
@@ -22,7 +22,7 @@ import qualified Waterfall.Path.Common as Path
 -- These cross-sections are then interpolated to form a smooth 3d shape.
 --
 -- This example demonstrates the "Waterfall.Loft" module, by generating a boat, with the profile of the boat specified by a series of bezier curves.
-loftExample :: Solids.Solid
+loftExample :: Solid.Solid
 loftExample = 
     let paths = 
           [ let p x z = V3 x 0 z 

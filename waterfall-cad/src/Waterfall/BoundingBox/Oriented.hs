@@ -13,7 +13,7 @@ import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, emp
 import Waterfall.Internal.Finalizers (acquireForeignPtr, unsafeFromAcquirePtr, unsafeFromAcquire)
 import Waterfall.Internal.FromOpenCascade (gpXYZToV3)
 import Foreign.Ptr (Ptr)
-import Waterfall.Solids (volume, box)
+import Waterfall.Solid (volume, box)
 import Waterfall.Transforms (translate)
 import qualified OpenCascade.Bnd.OBB as OBB
 import OpenCascade.Bnd.OBB (OBB)

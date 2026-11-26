@@ -12,8 +12,8 @@ import qualified Graphics.Svg as Svg
 import Waterfall.Diagram (Diagram)
 import qualified Waterfall.Diagram as Diagram
 import qualified Waterfall.TwoD.Transforms as TwoD.Transforms
-import Waterfall.Solids (Solid)
-import qualified Waterfall.Solids as Solids
+import Waterfall.Solid (Solid)
+import qualified Waterfall.Solid as Solid
 import qualified Waterfall.Transforms as Transforms
 import qualified Waterfall.Offset as Offset
 import qualified Waterfall.Booleans as Booleans
@@ -324,27 +324,27 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
     , GoldenGroup "Transforms" 
         [ GoldenGroup "Three-D"
             [ solidTest "Negative Scaled Cube" "negativeScaledCube.svg" 
-                (Transforms.scale (V3 (negate 1) 1 1) Solids.unitCube)
+                (Transforms.scale (V3 (negate 1) 1 1) Solid.unitCube)
             , solidTest "Negative Scaled Cube II" "negativeScaledCube-II.svg" 
-                (Transforms.scale (negate $ V3 1 1 1) Solids.unitCube)
+                (Transforms.scale (negate $ V3 1 1 1) Solid.unitCube)
             , solidTest "Negative Scaled Cube III" "negativeScaledCube-III.svg" 
-                (Transforms.scale (V3 (negate 10) (negate 10) 10) Solids.unitCube)
+                (Transforms.scale (V3 (negate 10) (negate 10) 10) Solid.unitCube)
             , solidTest "Negative Scaled Cuboid" "negativeScaledCuboid.svg" 
-                (Transforms.scale (V3 (negate 1) 2 3) Solids.unitCube)
+                (Transforms.scale (V3 (negate 1) 2 3) Solid.unitCube)
             , solidTest "scale near unity" "nearUnityScale.svg" 
-                . Solids.colourSolid Colour.red $
-                (Transforms.scale (V3 0.9999999999999998 1 1) Solids.unitCylinder
-                    <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
+                . Solid.colourSolid Colour.red $
+                (Transforms.scale (V3 0.9999999999999998 1 1) Solid.unitCylinder
+                    <> Transforms.translate (V3 0 0 0.5) Solid.unitCube
                 )
             , solidTest "orthogonal matrix" "orthogonalMatrix.svg"
-                . Solids.colourSolid Colour.red $
+                . Solid.colourSolid Colour.red $
                 -- rotation by 1 radian around the -y axis
                 ( Transforms.matTransform 
                     (V3 (V4 (sin 1) 0 (cos 1) 0)
                         (V4 0 1 0 0)
                         (V4 (cos 1) 0 (-sin 1) 0))
-                    Solids.unitCylinder
-                    <> Transforms.translate (V3 0 0 0.5) Solids.unitCube
+                    Solid.unitCylinder
+                    <> Transforms.translate (V3 0 0 0.5) Solid.unitCube
                 )
             ]
         , GoldenGroup "Two-D"
@@ -443,17 +443,17 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
         ]
     , GoldenGroup "Loose Parts and Shapes"
         [ solidTest "looseParts with Colour then transform" "loosePartsThenTransform.svg" $ 
-            let a = Solids.centeredCube 
-                    & Solids.colourSolid Colour.maroon
+            let a = Solid.centeredCube 
+                    & Solid.colourSolid Colour.maroon
                     & Transforms.translate (unit _x) 
-                b = Solids.centeredCube 
-                    & Solids.colourSolid Colour.navy
+                b = Solid.centeredCube 
+                    & Solid.colourSolid Colour.navy
                     & Transforms.translate (unit _x ^* (-1))
-                separator = Solids.centeredCube
-                    & Solids.colourSolid Colour.lime
+                separator = Solid.centeredCube
+                    & Solid.colourSolid Colour.lime
                     & Transforms.scale (V3 5 0.1 5)
             in ((a <> b) `Booleans.difference` separator)
-                    & Solids.looseParts
+                    & Solid.looseParts
                     & fmap (Transforms.rotate (unit _z) (pi/2))
                     & take 3
                     & mconcat
@@ -471,16 +471,16 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
         ]
     , GoldenGroup "Sections" 
         [ diagramTest "sphere section" "sphereSection.svg" (
-            Solids.unitSphere 
+            Solid.unitSphere 
                 & Shape.section
                 & Diagram.shapeDiagram (Paint.paintWithColour Colour.red)
                 & TwoD.Transforms.scale2D 50
             )
         , diagramTest "compound section" "compoundSection.svg" (
-            Solids.unitSphere
-                & (`Booleans.difference` (Solids.unitSphere & Transforms.uScale 0.4))
-                & (`Booleans.difference` (Solids.centeredCube & Transforms.translate (unit _x)))
-                & Booleans.union (Solids.centeredCube 
+            Solid.unitSphere
+                & (`Booleans.difference` (Solid.unitSphere & Transforms.uScale 0.4))
+                & (`Booleans.difference` (Solid.centeredCube & Transforms.translate (unit _x)))
+                & Booleans.union (Solid.centeredCube 
                     & Transforms.uScale 0.8
                     & Transforms.translate (unit _x)
                     )
@@ -491,22 +491,22 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
         ]
     , GoldenGroup "Silhouettes"   
         [ diagramTest "sphere silhouette" "sphereSilhouette.svg" (
-            Solids.unitSphere 
+            Solid.unitSphere 
                 & Shape.silhouette
                 & Diagram.shapeDiagram (Paint.paintWithColour Colour.fuchsia)
                 & TwoD.Transforms.scale2D 50
             )
         , diagramTest "torus silhouette" "torusSilhouette.svg" (
-            Solids.torus 2 1
+            Solid.torus 2 1
                 & Shape.silhouette
                 & Diagram.shapeDiagram (Paint.paintWithColour Colour.yellow)
                 & TwoD.Transforms.scale2D 50
             )
         , diagramTest "compound silhouette" "compoundSilhouette.svg" (
-            Solids.unitSphere
-                & (`Booleans.difference` (Solids.unitSphere & Transforms.uScale 0.4))
-                & (`Booleans.difference` (Solids.centeredCube & Transforms.translate (unit _x)))
-                & Booleans.union (Solids.centeredCube 
+            Solid.unitSphere
+                & (`Booleans.difference` (Solid.unitSphere & Transforms.uScale 0.4))
+                & (`Booleans.difference` (Solid.centeredCube & Transforms.translate (unit _x)))
+                & Booleans.union (Solid.centeredCube 
                     & Transforms.uScale 0.8
                     & Transforms.translate (unit _x)
                     )
@@ -517,34 +517,34 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
         ]
     , GoldenGroup "Painted Primitives"
         [ solidTest "painted sphere" "paintedSphere.svg" (
-            Solids.unitSphere
-                & Solids.colourSolid Colour.blue
+            Solid.unitSphere
+                & Solid.colourSolid Colour.blue
             )
         ]
     , GoldenGroup "Fillets" 
         [ solidTest "noop fillet cube" "noopFilletCube.svg" (
-            Solids.unitCube
+            Solid.unitCube
                 & Fillet.roundConditionalFillet (const Nothing)
-                & Solids.colourSolid Colour.blue
+                & Solid.colourSolid Colour.blue
             )
         , solidTest "fillet cone" "filletCone.svg" (
-            Solids.unitCone
+            Solid.unitCone
                 & Fillet.roundFillet 0.1
-                & Solids.colourSolid Colour.aqua
+                & Solid.colourSolid Colour.aqua
             )
         ]
     , GoldenGroup "Offsets"
         [ GoldenGroup "Three-D"
             [ solidTest "Offset of Compound" "offsetOfCompound.svg" 
-                (Offset.offset 1 $ (id <> Transforms.translate (unit _x ^* 3)) Solids.unitCube)
+                (Offset.offset 1 $ (id <> Transforms.translate (unit _x ^* 3)) Solid.unitCube)
             , solidTest "offset hole" "offsetHole.svg" (
-                let s = (Solids.centeredCube & Transforms.uScale 3 & Solids.colourSolid Colour.aqua)
-                            `Booleans.difference` (Solids.centeredCube & Solids.colourSolid Colour.fuchsia)
+                let s = (Solid.centeredCube & Transforms.uScale 3 & Solid.colourSolid Colour.aqua)
+                            `Booleans.difference` (Solid.centeredCube & Solid.colourSolid Colour.fuchsia)
                     mask x = x `Booleans.difference` (
-                        Solids.centeredCube 
+                        Solid.centeredCube 
                             & Transforms.translate (unit _y * 0.5) 
                             & Transforms.uScale 4 
-                            & Solids.colourSolid Colour.lime
+                            & Solid.colourSolid Colour.lime
                         )
                     s' = Offset.offset 0.2 s
                     s'' = Offset.offset (-0.2) (s)
@@ -554,17 +554,17 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
                     <> Transforms.translate ((unit _x + unit _z) ^* 4) (mask s'')
             )
             , solidTest "offset of scaled cylinder" "offsetOfScaledCylinder.svg" (
-                Solids.unitCylinder 
+                Solid.unitCylinder 
                     & Transforms.scale (V3 1 1 3)
                     & Offset.offset 0.5
             )
             , solidTest "offset of through hole cylinder" "offsetOfThroughHole.svg" (
-                let a = Solids.centeredCube
+                let a = Solid.centeredCube
                         & Transforms.scale (V3 3 3 0.5)
-                        & Solids.colourSolid Colour.blue
-                    b = Solids.centeredCylinder
+                        & Solid.colourSolid Colour.blue
+                    b = Solid.centeredCylinder
                             & Transforms.scale (V3 1 1 3)
-                            & Solids.colourSolid Colour.red
+                            & Solid.colourSolid Colour.red
                 in Offset.offsetWithPaint (Paint.mixPaints) 0.25 (a `Booleans.difference` b)
                     & Transforms.rotate (unit _x) (pi/2)
             )
@@ -767,85 +767,85 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
         [ GoldenGroup "Three-D"
             [ solidTest "intersections of cubes" "intersectionsOfCubes.svg" (
                 Booleans.intersections $
-                    zipWith Solids.colourSolid
+                    zipWith Solid.colourSolid
                         [Colour.red, Colour.lime, Colour.aqua] 
                         [
-                        Solids.centeredCube
+                        Solid.centeredCube
                             & Transforms.rotate (unit _z) theta
                         | theta <- [0, pi/3, 2*pi/3]
                         ]
                 )
             , solidTest "unions of cubes" "unionsOfCubes.svg" (
                 Booleans.unions $
-                    zipWith Solids.colourSolid
+                    zipWith Solid.colourSolid
                         [Colour.red, Colour.lime, Colour.aqua] 
                         [
-                        Solids.centeredCube
+                        Solid.centeredCube
                             & Transforms.rotate (unit _z) theta
                         | theta <- [0, pi/3, 2*pi/3]
                         ]
                 )
             , solidTest "fold intersection of cubes" "foldIntersectionOfCubes.svg" (
                 foldl1 Booleans.intersection $
-                    zipWith Solids.colourSolid
+                    zipWith Solid.colourSolid
                         [Colour.red, Colour.lime, Colour.aqua] 
                         [
-                        Solids.centeredCube
+                        Solid.centeredCube
                             & Transforms.rotate (unit _z) theta
                         | theta <- [0, pi/3, 2*pi/3]
                         ]
                 )
             , solidTest "fold union of cubes" "foldUnionOfCubes.svg" (
                 foldl' Booleans.union mempty $
-                    zipWith Solids.colourSolid
+                    zipWith Solid.colourSolid
                         [Colour.red, Colour.lime, Colour.aqua] 
                         [
-                        Solids.centeredCube
+                        Solid.centeredCube
                             & Transforms.rotate (unit _z) theta
                         | theta <- [0, pi/3, 2*pi/3]
                         ]
                 )
             , solidTest "intersections of identical cubes" "intersectionsOfIdenticalCubes.svg" (
                  Booleans.intersections $
-                    Solids.colourSolid
+                    Solid.colourSolid
                         <$> [Colour.red, Colour.lime, Colour.aqua]
-                        <*> pure Solids.centeredCube
+                        <*> pure Solid.centeredCube
                 )
             , solidTest "intersections with repeated cube" "intersectionsWithRepeatedCube.svg" (
                 Booleans.intersections
-                    [ Solids.colourSolid Colour.red Solids.centeredCube
-                    , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z) (pi/4) Solids.centeredCube)
-                    , Solids.colourSolid Colour.aqua Solids.centeredCube
+                    [ Solid.colourSolid Colour.red Solid.centeredCube
+                    , Solid.colourSolid Colour.lime (Transforms.rotate (unit _z) (pi/4) Solid.centeredCube)
+                    , Solid.colourSolid Colour.aqua Solid.centeredCube
                     ]
                 )
             , solidTest "intersections with mempty" "intersectionsWithMempty.svg" (
-                Solids.colourSolid Colour.red Solids.unitSphere <>
+                Solid.colourSolid Colour.red Solid.unitSphere <>
                     Booleans.intersections
-                        [ Transforms.uScale 2 $ Solids.centeredCube
+                        [ Transforms.uScale 2 $ Solid.centeredCube
                         , mempty
-                        , Transforms.uScale 2 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
+                        , Transforms.uScale 2 $ Transforms.rotate (unit _z) (pi/4) Solid.centeredCube
                         ]
                     )
             , solidTest "unions of identical cubes" "unionsOfIdenticalCubes.svg" (
                 Booleans.unions $
-                    Solids.colourSolid
+                    Solid.colourSolid
                         <$> [Colour.red, Colour.lime, Colour.aqua]
-                        <*> pure Solids.centeredCube
+                        <*> pure Solid.centeredCube
                 )
             , solidTest "unions with repeated cube" "unionsWithRepeatedCube.svg" (
                 Booleans.unions
-                    [ Solids.colourSolid Colour.red Solids.centeredCube
-                    , Solids.colourSolid Colour.lime (Transforms.rotate (unit _z)
-          (pi/4) Solids.centeredCube)
-                    , Solids.colourSolid Colour.aqua Solids.centeredCube
+                    [ Solid.colourSolid Colour.red Solid.centeredCube
+                    , Solid.colourSolid Colour.lime (Transforms.rotate (unit _z)
+          (pi/4) Solid.centeredCube)
+                    , Solid.colourSolid Colour.aqua Solid.centeredCube
                     ]
                 )
             , solidTest "unions with mempty" "unionsWithMempty.svg" (
-                Solids.colourSolid Colour.red Solids.unitSphere <>
+                Solid.colourSolid Colour.red Solid.unitSphere <>
                     Booleans.unions
-                      [ Transforms.uScale 1.5 $ Solids.centeredCube
+                      [ Transforms.uScale 1.5 $ Solid.centeredCube
                       , mempty
-                      , Transforms.uScale 1.5 $ Transforms.rotate (unit _z) (pi/4) Solids.centeredCube
+                      , Transforms.uScale 1.5 $ Transforms.rotate (unit _z) (pi/4) Solid.centeredCube
                       ]
                 )
             ]
@@ -855,7 +855,7 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
                     & TwoD.Transforms.translate2D (V2 0.5 0.5)
                     & Booleans.union Shape.unitCircle
                     & TwoD.Transforms.scale2D 10
-                    &  Solids.prism 5
+                    &  Solid.prism 5
                 )
             , diagramTest "Union 2D Diagram" "union2Ddiagram.svg" 
                 ( Shape.unitCircle
@@ -989,7 +989,7 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
         [ GoldenCase "read svg and make prism" "svgPrism.svg" $ do
             projectRoot <- Paths.getDataDir 
             Right gearProfile <- SVG.readSVG (projectRoot </> "test-data/gear-profile.svg")
-            let s = foldMap (Solids.prism 1 . Shape.makeShape) gearProfile
+            let s = foldMap (Solid.prism 1 . Shape.makeShape) gearProfile
             return $ standardSolidDiagram s
         , svgPathTest "svg relative smooth quadratic" "svgRelativeSmoothQuadratic.svg"
             "M 0 0 q 25 50 50 0 t 50 0 t 50 0"
@@ -1026,10 +1026,10 @@ goldenSpec = GoldenGroup "Diagram Golden Tests"
                       , bar (V2 (-1.2) 0.8) (V2 1.2 1.2)
                       , bar (V2 (-1.2) (-1.2)) (V2 1.2 (-0.8))
                       ]
-                  plate = Solids.prism 0.25 (TwoD.Transforms.uScale2D 4 Shape.centeredSquare)
-                      `Booleans.difference` (Solids.prism 3 slot & Transforms.translate (V3 0 0 (-1)))
+                  plate = Solid.prism 0.25 (TwoD.Transforms.uScale2D 4 Shape.centeredSquare)
+                      `Booleans.difference` (Solid.prism 3 slot & Transforms.translate (V3 0 0 (-1)))
               in withWidth 800 . Diagram.solidDiagram (V3 1 2 8)
-                    $ Solids.colourSolid Colour.aqua plate
+                    $ Solid.colourSolid Colour.aqua plate
               )
         ]
     ]

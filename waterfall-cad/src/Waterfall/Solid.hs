@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
-module Waterfall.Solids 
+module Waterfall.Solid
 ( Solid
 , emptySolid
 , unitCube

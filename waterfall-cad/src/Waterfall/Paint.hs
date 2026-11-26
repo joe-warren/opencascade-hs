@@ -4,7 +4,7 @@
 {-|
 Module: Waterfall.Paint
 
-`Paint` can be applied to change the appearance of the surface of a `Waterfall.Solids.Solid` (with `Waterfall.Solids.paintSolid`).
+`Paint` can be applied to change the appearance of the surface of a `Waterfall.Solid.Solid` (with `Waterfall.Solid.paintSolid`).
 
 `Paint` values can be constructed from the @paintWith*@ functions and can be combined monoidally (with `<>`), e.g.
 
@@ -68,7 +68,7 @@ data DoubleSidedness = SingleSided | DoubleSided
 
 instance NFData DoubleSidedness where rnf = rwhnf
 
--- | Can be applied to change the appearance of the surface of a `Waterfall.Solids.Solid`
+-- | Can be applied to change the appearance of the surface of a `Waterfall.Solid.Solid`
 -- 
 -- `Paint` values can be constructed from the @paintWith*@ functions
 -- and can be combined monoidally (with `<>`).

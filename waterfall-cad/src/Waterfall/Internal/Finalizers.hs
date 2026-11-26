@@ -8,7 +8,7 @@ makes heavy use of @Data.Acquire@ from @resourcet@ to handle memory management.
 
 However @waterfall-cad@ does not (at the highest level) keep values in the @Acquire@ monad. 
 
-(This is required to support functions like `Waterfall.Solids.volume`, which return pure Haskell primitives.)
+(This is required to support functions like `Waterfall.Solid.volume`, which return pure Haskell primitives.)
 
 -}
 module Waterfall.Internal.Finalizers 

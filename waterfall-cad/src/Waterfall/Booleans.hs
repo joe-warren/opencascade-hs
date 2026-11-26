@@ -1,5 +1,5 @@
 {-|
-[Constructive Solid Geometry \(CSG\)](https://en.wikipedia.org/wiki/Constructive_solid_geometry) operations on `Waterfall.Solids.Solid`, and `Waterfall.TwoD.Shape.Shape`.
+[Constructive Solid Geometry \(CSG\)](https://en.wikipedia.org/wiki/Constructive_solid_geometry) operations on `Waterfall.Solid.Solid`, and `Waterfall.TwoD.Shape.Shape`.
 -}
 module Waterfall.Booleans
 ( Boolean(..)
@@ -12,7 +12,7 @@ module Waterfall.Booleans
 ) where
 
 import Waterfall.Internal.Solid(union3D, unions3D, difference3D, intersection3D, intersections3D, complement)
-import qualified Waterfall.Solids as Solids
+import qualified Waterfall.Solid as Solid
 import qualified Waterfall.TwoD.Internal.Shape as Shape
 import Waterfall.TwoD.Internal.Shape (union2D, difference2D, intersection2D, unions2D, intersections2D)
 
@@ -59,11 +59,11 @@ class Boolean a where
     intersections [] = empty
     intersections xs = foldr1 intersection xs
 
-instance Boolean Solids.Solid where
+instance Boolean Solid.Solid where
     union = union3D
     difference = difference3D
     intersection = intersection3D
-    empty = Solids.emptySolid
+    empty = Solid.emptySolid
     unions = unions3D
     intersections = intersections3D
 

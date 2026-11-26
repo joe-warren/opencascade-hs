@@ -164,6 +164,6 @@ area = gPropQuery (liftIO . GProps.mass)
 
 -- | Center Of Mass of the `Shape` 
 -- 
--- The 2D counterpart of `Waterfall.Solids.centerOfMass`
+-- The 2D counterpart of `Waterfall.Solid.centerOfMass`
 centroid :: Shape -> V2 Double 
 centroid = (^. _xy) . (gPropQuery ((liftIO . gpPntToV3) <=< GProps.centreOfMass))
