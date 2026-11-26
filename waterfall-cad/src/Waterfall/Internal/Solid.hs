@@ -67,7 +67,7 @@ import Waterfall.Error (WaterfallError)
 import Waterfall.Paint (Paint, paintIsDefined)
 import Data.Functor.Compose (Compose(..))
 import Control.Monad (filterM, forM_, (<=<))
-import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape, deduplicateTopoDSShapes, containsShapeKind)
+import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape, deduplicateTopoDSShapes, containsShapeKind, subShapes)
 import Foreign.ForeignPtr (ForeignPtr)
 import Control.DeepSeq (NFData (rnf), liftRnf, liftRnf2, rwhnf)
 import qualified OpenCascade.NCollection.List as NCollection.List
@@ -269,8 +269,7 @@ acquireFacePaints =
 materialiseFacePaints :: Ptr TopoDS.Shape -> PaintMap -> Acquire [(Ptr TopoDS.Face, Paint)]
 materialiseFacePaints _ (FacePaints facePaints) = acquireFacePaints facePaints 
 materialiseFacePaints solid (UniformPaint paint) = do
-    faces <- traverse (liftIO . unsafeDowncast)
-        =<< allSubShapesWithCopy ShapeEnum.Face solid
+    faces <- subShapes solid
     return $ fmap (, paint) faces
 
 materialiseSolidFacePaints :: Solid -> Acquire [(Ptr TopoDS.Face, Paint)]

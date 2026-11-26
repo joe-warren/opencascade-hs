@@ -14,7 +14,6 @@ import Waterfall.Internal.Solid (remapPaints, History (historyGenerated), fromAc
 import OpenCascade.Inheritance (SubTypeOf(upcast), unsafeDowncast)
 import qualified OpenCascade.NCollection as NCollection
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
-import Waterfall.Internal.Edges (allSubShapesWithCopy)
 import Data.Foldable (toList)
 import qualified OpenCascade.NCollection.IndexedDataMap as NCollection.IndexedDataMap
 import qualified OpenCascade.TopExp as TopExp
@@ -24,11 +23,11 @@ import qualified Data.List.NonEmpty as NE
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import Control.Monad (filterM)
-import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape)
+import Waterfall.Internal.FromOpenCascade (shapesFromListOfShape, subShapes)
 
 getUniqueVertexes :: [Ptr TopoDS.Edge] -> Acquire [Ptr TopoDS.Vertex]
 getUniqueVertexes edges = 
-    let vertsForEdge e = traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Vertex (upcast e)
+    let vertsForEdge = subShapes . upcast
         dup a = (upcast a, a)
         in fmap toList . liftIO . ShapeMap.fromList . fmap dup . concat  =<< traverse vertsForEdge edges
 

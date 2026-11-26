@@ -32,7 +32,7 @@ import qualified OpenCascade.BRepBuilderAPI.MakeEdge as MakeEdge
 import qualified OpenCascade.BRepLib as BRepLib
 import Waterfall.Internal.NearZero (nearZero)
 import OpenCascade.GeomAbs.Shape as GeomAbs.Shape
-import Waterfall.Internal.FromOpenCascade (gpPntToV3, gpVecToV3)
+import Waterfall.Internal.FromOpenCascade (gpPntToV3, gpVecToV3, subShapes)
 import qualified OpenCascade.BRepAdaptor.Curve as BRepAdaptor.Curve
 import qualified OpenCascade.GCPnts.AbscissaPoint as AbscissaPoint
 import qualified OpenCascade.GProp.GProps as GProps
@@ -104,10 +104,10 @@ allSubShapesWithCopy t s = do
     go ShapeMap.empty
 
 allEdges :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Edge]
-allEdges s = traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Edge s 
+allEdges = subShapes 
 
 allWires :: Ptr TopoDS.Shape -> Acquire [Ptr TopoDS.Wire]
-allWires s = traverse (forwardWire <=< liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Wire s
+allWires = traverse forwardWire <=< subShapes
 
 wireFromEdges :: [Ptr TopoDS.Edge] -> Acquire (Ptr TopoDS.Wire)
 wireFromEdges edges = do

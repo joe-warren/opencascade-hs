@@ -6,20 +6,20 @@ module Waterfall.Sweep
 import Waterfall.Internal.Solid (Solid (..), acquireSolid, solidFromAcquire, emptyPaintMap, solidFromAcquireTWithCatch)
 import Waterfall.Internal.Path (Path (..))
 import Waterfall.Internal.Path.Common (RawPath (..))
-import Waterfall.Internal.Edges (wireTangentStart, wireEndpoints, allWires, allSubShapesWithCopy)
+import Waterfall.Internal.Edges (wireTangentStart, wireEndpoints, allWires)
 import Waterfall.Internal.Finalizers (acquireForeignPtr)
 import Waterfall.Internal.NearZero (nearZero)
+import Waterfall.Internal.FromOpenCascade (subShapes)
 import Waterfall.Transforms (rotate, translate)
 import Waterfall.Booleans (difference)
 import Waterfall.TwoD.Internal.Shape (Shape (..))
 import qualified OpenCascade.BRepOffsetAPI.MakePipeShell as MakePipeShell
 import qualified OpenCascade.BRepBuilderAPI.MakeShape as MakeShape
-import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.BRepTools as BRepTools
 import qualified OpenCascade.TopoDS.Shape as TopoDS.Shape
 import qualified OpenCascade.BRepBuilderAPI.TransitionMode as TransitionMode
 import qualified OpenCascade.TopoDS as TopoDS
-import OpenCascade.Inheritance (upcast, unsafeDowncast)
+import OpenCascade.Inheritance (upcast)
 import Control.Monad.IO.Class (liftIO)
 import Foreign.Ptr
 import Linear (V3, normalize, unit, _x, _z, cross, dot)
@@ -62,7 +62,7 @@ trySweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = fmap reassembl
     tangent <- liftIO $ wireTangentStart path
     (start,_)  <- liftIO $ wireEndpoints path
     adjustedFace <- positionFace start =<< rotateFace tangent shape
-    faces <- allSubShapesWithCopy ShapeEnum.Face adjustedFace
+    faces <- subShapes adjustedFace
     let shapeForWire wire = do
             builder <- MakePipeShell.new path
             liftIO $ do
@@ -73,7 +73,7 @@ trySweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = fmap reassembl
                 void $ MakePipeShell.makeSolid builder
             MakeShape.shape (upcast builder)
     fmap (Compose . catMaybes) . forM faces $ \face -> do
-        outerWire <- BRepTools.outerWire =<< liftIO (unsafeDowncast face)
+        outerWire <- BRepTools.outerWire face
         isNull <- liftIO $ TopoDS.Shape.isNull (upcast outerWire)
         if isNull
             then pure Nothing 
@@ -83,7 +83,7 @@ trySweep (Path (ComplexRawPath theRawPath)) (Shape theRawShape) = fmap reassembl
                         . fmap not 
                         .  TopoDS.Shape.isSame (upcast outerWire)
                         . upcast
-                    ) =<< allWires face
+                    ) =<< allWires (upcast face)
                 (Just .) .  (:|) <$> shapeForWire outerWire
                     <*> forM innerWires shapeForWire
 trySweep _ _ = Right mempty

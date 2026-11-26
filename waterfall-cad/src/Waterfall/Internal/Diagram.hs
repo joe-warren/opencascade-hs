@@ -22,8 +22,8 @@ import qualified OpenCascade.BOPAlgo.Builder as BOPAlgo.Builder
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import qualified OpenCascade.TopoDS.Builder as TopoDS.Builder
 import qualified OpenCascade.TopoDS.Compound as TopoDS.Compound
-import OpenCascade.Inheritance (upcast, unsafeDowncast)
-import Waterfall.Internal.FromOpenCascade (gpPntToV3)
+import OpenCascade.Inheritance (upcast)
+import Waterfall.Internal.FromOpenCascade (gpPntToV3, subShapes)
 import Control.Lens ((^.), (&), (.~), (<&>))
 import Linear (V3 (..), _x, _y, _z, norm, unit, cross)
 import qualified Data.IntMap as IntMap
@@ -141,8 +141,7 @@ projectedRegions s projectionDir projector extractor = do
                     forM_ boundary (liftIO . BOPAlgo.Builder.addArgument fuser . upcast)
                     liftIO $ BOPAlgo.Builder.perform fuser
                     pruneDangling 
-                        =<< traverse (liftIO . unsafeDowncast)
-                        =<<  allSubShapesWithCopy ShapeEnum.Edge 
+                        =<< subShapes
                         =<< BOPAlgo.Builder.shape fuser
 
             builder <- TopoDS.Builder.new
@@ -160,8 +159,7 @@ projectedRegions s projectionDir projector extractor = do
                     if not ok
                         then return [] 
                         else do
-                            regions <- traverse (liftIO . unsafeDowncast)
-                                 =<< allSubShapesWithCopy ShapeEnum.Face faces
+                            regions <- subShapes faces
 
                             inv <- Projector.invertedTransformation projector
                             intersector <- ShapeIntersector.new

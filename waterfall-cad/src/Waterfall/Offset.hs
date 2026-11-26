@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeApplications #-}
 {-|
 Module: Waterfall.Offset
 
@@ -48,6 +49,7 @@ import Waterfall.Internal.NearZero (nearZero)
 import Waterfall.Error (WaterfallError)
 import Data.Either (fromRight)
 import Waterfall.Internal.Edges (allSubShapesWithCopy)
+import Waterfall.Internal.FromOpenCascade (subShapes)
 import qualified Waterfall.Internal.ShapeMap as ShapeMap
 import qualified OpenCascade.TopAbs.ShapeEnum as ShapeEnum
 import Data.Maybe (isJust)
@@ -92,7 +94,7 @@ splitC0BSplines solid = solidFromAcquireWithPaintMapWithCatch
 filterPaintMap :: Ptr TopoDS.Shape -> PaintMap -> Acquire PaintMap
 filterPaintMap _ (UniformPaint paint) = pure (UniformPaint paint)
 filterPaintMap s (FacePaints paints) = do
-    faceSet <- liftIO . ShapeMap.fromList . fmap (,()) =<< allSubShapesWithCopy ShapeEnum.Face s
+    faceSet <- liftIO . ShapeMap.fromList . fmap (,()) =<< (fmap upcast <$> (subShapes s :: Acquire [Ptr TopoDS.Face]))
     fmap FacePaints . liftIO . fromAcquirePaints $
         ( filterM (liftIO . fmap isJust . ShapeMap.lookup faceSet . upcast . fst) 
             =<< acquireFacePaints paints
@@ -107,7 +109,7 @@ offsetOneWithTolerance ::
     -> Acquire (PaintMap, Ptr TopoDS.Shape)
 offsetOneWithTolerance tolerance value paintFn paintMap s = do
     builder <- MakeOffsetShape.new
-    allEdges <- traverse (liftIO . unsafeDowncast) =<< allSubShapesWithCopy ShapeEnum.Edge s
+    allEdges <- subShapes s
     liftIO $ MakeOffsetShape.performByJoin builder s value tolerance Mode.Skin False False GeomAbs.JoinType.Arc False
     shell <- MakeShape.shape (upcast builder)
     newPaintMap <- remapWithBlendFunction paintFn s allEdges (makeShapeHistory $ upcast builder)
