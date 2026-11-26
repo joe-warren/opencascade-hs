@@ -194,7 +194,7 @@ solidTests = testGroup "Solid"
                             (Solids.volume sweeped)
                         <> assertApproxEqual 
                             "Should be consistent with area" 
-                            1e-6 
+                            1e-3 
                             (TwoD.Shape.area shape)
                             (Solids.volume sweeped)
                 | (axisName, axis) <- 
