@@ -20,9 +20,10 @@ SYSROOT=~/.ghc-wasm/wasi-sdk/share/wasi-sysroot/lib/wasm32-wasi
 GHC_LIBDIR="$(wasm32-wasi-ghc --print-libdir)"
 GHC_VERSION_DIR="$(find "$GHC_LIBDIR" -maxdepth 1 -type d -name 'wasm32-wasi-ghc-*' | head -1)"
 GHC_VERSION_DIRNAME="$(basename "$GHC_VERSION_DIR")"
-CABAL_STORE=$(find ~/.ghc-wasm/.cabal/store -maxdepth 1 -type d -name "ghc-*" | head -1)
+GHC_VERSION="$(wasm32-wasi-ghc --numeric-version)"
+CABAL_STORE=$(find ~/.ghc-wasm/.cabal/store -maxdepth 1 -type d -name "ghc-$GHC_VERSION*" | head -1)
 OPENCASCADE_HS_DIR=/opencascade-hs
-BUILD_DIR=$(find /opencascade-hs/dist-newstyle/build/wasm32-wasi -maxdepth 1 -type d -name "ghc-*" | head -1)
+BUILD_DIR="/opencascade-hs/dist-newstyle/build/wasm32-wasi/ghc-$GHC_VERSION"
 
 # Shared package version, anchored in package-defaults.yaml
 PKG_VERSION=$(sed -n 's/^_version: &version "\(.*\)"/\1/p' "$OPENCASCADE_HS_DIR/package-defaults.yaml")
@@ -118,7 +119,7 @@ wasm32-wasi-ghc \
   -v0 \
   -package ghc \
   -package-db "$CABAL_STORE/package.db" \
-  $(find dist-newstyle/packagedb -maxdepth 1 -type d -name 'ghc-*' 2>/dev/null | head -1 | xargs -I{} echo "-package-db {}") \
+  $(find dist-newstyle/packagedb -maxdepth 1 -type d -name "ghc-$GHC_VERSION" 2>/dev/null | head -1 | xargs -I{} echo "-package-db {}") \
   -package-db "$BUILD_DIR/${LOCAL_PKGS[0]}/package.conf.inplace" \
   -package-db "$BUILD_DIR/${LOCAL_PKGS[1]}/package.conf.inplace" \
   -package-db "$BUILD_DIR/${LOCAL_PKGS[2]}/package.conf.inplace" \
