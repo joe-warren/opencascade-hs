@@ -5,8 +5,8 @@ module LoosePartsExample
 ( loosePartsExample
 ) where
 
-import Waterfall.Solids (Solid, looseParts)
-import qualified Waterfall.Solids as Solids
+import Waterfall.Solid (Solid, looseParts)
+import qualified Waterfall.Solid as Solid
 import Waterfall.Colour (Colour)
 import qualified Waterfall.Colour as Colour
 import qualified Waterfall.Transforms as Transforms
@@ -15,7 +15,7 @@ import Linear (V3 (..), unit, _x, _z, (^*))
 import Data.Function ((&))
 
 baseCube :: Solid
-baseCube = Solids.centeredCube
+baseCube = Solid.centeredCube
 
 colours :: [Colour]
 colours = [Colour.red, Colour.fuchsia, Colour.blue, Colour.aqua, Colour.lime, Colour.yellow, Colour.white]
@@ -23,7 +23,7 @@ colours = [Colour.red, Colour.fuchsia, Colour.blue, Colour.aqua, Colour.lime, Co
 separator :: Solid
 separator =
     let n = length colours
-    in Solids.centeredCube 
+    in Solid.centeredCube 
         & Transforms.translate (unit _x ^* 0.5)
         & Transforms.scale (V3 2 0.1 2)
         & iterate (Transforms.rotate (unit _z) (2 * pi / realToFrac n))
@@ -34,5 +34,5 @@ loosePartsExample :: Solid
 loosePartsExample = 
     (baseCube `Booleans.difference` separator)
         & looseParts
-        & zipWith Solids.colourSolid colours
+        & zipWith Solid.colourSolid colours
         & mconcat

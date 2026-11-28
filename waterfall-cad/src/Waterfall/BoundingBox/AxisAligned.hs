@@ -5,7 +5,7 @@ module Waterfall.BoundingBox.AxisAligned
 import Waterfall.Internal.Solid(Solid, acquireSolid)
 import Waterfall.Internal.Finalizers (unsafeFromAcquire)
 import Waterfall.Internal.FromOpenCascade (gpPntToV3)
-import Waterfall.Solids (box, volume)
+import Waterfall.Solid (box, volume)
 import Waterfall.Transforms (translate)
 import Linear (V3 (..), (^-^))
 import qualified OpenCascade.Bnd.Box as Bnd.Box

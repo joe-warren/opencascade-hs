@@ -6,7 +6,7 @@ module SweepExample
 ) where
 
 import Waterfall.Sweep (sweep)
-import Waterfall.Solids (Solid)
+import Waterfall.Solid (Solid)
 import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Path2D as Path2D
 import qualified Waterfall.TwoD.Shape as Shape

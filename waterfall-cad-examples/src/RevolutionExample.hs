@@ -5,7 +5,7 @@ module RevolutionExample
 ( revolutionExample 
 ) where
 
-import Waterfall.Solids (Solid)
+import Waterfall.Solid (Solid)
 import qualified Waterfall.TwoD.Path2D as Path2D
 import qualified Waterfall.TwoD.Shape as Shape
 import Waterfall.Revolution (revolution)

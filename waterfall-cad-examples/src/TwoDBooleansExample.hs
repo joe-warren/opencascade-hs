@@ -8,7 +8,7 @@ module TwoDBooleansExample
 import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Booleans as Booleans
 import Waterfall.TwoD.Transforms (translate2D)
-import Waterfall.Solids (prism, Solid)
+import Waterfall.Solid (prism, Solid)
 import Linear (V2 (..))
 
 twoDBooleansExample :: Solid

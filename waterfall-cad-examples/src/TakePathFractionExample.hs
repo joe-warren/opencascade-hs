@@ -6,7 +6,7 @@ module TakePathFractionExample
 ) where
 
 import Waterfall.Sweep (sweep)
-import Waterfall.Solids (Solid, colourSolid)
+import Waterfall.Solid (Solid, colourSolid)
 import qualified Waterfall.Path as Path
 import qualified Waterfall.TwoD.Shape as Shape
 import qualified Waterfall.Transforms as Transforms
