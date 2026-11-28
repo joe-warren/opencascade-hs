@@ -2,8 +2,9 @@
 set -euo pipefail
 # Test C++ exception throw/catch with OCCT types in wasm shared library
 source ~/.ghc-wasm/env
-CABAL_STORE=$(find ~/.ghc-wasm/.cabal/store -maxdepth 1 -type d -name "ghc-*" | head -1)
-BUILD_DIR=$(find /opencascade-hs/dist-newstyle/build/wasm32-wasi -maxdepth 1 -type d -name "ghc-*" | head -1)
+GHC_VERSION="$(wasm32-wasi-ghc --numeric-version)"
+CABAL_STORE=$(find ~/.ghc-wasm/.cabal/store -maxdepth 1 -type d -name "ghc-$GHC_VERSION*" | head -1)
+BUILD_DIR="/opencascade-hs/dist-newstyle/build/wasm32-wasi/ghc-$GHC_VERSION"
 OCHS_PKG=$(basename "$(find "$BUILD_DIR" -maxdepth 1 -type d -name 'opencascade-hs-*' | head -1)")
 GHC_LIBDIR=$(wasm32-wasi-ghc --print-libdir)
 GHC_VERSION_DIR=$(find "$GHC_LIBDIR" -maxdepth 1 -type d -name "wasm32-wasi-ghc-*" | head -1)

@@ -25,6 +25,7 @@ import GHC.Unit.Module.ModSummary (ms_mod)
 import GHC.Types.SrcLoc (SrcSpan (..), srcSpanStartCol, srcSpanStartLine)
 import GHC.Utils.Exception
 import GHC.Wasm.Prim
+import System.OsPath (unsafeEncodeUtf)
 
 -- | Compile the user's source and return the names of its top-level
 -- Solid-valued bindings (JSON array, in source order).
@@ -106,7 +107,7 @@ myMain js_libdir js_pkg_dbs =
             ghcLink = LinkInMemory,
             verbosity = 1,
             packageDBFlags = packageDBFlags dflags0 ++
-              map (PackageDB . PkgDbPath) pkg_db_paths
+              map (PackageDB . PkgDbPath . unsafeEncodeUtf) pkg_db_paths
           }
       getSessionDynFlags
 

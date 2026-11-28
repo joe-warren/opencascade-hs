@@ -25,10 +25,8 @@ RUN git clone --filter=tree:0 https://github.com/joe-warren/OCCT-Wasi-Fork.git O
     git -C rapidjson checkout "$RAPIDJSON_COMMIT"
 
 # install ghc-wasm (provides wasi-sdk, wasmtime, ghc cross-compiler, cabal)
-# Pin to a specific commit to avoid GHC version drift breaking wasm EH.
-# The wasm exception handling fix works with GHC 9.14.1.20260213 but regressed
-# with 20260330. We pin to a commit that gives us the working version.
-ENV GHC_WASM_META_COMMIT=61a4baf7
+# Pinned to a specific commit so that builds are reproducible.
+ENV GHC_WASM_META_COMMIT=8079eb96bbc6
 RUN cd /tmp && \
     curl -f -L --retry 5 "https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta/-/archive/${GHC_WASM_META_COMMIT}/ghc-wasm-meta.tar.gz" | tar xz --strip-components=1 && \
     ./setup.sh

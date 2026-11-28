@@ -204,12 +204,7 @@ async function runTest(page, name, code, opts) {
   return true;
 }
 
-async function main() {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
-  });
-
+async function openPlayground(browser) {
   const page = await browser.newPage();
 
   // Capture console errors
@@ -222,31 +217,48 @@ async function main() {
     };
   });
 
+  // Accept the rootfs download warning, which is shown whenever the rootfs
+  // is not yet in the browser cache
+  await page.evaluateOnNewDocument(() => {
+    setInterval(() => {
+      const dlg = document.getElementById('warningDialog');
+      if (dlg?.open) dlg.close();
+    }, 100);
+  });
+
   // Also capture page crashes
   page.on('pageerror', err => {
     console.log(`  PAGE ERROR: ${err.message.substring(0, 200)}`);
   });
 
-  console.log(`Loading ${URL}...`);
   await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: TIMEOUT });
+  return page;
+}
+
+async function main() {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+  });
+
+  console.log(`Loading ${URL}...`);
 
   let passed = 0;
   let failed = 0;
 
-  for (let i = 0; i < TESTS.length; i++) {
-    const [name, code, opts] = TESTS[i];
+  // Each test gets a fresh tab (clean state). Reloading a single tab left
+  // it unresponsive after several loads.
+  for (const [name, code, opts] of TESTS) {
+    let page;
     try {
+      page = await openPlayground(browser);
       const ok = await runTest(page, name, code, opts);
       if (ok) passed++; else failed++;
     } catch (e) {
       console.log(`  ERROR: ${e.message.substring(0, 200)}`);
       failed++;
     }
-
-    // Reload for next test (clean state)
-    if (i < TESTS.length - 1) {
-      await page.reload({ waitUntil: 'domcontentloaded', timeout: TIMEOUT });
-    }
+    await page?.close().catch(() => {});
   }
 
   await browser.close();
